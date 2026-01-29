@@ -15,7 +15,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         // TODO: Admin Check
 
         const { data, error } = await supabase
-            .from('gp_credentials')
+            .from('credentials')
             .update({
                 verification_status: 'verified',
                 verified_by: user.id,

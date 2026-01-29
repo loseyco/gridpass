@@ -28,12 +28,12 @@ export default async function PublicProfilePage({ params }: { params: { username
 
     // 2. Fetch Roles
     const { data: roles } = await supabase
-        .from('gp_roles')
+        .from('roles')
         .select('*')
         .eq('user_id', profile.id);
 
-    const isFounder = roles?.some(r => r.role_type === 'Founder');
-    const isSuperAdmin = roles?.some(r => r.role_type === 'Super Admin');
+    const isFounder = roles?.some(r => r.role === 'Founder');
+    const isSuperAdmin = roles?.some(r => r.role === 'Super Admin');
 
     const Section = ({ title, icon: Icon, data }: { title: string, icon: any, data: any }) => {
         if (!data || Object.keys(data).length === 0) return null;

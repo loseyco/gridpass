@@ -12,7 +12,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         const body = await request.json();
 
         const { data, error } = await supabase
-            .from('gp_features')
+            .from('features')
             .update({
                 title: body.title,
                 description: body.description,
@@ -45,7 +45,7 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { error } = await supabase
-            .from('gp_features')
+            .from('features')
             .delete()
             .eq('id', id);
 

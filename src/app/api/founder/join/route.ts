@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Record Transaction (Mock Payment of $1,500)
-    const { error: txError } = await supabase.from('gp_transactions').insert({
+    const { error: txError } = await supabase.from('transactions').insert({
         user_id: userId,
         amount: 1500.00,
         description: 'Founding Member Pass (Lifetime)',
@@ -58,10 +58,11 @@ export async function POST(request: Request) {
 
     // 3. Assign Role (Upsert to ensure we don't duplicate error if they re-buy?)
     // Actually, Roles are usually Unique per user/type.
-    const { error: roleError } = await supabase.from('gp_roles').insert({
+    const { error: roleError } = await supabase.from('roles').insert({
         user_id: userId,
-        role_type: 'Founder',
-        season_year: new Date().getFullYear(),
+        role: 'Founder',
+        // season_year removed as it's not in new schema? Checking schema... not there.
+        // verified: true is there.
         verified: true
     });
 

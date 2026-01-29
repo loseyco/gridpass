@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { data, error } = await supabase
-            .from('gp_notifications')
+            .from('notifications')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });

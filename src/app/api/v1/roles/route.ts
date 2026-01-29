@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         }
 
         let query = supabase
-            .from('gp_roles')
+            .from('roles')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -48,20 +48,20 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         // Basic Validation
-        if (!body.season_year || !body.role_type) {
+        if (!body.season_year || !body.role) {
             return NextResponse.json({
                 success: false,
-                error: { code: "VALIDATION_ERROR", message: "Season Year and Role Type are required." }
+                error: { code: "VALIDATION_ERROR", message: "Season Year and Role are required." }
             }, { status: 400 });
         }
 
         // Insert logic
         const { data, error } = await supabase
-            .from('gp_roles')
+            .from('roles')
             .insert({
                 user_id: user.id,
                 season_year: body.season_year,
-                role_type: body.role_type,
+                role: body.role,
                 verified: false // Always false on creation
             })
             .select()

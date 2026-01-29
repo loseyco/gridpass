@@ -14,7 +14,7 @@ export async function GET(
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { data, error } = await supabase
-            .from('gp_messages')
+            .from('messages')
             .select('*')
             .eq('thread_id', threadId)
             .order('created_at', { ascending: true });
@@ -43,7 +43,7 @@ export async function POST(
         if (!content) return NextResponse.json({ success: false, error: 'Content required' }, { status: 400 });
 
         const { data, error } = await supabase
-            .from('gp_messages')
+            .from('messages')
             .insert({
                 thread_id: threadId,
                 sender_id: user.id,
@@ -55,7 +55,7 @@ export async function POST(
         if (error) throw error;
 
         // Update thread's updated_at
-        await supabase.from('gp_threads').update({ updated_at: new Date().toISOString() }).eq('id', threadId);
+        await supabase.from('threads').update({ updated_at: new Date().toISOString() }).eq('id', threadId);
 
         return NextResponse.json({ success: true, data }, { status: 201 });
 

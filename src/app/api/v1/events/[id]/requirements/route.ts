@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     try {
         const { data, error } = await supabase
-            .from('gp_event_requirements')
+            .from('event_requirements')
             .select('*')
             .eq('event_id', id);
 
@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         }
 
         const { data, error } = await supabase
-            .from('gp_event_requirements')
+            .from('event_requirements')
             .insert({
                 event_id: id,
                 required_credential_type: body.required_credential_type,

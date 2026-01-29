@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_wallet_documents')
+            .from('wallet_documents')
             .select('*')
             .eq('user_id', user.id) // Redundant regarding RLS but good for clarity
             .order('created_at', { ascending: false });
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_wallet_documents')
+            .from('wallet_documents')
             .insert({
                 user_id: user.id,
                 name: body.name,

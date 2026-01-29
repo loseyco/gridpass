@@ -14,7 +14,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         const body = await request.json();
 
         const { data, error } = await supabase
-            .from('gp_tracks')
+            .from('tracks')
             .update({
                 name: body.name,
                 location: body.location,

@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     try {
         // Public Access allowed
         const { data, error } = await supabase
-            .from('gp_listings')
+            .from('listings')
             .select('*')
             .eq('status', 'active')
             .order('created_at', { ascending: false });
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_listings')
+            .from('listings')
             .insert({
                 user_id: user.id,
                 title: body.title,

@@ -10,7 +10,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { data, error } = await supabase
-            .from('gp_applications')
+            .from('applications')
             .select('*')
             .eq('id', id)
             .single();
@@ -35,7 +35,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
 
         // Ensure only allowed fields
         const { data, error } = await supabase
-            .from('gp_applications')
+            .from('applications')
             .update({
                 status: body.status,
                 cover_letter: body.cover_letter
@@ -62,7 +62,7 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { error } = await supabase
-            .from('gp_applications')
+            .from('applications')
             .delete()
             .eq('id', id);
 

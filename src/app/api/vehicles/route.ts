@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_vehicles')
+            .from('vehicles')
             .select('*')
             .eq('user_id', user.id);
 
@@ -59,9 +59,9 @@ export async function POST(request: Request) {
         };
 
         // If VIN is present, upsert. Otherwise insert.
-        const query = body.vin
-            ? supabase.from('gp_vehicles').upsert(vehicleData, { onConflict: 'vin' })
-            : supabase.from('gp_vehicles').insert(vehicleData);
+        const query = (body.vin)
+            ? supabase.from('vehicles').upsert(vehicleData, { onConflict: 'vin' })
+            : supabase.from('vehicles').insert(vehicleData);
 
         const { data, error } = await query.select().single();
 

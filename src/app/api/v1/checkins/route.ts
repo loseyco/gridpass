@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
     try {
         let query = supabase
-            .from('gp_checkins')
+            .from('checkins')
             .select('*')
             .order('checked_in_at', { ascending: false });
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
         // 3. Create Check-in
         const { data, error } = await supabase
-            .from('gp_checkins')
+            .from('checkins')
             .insert({
                 event_id: body.event_id,
                 user_id: body.user_id_to_checkin,

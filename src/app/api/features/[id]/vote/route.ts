@@ -11,7 +11,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // First get current votes
     const { data: feature, error: fetchError } = await supabase
-        .from('gp_features')
+        .from('features')
         .select('votes')
         .eq('id', id)
         .single();
@@ -23,7 +23,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const newVotes = (feature.votes || 0) + 1;
 
     const { error: updateError } = await supabase
-        .from('gp_features')
+        .from('features')
         .update({ votes: newVotes })
         .eq('id', id);
 

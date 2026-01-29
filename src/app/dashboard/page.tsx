@@ -15,10 +15,10 @@ export default async function DashboardPage() {
 
     // Fetch Founder Status
     const { data: founderRole } = await supabase
-        .from('gp_roles')
+        .from('roles')
         .select('*')
         .eq('user_id', user?.id)
-        .eq('role_type', 'Founder')
+        .eq('role', 'Founder')
         .single();
 
     const isFounder = !!founderRole;

@@ -8,7 +8,7 @@ export async function GET(request: Request) {
         const status = searchParams.get('status');
         const tier = searchParams.get('tier');
 
-        let query = supabase.from('gp_features').select('*').order('created_at', { ascending: false });
+        let query = supabase.from('features').select('*').order('created_at', { ascending: false });
 
         if (status) query = query.eq('status', status);
         if (tier) query = query.eq('tier', tier);
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
         // Create or Update (Upsert by Title)
         const { data, error } = await supabase
-            .from('gp_features')
+            .from('features')
             .upsert({
                 title: body.title,
                 description: body.description,

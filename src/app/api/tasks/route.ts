@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_tasks')
+            .from('tasks')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_tasks')
+            .from('tasks')
             .insert({
                 user_id: user.id,
                 title: body.title,

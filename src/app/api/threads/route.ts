@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
         // Using Postgres array containment operator @>
         const { data, error } = await supabase
-            .from('gp_threads')
+            .from('threads')
             .select('*')
             .contains('participants', [user.id])
             .order('updated_at', { ascending: false });
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         if (!recipient_id) return NextResponse.json({ success: false, error: 'Recipient required' }, { status: 400 });
 
         const { data, error } = await supabase
-            .from('gp_threads')
+            .from('threads')
             .insert({
                 participants: [user.id, recipient_id]
             })

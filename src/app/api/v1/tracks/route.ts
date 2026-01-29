@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
     try {
         const { data, error } = await supabase
-            .from('gp_tracks')
+            .from('tracks')
             .select('*')
             .eq('active', true)
             .order('name', { ascending: true });
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
         // Check if exists
         const { data: existing } = await supabase
-            .from('gp_tracks')
+            .from('tracks')
             .select('*')
             .eq('name', body.name)
             .single();
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             error = null;
         } else {
             const result = await supabase
-                .from('gp_tracks')
+                .from('tracks')
                 .insert({
                     name: body.name,
                     location: body.location,

@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     try {
         const { data, error } = await supabase
-            .from('gp_jobs')
+            .from('jobs')
             .select('*')
             .eq('status', 'active')
             .order('created_at', { ascending: false });
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_jobs')
+            .from('jobs')
             .insert({
                 user_id: user.id,
                 title: body.title,

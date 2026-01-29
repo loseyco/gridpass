@@ -10,7 +10,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
         if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { data, error } = await supabase
-            .from('gp_jobs')
+            .from('jobs')
             .select('*')
             .eq('id', id)
             .single();
@@ -34,7 +34,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         const body = await request.json();
 
         const { data, error } = await supabase
-            .from('gp_jobs')
+            .from('jobs')
             .update({
                 title: body.title,
                 description: body.description,

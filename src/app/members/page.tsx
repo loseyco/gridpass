@@ -16,7 +16,7 @@ export default async function MembersPage() {
 
     // Fetch all roles
     const { data: roles } = await supabase
-        .from('gp_roles')
+        .from('roles')
         .select('*');
 
     return (
@@ -68,8 +68,8 @@ export default async function MembersPage() {
                                     {/* Founder Badges */}
                                     {(() => {
                                         const userRoles = roles?.filter(r => r.user_id === profile.id);
-                                        const isSuperAdmin = userRoles?.some(r => r.role_type === 'Super Admin');
-                                        const isFounder = userRoles?.some(r => r.role_type === 'Founder');
+                                        const isSuperAdmin = userRoles?.some(r => r.role === 'Super Admin');
+                                        const isFounder = userRoles?.some(r => r.role === 'Founder');
 
                                         if (isSuperAdmin) {
                                             return (

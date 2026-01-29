@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_trips')
+            .from('trips')
             .select('*')
             .eq('user_id', user.id)
             .order('start_date', { ascending: true });
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_trips')
+            .from('trips')
             .insert({
                 user_id: user.id,
                 name: body.name,

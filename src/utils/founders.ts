@@ -7,9 +7,9 @@ export async function getFounderCount() {
 
     // Count user roles with role_type 'Founder'
     const { count, error } = await supabase
-        .from('gp_roles')
+        .from('roles')
         .select('*', { count: 'exact', head: true })
-        .eq('role_type', 'Founder');
+        .eq('role', 'Founder');
 
     if (error) {
         console.error('Error fetching founder count:', error);

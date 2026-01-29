@@ -14,7 +14,7 @@ export async function GET(request: Request) {
         }
 
         let query = supabase
-            .from('gp_credentials')
+            .from('credentials')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
         // Insert logic
         const { data, error } = await supabase
-            .from('gp_credentials')
+            .from('credentials')
             .insert({
                 user_id: user.id,
                 season_year: body.season_year || null,

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_inventory')
+            .from('inventory')
             .select('*')
             .eq('user_id', user.id)
             .order('name', { ascending: true });
@@ -52,8 +52,8 @@ export async function POST(request: Request) {
         };
 
         const query = (body.sku)
-            ? supabase.from('gp_inventory').upsert(itemData, { onConflict: 'sku' })
-            : supabase.from('gp_inventory').insert(itemData);
+            ? supabase.from('inventory').upsert(itemData, { onConflict: 'sku' })
+            : supabase.from('inventory').insert(itemData);
 
         const { data, error } = await query.select().single();
 

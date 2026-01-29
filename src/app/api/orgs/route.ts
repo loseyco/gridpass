@@ -6,7 +6,7 @@ export async function GET(request: Request) {
 
     try {
         const { data, error } = await supabase
-            .from('gp_orgs')
+            .from('orgs')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
         const { data, error } = await supabase
-            .from('gp_orgs')
+            .from('orgs')
             .upsert({
                 name,
                 type,

@@ -11,10 +11,10 @@ export async function GET(request: Request) {
 
     try {
         let query = supabase
-            .from('gp_events')
+            .from('events')
             .select(`
                 *,
-                track:gp_tracks(name, location)
+                track:tracks(name, location)
             `)
             .order('start_date', { ascending: true });
 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await supabase
-            .from('gp_events')
+            .from('events')
             .insert({
                 name: body.name,
                 track_id: body.track_id,

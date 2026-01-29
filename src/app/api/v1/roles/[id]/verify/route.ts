@@ -18,7 +18,7 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         // Since we don't have a user_admin table yet, we'll allow it for now but TODO: Secure this.
 
         const { data, error } = await supabase
-            .from('gp_roles')
+            .from('roles')
             .update({
                 verified: true,
                 verified_by: user.id,

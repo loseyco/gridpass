@@ -12,7 +12,7 @@ export default async function FounderPage() {
     const { remaining, limit } = await getFounderCount();
 
     const supabase = await createClient();
-    const { data: features } = await supabase.from('gp_features').select('*').order('created_at', { ascending: false });
+    const { data: features } = await supabase.from('features').select('*').order('created_at', { ascending: false });
 
     // Group features by Category
     const categories: Record<string, any[]> = {};
