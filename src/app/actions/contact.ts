@@ -21,14 +21,23 @@ export async function sendContactEmail(formData: FormData) {
     }
 
     try {
-        // 1. Get User ID from Profile
-        const { data: profile } = await supabaseAdmin
+        // 1. Check for Service Key
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            console.error('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing');
+            return { success: false, error: 'Server misconfiguration: Missing API Key' };
+        }
+
+        // 2. Get User ID from Profile
+        const { data: profile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .select('id, full_name, username')
             .ilike('username', recipientUsername)
             .single();
 
-        if (!profile) return { success: false, error: 'User not found' };
+        if (profileError || !profile) {
+            console.error('Profile Lookup Failed:', profileError);
+            return { success: false, error: `User not found: ${recipientUsername} (DB Error: ${profileError?.message})` };
+        }
 
         // 2. Get Verification Email
         const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
