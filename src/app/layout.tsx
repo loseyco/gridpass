@@ -34,6 +34,11 @@ export const metadata: Metadata = {
     description: "The Business Operating System for Racing.",
     creator: "@pjlosey",
   },
+  icons: {
+    icon: "/logo-square.png",
+    shortcut: "/logo-square.png",
+    apple: "/logo-square.png",
+  },
 };
 
 export default function RootLayout({
