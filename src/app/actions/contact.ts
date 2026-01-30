@@ -34,9 +34,39 @@ export async function sendContactEmail(formData: FormData) {
             .ilike('username', recipientUsername)
             .single();
 
+        // EMERGENCY FALLBACK: If DB fails, ensures PJ specifically always gets mail.
+        if ((profileError || !profile) && recipientUsername.toLowerCase() === 'pjlosey') {
+            console.log('Using Emergency Fallback for pjlosey');
+            // Mock profile for fallback
+            const fallbackEmail = 'loseyp@gmail.com';
+
+            const data = await resend.emails.send({
+                from: 'GridPass <team@gridpass.app>',
+                to: fallbackEmail,
+                subject: `[Fallback] Inquiry from ${name}`,
+                replyTo: email,
+                text: `
+    *** EMERGENCY FALLBACK MODE (DB Lookup Failed) ***
+    
+    You have a new work inquiry!
+    
+    FROM: ${name}
+    EMAIL: ${email}
+    
+    MESSAGE:
+    --------------------------------------------------
+    ${message}
+    --------------------------------------------------
+                `
+            });
+
+            if (data.error) return { success: false, error: data.error.message };
+            return { success: true };
+        }
+
         if (profileError || !profile) {
             console.error('Profile Lookup Failed:', profileError);
-            return { success: false, error: `User not found: ${recipientUsername} (DB Error: ${profileError?.message})` };
+            return { success: false, error: 'User not found' };
         }
 
         // 2. Get Verification Email
@@ -46,23 +76,9 @@ export async function sendContactEmail(formData: FormData) {
             return { success: false, error: 'Could not contact user' };
         }
 
-        // 3. Log Message in Database (Persistent Inbox)
-        const { error: dbError } = await supabaseAdmin
-            .from('profile_messages')
-            .insert({
-                sender_name: name,
-                sender_email: email,
-                recipient_id: profile.id,
-                content: message
-            });
+        // SKIP DB LOGGING as requested for stability
 
-        if (dbError) {
-            console.error('DB Insert Error:', dbError);
-            // We continue sending email even if DB log fails? Or fail?
-            // Let's log it but proceed to ensure they get the alert.
-        }
-
-        // 4. Send Notification Email
+        // 3. Send Notification Email
         const dashboardLink = `https://gridpass.app/dashboard/messages`;
 
         const data = await resend.emails.send({
@@ -78,25 +94,7 @@ FROM: ${name} (${email})
 ${message}
 --------------------------------------------------
 
-This message has been saved to your Inbox.
 View & Reply here: ${dashboardLink}
-
-(You can also reply directly to this email)
-            `,
-            html: `
-                <div style="font-family: sans-serif; color: #333;">
-                    <h2>New Inquiry on GridPass</h2>
-                    <p><strong>${name}</strong> (${email}) sent you a message:</p>
-                    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        ${message.replace(/\n/g, '<br/>')}
-                    </div>
-                    <a href="${dashboardLink}" style="background: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                        View in Dashboard
-                    </a>
-                    <p style="color: #666; font-size: 12px; margin-top: 30px;">
-                        You can also reply directly to this email.
-                    </p>
-                </div>
             `
         });
 
