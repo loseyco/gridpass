@@ -82,7 +82,7 @@ export async function sendContactEmail(formData: FormData) {
         const dashboardLink = `https://gridpass.app/dashboard/messages`;
 
         const data = await resend.emails.send({
-            from: 'GridPass <team@gridpass.app>',
+            from: `${name} via GridPass <team@gridpass.app>`,
             to: user.email,
             subject: `[GridPass] New Inquiry from ${name}`,
             replyTo: email,
