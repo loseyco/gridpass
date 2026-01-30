@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: { username: string 
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name, username, bio')
+        .select('full_name, username, bio, avatar_url')
         .ilike('username', username)
         .single();
 
@@ -38,6 +38,7 @@ export async function generateMetadata({ params }: { params: { username: string 
             description: profile.bio || `Check out ${displayName}'s racing profile on GridPass.`,
             type: 'profile',
             username: profile.username,
+            images: profile.avatar_url ? [profile.avatar_url] : [],
         }
     };
 }
@@ -112,8 +113,12 @@ export default async function PublicProfilePage({ params }: { params: { username
 
                         <div className="flex flex-col md:flex-row gap-8 items-start print:items-center print:flex-row print:gap-6">
                             {/* Avatar - Hide in print if generic or keep small */}
-                            <div className="w-32 h-32 bg-neutral-800 rounded-full flex items-center justify-center border-4 border-neutral-950 shadow-xl shrink-0 print:border-gray-200 print:w-24 print:h-24 print:bg-gray-100">
-                                <User className="w-16 h-16 text-neutral-600 print:text-gray-400" />
+                            <div className="w-32 h-32 bg-neutral-800 rounded-full flex items-center justify-center border-4 border-neutral-950 shadow-xl shrink-0 print:border-gray-200 print:w-24 print:h-24 print:bg-gray-100 overflow-hidden relative">
+                                {profile.avatar_url ? (
+                                    <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="w-16 h-16 text-neutral-600 print:text-gray-400" />
+                                )}
                             </div>
 
                             <div className="flex-1 print:text-left">

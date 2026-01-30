@@ -8,7 +8,8 @@ import {
     LogOut,
     Shield,
     Trophy,
-    Home
+    Home,
+    Inbox
 } from 'lucide-react';
 import LogoutButton from '@/components/LogoutButton';
 
@@ -56,6 +57,10 @@ export default async function DashboardLayout({
                     <Link href="/dashboard/profile" className="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                         <User className="w-5 h-5" />
                         My Profile
+                    </Link>
+                    <Link href="/dashboard/messages" className="flex items-center gap-3 px-4 py-3 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                        <Inbox className="w-5 h-5" />
+                        Messages
                     </Link>
 
                     {/* Founder Exclusive Section */}

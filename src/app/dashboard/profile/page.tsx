@@ -279,6 +279,69 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
 
+                                    {/* Avatar Upload for Basic Info Section */}
+                                    {cat.id === 'basic' && (
+                                        <div className="mb-8 p-6 bg-black/20 rounded-xl border border-dashed border-white/10 flex items-center gap-6">
+                                            <div className="relative group">
+                                                <div className="w-24 h-24 rounded-full bg-neutral-800 overflow-hidden border-2 border-white/10 flex items-center justify-center">
+                                                    {formData.avatar_url ? (
+                                                        <img src={formData.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <UserIcon className="w-10 h-10 text-neutral-500" />
+                                                    )}
+                                                </div>
+                                                {/* Hidden File Input */}
+                                                <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity rounded-full">
+                                                    <span className="text-xs font-bold text-white">Change</span>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (!file) return;
+
+                                                            try {
+                                                                setIsLoading(true);
+                                                                const { data: { user } } = await supabase.auth.getUser();
+                                                                if (!user) return;
+
+                                                                const fileExt = file.name.split('.').pop();
+                                                                const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+
+                                                                const { error: uploadError } = await supabase.storage
+                                                                    .from('avatars')
+                                                                    .upload(filePath, file);
+
+                                                                if (uploadError) throw uploadError;
+
+                                                                const { data: { publicUrl } } = supabase.storage
+                                                                    .from('avatars')
+                                                                    .getPublicUrl(filePath);
+
+                                                                handleChange('avatar_url', publicUrl);
+                                                                // Auto-save the avatar change immediately
+                                                                await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+                                                                setMessage({ type: 'success', text: 'Photo updated!' });
+                                                            } catch (error: any) {
+                                                                console.error('Upload failed', error);
+                                                                setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
+                                                            } finally {
+                                                                setIsLoading(false);
+                                                            }
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-neutral-200">Profile Photo</h3>
+                                                <p className="text-sm text-neutral-500 max-w-sm">
+                                                    This image will be shown on your public profile and used as the preview image when you share your link.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {cat.fields.map(field => (
                                             <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
