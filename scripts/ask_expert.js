@@ -46,25 +46,39 @@ async function askExpert() {
         Please provide the code or answer below. Do not include <think> tags or markdown code blocks in the final output if writing to a file.
         `;
 
-        const response = await fetch(OLLAMA_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: MODEL,
-                prompt: fullPrompt,
-                stream: false,
-                options: {
-                    temperature: 0.2 // Lower temp for more precise/expert answers
-                }
-            })
-        });
+        if (expertType === 'cloud') {
+            const { execSync } = require('child_process');
+            console.log(`☁️ Routing to Cloud Intelligence (Gemini)...`);
 
-        if (!response.ok) {
-            throw new Error(`Ollama API Error: ${response.statusText}`);
+            // Sanitize prompt for shell
+            const sanitizedPrompt = fullPrompt.replace(/"/g, '\\"');
+            const cmd = `node scripts/gemini_client.js "${sanitizedPrompt}"`;
+
+            try {
+                const output = execSync(cmd, { encoding: 'utf-8', stdio: 'pipe' });
+                var responseJson = { response: output }; // Mock Ollama format
+            } catch (e) {
+                console.error("Gemini Error:", e.stderr?.toString());
+                throw new Error("Cloud Expert Failed");
+            }
+        } else {
+            // Standard Ollama Call
+            var response = await fetch(OLLAMA_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: MODEL,
+                    prompt: fullPrompt,
+                    stream: false,
+                    options: { temperature: 0.2 }
+                })
+            });
+
+            if (!response.ok) throw new Error(`Ollama API Error: ${response.statusText}`);
+            var responseJson = await response.json();
         }
 
-        const data = await response.json();
-        let content = data.response;
+        let content = responseJson.response;
 
         // Strip <think> tags
         content = content.replace(/<think>[\s\S]*?<\/think>/g, '');

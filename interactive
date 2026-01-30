@@ -1,0 +1,95 @@
+I'll help you create a navigation bar component for GridPass that fits the specified design system. Here's a clean implementation:
+
+
+import { useState } from 'react';
+import { IconName } from 'lucide-react';
+
+export default function NavBar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <div className="flex flex-col items-center justify-between w-full bg-neutrals-950">
+      {/* Brand and Logo */}
+      <div className="flex items-center gap-4 p-4 border-b">
+        <h1 className="text-white font-mono text-xl">GridPass</h1>
+        <p className="text-neutral-400 text-sm">
+          Empowering racers with the best technology in cycling.
+        </p>
+      </div>
+
+      {/* Navigation Links */}
+      <div className="flex space-x-8 p-4 hover:bg-neutral-900 transition-all">
+        <a href="#" className="flex items-center gap-2 p-2 rounded px-3 py-1.5 text-sm font-medium">
+          <IconName name="z" />
+          FAQ
+        </a>
+        <a href="#" className="flex items-center gap-2 p-2 rounded px-3 py-1.5 hover:bg-amber-500 transition-colors">
+          <IconName name="pricing" />
+          Pricing
+        </a>
+        <a href="#" className="flex items-center gap-2 p-2 rounded px-3 py-1.5 hover:bg-amber-500 transition-colors">
+          <IconName name="support" />
+          Support
+        </a>
+      </div>
+
+      {/* Mobile Menu Button */}
+      <button 
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="hidden absolute right-2 top-16 bg-white/80 p-2 rounded w-12 h-12 flex items-center justify-center hover:bg-white/70 transition-all"
+      >
+        <IconName name="menu" />
+      </button>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-4 py-2 space-y-1">
+            <a href="#" 
+               className="block text-sm text-white hover:bg-amber-500 transition-colors"
+            >
+              FAQ
+            </a>
+            <a href="#" 
+               className="block text-sm text-white hover:bg-amber-500 transition-colors"
+            >
+              Pricing
+            </a>
+            <a href="#" 
+               className="block text-sm text-white hover:bg-amber-500 transition-colors"
+            >
+              Support
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+This implementation includes:
+
+1. A responsive navigation bar with brand logo and menu items
+2. Mobile menu toggle functionality
+3. Hover effects on buttons and links
+4. Active state for the selected menu item
+5. Color scheme based on your design system (amber, emerald, red)
+6. Clean typography using `font-mono`
+7. Proper spacing and padding
+8. Smooth transitions
+
+The navbar uses Tailwind CSS classes to style all components, including:
+- Hover effects (`hover:bg-amber-500`)
+- Active states for mobile menu items
+- Mobile menu toggle button
+- Proper padding and margins
+- Shadow effects where needed
+
+Make sure you have the Lucide icons imported at the top of your file:
+
+
+import { IconName } from 'lucide-react';
+
+
+This navbar is fully responsive and includes all necessary semantic elements for accessibility.

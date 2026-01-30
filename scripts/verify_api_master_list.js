@@ -31,17 +31,45 @@ async function run() {
     });
 
     if (!loginRes.ok) throw new Error("Login failed");
-    const cookie = loginRes.headers.get('set-cookie');
-    console.log("✅ Authenticated.");
+    // Handle Set-Cookie array or string
+    const rawCookie = loginRes.headers.get('set-cookie');
+    const cookie = Array.isArray(rawCookie) ? rawCookie.join('; ') : rawCookie;
+    console.log("✅ Authenticated. Cookie length:", cookie ? cookie.length : 0);
+    // console.log("Cookie:", cookie);
 
     // 2. Fetch Registry
+    // 2. Fetch Registry (or load from local SQL seed as fallback)
     console.log("📜 Fetching API Registry...");
-    const regRes = await fetch(`${BASE_URL}/api/admin/registry`, {
-        headers: { 'Cookie': cookie }
-    });
-    if (!regRes.ok) throw new Error("Failed to fetch registry");
-    const registry = await regRes.json();
-    console.log(`loaded ${registry.length} endpoints definitions.`);
+    let registry = [];
+    try {
+        const regRes = await fetch(`${BASE_URL}/api/admin/registry`, {
+            headers: { 'Cookie': cookie }
+        });
+        if (regRes.ok) {
+            registry = await regRes.json();
+        } else {
+            console.log(`API Registry fetch failed (${regRes.status}). Using local fallback from registry_seed.sql`);
+            throw new Error("API Unreachable");
+        }
+    } catch (e) {
+        // Fallback: Parse registry_seed.sql
+        try {
+            const sql = require('fs').readFileSync('registry_seed.sql', 'utf-8');
+            const lines = sql.split('\n');
+            for (const line of lines) {
+                // ('/api/admin/ai-status', 'GET', 'untested'),
+                const match = line.match(/\('([^']+)', '([^']+)',/);
+                if (match) {
+                    registry.push({ path: match[1], method: match[2], status: 'untested' });
+                }
+            }
+            console.log(`Loaded ${registry.length} endpoints from SQL seed.`);
+        } catch (e2) {
+            console.error("Could not load backup registry:", e2.message);
+            process.exit(1);
+        }
+    }
+    console.log(`Loaded ${registry.length} endpoints definitions.`);
 
     // Debug specific endpoint
     const postVehicles = registry.find(e => e.path === '/api/vehicles' && e.method === 'POST');

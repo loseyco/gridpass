@@ -21,6 +21,7 @@ create table if not exists public.profiles (
   driver_info jsonb default '{}'::jsonb,
   mechanic_info jsonb default '{}'::jsonb,
   emergency_contact jsonb default '{}'::jsonb, -- Private
+  logistics_info jsonb default '{}'::jsonb,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

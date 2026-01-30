@@ -1,0 +1,155 @@
+I'll help you create some clean, modern components following GridPass's design system. Here's a collection of reusable components:
+
+
+// Card component
+function Card({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="bg-neutral-900 p-6 rounded-lg shadow-sm">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-white text-xl font-bold">{title}</h3>
+        <span className="text-gray-400 text-sm">Get Directions</span>
+      </div>
+      <p className="text-neutral-400">{description}</p>
+    </div>
+  )
+}
+
+// InputCard component
+function InputCard({ value, type }: { value: string; type: 'select' | 'text' }) {
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="flex flex-col gap-4 items-center">
+        {type === 'select' && (
+          <div>
+            <label className="block text-neutral-400">Select</label>
+            <select className="w-full p-2 rounded" />
+          </div>
+        )}
+        <input
+          type={type}
+          value={value}
+          placeholder={`Enter ${type === 'text' ? '' : 'Select'}`}
+          className="flex-1 p-2 border-b"
+        />
+      </div>
+    </div>
+  )
+}
+
+// Alert component
+function Alert(color: string, message: string) {
+  return (
+    <div className={`${color}-bg px-4 py-3 rounded shadow-sm`}>
+      <p className="text-white text-sm">{message}</p>
+    </div>
+  )
+}
+
+// Button components with different states
+function PrimaryButton() {
+  return (
+    <button 
+      className="bg-amber-500 hover:bg-amber-400 text-white font-bold px-6 py-3 rounded-full shadow-sm transition-all"
+    >
+      <Zap className="w-8 h-8" />
+      Go
+    </button>
+  )
+}
+
+function SecondaryButton() {
+  return (
+    <button 
+      className="bg-neutral-700 hover:bg-neutral-600 text-white font-bold px-6 py-3 rounded-full shadow-sm transition-all"
+    >
+      <Zap className="w-8 h-8" />
+      Continue
+    </button>
+  )
+}
+
+function SuccessButton() {
+  return (
+    <button 
+      className="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-6 py-3 rounded-full shadow-sm transition-all"
+    >
+      <Zap className="w-8 h-8" />
+      Verified
+    </button>
+  )
+}
+
+// Badge component for status indicators
+function Badge(text: string, icon: string) {
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded shadow-sm">
+      <span className="text-gray-700">{text}</span>
+      <span className="text-gray-400 text-2xl inline-block">
+        <{icon} className="w-5 h-5" />
+      </span>
+    </div>
+  )
+}
+
+// Table component
+function DataTable({ data }: { data: Array<{ [key: string]: string }> }>) {
+  return (
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          <th key="Status">Status</th>
+          <th key="Device Type">Device Type</th>
+          <th key="Connection Quality">Connection Quality</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row) => (
+          <tr>
+            <td><Badge text={row.Status} icon={<Zap className="w-4 h-4")}</Badge></td>
+            <td>{row.Device Type}</td>
+            <td>{row.Connection Quality}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+// Modal component
+function Modal({ onClose, title }: { onClose: () => void; title: string }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg w-full max-w-md p-6">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <form onSubmit={onClose}>
+          <div className="mb-4">
+            <label className="block text-gray-700">Email</label>
+            <input
+              type="email"
+              value={title}
+              onChange={(e) => title = e.target.value}
+              placeholder="Enter your email"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-amber-500 hover:bg-amber-400 text-white font-bold py-2 px-4 rounded transition-all"
+          >
+            Sign Up
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+
+These components follow the design system's color scheme, spacing rules, and micro-interaction principles. They're ready to be integrated into your Next.js application with proper styling using Tailwind CSS classes.
+
+To use these components in your code:
+1. Import them in your `src/components` directory
+2. Reference them by their names
+3. Apply the necessary props based on your requirements
+
+Would you like me to explain any component in more detail or add additional functionality?

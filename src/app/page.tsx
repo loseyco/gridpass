@@ -12,6 +12,15 @@ import {
 
 import { createClient } from '@/utils/supabase/server';
 import { getFounderCount } from "@/utils/founders";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "The Business Operating System for Racing",
+  openGraph: {
+    title: "GridPass: The Business Operating System for Racing",
+    images: [{ url: '/opengraph-image.png' }]
+  }
+};
 
 export default async function Home() {
   const { count, remaining, limit } = await getFounderCount();
@@ -52,7 +61,7 @@ export default async function Home() {
             ) : (
               <>
                 <Link
-                  href="/auth/register"
+                  href="/register"
                   className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all active:scale-95"
                 >
                   Get Started <ArrowRight className="w-5 h-5" />
@@ -64,7 +73,7 @@ export default async function Home() {
                   Browse Members
                 </Link>
                 <Link
-                  href="/auth/login"
+                  href="/login"
                   className="flex items-center justify-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-8 py-4 rounded-2xl font-bold text-lg border border-white/10 transition-all active:scale-95"
                 >
                   Login

@@ -7,6 +7,16 @@ import LegalDisclaimer from './LegalDisclaimer';
 import CategoryAccordion from './CategoryAccordion';
 
 import { getFounderCount } from '@/utils/founders';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: "Become a Founding Member",
+    description: "Secure Lifetime Access and verified status on GridPass. Limited spots available.",
+    openGraph: {
+        title: "Become a Founding Member of GridPass",
+        description: "Secure Lifetime Access and verified status. Limited spots available.",
+    }
+};
 
 export default async function FounderPage() {
     const { remaining, limit } = await getFounderCount();
@@ -36,7 +46,7 @@ export default async function FounderPage() {
             {/* Nav */}
             <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-neutral-950/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="font-bold text-xl tracking-tighter flex items-center gap-2">
+                    <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2 hover:opacity-80 transition-opacity">
                         <div className="w-8 h-8 relative rounded flex items-center justify-center font-bold text-black overflow-hidden">
                             <Image
                                 src="/logo-square.png"
@@ -46,7 +56,7 @@ export default async function FounderPage() {
                             />
                         </div>
                         GridPass <span className="text-amber-500 text-xs uppercase tracking-widest border border-amber-500/20 px-2 py-0.5 rounded-full bg-amber-500/10">Founder</span>
-                    </div>
+                    </Link>
                 </div>
             </nav>
 

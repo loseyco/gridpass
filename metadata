@@ -1,0 +1,20 @@
+import type { Metadata } from 'next';
+
+const metadata: Metadata = {
+  title: "Team Logistics | GridPass",
+  description: "Strategic planning for sim racing teams to gain a competitive edge.",
+  images: [
+    {
+      url: '/images/team-logistics.jpg',
+      alt: 'Team logistics dashboard'
+    }
+  ],
+  type: 'profile',
+  siteName: 'GridPass',
+  keywords: ['Sim Racing', 'Management', 'iRacing', 'Motorsport', 'Team Logistics'],
+  previewUrl: '/preview'
+};
+
+export async function generateMetadata({ params }: { params: Record<string, unknown> }) {
+  return metadata;
+}

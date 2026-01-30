@@ -5,6 +5,13 @@ import { User, Trophy, Wrench, Search, Shield } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: "Members Directory",
+    description: "Discover verified drivers, mechanics, and race teams on GridPass.",
+};
+
 export default async function MembersPage() {
     const supabase = await createClient();
 

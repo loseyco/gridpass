@@ -1,0 +1,34 @@
+I'll help you implement the API route. Here's a concise implementation following your requirements:
+
+
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const supabase = createClient();
+  
+  // Check authentication first
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Query the vehicles
+  const { data, error } = await supabase.from('vehicles').select('*');
+  
+  if (error) {
+    return NextResponse.json({ error: 'Database Error' }, { status: 500 });
+  }
+  
+  return NextResponse.json(data);
+}
+
+
+This implementation:
+1. Uses `createClient` for secure authentication
+2. Checks for auth errors before making database calls
+3. Handles potential database errors
+4. Returns proper error responses with status codes
+5. Returns data in JSON format as required
+
+The code is concise while following your security and architectural requirements.

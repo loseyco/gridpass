@@ -45,10 +45,15 @@ export default function Navbar() {
                         </Link>
 
                         {user ? (
-                            <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10">
-                                <User className="w-4 h-4" />
-                                <span>Dashboard</span>
-                            </Link>
+                            <div className="flex items-center gap-4">
+                                <Link href="/admin" className="text-red-500 hover:text-red-400 font-bold uppercase tracking-wider text-xs border border-red-500/20 bg-red-500/10 px-2 py-1 rounded transition-colors">
+                                    Admin
+                                </Link>
+                                <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10">
+                                    <User className="w-4 h-4" />
+                                    <span>Dashboard</span>
+                                </Link>
+                            </div>
                         ) : (
                             <div className="flex items-center gap-4">
                                 <Link href="/login" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
@@ -93,14 +98,23 @@ export default function Navbar() {
                         <div className="h-px bg-white/10 my-2"></div>
 
                         {user ? (
-                            <Link
-                                href="/dashboard"
-                                className="flex items-center justify-center gap-2 bg-neutral-800 text-white p-3 rounded-lg font-bold"
-                                onClick={() => setIsOpen(false)}
-                            >
-                                <User className="w-5 h-5" />
-                                Go to Dashboard
-                            </Link>
+                            <>
+                                <Link
+                                    href="/admin"
+                                    className="text-center text-red-500 font-bold uppercase tracking-widest py-2 block border border-red-500/20 bg-red-500/5 rounded-lg mb-2"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    Admin Command
+                                </Link>
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center justify-center gap-2 bg-neutral-800 text-white p-3 rounded-lg font-bold"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <User className="w-5 h-5" />
+                                    Go to Dashboard
+                                </Link>
+                            </>
                         ) : (
                             <>
                                 <Link

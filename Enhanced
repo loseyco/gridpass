@@ -1,0 +1,64 @@
+I'll help you create a navigation bar component for GridPass. Here's a clean implementation using Tailwind CSS:
+
+
+import { Button } from 'lucide-react'
+
+function NavigationBar() {
+  const locations = [
+    { name: 'New York', color: 'amber-500' },
+    { name: 'San Francisco', color: 'amber-500' },
+    { name: 'London', color: 'amber-500' },
+    { name: 'Tokyo', color: 'amber-500' }
+  ];
+
+  return (
+    <div className="container mx-auto px-4 py-2">
+      <div className="flex justify-between items-center space-x-8">
+        <div className="text-white font-bold text-xl">GridPass</div>
+        
+        {locations.map((location) => (
+          <Button 
+            key={location.name}
+            className={`${location.color} hover:scale-105 transition-all`}:hover
+            onClick={() => {
+              // Add click handler here
+            }}
+          >
+            <Zap className="w-4 h-4 text-white" />
+            {location.name}
+          </Button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+
+This implementation includes:
+- Responsive design that works on both desktop and mobile
+- Hover scaling effect with smooth transition
+- Clean grid layout for the navigation items
+- Proper spacing using Tailwind's utility classes
+- Dynamic content display based on the locations array
+
+You can customize the colors, spacing, and other properties by adjusting the Tailwind classes. The `Zap` icon is used consistently across all buttons while keeping the design simple and clean.
+
+To use this component, import it at the top of your file:
+
+
+import { NavigationBar } from './components/NavBar'
+
+
+And then use it in your main component:
+
+
+function HomePage() {
+  return (
+    <div className="min-h-screen bg-neutral-900">
+      <Navbar className="w-full h-12 bg-neutral-800">
+        <NavigationBar />
+      </Navbar>
+      {/* Your page content */}
+    </div>
+  )
+}

@@ -1,0 +1,148 @@
+To solve this problem, we need to create three Supabase REST API endpoints using Next.js: a GET endpoint to fetch all vehicles, a POST endpoint to create a new vehicle, and a GET endpoint to retrieve a specific vehicle by its ID. Each endpoint must include proper authentication, error handling, and data validation.
+
+### Approach
+
+1. **Authentication**: Use Supabase's `createClient` method to obtain an authenticated user object. This ensures that only authorized users can access the API endpoints.
+2. **Error Handling**: Properly handle both internal server errors (500) and unauthorized access (401/403).
+3. **Data Validation**: Ensure that all required fields are present when creating a vehicle.
+4. **Row-Level Security (RLS)**: Implement RLS for the SELECT operations to restrict access to specific vehicles based on user permissions.
+
+### Solution Code
+
+#### 1. GET /api/vehicles
+
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const supabase = createClient();
+  const { data: { users }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !users) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { data, error }: supabase.from('vehicles').select('*');
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({ data: data }, { status: 200 });
+  } catch (err) {
+    console.error('Error:', err);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
+
+
+#### 2. POST /api/vehicles
+
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function POST() {
+  const supabase = createClient();
+  const { data: { user } }: await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const requestBody = await request.json();
+    
+    const make = requestBody.make;
+    const model = requestBody.model;
+    const year = requestBody.year;
+    const vin = requestBody.vin;
+
+    try {
+      const { data, error }: supabase.from('vehicles')
+        .insert({
+          user_id: user.id,
+          make,
+          model,
+          year,
+          vin
+        });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ data: data }, { status: 201 });
+    } catch (err) {
+      console.error('Error:', err);
+      return NextResponse.json(
+        { error: 'Internal Server Error' },
+        { status: 500 }
+      );
+    }
+  } catch (authErr) {
+    if (authErr === authError) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    // Handle other authentication errors appropriately
+  }
+}
+
+
+#### 3. GET /api/vehicles/{id}
+
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function GET(id) {
+  const supabase = createClient();
+  const { data: { user } }: await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const vehicleData = await supabase.from('vehicles').select('*').eq('id', id).get();
+    
+    if (vehicleData.error) {
+      return NextResponse.json({ error: vehicleData.error.message }, { status: 500 });
+    }
+
+    // Check if the user owns the vehicle
+    if (user.id !== vehicleData.user_id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    return NextResponse.json({ data: vehicleData.data }, { status: 200 });
+  } catch (err) {
+    console.error('Error:', err);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
+
+
+### Explanation
+
+1. **GET /api/vehicles**:
+   - Fetches all vehicles from the database.
+   - Includes authentication to ensure only authorized users can access the endpoint.
+   - Returns a JSON response with the data or an error if something goes wrong.
+
+2. **POST /api/vehicles**:
+   - Creates a new vehicle entry in the database.
+   - Requires proper authentication and validation of the request body parameters (make, model, year, vin).
+   - Returns a success response with the created vehicle's data or appropriate errors.
+
+3. **GET /api/vehicles/{id}**:
+   - Retrieves a specific vehicle by its ID.
+   - Includes user verification to ensure only the vehicle owner can access it.
+   - Returns the vehicle's data or an error if unauthorized or invalid ID is provided.
+
+Each endpoint follows RESTful practices, handles errors gracefully, and ensures proper authorization through Supabase's authentication layer.

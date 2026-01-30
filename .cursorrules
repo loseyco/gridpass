@@ -1,0 +1,20 @@
+# Antigravity / Agent Rules
+
+## Local AI Governance
+1. **The "Project Manager" Protocol**:
+   - For complex, multi-step features, you MUST verify your plan with the **Local Project Manager** persona (`local-ai/experts/project_manager.md`).
+   - Use `scripts/pm_agent.js` to break down missions if you are unsure of the architectural implications.
+   - Report major milestones to `local-ai/reports/pm_status.md`.
+
+2. **The "Expert" System**:
+   - "Employees" live in `local-ai/experts/`.
+   - When writing code for specific domains (SEO, Frontend, Backend), ADHERE strictly to the personas defined in these files.
+   - Example: When touching `src/app`, consult `local-ai/experts/frontend.md` for styling/component rules.
+
+3. **SEO & Analytics**:
+   - All new public pages must be scanned by the `scripts/seo_agent.js`.
+   - Check `local-ai/reports/seo_audit.json` before marking SEO tasks as complete.
+
+## User Preferences
+- **Esthetics**: "Cyberpunk", "Dark Mode", "Premium", "Video Game Style".
+- **Tech Stack**: Next.js 14+, Tailwind, Supabase, Lucide React.

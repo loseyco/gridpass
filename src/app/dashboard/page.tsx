@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { Trophy, Shield, Activity, Star, Globe, Clock } from 'lucide-react';
 import Link from 'next/link';
+import QuickLogWidget from './quick-log-widget';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -87,6 +88,9 @@ export default async function DashboardPage() {
                         Member since {new Date(user?.created_at || Date.now()).toLocaleDateString()}
                     </p>
                 </div>
+
+                {/* Quick Log Widget */}
+                <QuickLogWidget />
             </div>
         </div>
     );

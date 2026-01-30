@@ -1,0 +1,65 @@
+To optimize GridPass pages for 2026, we'll implement a structured approach focusing on titles, descriptions, Open Graph tags, keywords, and code style. Here's the organized solution:
+
+### Title Optimization
+- **Format**: Use "Page Topic | GridPass" or dynamic "Entity Name | GridPass Profile".
+- **Example**: If it's about iRacing, use "iRacing Management | GridPass Profile".
+
+### Description Optimization
+- **Length**: Under 110 characters.
+- **Content**: Concise summary highlighting key points and benefits.
+
+### Open Graph Tags
+- **Type**: Use "website" for general pages, "profile" for profile-specific ones.
+- **Site Name**: Always include "GridPass".
+- **Image**: Include user avatar or vehicle image for profiles; use specific assets or default image for static pages.
+
+### AI & Semantic Search
+- **Clarity**: Ensure titles and descriptions clearly define the page content.
+- **Keywords**: Integrate "Sim Racing", "Management", "iRacing", "Motorsport", and "Team Logistics" naturally into metadata.
+
+### Code Implementation
+
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { 
+  topic: string;
+  name?: string; // For profile pages
+}) {
+  const pageTopic = params.topic || 'Home';
+  const entityName = params.name || undefined;
+
+  return metadata({
+    title: `Page Topic | GridPass`,
+    description: `Summary of Page Topic for GridPass`,
+    keywords: ['Sim Racing', 'Management', 'iRacing', 'Motorsport', 'Team Logistics'],
+    ogType: params.type || 'website',
+    ogSiteName: 'GridPass',
+    ogImage: params.name ? `/images/og-profile.jpg` : '/images/og-default.jpg',
+  });
+}
+
+function HomePage() {
+  return (
+    <div className="container">
+      <h1 className="text-3xl font-bold">Home</h1>
+      {/* Include generated metadata using generateMetadata */}
+    </div>
+  );
+}
+
+function PageEntity(params) {
+  return (
+    <div className="container">
+      {generateMetadata(params)} // Pass params to include entity-specific data
+    </div>
+  );
+}
+
+
+### Explanation
+- **Title and Description**: Ensure they are concise, keyword-rich, and optimized for both search engines and social media.
+- **Open Graph Tags**: Properly set up for maximum visibility across platforms.
+- **Keywords**: Integrate naturally to enhance SEO performance without keyword stuffing.
+- **Code Structure**: Uses TypeScript for type safety and Next.js metadata API for structured data optimization.
+
+This approach ensures all pages are optimized for 2026, leveraging the latest SEO practices with a focus on user experience and platform compatibility.

@@ -1,0 +1,54 @@
+I'll help you create a secure and scalable API route for fetching vehicles with optional filtering parameters. Here's how we can modify the vehicle endpoint:
+
+
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const supabase = createClient();
+  
+  // Check if user is authenticated
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } catch (autherr) {
+    console.error('Authentication error:', autherr);
+    return NextResponse.json({ error: 'Internal Server Error - Unauthorized' }, { status: 500 });
+  }
+
+  const params = new URLSearchParams(window.location.search);
+
+  // Get filter parameters
+  const sortBy = params.get('sortBy') || 'vin';
+  const pageSize = parseInt(params.get('pageSize')) || 10;
+
+  try {
+    const { data, error } = await supabase.from('vehicles')
+      .select('*', { 
+        orderBy: sortBy,
+        limit: pageSize
+      });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (err) {
+    console.error('Database error:', err);
+    return NextResponse.json({ error: 'Internal Server Error - Database Operation' }, { status: 500 });
+  }
+}
+
+
+This implementation includes:
+
+1. Authentication check using Supabase's createClient
+2. Optional sortBy parameter for sorting results
+3. pageSize parameter for pagination control
+4. Proper error handling for both auth and database operations
+5. Returns data in JSON format with proper status codes
+
+The API route follows your defined architecture rules while providing flexibility through optional parameters.

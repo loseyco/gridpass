@@ -1,0 +1,42 @@
+I'll help you create a sample API route using Supabase in Next.js. Let's create a basic endpoint to fetch all users from the 'users' table.
+
+
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const supabase = createClient();
+  
+  // Get authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return NextResponse.json({ 
+      error: 'Unauthorized'
+    }, { status: 401 });
+  }
+
+  // Fetch all users from the database
+  const { data, error } = await supabase.to('users').select('*');
+
+  if (error) {
+    return NextResponse.json({ 
+      error: error.message
+    }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    data: user
+  });
+}
+
+
+This endpoint follows the rules:
+1. Uses `createClient` for authentication
+2. Implements proper error handling with JSON responses
+3. Returns data in JSON format as per requirements
+4. Handles errors appropriately with status codes
+
+For a create operation, you would need to validate required fields and implement row-level security policies.
+
+Would you like me to provide an example of a create operation or another type of endpoint?

@@ -2,134 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Loader2, Save, User as UserIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Save, User as UserIcon, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import {
     Trophy, Wrench, Briefcase, User, MapPin,
-    FileText, Zap, Shield, Globe, Award, Phone, AlertTriangle
+    FileText, Zap, Shield, Globe, Award, Phone, AlertTriangle, History
 } from 'lucide-react';
+import CareerEditor from './career-editor';
+import { CareerEntry } from '@/types/career';
 
-// --- Field Definitions (Reused from Research) ---
-type FieldCategory = {
-    id: string;
-    title: string;
-    icon: any;
-    description: string;
-    db_column: string; // The JSONB column in DB
-    fields: { key: string; label: string; type: string; placeholder?: string, options?: string[] }[];
-};
-
-const SCHEMA_CATEGORIES: FieldCategory[] = [
-    {
-        id: 'basic',
-        title: 'Basic Info',
-        icon: User,
-        description: 'Public facing identity.',
-        db_column: 'basic', // Virtual column for top-level fields
-        fields: [
-            { key: 'username', label: 'Username', type: 'text', placeholder: 'racer123' },
-            { key: 'full_name', label: 'Full Name', type: 'text', placeholder: 'John Doe' },
-            { key: 'bio', label: 'Bio', type: 'textarea', placeholder: 'Tell us about yourself...' },
-            { key: 'website', label: 'Website', type: 'url', placeholder: 'https://...' },
-            { key: 'location', label: 'Location', type: 'text', placeholder: 'Austin, TX' },
-        ]
-    },
-    {
-        id: 'real_world',
-        title: 'Real World Driver',
-        icon: Award,
-        description: 'FIA/SCCA/NASA licenses and track experience.',
-        db_column: 'real_world_info',
-        fields: [
-            { key: 'organization', label: 'Sanctioning Body', type: 'text', placeholder: 'SCCA, NASA, FIA' },
-            { key: 'license_grade', label: 'License Grade', type: 'text', placeholder: 'Full Competition, Time Trial' },
-            { key: 'primary_series', label: 'Primary Series', type: 'text', placeholder: 'Spec Miata, IMSA' },
-            { key: 'car_number', label: 'Car Number', type: 'text', placeholder: '#42' },
-            { key: 'years_racing', label: 'Years Competed', type: 'number', placeholder: '3' },
-            { key: 'home_track', label: 'Home Circuit', type: 'text', placeholder: 'Road Atlanta' },
-            { key: 'achievements', label: 'Race Wins / Titles', type: 'textarea', placeholder: '2023 Regional Champion...' }
-        ]
-    },
-    {
-        id: 'driver',
-        title: 'Sim Driver (iRacing)',
-        icon: Trophy,
-        description: 'Your iRacing stats and license info.',
-        db_column: 'driver_info',
-        fields: [
-            { key: 'iracing_id', label: 'iRacing Customer ID', type: 'number', placeholder: '123456' },
-            { key: 'license_class', label: 'License Class', type: 'select', options: ['Rookie', 'D', 'C', 'B', 'A', 'Pro', 'WC'] },
-            { key: 'irating', label: 'iRating', type: 'number', placeholder: '2500' },
-            { key: 'safety_rating', label: 'Safety Rating', type: 'text', placeholder: 'A 4.99' },
-            { key: 'home_track', label: 'Home Track', type: 'text', placeholder: 'Circuit of the Americas' },
-            { key: 'years_racing', label: 'Years Racing', type: 'number', placeholder: '5' },
-            { key: 'achievements', label: 'Key Achievements', type: 'textarea', placeholder: '2024 Season Champion...' }
-        ]
-    },
-    {
-        id: 'mechanic',
-        title: 'Mechanic / Crew',
-        icon: Wrench,
-        description: 'For shop staff, pit crew, and engineers.',
-        db_column: 'mechanic_info',
-        fields: [
-            { key: 'specialties', label: 'Specialties', type: 'text', placeholder: 'Engine Building, Suspension, Fab' },
-            { key: 'years_wrenching', label: 'Years Experience', type: 'number', placeholder: '10' },
-            { key: 'own_tools', label: 'Has Own Tools?', type: 'checkbox' },
-            { key: 'tool_box_size', label: 'Tool Storage Size', type: 'text', placeholder: 'Triple Bay Snap-on' },
-            { key: 'willing_to_travel', label: 'Willing to Travel?', type: 'checkbox' }
-        ]
-    },
-    {
-        id: 'physical',
-        title: 'Physical & Gear',
-        icon: User,
-        description: 'Vital stats for team gear and cockpit fitting.',
-        db_column: 'physical_info',
-        fields: [
-            { key: 'helmet_size', label: 'Helmet Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] },
-            { key: 'suit_size', label: 'Suit Size', type: 'text', placeholder: '52 Euro / 42 US' },
-            { key: 'shoe_size', label: 'Shoe Size', type: 'number', placeholder: '10.5' },
-            { key: 'glove_size', label: 'Glove Size', type: 'select', options: ['S', 'M', 'L', 'XL'] },
-            { key: 'blood_type', label: 'Blood Type', type: 'text', placeholder: 'O+' },
-            { key: 'allergies', label: 'Medical Allergies', type: 'text', placeholder: 'Latex, Penicillin' }
-        ]
-    },
-    {
-        id: 'logistics',
-        title: 'Logistics',
-        icon: Briefcase,
-        description: 'Travel and employment eligibility.',
-        db_column: 'logistics_info',
-        fields: [
-            { key: 'home_airport', label: 'Home Airport Code', type: 'text', placeholder: 'AUS' },
-            { key: 'passport_status', label: 'Passport Valid?', type: 'checkbox' },
-            { key: 'drivers_license_state', label: 'DL State', type: 'text', placeholder: 'TX' },
-            { key: 'languages', label: 'Languages Spoken', type: 'text', placeholder: 'English, Spanish' }
-        ]
-    },
-    {
-        id: 'emergency',
-        title: 'Emergency Contact',
-        icon: AlertTriangle,
-        description: 'Who to call in case of an incident.',
-        db_column: 'emergency_contact',
-        fields: [
-            { key: 'name', label: 'Contact Name', type: 'text', placeholder: 'Jane Doe' },
-            { key: 'relation', label: 'Relationship', type: 'text', placeholder: 'Spouse' },
-            { key: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+1 555-0123' },
-            { key: 'email', label: 'Email', type: 'email', placeholder: 'jane@example.com' }
-        ]
-    }
-];
+import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
 
 export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [activeSection, setActiveSection] = useState<string>('basic');
+    const [savingSection, setSavingSection] = useState<string | null>(null);
+    const [savedSection, setSavedSection] = useState<string | null>(null);
 
     // Store all data in a flat state for now, but we'll map it back to JSONBs on save
     const [formData, setFormData] = useState<any>({});
+    const [careerHistory, setCareerHistory] = useState<CareerEntry[]>([]);
 
     const supabase = createClient();
 
@@ -161,8 +54,10 @@ export default function ProfilePage() {
                     ...data.mechanic_info,
                     ...data.physical_info,
                     ...data.logistics_info,
+                    ...data.logistics_info,
                     ...data.emergency_contact,
                 });
+                setCareerHistory(data.career_history || []);
             }
             setIsLoading(false);
         };
@@ -173,9 +68,37 @@ export default function ProfilePage() {
         setFormData((prev: any) => ({ ...prev, [key]: value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
+    // Auto-save wrapper for career history
+    const handleCareerUpdate = async (newHistory: CareerEntry[]) => {
+        setCareerHistory(newHistory);
+
+        // Optimistic update locally, then background save
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    career_history: newHistory,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) {
+                setMessage({ type: 'error', text: 'Failed to save career changes' });
+            }
+        } catch (e) {
+            console.error('Auto-save failed', e);
+        }
+    };
+
+    const handleSave = async (sectionId?: string) => {
+        if (sectionId) {
+            setSavingSection(sectionId);
+        } else {
+            setIsSaving(true);
+        }
         setMessage(null);
 
         try {
@@ -202,6 +125,7 @@ export default function ProfilePage() {
                 physical_info: extractFields('physical', formData),
                 logistics_info: extractFields('logistics', formData),
                 emergency_contact: extractFields('emergency', formData),
+                career_history: careerHistory,
             };
 
             const { error } = await supabase
@@ -209,16 +133,26 @@ export default function ProfilePage() {
                 .upsert(updates);
 
             if (error) throw error;
-            setMessage({ type: 'success', text: 'Profile updated successfully!' });
 
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (sectionId) {
+                setSavedSection(sectionId);
+                setTimeout(() => setSavedSection(null), 3000);
+            } else {
+                setMessage({ type: 'success', text: 'Profile updated successfully!' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
 
         } catch (error: any) {
             setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
         } finally {
             setIsSaving(false);
+            setSavingSection(null);
         }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleSave();
     };
 
     // Helper to extract specific fields for a category from the flat form data
@@ -250,14 +184,24 @@ export default function ProfilePage() {
                     <h1 className="text-3xl font-bold">Edit Profile</h1>
                     <p className="text-neutral-400">Manage your identity across the GridPass ecosystem.</p>
                 </div>
-                <button
-                    onClick={handleSubmit}
-                    disabled={isSaving}
-                    className="bg-white text-black font-bold px-6 py-2 rounded hover:bg-neutral-200 transition-colors flex items-center gap-2 disabled:opacity-50"
-                >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save Changes
-                </button>
+                <div className="flex gap-2">
+                    <a
+                        href={`/u/${formData.username}`}
+                        target="_blank"
+                        className="bg-neutral-800 text-neutral-300 font-bold px-4 py-2 rounded hover:bg-neutral-700 transition-colors flex items-center gap-2 border border-white/5"
+                    >
+                        <UserIcon className="w-4 h-4" />
+                        View Public Profile
+                    </a>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isSaving}
+                        className="bg-white text-black font-bold px-6 py-2 rounded hover:bg-neutral-200 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Save Changes
+                    </button>
+                </div>
             </div>
 
             {message && (
@@ -283,6 +227,17 @@ export default function ProfilePage() {
                         </button>
                     ))}
 
+                    <button
+                        onClick={() => setActiveSection('career')}
+                        className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium ${activeSection === 'career'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                            }`}
+                    >
+                        <History className="w-4 h-4" />
+                        Career Timeline
+                    </button>
+
                     <div className="pt-4 mt-4 border-t border-white/5">
                         <div className="px-4 text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Integrations</div>
                         <button className="w-full text-left px-4 py-2 rounded flex items-center gap-3 text-neutral-500 cursor-not-allowed opacity-50">
@@ -294,73 +249,90 @@ export default function ProfilePage() {
 
                 {/* Form Content */}
                 <div className="lg:col-span-3 space-y-6">
-                    {SCHEMA_CATEGORIES.map(cat => (
-                        // Show only active section for cleaner UI (could also do one long scroll)
-                        activeSection === cat.id && (
-                            <div key={cat.id} className="bg-neutral-900 border border-white/5 rounded-xl p-6 md:p-8 animate-fade-in">
-                                <div className="flex items-start justify-between mb-6">
-                                    <div>
-                                        <h2 className="text-xl font-bold flex items-center gap-2">
-                                            {cat.title}
-                                        </h2>
-                                        <p className="text-sm text-neutral-400 mt-1">{cat.description}</p>
+                    {activeSection === 'career' ? (
+                        <CareerEditor entries={careerHistory} onChange={handleCareerUpdate} />
+                    ) : (
+                        SCHEMA_CATEGORIES.map(cat => (
+                            // Show only active section for cleaner UI (could also do one long scroll)
+                            activeSection === cat.id && (
+                                <div key={cat.id} className="bg-neutral-900 border border-white/5 rounded-xl p-6 md:p-8 animate-fade-in">
+                                    <div className="flex items-start justify-between mb-6">
+                                        <div>
+                                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                                {cat.title}
+                                            </h2>
+                                            <p className="text-sm text-neutral-400 mt-1">{cat.description}</p>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            {savedSection === cat.id && (
+                                                <span className="text-sm text-emerald-500 font-bold flex items-center gap-1 animate-fade-in">
+                                                    <Check className="w-4 h-4" /> Saved!
+                                                </span>
+                                            )}
+                                            <button
+                                                onClick={() => handleSave(cat.id)}
+                                                disabled={isSaving || savingSection === cat.id}
+                                                className="text-sm bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                                            >
+                                                {savingSection === cat.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+                                            </button>
+                                        </div>
                                     </div>
-                                    <cat.icon className="w-5 h-5 text-neutral-500" />
-                                </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {cat.fields.map(field => (
-                                        <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                                            <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
-                                                {field.label}
-                                            </label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {cat.fields.map(field => (
+                                            <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
+                                                <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                                                    {field.label}
+                                                </label>
 
-                                            {field.type === 'textarea' ? (
-                                                <textarea
-                                                    value={formData[field.key] || ''}
-                                                    onChange={(e) => handleChange(field.key, e.target.value)}
-                                                    className="w-full bg-neutral-950 border border-white/10 p-3 rounded text-white focus:border-indigo-500 outline-none resize-none min-h-[100px]"
-                                                    placeholder={field.placeholder}
-                                                />
-                                            ) : field.type === 'select' ? (
-                                                <div className="relative">
-                                                    <select
+                                                {field.type === 'textarea' ? (
+                                                    <textarea
                                                         value={formData[field.key] || ''}
                                                         onChange={(e) => handleChange(field.key, e.target.value)}
-                                                        className="w-full bg-neutral-950 border border-white/10 p-3 rounded text-white focus:border-indigo-500 outline-none appearance-none"
-                                                    >
-                                                        <option value="">Select...</option>
-                                                        {field.options?.map(opt => (
-                                                            <option key={opt} value={opt}>{opt}</option>
-                                                        ))}
-                                                    </select>
-                                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
-                                                </div>
-                                            ) : field.type === 'checkbox' ? (
-                                                <label className="flex items-center gap-3 p-3 bg-neutral-950 border border-white/10 rounded cursor-pointer hover:border-white/20">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData[field.key] === true}
-                                                        onChange={(e) => handleChange(field.key, e.target.checked)}
-                                                        className="w-5 h-5 rounded border-neutral-700 bg-neutral-900 text-indigo-600 focus:ring-indigo-500"
+                                                        className="w-full bg-neutral-950 border border-white/10 p-3 rounded text-white focus:border-indigo-500 outline-none resize-none min-h-[100px]"
+                                                        placeholder={field.placeholder}
                                                     />
-                                                    <span className="text-sm text-neutral-300">{field.placeholder || "Yes"}</span>
-                                                </label>
-                                            ) : (
-                                                <input
-                                                    type={field.type}
-                                                    value={formData[field.key] || ''}
-                                                    onChange={(e) => handleChange(field.key, e.target.value)}
-                                                    className="w-full bg-neutral-950 border border-white/10 p-3 rounded text-white focus:border-indigo-500 outline-none"
-                                                    placeholder={field.placeholder}
-                                                />
-                                            )}
-                                        </div>
-                                    ))}
+                                                ) : field.type === 'select' ? (
+                                                    <div className="relative">
+                                                        <select
+                                                            value={formData[field.key] || ''}
+                                                            onChange={(e) => handleChange(field.key, e.target.value)}
+                                                            className="w-full bg-neutral-950 border border-white/10 p-3 rounded text-white focus:border-indigo-500 outline-none appearance-none"
+                                                        >
+                                                            <option value="">Select...</option>
+                                                            {field.options?.map(opt => (
+                                                                <option key={opt} value={opt}>{opt}</option>
+                                                            ))}
+                                                        </select>
+                                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+                                                    </div>
+                                                ) : field.type === 'checkbox' ? (
+                                                    <label className="flex items-center gap-3 p-3 bg-neutral-950 border border-white/10 rounded cursor-pointer hover:border-white/20">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData[field.key] === true}
+                                                            onChange={(e) => handleChange(field.key, e.target.checked)}
+                                                            className="w-5 h-5 rounded border-neutral-700 bg-neutral-900 text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                        <span className="text-sm text-neutral-300">{field.placeholder || "Yes"}</span>
+                                                    </label>
+                                                ) : (
+                                                    <input
+                                                        type={field.type}
+                                                        value={formData[field.key] || ''}
+                                                        onChange={(e) => handleChange(field.key, e.target.value)}
+                                                        className="w-full bg-neutral-950 border border-white/10 p-3 rounded text-white focus:border-indigo-500 outline-none"
+                                                        placeholder={field.placeholder}
+                                                    />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    ))}
+                            )
+                        ))
+                    )}
                 </div>
             </div>
         </div>

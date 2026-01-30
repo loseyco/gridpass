@@ -260,13 +260,15 @@ export default function FounderRegisterPage() {
                             <div className="text-center text-xs text-neutral-500 mb-4">* Mock Payment System Active</div>
 
                             <button
-                                onClick={handlePayment}
-                                disabled={isLoading}
-                                className="w-full bg-amber-500 text-black font-bold py-4 rounded hover:bg-amber-400 transition-colors flex justify-center items-center gap-2"
+                                disabled={true}
+                                className="w-full bg-neutral-800 text-neutral-400 font-bold py-4 rounded cursor-not-allowed flex justify-center items-center gap-2 border border-white/5"
                             >
-                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-4 h-4" />}
-                                {isLoading ? 'Processing...' : 'Pay $1,500 & Join GridPass'}
+                                <Lock className="w-4 h-4" />
+                                Applications Temporarily Paused
                             </button>
+                            <p className="text-center text-xs text-amber-500 mt-2 font-medium">
+                                We are updating our payment processor. Please check back in 24 hours.
+                            </p>
 
                             <button onClick={() => setStep('details')} className="w-full text-neutral-500 text-sm hover:text-white mt-4">
                                 Back to Details

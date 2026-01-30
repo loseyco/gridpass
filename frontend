@@ -1,0 +1,78 @@
+I'll help you create an example card-based layout that follows GridPass's design system. Here's a sample implementation using Next.js and Tailwind CSS:
+
+
+import { Zap } from 'lucide-react';
+
+interface FeatureCard {
+  title: string;
+  description: string;
+  action: string;
+}
+
+export default function CardList<T extends Record<string, any>|null = null> {
+  if (!T) T = [];
+  
+  return (
+    <div className="flex flex-col space-y-4">
+      {T.map((item, index) => (
+        <div key={index} className="bg-neutral-900 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+          <Zap className="w-12 h-12 text-amber-500 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+          <p className="text-neutral-400">{item.description}</p>
+          
+          <div className="flex gap-2">
+            {item.action.split(',').map((btn, i) => (
+              <button 
+                key={i}
+                className={`w-full text-left px-4 py-2 rounded-md transition-all ${
+                  item.action.includes('premium') ? 'bg-amber-500 hover:bg-amber-400' :
+                  item.action.includes('verified') ? 'bg-emerald-500 hover:bg-emerald-400' :
+                  'bg-red-500 hover:bg-red-400'
+                }`}
+              >
+                {btn}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function FeatureCardList() {
+  return (
+    <FeatureCard[]>
+      // Sample data
+      [
+        {
+          title: "Premium Features",
+          description: "Enhanced security and performance features",
+          action: "Upgrade"
+        },
+        {
+          title: "Safe Navigation",
+          description: "Protected browsing experience",
+          action: "Verify"
+        },
+        {
+          title: "Tech Specs",
+          description: "Detailed technical specifications",
+          action: "Action"
+        }
+      ]
+    </FeatureCard[]>
+  );
+}
+
+
+This example includes:
+- Dark mode colors from the GridPass design system
+- Amber, Emerald, and Red accent colors for different actions/types
+- Hover states with smooth transitions
+- Responsive grid layout
+- Clean card-based design instead of dense tables
+- Interactive buttons with appropriate color schemes
+- Proper spacing and typography according to the design system
+
+You can reuse this structure by passing your data through the `FeatureCardList` component, making it highly reusable for different sections (Features, Offers, Stats, etc.).
