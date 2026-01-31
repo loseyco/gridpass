@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { requireRole, ROLES } from '@/utils/rbac';
+import UserRoleSelect from './UserRoleSelect';
 
 export default async function UsersPage() {
     const isSuperAdmin = await requireRole(ROLES.SUPERADMIN);
@@ -61,14 +62,7 @@ export default async function UsersPage() {
                                         {new Date(profile.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="p-4 text-right">
-                                        <form action={async () => {
-                                            'use server'
-                                            // Placeholder
-                                        }}>
-                                            <button className="text-indigo-400 text-sm font-bold hover:text-indigo-300">
-                                                Edit Role
-                                            </button>
-                                        </form>
+                                        <UserRoleSelect userId={profile.id} currentRole={profile.role} />
                                     </td>
                                 </tr>
                             ))}
