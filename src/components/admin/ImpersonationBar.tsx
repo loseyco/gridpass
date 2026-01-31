@@ -27,7 +27,7 @@ export default function AdminHUD({ currentRole: role }: { currentRole: any }) {
 
     // Track View on Mount
     useEffect(() => {
-        if (currentRole === 'superadmin') {
+        if (role === 'superadmin') {
             trackPageView(pathname, window.navigator.userAgent).then(() => {
                 getPageStats(pathname).then(data => {
                     if (data) setStats(data);
