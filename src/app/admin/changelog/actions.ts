@@ -64,7 +64,17 @@ export async function saveChangelog(formData: FormData) {
         published_at: published_at || new Date().toISOString(),
     };
 
+    let error;
     if (id && id !== 'new') {
+        const { error: updateError } = await supabase
+            .from('changelogs')
+            .update(payload)
+            .eq('id', id);
+        error = updateError;
+    } else {
+        const { error: insertError } = await supabase
+            .from('changelogs')
+            .insert(payload);
         error = insertError;
     }
 
