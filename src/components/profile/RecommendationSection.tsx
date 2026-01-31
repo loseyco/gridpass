@@ -67,7 +67,11 @@ export default async function RecommendationSection({ targetUserId, targetName }
                                     </div>
                                     <div className="text-xs text-neutral-500 flex items-center gap-1.5 print:text-gray-600">
                                         <span>{rec.relationship}</span>
-                                        {rec.author && <ShieldCheck className="w-3 h-3 text-indigo-400" title="Verified GridPass Member" />}
+                                        {rec.author && (
+                                            <span title="Verified GridPass Member">
+                                                <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
