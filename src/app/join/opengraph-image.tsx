@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { createClient } from '@/utils/supabase/server';
+
 
 export const runtime = 'edge';
 
@@ -15,14 +15,37 @@ export default async function Image({ searchParams }: { searchParams: { token?: 
     // 1. Fetch Invite Data
     const { token } = searchParams;
     let role = 'MEMBER';
+    let note: string | null = null;
     let valid = false;
 
     if (token) {
-        const supabase = await createClient();
-        const { data } = await supabase.rpc('get_invite_by_token', { lookup_token: token });
-        if (data && !data.used_at) {
-            role = data.role || 'MEMBER';
-            valid = true;
+        // Use direct fetch to avoid cookie issues on Edge Runtime
+        try {
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+            if (supabaseUrl && supabaseKey) {
+                const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_invite_by_token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`
+                    },
+                    body: JSON.stringify({ lookup_token: token })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && !data.used_at) {
+                        role = data.role || 'MEMBER';
+                        note = data.note || null;
+                        valid = true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('OG Image Fetch Error:', e);
         }
     }
 
@@ -111,11 +134,24 @@ export default async function Image({ searchParams }: { searchParams: { token?: 
                                 textTransform: 'uppercase',
                                 letterSpacing: '-2px',
                                 lineHeight: '1',
-                                marginBottom: '24px',
+                                marginBottom: '16px',
                                 textShadow: `0 0 20px ${accentColor}40`,
                             }}>
                                 {role}
                             </div>
+
+                            {note && (
+                                <div style={{
+                                    fontSize: '32px',
+                                    fontWeight: 700,
+                                    color: '#fff',
+                                    marginBottom: '24px',
+                                    fontStyle: 'italic',
+                                    opacity: 0.9,
+                                }}>
+                                    For: {note}
+                                </div>
+                            )}
 
                             <div style={{
                                 display: 'flex',
