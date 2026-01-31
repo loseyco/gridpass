@@ -24,7 +24,7 @@ export default async function DashboardPage() {
         .eq('role', 'Founder')
         .single();
 
-    const isFounder = !!founderRole;
+    const isFounder = !!founderRole || profile?.role?.toLowerCase() === 'founder';
 
     return (
         <div className="space-y-8 animate-fade-in">

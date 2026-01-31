@@ -42,7 +42,12 @@ export default function FeatureCardClient({ feature, onEdit }: { feature: Featur
 
     async function handleDelete() {
         if (confirm('Are you sure you want to delete this feature?')) {
-            await deleteFeature(feature.id);
+            try {
+                await deleteFeature(feature.id);
+            } catch (error: any) {
+                alert(`Failed to delete: ${error.message}`);
+                console.error("Delete failed:", error);
+            }
         }
     }
 

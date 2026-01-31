@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2, UserPlus, ChevronRight, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { notifyNewUser } from '@/app/actions/auth';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { notifyNewUser, registerUser } from '@/app/actions/auth';
 
 export default function RegisterForm() {
     const [isLoading, setIsLoading] = useState(false);
@@ -13,6 +13,7 @@ export default function RegisterForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const router = useRouter();
+    const searchParams = useSearchParams();
     const supabase = createClient();
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -21,20 +22,25 @@ export default function RegisterForm() {
         setError(null);
 
         try {
-            const { error: signUpError } = await supabase.auth.signUp({
+            // 1. Create User via Server Action (Bypasses Email Verification)
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', password);
+
+            const result = await registerUser(formData);
+            if (result.error) throw new Error(result.error);
+
+            // 2. Sign In Immediately (Since email is auto-confirmed)
+            const { error: signInError } = await supabase.auth.signInWithPassword({
                 email,
-                password,
-                options: {
-                    emailRedirectTo: `${location.origin}/auth/callback`,
-                },
+                password
             });
 
-            if (signUpError) throw signUpError;
+            if (signInError) throw signInError;
 
-            // Notify Admin
-            await notifyNewUser(email);
-
-            router.push('/dashboard?welcome=true');
+            // 3. Redirect
+            const next = searchParams.get('next');
+            router.push(next || '/dashboard?welcome=true');
         } catch (err: any) {
             setError(err.message || 'Failed to register');
         } finally {

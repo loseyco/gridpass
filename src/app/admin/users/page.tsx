@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { requireRole, ROLES } from '@/utils/rbac';
 import UserRoleSelect from './UserRoleSelect';
+import UserBanToggle from './UserBanToggle';
 
 export default async function UsersPage() {
     const isSuperAdmin = await requireRole(ROLES.SUPERADMIN);
@@ -61,7 +62,8 @@ export default async function UsersPage() {
                                     <td className="p-4 text-sm text-neutral-400">
                                         {new Date(profile.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="p-4 text-right">
+                                    <td className="p-4 text-right flex items-center justify-end gap-3">
+                                        <UserBanToggle userId={profile.id} isBanned={profile.is_banned} />
                                         <UserRoleSelect userId={profile.id} currentRole={profile.role} />
                                     </td>
                                 </tr>

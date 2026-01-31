@@ -15,10 +15,11 @@ export const metadata: Metadata = {
 export default async function MembersPage() {
     const supabase = await createClient();
 
-    // Fetch all profiles
+    // Fetch all profiles (exclude banned)
     const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
+        .not('is_banned', 'is', true)
         .order('created_at', { ascending: false });
 
     // Fetch all roles

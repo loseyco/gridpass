@@ -57,9 +57,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/founder" className="text-amber-500 hover:text-amber-400 transition-colors text-sm font-bold uppercase tracking-wide">
                             Founding 50
                         </Link>
-                        <Link href="/classifieds" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
-                            Classifieds
-                        </Link>
+
 
                         {showLoggedIn ? (
                             <div className="flex items-center gap-4">

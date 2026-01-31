@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ImpersonationBarWrapper from "@/components/admin/ImpersonationBarWrapper";
+import SuspendedBannerWrapper from "@/components/SuspendedBannerWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default async function RootLayout({
       >
         <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
+        <SuspendedBannerWrapper />
         {children}
       </body>
     </html>

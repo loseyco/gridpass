@@ -5,11 +5,11 @@ export const FOUNDER_LIMIT = 50;
 export async function getFounderCount() {
     const supabase = await createClient();
 
-    // Count user roles with role_type 'Founder'
+    // Count user roles with role_type 'Founder' in profiles
     const { count, error } = await supabase
-        .from('roles')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('role', 'Founder');
+        .eq('role', 'founder');
 
     if (error) {
         console.error('Error fetching founder count:', error);

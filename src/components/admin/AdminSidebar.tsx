@@ -12,7 +12,8 @@ import {
     Settings,
     LogOut,
     FileText,
-    ShoppingBag
+    ShoppingBag,
+    Ticket
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -21,6 +22,7 @@ const MENU_ITEMS = [
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Roles', href: '/admin/roles', icon: Shield },
     { name: 'Features', href: '/admin/features', icon: Lightbulb },
+    { name: 'Invites', href: '/admin/invites', icon: Ticket },
     { name: 'Classifieds', href: '/admin/classifieds', icon: ShoppingBag },
     { name: 'Database', href: '/admin/database', icon: Database },
 ];
