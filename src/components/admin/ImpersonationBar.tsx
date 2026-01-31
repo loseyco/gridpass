@@ -22,7 +22,7 @@ export default function AdminHUD({ currentRole: role }: { currentRole: any }) {
     } | null>(null);
 
     // SEO Form State
-    const [seoForm, setSeoForm] = useState({ title: '', description: '', image_url: '' });
+    const [seoForm, setSeoForm] = useState({ title: '', description: '', image_url: '', required_role: 'public', no_index: false });
     const [seoLoading, setSeoLoading] = useState(false);
 
     // Track View on Mount
@@ -265,13 +265,42 @@ export default function AdminHUD({ currentRole: role }: { currentRole: any }) {
                                 />
                             </div>
 
+                            <div className="pt-2 border-t border-white/5">
+                                <div className="text-[10px] text-neutral-500 uppercase font-bold mb-2">Access & Security</div>
+
+                                <div className="mb-2">
+                                    <label className="text-[10px] text-neutral-400 block mb-1">Required Role</label>
+                                    <select
+                                        value={seoForm.required_role}
+                                        onChange={(e) => setSeoForm({ ...seoForm, required_role: e.target.value })}
+                                        className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                                    >
+                                        <option value="public">Public (Default)</option>
+                                        <option value="authenticated">Authenticated Only</option>
+                                        <option value="founder">Founder Only</option>
+                                        <option value="admin">Admin Only</option>
+                                        <option value="superadmin">Superadmin Only</option>
+                                    </select>
+                                </div>
+
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={seoForm.no_index}
+                                        onChange={(e) => setSeoForm({ ...seoForm, no_index: e.target.checked })}
+                                        className="rounded border-white/10 bg-black/40 text-indigo-500 focus:ring-offset-0 focus:ring-1 focus:ring-indigo-500"
+                                    />
+                                    <span className="text-[10px] text-neutral-400">No Index (Hide from Search)</span>
+                                </label>
+                            </div>
+
                             <button
                                 disabled={seoLoading}
                                 onClick={handleSaveSEO}
                                 className="w-full px-3 py-2 text-xs font-bold rounded bg-indigo-600 text-white hover:bg-indigo-500 transition-all flex items-center justify-center gap-2 mt-2"
                             >
                                 {seoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                                Save Overrides
+                                Save Settings
                             </button>
                         </div>
                     )}

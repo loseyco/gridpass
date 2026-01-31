@@ -46,7 +46,7 @@ export async function getPageStats(path: string) {
     return { summary, events };
 }
 
-export async function updatePageSEO(path: string, data: { title: string, description: string, image_url: string }) {
+export async function updatePageSEO(path: string, data: { title: string, description: string, image_url: string, required_role?: string, no_index?: boolean }) {
     const supabase = await createClient();
     // Simplified security: relying on Admin Layout / Middleware for now, 
     // but HUD checks superadmin status too.
@@ -61,9 +61,53 @@ export async function updatePageSEO(path: string, data: { title: string, descrip
             path,
             title: data.title,
             description: data.description,
-            image_url: data.image_url
+            image_url: data.image_url,
+            required_role: data.required_role || 'public',
+            no_index: data.no_index || false
         });
 
     if (error) throw new Error(error.message);
     return { success: true };
+}
+
+export async function getAllPageStats() {
+    const supabase = await createClient();
+
+    try {
+        // Fetch SEO metadata
+        const { data: seoList, error: seoError } = await supabase
+            .from('page_seo')
+            .select('*');
+
+        if (seoError) throw new Error(seoError.message);
+
+        // Fetch Analytics Summary
+        const { data: analyticsList, error: analyticsError } = await supabase
+            .from('page_analytics')
+            .select('*');
+
+        if (analyticsError) throw new Error(analyticsError.message);
+
+        // Combine Data (Left Join logic on Application Layer)
+        // We want a list of ALL pages that have either SEO or Analytics data.
+        const combined = new Map();
+
+        seoList?.forEach(item => {
+            combined.set(item.path, { ...item, type: 'static' }); // Default type
+        });
+
+        analyticsList?.forEach(item => {
+            const existing = combined.get(item.path) || { path: item.path, required_role: 'public', title: 'Untitled' };
+            combined.set(item.path, {
+                ...existing,
+                visits: item.visits,
+                last_visited: item.last_visited
+            });
+        });
+
+        return Array.from(combined.values()).sort((a, b) => b.visits - a.visits);
+    } catch (error) {
+        console.error('getAllPageStats error:', error);
+        return []; // Return empty array on failure to prevent page crash
+    }
 }

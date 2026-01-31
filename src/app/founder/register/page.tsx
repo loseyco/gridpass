@@ -1,15 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, CreditCard, Lock, Check, Loader2, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { Shield, CreditCard, Lock, Check, Loader2, ChevronRight, X } from 'lucide-react';
 import Image from 'next/image';
 import { createClient } from '@/utils/supabase/client';
+import { loadStripe } from '@stripe/stripe-js';
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+
+// Initialize Stripe loader (only once)
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function FounderRegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [step, setStep] = useState<'details' | 'payment'>('details');
     const [isLogin, setIsLogin] = useState(false);
+
+    // Embedded Checkout State
+    const [clientSecret, setClientSecret] = useState<string | null>(null);
+    const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
     const [form, setForm] = useState({
         firstName: '',
@@ -22,29 +30,45 @@ export default function FounderRegisterPage() {
     const supabase = createClient();
     const [spotsRemaining, setSpotsRemaining] = useState<number | null>(null);
 
-    // Fetch live spot count
+    // Check if user is already a founder
+    const [isFounder, setIsFounder] = useState(false);
+
+    // Fetch live spot count & User Profile
     useEffect(() => {
         fetch('/api/founder/count')
             .then(res => res.json())
             .then(data => setSpotsRemaining(data.remaining))
             .catch(err => console.error('Failed to fetch founder count:', err));
 
-        // Auto-advance if logged in
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        const checkUserStatus = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                setIsLogin(false); // Ensure we are not in login mode visually
+                setIsLogin(false);
                 setStep('payment');
+
+                // Check Profile Role
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (profile?.role === 'founder') {
+                    setIsFounder(true);
+                }
             }
-        });
+        };
+
+        checkUserStatus();
     }, []);
 
 
     const handleSubmitDetails = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
 
         if (isLogin) {
             // LOGIN FLOW
-            setIsLoading(true);
             const { error } = await supabase.auth.signInWithPassword({
                 email: form.email,
                 password: form.password
@@ -54,59 +78,99 @@ export default function FounderRegisterPage() {
                 alert('Login Failed: ' + error.message);
                 return;
             }
-            // Move to payment on success
             setStep('payment');
         } else {
             // REGISTER FLOW
-            // We verify details locally? Or just let API handle it?
-            // Actually, for Register, we just collect data here and pass to API in next step?
-            // Wait, we want to create/register USER first? Or do it all in one go?
-            // The original plan was all in one go.
-            // But if we want to confirm email is unique before payment?
-            // Let's keep it simple: Just move to Payment step, and let handlePayment do the work?
-            // detailed in previous steps.
+            const { data, error } = await supabase.auth.signUp({
+                email: form.email,
+                password: form.password,
+                options: {
+                    data: {
+                        first_name: form.firstName,
+                        last_name: form.lastName,
+                        full_name: `${form.firstName} ${form.lastName}`.trim()
+                    }
+                }
+            });
+
+            setIsLoading(false);
+
+            if (error) {
+                alert('Registration Failed: ' + error.message);
+                return;
+            }
+
             setStep('payment');
         }
     };
 
-    const handlePayment = async () => {
+    const handleStripeCheckout = async () => {
         setIsLoading(true);
         try {
-            // Check if we have a session (logged in)
             const { data: { session } } = await supabase.auth.getSession();
+            const userId = session?.user?.id;
+            const email = session?.user?.email || form.email;
 
-            // Prepare payload
-            // If logged in, we might not need firstName/lastName if they are already in DB?
-            // But sending them doesn't hurt.
-            const payload = {
-                firstName: form.firstName,
-                lastName: form.lastName,
-                email: form.email, // If logged in, email might differ? Should use session email? 
-                // For now, assume form matches or ignored if session exists.
-                password: form.password
-            };
+            if (!userId) {
+                alert('User session not found. Please log in again.');
+                setStep('details');
+                setIsLoading(false);
+                return;
+            }
 
-            const res = await fetch('/api/founder/join', {
+            // Call internal API to create Stripe Session (Embedded)
+            const res = await fetch('/api/stripe/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ userId, email }),
             });
 
-            if (res.ok) {
-                window.location.href = '/founder/welcome';
-            } else {
-                const data = await res.json();
-                alert('Registration/Payment Failed: ' + (data.error || 'Unknown Error'));
-            }
-        } catch (e) {
-            alert('Error processing request');
+            const { clientSecret, error } = await res.json();
+
+            if (error) throw new Error(error);
+
+            // Open Modal with Embedded Checkout
+            setClientSecret(clientSecret);
+            setShowCheckoutModal(true);
+
+        } catch (err: any) {
+            console.error('Payment Error:', err);
+            alert('Failed to initialize payment: ' + err.message);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white font-sans flex flex-col md:flex-row">
+        <div className="min-h-screen bg-neutral-950 text-white font-sans flex flex-col md:flex-row relative">
+
+            {/* EMBEDDED CHECKOUT MODAL */}
+            {showCheckoutModal && clientSecret && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowCheckoutModal(false)} />
+
+                    {/* Modal Content */}
+                    <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden animate-fade-in max-h-[90vh] overflow-y-auto">
+                        <div className="p-4 bg-neutral-100 border-b flex justify-between items-center text-black">
+                            <h3 className="font-bold flex items-center gap-2">
+                                <Shield className="w-5 h-5 text-amber-500" />
+                                Secure Checkout
+                            </h3>
+                            <button onClick={() => setShowCheckoutModal(false)}>
+                                <X className="w-6 h-6 text-neutral-500 hover:text-red-500 transition-colors" />
+                            </button>
+                        </div>
+
+                        <div className="p-1">
+                            <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
+                                <EmbeddedCheckout className="w-full" />
+                            </EmbeddedCheckoutProvider>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* Left: Summary */}
             <div className="w-full md:w-1/3 p-8 bg-neutral-900 border-r border-white/5 flex flex-col justify-between">
@@ -242,41 +306,59 @@ export default function FounderRegisterPage() {
                         </>
                     ) : (
                         <div className="space-y-6 animate-fade-in">
-                            <h3 className="text-2xl font-bold mb-6">Payment Method</h3>
+                            <h3 className="text-2xl font-bold mb-6">Complete Purchase</h3>
 
-                            <div className="p-4 border border-amber-500/50 bg-amber-500/10 rounded-lg mb-6">
-                                <div className="text-amber-500 font-bold flex items-center gap-2 mb-2">
-                                    <Lock className="w-4 h-4" /> Secure Transaction
-                                </div>
-                                <p className="text-sm text-amber-200/80">This is a secure 256-bit SSL encrypted payment.</p>
-                            </div>
-
-                            {/* Mock Credit Card Form */}
-                            <div className="opacity-50 pointer-events-none grayscale select-none relative">
-                                <div className="absolute inset-0 z-10"></div> {/* Disable clicks */}
-                                <label className="block text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">Card Number</label>
-                                <div className="flex items-center gap-2 bg-neutral-900 border border-white/10 p-3 rounded mb-4">
-                                    <CreditCard className="w-5 h-5 text-neutral-500" />
-                                    <input type="text" placeholder="0000 0000 0000 0000" className="bg-transparent w-full outline-none" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" placeholder="MM / YY" className="bg-neutral-900 border border-white/10 p-3 rounded outline-none" />
-                                    <input type="text" placeholder="CVC" className="bg-neutral-900 border border-white/10 p-3 rounded outline-none" />
+                            <div className="p-4 border border-emerald-500/50 bg-emerald-500/10 rounded-lg mb-6 flex gap-3">
+                                <Shield className="w-5 h-5 text-emerald-500 shrink-0" />
+                                <div>
+                                    <h4 className="font-bold text-emerald-400 text-sm">Account Created</h4>
+                                    <p className="text-xs text-neutral-400">You are logged in.</p>
                                 </div>
                             </div>
 
-                            <div className="text-center text-xs text-neutral-500 mb-4">* Mock Payment System Active</div>
+                            {isFounder ? (
+                                <div className="p-6 border border-amber-500/30 bg-amber-500/10 rounded-xl text-center space-y-4">
+                                    <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+                                        <Image src="/logo-square.png" width={40} height={40} alt="GridPass" className="brightness-0 invert" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xl font-bold text-white">You are a Founding Member</h4>
+                                        <p className="text-neutral-400 text-sm mt-1">Thank you for your support. Your exclusive badge is active.</p>
+                                    </div>
+                                    <a
+                                        href="/dashboard"
+                                        className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded font-bold hover:bg-neutral-200 transition-colors"
+                                    >
+                                        Go to Dashboard <ChevronRight className="w-4 h-4" />
+                                    </a>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        disabled={isLoading}
+                                        onClick={handleStripeCheckout}
+                                        className="w-full bg-[#635BFF] hover:bg-[#5851E1] text-white font-bold py-4 rounded transition-colors flex justify-center items-center gap-2 shadow-lg shadow-indigo-500/20"
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                Secure Checkout...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CreditCard className="w-5 h-5" />
+                                                Pay Securely with Stripe (Popup)
+                                            </>
+                                        )}
+                                    </button>
 
-                            <button
-                                disabled={true}
-                                className="w-full bg-neutral-800 text-neutral-400 font-bold py-4 rounded cursor-not-allowed flex justify-center items-center gap-2 border border-white/5"
-                            >
-                                <Lock className="w-4 h-4" />
-                                Applications Temporarily Paused
-                            </button>
-                            <p className="text-center text-xs text-amber-500 mt-2 font-medium">
-                                We are updating our payment processor. Please check back in 24 hours.
-                            </p>
+                                    <div className="flex justify-center gap-2 mt-4 grayscale opacity-50">
+                                        <div className="text-[10px] bg-white text-black px-1 rounded font-bold">VISA</div>
+                                        <div className="text-[10px] bg-white text-black px-1 rounded font-bold">MC</div>
+                                        <div className="text-[10px] bg-white text-black px-1 rounded font-bold">AMEX</div>
+                                    </div>
+                                </>
+                            )}
 
                             <button onClick={() => setStep('details')} className="w-full text-neutral-500 text-sm hover:text-white mt-4">
                                 Back to Details

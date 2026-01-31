@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { Menu, X, ArrowRight, User } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { UserRole } from '@/utils/rbac-shared';
+import NotificationBadge from './NotificationBadge';
 
-export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | null }) {
+export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | 'public' | null }) {
     const [isOpen, setIsOpen] = useState(false);
     // Use effectiveRole as the primary source of UI truth if provided
     // If effectiveRole is 'public' (from impersonation), we treat as logged out.
@@ -67,9 +68,10 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | n
                                         Admin
                                     </Link>
                                 )}
-                                <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10">
+                                <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10 relative">
                                     <User className="w-4 h-4" />
                                     <span>Dashboard</span>
+                                    <NotificationBadge />
                                 </Link>
                             </div>
                         ) : (
@@ -128,11 +130,12 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | n
                                 )}
                                 <Link
                                     href="/dashboard"
-                                    className="flex items-center justify-center gap-2 bg-neutral-800 text-white p-3 rounded-lg font-bold"
+                                    className="flex items-center justify-center gap-2 bg-neutral-800 text-white p-3 rounded-lg font-bold relative"
                                     onClick={() => setIsOpen(false)}
                                 >
                                     <User className="w-5 h-5" />
                                     Go to Dashboard
+                                    <NotificationBadge />
                                 </Link>
                             </>
                         ) : (

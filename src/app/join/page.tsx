@@ -1,8 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Trophy, Users, Shield, Flag, ChevronRight } from "lucide-react";
+import { Users, Shield, ChevronRight } from "lucide-react";
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
 
-export default function JoinPage() {
+export default async function JoinPage() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+        redirect('/dashboard');
+    }
+
     return (
         <div className="min-h-screen bg-neutral-950 font-sans text-white selection:bg-indigo-500/30">
 

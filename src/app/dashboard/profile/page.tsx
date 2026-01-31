@@ -5,12 +5,19 @@ import { createClient } from '@/utils/supabase/client';
 import { Loader2, Save, User as UserIcon, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import {
     Trophy, Wrench, Briefcase, User, MapPin,
-    FileText, Zap, Shield, Globe, Award, Phone, AlertTriangle, History
+    FileText, Zap, Shield, Globe, Award, Phone, AlertTriangle, History, Sparkles
 } from 'lucide-react';
 import CareerEditor from './career-editor';
 import { CareerEntry } from '@/types/career';
 
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
+import MediaGalleryEditor from '@/components/profile/MediaGalleryEditor';
+import ImageCropper from '@/components/ui/ImageCropper';
+
+
+// Quick hack to add Media to sidebar without touching schema file since it's hardcoded there
+const MEDIA_SECTION = { id: 'media', title: 'Media Gallery', icon: ImageIcon, description: 'Showcase your racing highlights.' };
+import { Image as ImageIcon } from 'lucide-react';
 
 export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +26,10 @@ export default function ProfilePage() {
     const [activeSection, setActiveSection] = useState<string>('basic');
     const [savingSection, setSavingSection] = useState<string | null>(null);
     const [savedSection, setSavedSection] = useState<string | null>(null);
+
+    // Cropper State
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+    const [cropConfig, setCropConfig] = useState<{ aspect: number, circular: boolean, field: string } | null>(null);
 
     // Store all data in a flat state for now, but we'll map it back to JSONBs on save
     const [formData, setFormData] = useState<any>({});
@@ -47,6 +58,7 @@ export default function ProfilePage() {
                     website: data.website || '',
                     location: data.location || '',
                     avatar_url: data.avatar_url || '',
+                    cover_image_url: data.cover_image_url || '',
 
                     // JSONB fields flattened (simple approach for now)
                     ...data.driver_info,
@@ -117,6 +129,7 @@ export default function ProfilePage() {
                 website: formData.website,
                 location: formData.location,
                 avatar_url: formData.avatar_url,
+                cover_image_url: formData.cover_image_url,
 
                 // Nested JSONB
                 driver_info: extractFields('driver', formData),
@@ -153,6 +166,67 @@ export default function ProfilePage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         handleSave();
+    };
+
+    // --- Cropper Logic ---
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            setCropImageSrc(reader.result?.toString() || null);
+            setCropConfig({
+                aspect: field === 'avatar_url' ? 1 : 16 / 9,
+                circular: field === 'avatar_url',
+                field
+            });
+        });
+        reader.readAsDataURL(file);
+        e.target.value = ''; // Reset input
+    };
+
+    const handleCropComplete = async (croppedBlob: Blob) => {
+        if (!cropConfig || !cropImageSrc) return;
+
+        const field = cropConfig.field;
+        setCropImageSrc(null); // Close cropper UI immediately
+        setCropConfig(null);
+
+        try {
+            setIsLoading(true);
+            setMessage(null);
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
+
+            // Define path based on field
+            const isAvatar = field === 'avatar_url';
+            const bucket = isAvatar ? 'avatars' : 'profile_assets';
+            const fileName = `${Date.now()}.webp`;
+            const filePath = isAvatar ? `${user.id}/${fileName}` : `${user.id}/cover/${fileName}`;
+
+            // Upload
+            const { error: uploadError } = await supabase.storage
+                .from(bucket)
+                .upload(filePath, croppedBlob, { contentType: 'image/webp', upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            // Get URL
+            const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+            // Update State & DB
+            handleChange(field, publicUrl);
+            await supabase.from('profiles').update({ [field]: publicUrl }).eq('id', user.id);
+
+            setMessage({ type: 'success', text: 'Image updated successfully!' });
+
+        } catch (error: any) {
+            console.error('Upload error', error);
+            setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Helper to extract specific fields for a category from the flat form data
@@ -238,6 +312,17 @@ export default function ProfilePage() {
                         Career Timeline
                     </button>
 
+                    <button
+                        onClick={() => setActiveSection('media')}
+                        className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors text-sm font-medium ${activeSection === 'media'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
+                            }`}
+                    >
+                        <ImageIcon className="w-4 h-4" />
+                        Media Gallery
+                    </button>
+
                     <div className="pt-4 mt-4 border-t border-white/5">
                         <div className="px-4 text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Integrations</div>
                         <button className="w-full text-left px-4 py-2 rounded flex items-center gap-3 text-neutral-500 cursor-not-allowed opacity-50">
@@ -251,9 +336,20 @@ export default function ProfilePage() {
                 <div className="lg:col-span-3 space-y-6">
                     {activeSection === 'career' ? (
                         <CareerEditor entries={careerHistory} onChange={handleCareerUpdate} />
+                    ) : activeSection === 'media' ? (
+                        <div className="bg-neutral-900 border border-white/5 rounded-xl p-6 md:p-8 animate-fade-in">
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold flex items-center gap-2">
+                                    Media Gallery
+                                </h2>
+                                <p className="text-sm text-neutral-400 mt-1">
+                                    Upload photos and videos to showcase your career.
+                                </p>
+                            </div>
+                            <MediaGalleryEditor />
+                        </div>
                     ) : (
                         SCHEMA_CATEGORIES.map(cat => (
-                            // Show only active section for cleaner UI (could also do one long scroll)
                             activeSection === cat.id && (
                                 <div key={cat.id} className="bg-neutral-900 border border-white/5 rounded-xl p-6 md:p-8 animate-fade-in">
                                     <div className="flex items-start justify-between mb-6">
@@ -279,7 +375,40 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
 
-                                    {/* Avatar Upload for Basic Info Section */}
+                                    {/* Cover Image Upload */}
+                                    {cat.id === 'basic' && (
+                                        <div className="mb-8 relative group rounded-xl overflow-hidden border border-white/10 bg-neutral-900 h-48 md:h-64">
+                                            {/* Preview */}
+                                            {formData.cover_image_url ? (
+                                                <img src={formData.cover_image_url} alt="Cover" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center">
+                                                    <div className="text-center">
+                                                        <FileText className="w-12 h-12 text-neutral-700 mx-auto mb-2" />
+                                                        <p className="text-neutral-500 font-medium">No Cover Image</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Actions Overlay */}
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                                {/* Manual Upload */}
+                                                <label className="bg-white text-black px-5 py-2.5 rounded-full font-bold cursor-pointer hover:bg-neutral-200 transition-colors flex items-center gap-2">
+                                                    <Wrench className="w-4 h-4" />
+                                                    Upload
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => handleFileSelect(e, 'cover_image_url')}
+                                                    />
+                                                </label>
+
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Avatar Upload */}
                                     {cat.id === 'basic' && (
                                         <div className="mb-8 p-6 bg-black/20 rounded-xl border border-dashed border-white/10 flex items-center gap-6">
                                             <div className="relative group">
@@ -290,46 +419,13 @@ export default function ProfilePage() {
                                                         <UserIcon className="w-10 h-10 text-neutral-500" />
                                                     )}
                                                 </div>
-                                                {/* Hidden File Input */}
                                                 <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity rounded-full">
                                                     <span className="text-xs font-bold text-white">Change</span>
                                                     <input
                                                         type="file"
                                                         accept="image/*"
                                                         className="hidden"
-                                                        onChange={async (e) => {
-                                                            const file = e.target.files?.[0];
-                                                            if (!file) return;
-
-                                                            try {
-                                                                setIsLoading(true);
-                                                                const { data: { user } } = await supabase.auth.getUser();
-                                                                if (!user) return;
-
-                                                                const fileExt = file.name.split('.').pop();
-                                                                const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-
-                                                                const { error: uploadError } = await supabase.storage
-                                                                    .from('avatars')
-                                                                    .upload(filePath, file);
-
-                                                                if (uploadError) throw uploadError;
-
-                                                                const { data: { publicUrl } } = supabase.storage
-                                                                    .from('avatars')
-                                                                    .getPublicUrl(filePath);
-
-                                                                handleChange('avatar_url', publicUrl);
-                                                                // Auto-save the avatar change immediately
-                                                                await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
-                                                                setMessage({ type: 'success', text: 'Photo updated!' });
-                                                            } catch (error: any) {
-                                                                console.error('Upload failed', error);
-                                                                setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
-                                                            } finally {
-                                                                setIsLoading(false);
-                                                            }
-                                                        }}
+                                                        onChange={(e) => handleFileSelect(e, 'avatar_url')}
                                                     />
                                                 </label>
                                             </div>
@@ -395,9 +491,10 @@ export default function ProfilePage() {
                                 </div>
                             )
                         ))
-                    )}
-                </div>
-            </div>
-        </div>
+                    )
+                    }
+                </div >
+            </div >
+        </div >
     );
 }

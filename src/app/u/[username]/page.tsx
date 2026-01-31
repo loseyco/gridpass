@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
 import ProfileActions from './profile-actions';
+import RecommendationSection from '@/components/profile/RecommendationSection';
 import { CareerEntry } from '@/types/career';
 
 // Force dynamic rendering since we rely on DB data for slugs
@@ -221,6 +222,14 @@ export default async function PublicProfilePage({ params }: { params: { username
                             </div>
                         </div>
                     )}
+
+                    {/* Recommendations Section */}
+                    <div className="mb-6">
+                        <RecommendationSection
+                            targetUserId={profile.id}
+                            targetName={profile.full_name || profile.username}
+                        />
+                    </div>
 
                     {/* Info Sections */}
                     <div className="space-y-6 print:space-y-4">
