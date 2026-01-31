@@ -11,6 +11,39 @@ interface Props {
     }>;
 }
 
+import { Metadata } from "next";
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+    const { token } = await searchParams;
+
+    if (!token) {
+        return {
+            title: "Join GridPass",
+            description: "The Business Operating System for Racing. Start your career today."
+        };
+    }
+
+    const supabase = await createClient();
+    const { data } = await supabase.rpc('get_invite_by_token', { lookup_token: token });
+
+    if (!data || data.used_at) {
+        return {
+            title: "Join GridPass",
+            description: "This invite link is invalid or has expired."
+        };
+    }
+
+    const role = data.role || 'Member';
+
+    return {
+        title: `You're invited to join as a ${role} | GridPass`,
+        description: `You have been granted exclusive access to join GridPass with the ${role} role. Claim your spot now.`,
+        openGraph: {
+            images: [`/join/opengraph-image?token=${token}`] // Explicitly point to the generator with the token
+        }
+    };
+}
+
 export default async function JoinPage(props: Props) {
     const searchParams = await props.searchParams;
     const { id, token } = searchParams;
