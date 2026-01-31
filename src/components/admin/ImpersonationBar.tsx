@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { setImpersonationRole } from '@/app/actions/impersonate';
+import { setImpersonationRole, setImpersonationUserId } from '@/app/actions/impersonate';
 import { trackPageView, getPageStats, updatePageSEO } from '@/app/actions/analytics'; // Ensure these are exported
 import { ROLES, UserRole } from '@/utils/rbac-shared';
 import { Eye, X, Loader2, RefreshCw, Activity, Shield, MapPin, Globe, PenTool, Save } from 'lucide-react';
@@ -38,6 +38,13 @@ export default function AdminHUD({ currentRole }: { currentRole: string }) {
     const handleSetRole = (role: UserRole | 'clear') => {
         startTransition(async () => {
             await setImpersonationRole(role);
+            router.refresh();
+        });
+    };
+
+    const handleSetUserId = (userId: string) => {
+        startTransition(async () => {
+            await setImpersonationUserId(userId || 'clear');
             router.refresh();
         });
     };
@@ -130,6 +137,23 @@ export default function AdminHUD({ currentRole }: { currentRole: string }) {
                             {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                             Reset Identity
                         </button>
+
+                        <div className="pt-4 border-t border-white/10">
+                            <label className="text-[10px] text-neutral-500 uppercase font-bold mb-2 block">Impersonate User ID</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="UUID..."
+                                    className="bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-white w-full"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleSetUserId((e.target as HTMLInputElement).value);
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <div className="text-[10px] text-neutral-600 mt-1">Press Enter to Apply</div>
+                        </div>
                     </div>
                 )}
 

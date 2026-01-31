@@ -1,5 +1,6 @@
 
 import { createClient } from '@/utils/supabase/server';
+import { getEffectiveUserId } from '@/utils/rbac';
 import { notFound } from 'next/navigation';
 import {
     Shield, Calendar, MapPin, Globe, User, Briefcase
@@ -38,7 +39,6 @@ export async function generateMetadata({ params }: { params: { username: string 
             description: profile.bio || `Check out ${displayName}'s racing profile on GridPass.`,
             type: 'profile',
             username: profile.username,
-            images: profile.avatar_url ? [profile.avatar_url] : [],
         }
     };
 }
@@ -50,7 +50,7 @@ export default async function PublicProfilePage({ params }: { params: { username
     // 1. Fetch Profile
     const { data: profile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*') // Wildcard is fine here since we want everything, but good to be explicit usually.
         .ilike('username', username) // Case-insensitive lookup
         .single();
 
@@ -65,10 +65,9 @@ export default async function PublicProfilePage({ params }: { params: { username
         .eq('user_id', profile.id);
 
     const isFounder = roles?.some(r => r.role === 'Founder');
-    const { data: { user } } = await supabase.auth.getUser();
-
     // Check ownership
-    const isOwner = user?.id === profile.id;
+    const effectiveUserId = await getEffectiveUserId();
+    const isOwner = effectiveUserId === profile.id;
 
     const isSuperAdmin = roles?.some(r => r.role === 'Super Admin');
 
@@ -96,62 +95,80 @@ export default async function PublicProfilePage({ params }: { params: { username
                     </div>
 
                     {/* Header Card */}
-                    <div className="bg-neutral-900/50 border border-white/5 rounded-2xl p-8 mb-8 relative overflow-hidden print:bg-white print:border-none print:p-0 print:mb-6 print:shadow-none">
-                        {isSuperAdmin ? (
-                            <div className="absolute top-0 right-0 p-4 print:hidden">
-                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-red-600/10 text-red-500 text-xs font-bold uppercase tracking-widest rounded-full border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                                    <Shield className="w-3 h-3 text-red-500" /> The Founder
-                                </span>
-                            </div>
-                        ) : isFounder ? (
-                            <div className="absolute top-0 right-0 p-4 print:hidden">
-                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-500 text-xs font-bold uppercase tracking-widest rounded-full border border-amber-500/20">
-                                    <Shield className="w-3 h-3" /> Founder
-                                </span>
-                            </div>
-                        ) : null}
+                    <div className="relative mb-8 rounded-2xl overflow-hidden bg-neutral-900 border border-white/5 print:border-none print:shadow-none print:bg-white print:overflow-visible">
 
-                        <div className="flex flex-col md:flex-row gap-8 items-start print:items-center print:flex-row print:gap-6">
-                            {/* Avatar - Hide in print if generic or keep small */}
-                            <div className="w-32 h-32 bg-neutral-800 rounded-full flex items-center justify-center border-4 border-neutral-950 shadow-xl shrink-0 print:border-gray-200 print:w-24 print:h-24 print:bg-gray-100 overflow-hidden relative">
-                                {profile.avatar_url ? (
-                                    <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
-                                ) : (
-                                    <User className="w-16 h-16 text-neutral-600 print:text-gray-400" />
-                                )}
-                            </div>
-
-                            <div className="flex-1 print:text-left">
-                                <h1 className="text-4xl font-bold mb-2 print:text-black print:text-3xl">{profile.full_name || profile.username}</h1>
-
-                                <div className="print:flex print:justify-between print:items-start">
-                                    <div>
-                                        <p className="text-neutral-400 text-lg mb-4 print:text-gray-600 print:mb-2">@{profile.username}</p>
-
-                                        {profile.bio && (
-                                            <p className="max-w-2xl text-neutral-300 leading-relaxed mb-6 print:text-black print:text-sm print:mb-4">
-                                                {profile.bio}
-                                            </p>
-                                        )}
+                        {/* Cover Image Banner */}
+                        <div className="h-48 md:h-64 w-full bg-neutral-800 relative">
+                            {profile.cover_image_url ? (
+                                <img src={profile.cover_image_url} alt="Cover" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-r from-neutral-800 to-neutral-900 flex items-center justify-center">
+                                    <div className="opacity-10 pointer-events-none select-none text-9xl font-black text-white overflow-hidden whitespace-nowrap">
+                                        RACE . WIN . REPEAT
                                     </div>
+                                </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent opacity-90"></div>
+                        </div>
 
-                                    {/* Contact Info for Resume (Right aligned in print?) */}
-                                    <div className="flex flex-wrap gap-6 text-sm text-neutral-500 print:block print:text-right print:space-y-1 print:text-xs">
-                                        {profile.location && (
+                        {/* Profile Info Overlay */}
+                        <div className="px-8 pb-8 relative -mt-16 md:-mt-20 print:mt-0 print:px-0 print:pb-0">
+                            {isSuperAdmin ? (
+                                <div className="absolute top-4 right-4 md:top-20 md:right-8 print:hidden">
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-red-600/10 text-red-500 text-xs font-bold uppercase tracking-widest rounded-full border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                                        <Shield className="w-3 h-3 text-red-500" /> The Founder
+                                    </span>
+                                </div>
+                            ) : isFounder ? (
+                                <div className="absolute top-4 right-4 md:top-20 md:right-8 print:hidden">
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-500 text-xs font-bold uppercase tracking-widest rounded-full border border-amber-500/20">
+                                        <Shield className="w-3 h-3" /> Founder
+                                    </span>
+                                </div>
+                            ) : null}
+
+                            <div className="flex flex-col md:flex-row gap-8 items-start print:items-center print:flex-row print:gap-6">
+                                {/* Avatar - Hide in print if generic or keep small */}
+                                <div className="w-32 h-32 bg-neutral-800 rounded-full flex items-center justify-center border-4 border-neutral-950 shadow-xl shrink-0 print:border-gray-200 print:w-24 print:h-24 print:bg-gray-100 overflow-hidden relative">
+                                    {profile.avatar_url ? (
+                                        <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-16 h-16 text-neutral-600 print:text-gray-400" />
+                                    )}
+                                </div>
+
+                                <div className="flex-1 print:text-left">
+                                    <h1 className="text-4xl font-bold mb-2 print:text-black print:text-3xl">{profile.full_name || profile.username}</h1>
+
+                                    <div className="print:flex print:justify-between print:items-start">
+                                        <div>
+                                            <p className="text-neutral-400 text-lg mb-4 print:text-gray-600 print:mb-2">@{profile.username}</p>
+
+                                            {profile.bio && (
+                                                <p className="max-w-2xl text-neutral-300 leading-relaxed mb-6 print:text-black print:text-sm print:mb-4">
+                                                    {profile.bio}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Contact Info for Resume (Right aligned in print?) */}
+                                        <div className="flex flex-wrap gap-6 text-sm text-neutral-500 print:block print:text-right print:space-y-1 print:text-xs">
+                                            {profile.location && (
+                                                <div className="flex items-center gap-2 print:justify-end">
+                                                    <MapPin className="w-4 h-4 print:w-3 print:h-3" />
+                                                    {profile.location}
+                                                </div>
+                                            )}
+                                            {profile.website && (
+                                                <a href={profile.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-indigo-400 transition-colors print:justify-end print:text-black">
+                                                    <Globe className="w-4 h-4 print:w-3 print:h-3" />
+                                                    {profile.website.replace(/^https?:\/\//, '')}
+                                                </a>
+                                            )}
                                             <div className="flex items-center gap-2 print:justify-end">
-                                                <MapPin className="w-4 h-4 print:w-3 print:h-3" />
-                                                {profile.location}
+                                                <Calendar className="w-4 h-4 print:w-3 print:h-3" />
+                                                Member since {new Date(profile.created_at || Date.now()).getFullYear()}
                                             </div>
-                                        )}
-                                        {profile.website && (
-                                            <a href={profile.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-indigo-400 transition-colors print:justify-end print:text-black">
-                                                <Globe className="w-4 h-4 print:w-3 print:h-3" />
-                                                {profile.website.replace(/^https?:\/\//, '')}
-                                            </a>
-                                        )}
-                                        <div className="flex items-center gap-2 print:justify-end">
-                                            <Calendar className="w-4 h-4 print:w-3 print:h-3" />
-                                            Member since {new Date(profile.created_at || Date.now()).getFullYear()}
                                         </div>
                                     </div>
                                 </div>

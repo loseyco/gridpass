@@ -66,6 +66,38 @@ export async function getUserRole(): Promise<UserRole | null> {
     return profile?.role || 'user';
 }
 
+export async function getEffectiveUserId(): Promise<string | null> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    // Check for superadmin status (real)
+    const SUPER_ADMIN_EMAILS = ['pjlosey@gmail.com', 'admin@gridpass.io', 'pjlosey@outlook.com'];
+    let isRealSuperAdmin = false;
+
+    if (user.email && SUPER_ADMIN_EMAILS.includes(user.email)) {
+        isRealSuperAdmin = true;
+    } else {
+        const { data: realProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        if (realProfile?.role === 'superadmin') {
+            isRealSuperAdmin = true;
+        }
+    }
+
+    if (isRealSuperAdmin) {
+        const cookieStore = await cookies();
+        const overrideId = cookieStore.get('gridpass_impersonate_user_id')?.value;
+        if (overrideId) return overrideId;
+    }
+
+    return user.id;
+}
+
 export async function hasRole(requiredRole: UserRole): Promise<boolean> {
     const currentRole = await getUserRole();
     if (!currentRole) return false;

@@ -37,3 +37,13 @@ export async function setImpersonationRole(role: UserRole | 'clear') {
     cookieStore.set('gridpass_role_override', role, { path: '/', httpOnly: true, secure: true });
     return { success: true };
 }
+
+export async function setImpersonationUserId(userId: string | 'clear') {
+    const cookieStore = await cookies();
+    if (userId === 'clear') {
+        cookieStore.delete('gridpass_impersonate_user_id');
+        return { success: true };
+    }
+    cookieStore.set('gridpass_impersonate_user_id', userId, { path: '/', httpOnly: true, secure: true });
+    return { success: true };
+}
