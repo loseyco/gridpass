@@ -28,6 +28,14 @@ export default function FounderRegisterPage() {
             .then(res => res.json())
             .then(data => setSpotsRemaining(data.remaining))
             .catch(err => console.error('Failed to fetch founder count:', err));
+
+        // Auto-advance if logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+                setIsLogin(false); // Ensure we are not in login mode visually
+                setStep('payment');
+            }
+        });
     }, []);
 
 
