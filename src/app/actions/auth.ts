@@ -51,12 +51,18 @@ export async function registerUser(formData: FormData) {
 
     // Create user with auto-confirm
     console.log(`Creating user: ${email}, Tracking: ${trackingId}`);
+
+    // 1. Generate Username
+    const username = await generateUsername(fullName, supabase);
+    console.log(`Generated Username: ${username}`);
+
     const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: {
             full_name: fullName,
+            username: username, // Pass to metadata as well
             tracking_id: trackingId || null
         }
     });
@@ -66,12 +72,67 @@ export async function registerUser(formData: FormData) {
         return { error: error.message };
     }
 
-    console.log('User created successfully:', data.user?.id);
+    const userId = data.user?.id;
+    console.log('User created successfully:', userId);
+
+    // 2. Ensure Profile Exists with Username (Upsert to be safe against Triggers)
+    if (userId) {
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: userId,
+                username: username,
+                full_name: fullName,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+
+        if (profileError) {
+            console.error('Profile Upsert Warning:', profileError);
+            // Don't fail the registration, but log it.
+        }
+    }
 
     // Notify Admin (Fire and Forget)
     notifyNewUser(email, trackingId);
 
     return { success: true };
+}
+
+// Helper to generate unique username
+async function generateUsername(fullName: string, supabase: any): Promise<string> {
+    // 1. Slugify: clean, lowercase, no spaces/special chars
+    let base = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!base) base = 'user'; // Fallback for empty/symbols
+
+    // 2. Check availability
+    let candidate = base;
+    let isUnique = false;
+    let attempts = 0;
+
+    while (!isUnique && attempts < 5) {
+        // Query profiles to see if taken
+        const { data } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('username', candidate)
+            .single();
+
+        if (!data) {
+            isUnique = true;
+        } else {
+            // Append random 4 digits
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000); // 1000-9999
+            candidate = `${base}${randomSuffix}`;
+            attempts++;
+        }
+    }
+
+    // If still failing after 5 attempts, force a timestamp
+    if (!isUnique) {
+        candidate = `${base}${Date.now().toString().slice(-6)}`;
+    }
+
+    return candidate;
 }
 
 export async function notifyNewUser(email: string, trackingId?: string | null) {
