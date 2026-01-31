@@ -15,7 +15,7 @@ interface Props {
 
 export default function JoinFlow({ invite, user, trackingId }: Props) {
     const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState<'view' | 'login' | 'register'>(invite ? 'view' : 'initial');
+    const [mode, setMode] = useState<'initial' | 'view' | 'login' | 'register'>(invite ? 'view' : 'initial');
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
