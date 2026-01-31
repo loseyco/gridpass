@@ -30,5 +30,6 @@ export const ROLES = {
     ADMIN: 'admin' as UserRole,
     FOUNDER: 'founder' as UserRole,
     MEMBER: 'member' as UserRole,
-    USER: 'user' as UserRole
+    USER: 'user' as UserRole,
+    PUBLIC: 'public' as UserRole // Virtual role for testing
 };

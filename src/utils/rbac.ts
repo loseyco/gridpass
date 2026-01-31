@@ -10,7 +10,8 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
     admin: 80,
     founder: 60,
     member: 40,
-    user: 20
+    user: 20,
+    public: 0
 };
 
 export async function getUserRole(): Promise<UserRole | null> {
