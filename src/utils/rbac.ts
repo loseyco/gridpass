@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 import { UserRole, Permission, ROLES } from './rbac-shared';
 
 // Export Shared Types/Constants so Server Components can import everything from here
@@ -18,10 +19,39 @@ export async function getUserRole(): Promise<UserRole | null> {
 
     if (!user) return null;
 
-    // Fallback for hardcoded superadmins until database is fully synced
-    // This ensures you don't lose access even if DB query fails or is empty
+    // 0. Check for Role Override (Impersonation)
+    // ONLY allowed if the REAL user is a superadmin.
+    // We must first verify they are ACTUALLY a superadmin before honoring the cookie.
+
+    // Fallback for hardcoded superadmins 
     const SUPER_ADMIN_EMAILS = ['pjlosey@gmail.com', 'admin@gridpass.io', 'pjlosey@outlook.com'];
+    let isRealSuperAdmin = false;
+
     if (user.email && SUPER_ADMIN_EMAILS.includes(user.email)) {
+        isRealSuperAdmin = true;
+    } else {
+        // Double check DB payload if not in hardcoded list
+        // Ideally we fetch the profile here to be sure
+        const { data: realProfile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+        if (realProfile?.role === 'superadmin') {
+            isRealSuperAdmin = true;
+        }
+    }
+
+    if (isRealSuperAdmin) {
+        // Check for override cookie
+        const cookieStore = await cookies();
+        const overrideRole = cookieStore.get('gridpass_role_override')?.value as UserRole | undefined;
+
+        if (overrideRole && Object.values(ROLES).includes(overrideRole)) {
+            return overrideRole;
+        }
+
+        // Return real role if no override
         return 'superadmin';
     }
 
@@ -30,6 +60,7 @@ export async function getUserRole(): Promise<UserRole | null> {
         .select('role')
         .eq('id', user.id)
         .single();
+
 
     return profile?.role || 'user';
 }
