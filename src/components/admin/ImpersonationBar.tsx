@@ -8,7 +8,7 @@ import { ROLES, UserRole } from '@/utils/rbac-shared';
 import { Eye, X, Loader2, RefreshCw, Activity, Shield, MapPin, Globe, PenTool, Save } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
-export default function AdminHUD({ currentRole }: { currentRole: string }) {
+export default function AdminHUD({ currentRole: role }: { currentRole: any }) {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'identity' | 'intel' | 'seo'>('identity');
     const [isPending, startTransition] = useTransition();
@@ -141,7 +141,7 @@ export default function AdminHUD({ currentRole }: { currentRole: string }) {
                                         <button
                                             key={r}
                                             disabled={isPending}
-                                            onClick={() => handleSetRole(r)}
+                                            onClick={() => handleSetRole(r as any)}
                                             className={`px-3 py-2 text-xs font-medium rounded border transition-all
                                                 ${role === r
                                                     ? 'bg-white text-black border-white'
@@ -285,5 +285,6 @@ export default function AdminHUD({ currentRole }: { currentRole: string }) {
                     <span>{isPending ? 'Syncing...' : 'System Ready'}</span>
                 </div>
             </div>
-            );
+        </div>
+    );
 }
