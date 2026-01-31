@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import { Tag, MapPin, DollarSign, Image as ImageIcon } from 'lucide-react';
 import { Metadata } from 'next';
+import { hasRole, ROLES } from '@/utils/rbac';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,23 +14,12 @@ export const metadata: Metadata = {
 
 export default async function ClassifiedsPage() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    // Temporary Superadmin Restriction
-    const allowedEmails = ['pjlosey@gmail.com', 'admin@gridpass.io'];
-    if (!user || !allowedEmails.includes(user.email || '')) {
-        // Show "Coming Soon" or redirect. Let's show a friendly "Access Denied / Coming Soon" instead of redirecting aggressively?
-        // Or just redirect to home for now as per "not ready for public".
-        // The user said "not ready for public", usually implying hidden.
-        // Let's redirect to home for non-admins.
-        // Actually, let's Redirect to Home.
-        // We can't import redirect here without importing it.
-        // Let's modify imports first?
-        // Actually, let's keep it simple: Return a "Coming Soon" view if not admin.
-    }
+    // Role Check
+    const isAllowed = await hasRole(ROLES.SUPERADMIN);
 
-    // IF USER IS NOT ADMIN, RETURN COMING SOON VIEW
-    if (!user || !allowedEmails.includes(user.email || '')) {
+    // IF USER IS NOT SUPERADMIN, RETURN COMING SOON VIEW
+    if (!isAllowed) {
         return (
             <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-center p-6">
                 <h1 className="text-4xl font-bold text-white mb-4">Classifieds</h1>

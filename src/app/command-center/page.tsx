@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import CommandCenterDashboard from '@/components/command-center/CommandCenterDashboard';
+import { hasRole, ROLES } from '@/utils/rbac';
 
 export default async function CommandCenterPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const params = await searchParams;
@@ -13,9 +14,9 @@ export default async function CommandCenterPage({ searchParams }: { searchParams
         return redirect('/login?next=/command-center');
     }
 
-    // Temporary Superadmin Restriction
-    const allowedEmails = ['pjlosey@gmail.com', 'admin@gridpass.io'];
-    if (!allowedEmails.includes(user.email || '')) {
+    // Role Check
+    const isAllowed = await hasRole(ROLES.SUPERADMIN);
+    if (!isAllowed) {
         return redirect('/');
     }
 
