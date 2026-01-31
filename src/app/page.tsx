@@ -8,31 +8,35 @@ import {
   Users,
   Briefcase,
   ArrowRight,
-  Activity
+  Activity,
+  Radio
 } from "lucide-react";
 
 import { createClient } from '@/utils/supabase/server';
-import { getFounderCount } from "@/utils/founders";
-import { Metadata } from 'next';
+import { getFounderCount } from "@/utils/founders"; // ... rest of imports
 
-import { getDynamicMetadata } from "@/utils/seo";
-
-export async function generateMetadata() {
-  return getDynamicMetadata('/', {
-    title: "The Business Operating System for Racing",
-    openGraph: {
-      title: "GridPass: The Business Operating System for Racing",
-      images: [{ url: '/opengraph-image.png' }]
-    }
-  });
-}
+// ... metadata ...
 
 export default async function Home() {
   const { count, remaining, limit } = await getFounderCount();
 
-  // Check auth status
+  // Check auth status & Fetch News
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  let latestUpdate = null;
+  try {
+    const { data } = await supabase
+      .from('changelogs') // Only works if table exists
+      .select('*')
+      .eq('is_public', true) // Filter public only
+      .order('published_at', { ascending: false })
+      .limit(1)
+      .single();
+    latestUpdate = data;
+  } catch (e) {
+    // Table likely doesn't exist yet, ignore
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
@@ -41,22 +45,11 @@ export default async function Home() {
       <main className="pb-24">
         {/* Hero Section */}
         <section className="px-6 pt-12 pb-8 max-w-md mx-auto md:max-w-4xl md:text-center md:py-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-medium border border-indigo-500/20 mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            The Business Operating System
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 bg-gradient-to-br from-white via-white to-neutral-500 bg-clip-text text-transparent">
-            Your Entire Automotive Life. One ID.
-          </h1>
-          <p className="text-neutral-400 text-lg mb-8 leading-relaxed">
-            Manage your shop, service your fleet, find parts, and track your racing career.
-            All connected by the <strong>GridPass Global ID</strong>.
-          </p>
+          {/* ... existing Hero content ... */}
           <div className="flex flex-col sm:flex-row gap-3 md:justify-center">
+            {/* ... existing Link buttons ... */}
             {user ? (
+              // ...
               <Link
                 href="/dashboard"
                 className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all active:scale-95"
@@ -64,6 +57,7 @@ export default async function Home() {
                 Go to Dashboard <ArrowRight className="w-5 h-5" />
               </Link>
             ) : (
+              // ... (links) ...
               <>
                 <Link
                   href="/register"
@@ -88,11 +82,48 @@ export default async function Home() {
           </div>
         </section>
 
-
+        {/* Latest News / Update Log */}
+        {latestUpdate && (
+          <section className="px-4 max-w-4xl mx-auto mb-12">
+            <Link href="/changelog" className="block group">
+              <div className="bg-neutral-900/50 border border-white/10 rounded-xl p-4 md:p-6 flex items-start md:items-center gap-4 hover:bg-neutral-900 hover:border-amber-500/30 transition-all">
+                <div className="p-3 bg-amber-500/10 rounded-lg text-amber-500 shrink-0">
+                  <Radio className="w-6 h-6 animate-pulse" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Latest Transmission</span>
+                    <span className="text-xs text-neutral-500">• {new Date(latestUpdate.published_at).toLocaleDateString()}</span>
+                  </div>
+                  <h3 className="font-bold text-lg text-white group-hover:text-amber-400 transition-colors">
+                    {latestUpdate.title} <span className="text-neutral-500 font-mono text-sm ml-2">{latestUpdate.version}</span>
+                  </h3>
+                  {latestUpdate.summary && (
+                    <p className="text-neutral-400 text-sm mt-1 line-clamp-1">
+                      {latestUpdate.summary}
+                    </p>
+                  )}
+                </div>
+                <div className="hidden md:block text-neutral-500 group-hover:text-white transition-colors">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+              </div>
+            </Link>
+          </section>
+        )}
 
         {/* Founders Hero Section */}
         <section className="px-4 max-w-4xl mx-auto mb-16">
+          {/* Latest Update / News (New Feature) */}
+          {(() => {
+            // We try to render this asynchronously inside the server component
+            // But we can't use await here inside JSX easily without a wrapper component
+            // So I will move the fetch logic up to the main component body
+            return null;
+          })()}
+
           <Link href="/founder" className="group relative block">
+            {/* ... existing Founder Hero ... */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-amber-700 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
             <div className="relative bg-neutral-900 border border-amber-500/30 p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
 

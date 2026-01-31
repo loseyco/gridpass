@@ -33,7 +33,7 @@ export default function UserRoleSelect({ userId, currentRole }: { userId: string
     const roleColors: Record<string, string> = {
         superadmin: 'text-red-400',
         admin: 'text-orange-400',
-        founder: 'text-purple-400',
+        founder: 'text-amber-400',
         member: 'text-emerald-400',
         user: 'text-neutral-400'
     };

@@ -1,17 +1,6 @@
-
-import { promises as fs } from 'fs';
-import path from 'path';
+import { createClient } from '@/utils/supabase/server';
 import { Zap, Bug, Star, Clock } from 'lucide-react';
-
-async function getChangelog() {
-    try {
-        const historyPath = path.join(process.cwd(), 'local-ai/reports/changelog_history.json');
-        const data = await fs.readFile(historyPath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return [];
-    }
-}
+import { notFound } from 'next/navigation';
 
 export const metadata = {
     title: 'Patch Notes | GridPass',
@@ -19,7 +8,18 @@ export const metadata = {
 };
 
 export default async function ChangelogPage() {
-    const history = await getChangelog();
+    const supabase = await createClient();
+    const { data: historyData, error } = await supabase
+        .from('changelogs')
+        .select('*')
+        .eq('is_public', true) // Filter public only
+        .order('published_at', { ascending: false });
+
+    const history = historyData || [];
+
+    if (error) {
+        console.error("Failed to fetch changelog", error);
+    }
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white font-sans selection:bg-amber-500 selection:text-black">
@@ -53,14 +53,14 @@ export default async function ChangelogPage() {
                                 <div className="text-2xl font-mono font-bold text-amber-500">{entry.version}</div>
                                 <div className="text-neutral-500 text-sm flex items-center justify-end gap-1">
                                     <Clock className="w-3 h-3" />
-                                    {entry.date}
+                                    {entry.published_at ? new Date(entry.published_at).toLocaleDateString() : 'N/A'}
                                 </div>
                             </div>
 
                             {/* Mobile Header (Visible only on small screens) */}
                             <div className="md:hidden mb-2">
                                 <span className="text-xl font-mono font-bold text-amber-500 mr-2">{entry.version}</span>
-                                <span className="text-neutral-500 text-sm">{entry.date}</span>
+                                <span className="text-neutral-500 text-sm">{entry.published_at ? new Date(entry.published_at).toLocaleDateString() : 'N/A'}</span>
                             </div>
 
                             {/* Content Card */}

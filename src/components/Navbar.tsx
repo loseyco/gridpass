@@ -46,7 +46,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
 
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2">
-                        <img src="/logo-text.png" alt="GridPass" className="h-8 w-auto px-2 bg-white/5 rounded-lg border border-white/5" />
+                        <span className="text-2xl font-black italic uppercase tracking-tighter text-white">
+                            Grid<span className="text-red-600">Pass</span>
+                        </span>
                     </Link>
 
                     {/* Desktop Navigation */}

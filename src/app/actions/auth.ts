@@ -2,17 +2,15 @@
 
 import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient } from '@/utils/supabase/server';
 
 // ... existing imports
 
 export async function toggleUserBan(userId: string, isBanned: boolean) {
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.error('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing during toggleUserBan');
-        return { error: 'Server configuration error: Missing Admin Key' };
-    }
-
+    // RLS Verification confirmed standard Admins can update 'is_banned',
+    // so we use the standard client (User Context) instead of Service Role.
     try {
-        const supabase = createAdminClient();
+        const supabase = await createClient();
 
         // 1. Update Profile
         const { error } = await supabase

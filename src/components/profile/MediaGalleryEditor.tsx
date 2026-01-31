@@ -12,24 +12,21 @@ interface MediaItem {
     sort_order: number;
 }
 
-export default function MediaGalleryEditor() {
+export default function MediaGalleryEditor({ userId }: { userId: string }) {
     const [media, setMedia] = useState<MediaItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const supabase = createClient();
 
     useEffect(() => {
-        loadMedia();
-    }, []);
+        if (userId) loadMedia();
+    }, [userId]);
 
     const loadMedia = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
         const { data } = await supabase
             .from('profile_media')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .order('sort_order', { ascending: true });
 
         setMedia(data || []);
@@ -42,12 +39,10 @@ export default function MediaGalleryEditor() {
 
         try {
             setIsUploading(true);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
 
             // 1. Upload to Storage
             const fileExt = file.name.split('.').pop();
-            const filePath = `${user.id}/gallery/${Date.now()}.${fileExt}`;
+            const filePath = `${userId}/gallery/${Date.now()}.${fileExt}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('profile_assets')
@@ -63,7 +58,7 @@ export default function MediaGalleryEditor() {
             const { error: dbError } = await supabase
                 .from('profile_media')
                 .insert({
-                    user_id: user.id,
+                    user_id: userId,
                     url: publicUrl,
                     type: file.type.startsWith('video') ? 'video' : 'image',
                     sort_order: media.length // Append to end

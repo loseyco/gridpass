@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     const isFounder = !!roles;
 
     return (
-        <div className="flex min-h-screen bg-neutral-950 text-white font-sans">
+        <div className="flex flex-col md:flex-row min-h-screen bg-neutral-950 text-white font-sans">
             {/* Responsive Sidebar */}
             <DashboardSidebar userEmail={user.email} isFounder={isFounder} />
 

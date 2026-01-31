@@ -63,6 +63,13 @@ export default async function UsersPage() {
                                         {new Date(profile.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="p-4 text-right flex items-center justify-end gap-3">
+                                        <a
+                                            href={`/admin/users/${profile.id}`}
+                                            className="p-2 text-neutral-400 hover:text-indigo-400 hover:bg-white/5 rounded transition-colors"
+                                            title="Edit Profile"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                                        </a>
                                         <UserBanToggle userId={profile.id} isBanned={profile.is_banned} />
                                         <UserRoleSelect userId={profile.id} currentRole={profile.role} />
                                     </td>
@@ -80,7 +87,7 @@ function RoleBadge({ role }: { role: string }) {
     const colors: Record<string, string> = {
         superadmin: 'bg-red-500/20 text-red-400 border-red-500/30',
         admin: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-        founder: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+        founder: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
         member: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
         user: 'bg-neutral-800 text-neutral-400 border-white/10'
     };

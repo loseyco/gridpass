@@ -15,115 +15,114 @@ export const metadata: Metadata = {
 export default async function MembersPage() {
     const supabase = await createClient();
 
-    // Fetch all profiles (exclude banned)
+    // Fetch all profiles    // Fetch Profiles
     const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
         .not('is_banned', 'is', true)
         .order('created_at', { ascending: false });
 
-    // Fetch all roles
-    const { data: roles } = await supabase
-        .from('roles')
-        .select('*');
-
     return (
-        <div className="min-h-screen bg-neutral-950 text-white font-sans p-6 md:p-12">
-            <div className="max-w-7xl mx-auto animate-fade-in">
-
-                <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <div className="min-h-screen bg-neutral-950 text-white font-sans pt-24 px-4 md:px-8 pb-12">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex justify-between items-end mb-12">
                     <div>
-                        <h1 className="text-4xl font-bold mb-2">Members Directory</h1>
-                        <p className="text-neutral-400">Discover drivers, mechanics, and teams on the Grid.</p>
+                        <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter mb-4">
+                            Grid<span className="text-red-600">Pass</span> Members
+                        </h1>
+                        <p className="text-neutral-400 text-lg max-w-2xl">
+                            Connect with fellow racers, team managers, and enthusiasts.
+                        </p>
                     </div>
-
-                    {/* Placeholder for future search */}
-                    <div className="relative w-full md:w-64">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-neutral-500" />
+                    <div className="hidden md:block">
+                        <div className="px-4 py-2 bg-neutral-900 rounded-lg border border-white/5 text-sm text-neutral-500 font-mono">
+                            {profiles?.length || 0} MEMBERS
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Search members..."
-                            className="bg-neutral-900 border border-white/10 text-white text-sm rounded-lg block w-full pl-10 p-2.5 focus:border-indigo-500 outline-none"
-                            disabled
-                        />
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {profiles?.map((profile) => (
-                        <Link
-                            key={profile.id}
-                            href={`/u/${profile.username}`}
-                            className="group bg-neutral-900 border border-white/5 rounded-xl p-6 hover:border-indigo-500/50 hover:bg-neutral-900/80 transition-all flex items-start gap-4"
-                        >
-                            <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center shrink-0 border border-white/5 group-hover:border-indigo-500/30">
-                                {profile.avatar_url ? (
-                                    <img src={profile.avatar_url} alt={profile.username} className="w-full h-full rounded-full object-cover" />
-                                ) : (
-                                    <User className="w-6 h-6 text-neutral-500 group-hover:text-indigo-400 transition-colors" />
-                                )}
-                            </div>
-
-                            <div className="overflow-hidden">
-                                <h3 className="font-bold text-lg truncate group-hover:text-indigo-300 transition-colors">
-                                    {profile.full_name || profile.username || 'Anonymous'}
-                                </h3>
-                                <p className="text-sm text-neutral-500 truncate mb-2">@{profile.username}</p>
-
-                                <div className="flex flex-wrap gap-2">
-                                    {/* Founder Badges */}
-                                    {(() => {
-                                        const userRoles = roles?.filter(r => r.user_id === profile.id);
-                                        const isSuperAdmin = userRoles?.some(r => r.role === 'Super Admin');
-                                        const isFounder = userRoles?.some(r => r.role === 'Founder');
-
-                                        if (isSuperAdmin) {
-                                            return (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-600/10 text-red-500 text-[10px] font-bold uppercase tracking-wider border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-                                                    <Shield className="w-3 h-3 text-red-500" /> The Founder
-                                                </span>
-                                            );
-                                        }
-                                        if (isFounder) {
-                                            return (
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">
-                                                    <Shield className="w-3 h-3" /> Founder
-                                                </span>
-                                            );
-                                        }
-                                        return null;
-                                    })()}
-
-                                    {/* Conditional Badges based on data presence */}
-                                    {profile.real_world_info && Object.keys(profile.real_world_info).length > 0 && (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">
-                                            <Trophy className="w-3 h-3" /> Driver
-                                        </span>
-                                    )}
-                                    {profile.driver_info && Object.keys(profile.driver_info).length > 0 && (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
-                                            <Trophy className="w-3 h-3" /> Sim Racer
-                                        </span>
-                                    )}
-                                    {profile.mechanic_info && Object.keys(profile.mechanic_info).length > 0 && (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">
-                                            <Wrench className="w-3 h-3" /> Crew
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </Link>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {profiles?.map((profile: any) => (
+                        <ClientMemberCard key={profile.id} profile={profile} />
                     ))}
-
-                    {(!profiles || profiles.length === 0) && (
-                        <div className="col-span-full text-center py-12 text-neutral-500">
-                            No members found. Be the first to join!
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
+    );
+}
+
+function ClientMemberCard({ profile }: { profile: any }) {
+    return (
+        <Link
+            href={`/u/${profile.username}`}
+            className="group block bg-neutral-900 border border-white/5 rounded-xl overflow-hidden hover:border-red-600/50 transition-all hover:shadow-[0_0_30px_rgba(220,38,38,0.1)] hover:-translate-y-1"
+        >
+            <div className="relative h-32 bg-neutral-800">
+                {profile.cover_image_url ? (
+                    <img src={profile.cover_image_url} alt="Cover" className="w-full h-full object-cover opacity-50 group-hover:opacity-75 transition-opacity" />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-900"></div>
+                )}
+                {/* User Avatar */}
+                <div className="absolute -bottom-6 left-6">
+                    <div className="w-16 h-16 rounded-full bg-neutral-900 border-4 border-neutral-900 overflow-hidden shadow-lg">
+                        {profile.avatar_url ? (
+                            <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+                                <User className="w-8 h-8 text-neutral-600" />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="pt-8 px-6 pb-6">
+                <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-lg text-white group-hover:text-red-500 transition-colors truncate">
+                            {profile.full_name || profile.username}
+                        </h3>
+                        {/* Founder Badges based on profile.role */}
+                        {(() => {
+                            if (profile.role === 'superadmin') {
+                                return (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-600/10 text-red-500 text-[10px] font-bold uppercase tracking-wider border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                                        <Shield className="w-3 h-3 text-red-500" /> The Founder
+                                    </span>
+                                );
+                            }
+                            if (profile.role === 'founder') {
+                                return (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">
+                                        <Shield className="w-3 h-3" /> Founder
+                                    </span>
+                                );
+                            }
+                            return null;
+                        })()}
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                    {/* Conditional Badges based on data presence */}
+                    {profile.real_world_info && Object.keys(profile.real_world_info).length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold uppercase tracking-wider border border-amber-500/20">
+                            <Trophy className="w-3 h-3" /> Driver
+                        </span>
+                    )}
+                    {profile.driver_info && Object.keys(profile.driver_info).length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                            <Trophy className="w-3 h-3" /> Sim Racer
+                        </span>
+                    )}
+                    {profile.mechanic_info && Object.keys(profile.mechanic_info).length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-bold uppercase tracking-wider border border-blue-500/20">
+                            <Wrench className="w-3 h-3" /> Crew
+                        </span>
+                    )}
+                </div>
+            </div>
+        </Link>
     );
 }
