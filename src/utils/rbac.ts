@@ -19,7 +19,7 @@ export async function getUserRole(): Promise<UserRole | null> {
 
     // Fallback for hardcoded superadmins until database is fully synced
     // This ensures you don't lose access even if DB query fails or is empty
-    const SUPER_ADMIN_EMAILS = ['pjlosey@gmail.com', 'admin@gridpass.io'];
+    const SUPER_ADMIN_EMAILS = ['pjlosey@gmail.com', 'admin@gridpass.io', 'pjlosey@outlook.com'];
     if (user.email && SUPER_ADMIN_EMAILS.includes(user.email)) {
         return 'superadmin';
     }
