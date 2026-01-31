@@ -42,17 +42,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { getUserRole } from "@/utils/rbac";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const role = await getUserRole();
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar />
+        <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
         {children}
       </body>
