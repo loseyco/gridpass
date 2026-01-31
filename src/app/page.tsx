@@ -15,13 +15,17 @@ import { createClient } from '@/utils/supabase/server';
 import { getFounderCount } from "@/utils/founders";
 import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: "The Business Operating System for Racing",
-  openGraph: {
-    title: "GridPass: The Business Operating System for Racing",
-    images: [{ url: '/opengraph-image.png' }]
-  }
-};
+import { getDynamicMetadata } from "@/utils/seo";
+
+export async function generateMetadata() {
+  return getDynamicMetadata('/', {
+    title: "The Business Operating System for Racing",
+    openGraph: {
+      title: "GridPass: The Business Operating System for Racing",
+      images: [{ url: '/opengraph-image.png' }]
+    }
+  });
+}
 
 export default async function Home() {
   const { count, remaining, limit } = await getFounderCount();
