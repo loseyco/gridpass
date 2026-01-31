@@ -39,7 +39,7 @@ export default function InviteManager() {
     };
 
     const copyLink = (token: string) => {
-        const url = `${window.location.origin}/invite/${token}`;
+        const url = `${window.location.origin}/join?token=${token}`;
         navigator.clipboard.writeText(url);
         alert('Copied to clipboard: ' + url);
     };
