@@ -7,7 +7,8 @@ import {
   Trophy,
   Users,
   Briefcase,
-  ArrowRight
+  ArrowRight,
+  Activity
 } from "lucide-react";
 
 import { createClient } from '@/utils/supabase/server';
@@ -176,15 +177,15 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Careers Module */}
+            {/* Resume Builder Module */}
             <div className="col-span-1 bg-neutral-900 p-5 rounded-3xl border border-white/5 flex flex-col justify-between group hover:border-pink-500/30 transition-colors relative overflow-hidden opacity-80">
               <div className="absolute inset-0 bg-neutral-950/50 backdrop-blur-[1px] z-20 flex items-center justify-center pointer-events-none">
                 <span className="bg-neutral-900/90 text-neutral-300 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border border-white/10 shadow-lg text-center">Coming Soon</span>
               </div>
               <Briefcase className="w-8 h-8 text-pink-400" />
               <div>
-                <h3 className="font-bold mt-4">Careers</h3>
-                <p className="text-xs text-neutral-500 mt-1">Jobs & Resumes.</p>
+                <h3 className="font-bold mt-4">Resume Builder</h3>
+                <p className="text-xs text-neutral-500 mt-1">AI-Powered Profiles.</p>
               </div>
             </div>
 
@@ -205,6 +206,36 @@ export default async function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Command Center Module (New) */}
+            <Link href="/command-center" className="col-span-2 md:col-span-4 bg-gradient-to-r from-indigo-900/20 to-neutral-900 p-6 rounded-3xl border border-indigo-500/30 relative overflow-hidden group hover:border-indigo-500/50 transition-all">
+              <div className="absolute top-0 right-0 p-40 bg-indigo-500/10 blur-[80px] rounded-full group-hover:bg-indigo-500/20 transition-all"></div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30 text-indigo-400">
+                    <Activity className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      Command Center
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                    </h3>
+                    <p className="text-sm text-neutral-400 mt-1">
+                      Realtime Telemetry & Remote Rig Control. <span className="text-indigo-400 font-bold">Zero Latency.</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider">
+                    Live Beta
+                  </span>
+                  <ArrowRight className="w-5 h-5 text-neutral-500 group-hover:text-white transition-colors" />
+                </div>
+              </div>
+            </Link>
 
           </div>
         </section>
