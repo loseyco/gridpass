@@ -6,20 +6,30 @@ import { createAdminClient } from '@/utils/supabase/admin';
 // ... existing imports
 
 export async function toggleUserBan(userId: string, isBanned: boolean) {
-    const supabase = await createAdminClient();
-
-    // 1. Update Profile
-    const { error } = await supabase
-        .from('profiles')
-        .update({ is_banned: isBanned })
-        .eq('id', userId);
-
-    if (error) {
-        console.error('Error toggling ban:', error);
-        return { error: 'Failed to update ban status' };
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing during toggleUserBan');
+        return { error: 'Server configuration error: Missing Admin Key' };
     }
 
-    return { success: true };
+    try {
+        const supabase = createAdminClient();
+
+        // 1. Update Profile
+        const { error } = await supabase
+            .from('profiles')
+            .update({ is_banned: isBanned })
+            .eq('id', userId);
+
+        if (error) {
+            console.error('Error toggling ban:', error);
+            return { error: `Failed to update ban status: ${error.message}` };
+        }
+
+        return { success: true };
+    } catch (e: any) {
+        console.error('Unexpected error in toggleUserBan:', e);
+        return { error: `Unexpected error: ${e.message}` };
+    }
 }
 
 export async function registerUser(formData: FormData) {

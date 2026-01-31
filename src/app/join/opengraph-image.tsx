@@ -11,20 +11,33 @@ export const size = {
 
 export const contentType = 'image/png';
 
-export default async function Image({ searchParams }: { searchParams: { token?: string } }) {
-    // 1. Fetch Invite Data
-    const { token } = searchParams;
+// 1. Safe searchParams handling for Next.js 15+
+export default async function Image({ searchParams }: { searchParams: Promise<{ token?: string }> | { token?: string } }) {
     let role = 'MEMBER';
     let note: string | null = null;
     let valid = false;
 
-    if (token) {
-        // Use direct fetch to avoid cookie issues on Edge Runtime
-        try {
+    // Default colors
+    const colors: Record<string, string> = {
+        FOUNDER: '#fbbf24', // Amber/Gold
+        ADMIN: '#ef4444',   // Red
+        MEMBER: '#34d399',  // Emerald
+        DRIVER: '#ffffff',  // White
+    };
+
+    try {
+        // Await searchParams if it's a promise
+        const resolvedParams = await searchParams;
+        const token = resolvedParams?.token;
+
+        if (token) {
+            // Use direct fetch to avoid cookie issues on Edge Runtime
             const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
             const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
             if (supabaseUrl && supabaseKey) {
+                // Determine protocol - usually https, but helpful to be explicit if needed
+                // Using simple fetch to RPC
                 const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_invite_by_token`, {
                     method: 'POST',
                     headers: {
@@ -44,18 +57,13 @@ export default async function Image({ searchParams }: { searchParams: { token?: 
                     }
                 }
             }
-        } catch (e) {
-            console.error('OG Image Fetch Error:', e);
         }
+    } catch (e) {
+        console.error('OG Generation Error:', e);
+        // Fallback to default state on error
+        role = 'MEMBER';
+        valid = false;
     }
-
-    // 2. Define Colors based on Role
-    const colors: Record<string, string> = {
-        FOUNDER: '#fbbf24', // Amber/Gold
-        ADMIN: '#ef4444',   // Red
-        MEMBER: '#34d399',  // Emerald
-        DRIVER: '#ffffff',  // White
-    };
 
     const accentColor = colors[role.toUpperCase()] || colors.DRIVER;
 
@@ -102,7 +110,6 @@ export default async function Image({ searchParams }: { searchParams: { token?: 
                 >
                     {/* Logo Area */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                        {/* We can't use local images easily in Edge without reading file buffer, so using text/shapes for now or simpler layout */}
                         <div style={{
                             fontSize: '32px',
                             fontWeight: 900,

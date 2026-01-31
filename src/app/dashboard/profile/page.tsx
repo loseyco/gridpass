@@ -495,6 +495,19 @@ export default function ProfilePage() {
                     }
                 </div >
             </div >
-        </div >
+            {/* Cropper Modal */}
+            {cropImageSrc && cropConfig && (
+                <ImageCropper
+                    imageSrc={cropImageSrc}
+                    aspectRatio={cropConfig.aspect}
+                    circularCrop={cropConfig.circular}
+                    onCropComplete={handleCropComplete}
+                    onCancel={() => {
+                        setCropImageSrc(null);
+                        setCropConfig(null);
+                    }}
+                />
+            )}
+        </div>
     );
 }
