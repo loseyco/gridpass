@@ -1,7 +1,8 @@
 import { createClient } from '@/utils/supabase/server';
-import { Database } from '@/types/supabase';
+import { UserRole, Permission, ROLES } from './rbac-shared';
 
-export type UserRole = Database['public']['Enums']['user_role'];
+// Export Shared Types/Constants so Server Components can import everything from here
+export * from './rbac-shared';
 
 const ROLE_HIERARCHY: Record<UserRole, number> = {
     superadmin: 100,
@@ -44,10 +45,26 @@ export async function requireRole(requiredRole: UserRole): Promise<boolean> {
     return hasRole(requiredRole);
 }
 
-export const ROLES = {
-    SUPERADMIN: 'superadmin' as UserRole,
-    ADMIN: 'admin' as UserRole,
-    FOUNDER: 'founder' as UserRole,
-    MEMBER: 'member' as UserRole,
-    USER: 'user' as UserRole
-};
+export async function hasPermission(requiredPermission: Permission): Promise<boolean> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return false;
+
+    // Superadmin override (optional, but good for safety)
+    if (await hasRole('superadmin')) return true;
+
+    // 1. Get User Role
+    const userRole = await getUserRole();
+    if (!userRole) return false;
+
+    // 2. Check DB for specific permission
+    const { data } = await supabase
+        .from('role_permissions')
+        .select('id')
+        .eq('role', userRole)
+        .eq('permission', requiredPermission)
+        .single();
+
+    return !!data;
+}

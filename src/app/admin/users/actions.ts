@@ -1,7 +1,8 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server';
-import { requireRole, ROLES, UserRole } from '@/utils/rbac';
+import { requireRole, ROLES } from '@/utils/rbac';
+import { UserRole } from '@/utils/rbac-shared';
 import { revalidatePath } from 'next/cache';
 
 export async function updateUserRole(targetUserId: string, newRole: UserRole) {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { updateUserRole } from './actions';
-import { UserRole } from '@/utils/rbac';
+import { UserRole } from '@/utils/rbac-shared';
 import { Loader2, ChevronDown } from 'lucide-react';
 
 export default function UserRoleSelect({ userId, currentRole }: { userId: string, currentRole: string }) {
