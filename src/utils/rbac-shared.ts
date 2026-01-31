@@ -2,7 +2,7 @@
 // It must NOT import anything from 'next/headers' or '@/utils/supabase/server'
 import { Database } from '@/types/supabase';
 
-export type UserRole = Database['public']['Enums']['user_role'];
+export type UserRole = Database['public']['Enums']['user_role'] | 'public';
 
 // Known system permissions
 export const PERMISSIONS = {
@@ -29,7 +29,7 @@ export const ROLES = {
     SUPERADMIN: 'superadmin' as UserRole,
     ADMIN: 'admin' as UserRole,
     FOUNDER: 'founder' as UserRole,
-    MEMBER: 'member' as UserRole,
-    USER: 'user' as UserRole,
-    PUBLIC: 'public' as UserRole // Virtual role for testing
-};
+    MEMBER: 'member',
+    USER: 'user',
+    PUBLIC: 'public'
+} as const;
