@@ -120,6 +120,20 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         >
                             Founding 50
                         </Link>
+                        <Link
+                            href="/features"
+                            className="text-neutral-300 hover:text-white py-2 block"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Features
+                        </Link>
+                        <Link
+                            href="/changelog"
+                            className="text-neutral-300 hover:text-white py-2 block"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Changelog
+                        </Link>
 
                         <div className="h-px bg-white/10 my-2"></div>
 

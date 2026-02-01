@@ -10,15 +10,14 @@ export const metadata = {
     description: 'Vote on the future of GridPass. Submit ideas and track our progress.'
 };
 
+import { getUserRole } from '@/utils/rbac';
+
 export default async function FeaturesPage() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    let isAdmin = false;
-    if (user) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-        isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
-    }
+    // Check role using RBAC utility (respects impersonation)
+    const role = await getUserRole();
+    const isAdmin = role === 'admin' || role === 'superadmin';
 
     const features = await getPublicFeatures();
     const completedFeatures = await getCompletedFeatures();
