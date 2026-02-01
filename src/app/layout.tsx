@@ -7,6 +7,7 @@ import SuspendedBannerWrapper from "@/components/SuspendedBannerWrapper";
 import PageTracker from "@/components/analytics/PageTracker";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
+import { Toaster } from 'sonner';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,7 +66,9 @@ export default async function RootLayout({
         <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
         <SuspendedBannerWrapper />
+        <SuspendedBannerWrapper />
         <PageTracker />
+        <Toaster theme="dark" position="top-center" />
         {children}
       </body>
     </html>
