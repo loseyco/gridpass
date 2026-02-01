@@ -14,9 +14,10 @@ import { CareerEntry } from '@/types/career';
 // Force dynamic rendering since we rely on DB data for slugs
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: { params: { username: string } }) {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ username: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const supabase = await createClient();
     const { username } = await params;
+    const { action } = await searchParams;
 
     const { data: profile } = await supabase
         .from('profiles')
@@ -31,6 +32,20 @@ export async function generateMetadata({ params }: { params: { username: string 
     }
 
     const displayName = profile.full_name || profile.username;
+
+    if (action === 'recommend') {
+        return {
+            title: `Recommendation Request from ${displayName}`,
+            description: `I'm building my racing profile on GridPass and would love your recommendation. Click to write a review.`,
+            openGraph: {
+                title: `I need your recommendation! | ${displayName}`,
+                description: `Vouch for ${displayName} on GridPass to help them build their racing reputation.`,
+                type: 'profile',
+                username: profile.username,
+                images: profile.avatar_url ? [profile.avatar_url] : [], // Optionally use a specific "Help me" image if we had one
+            }
+        };
+    }
 
     return {
         title: `${displayName} (@${profile.username})`,

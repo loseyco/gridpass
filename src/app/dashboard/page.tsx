@@ -88,6 +88,23 @@ export default async function DashboardPage() {
 
                 {/* Right Column: Status & Info */}
                 <div className="space-y-6">
+                    {/* Reputation / Points */}
+                    <div className="bg-neutral-900 p-6 rounded-xl border border-white/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-16 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none group-hover:bg-indigo-500/20 transition-all"></div>
+                        <div className="relative z-10">
+                            <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-4">
+                                <Trophy className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <h3 className="font-bold mb-1 text-white">Reputation</h3>
+                            <div className="text-3xl font-bold text-white mb-2">
+                                {profile?.points || 0} <span className="text-sm font-normal text-neutral-500">pts</span>
+                            </div>
+                            <p className="text-xs text-neutral-500">
+                                Earn points by recommending others and building your profile.
+                            </p>
+                        </div>
+                    </div>
+
                     {/* Pass Status */}
                     <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">
                         <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-4">

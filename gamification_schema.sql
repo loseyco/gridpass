@@ -46,3 +46,29 @@ BEGIN
     WHERE id = target_user_id;
 END;
 $$;
+
+-- Revoke public access to prevent abuse (Only Service Role or Triggers should call this)
+REVOKE EXECUTE ON FUNCTION award_points FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION award_points FROM anon;
+REVOKE EXECUTE ON FUNCTION award_points FROM authenticated;
+
+-- Trigger Function for Signup Bonus
+CREATE OR REPLACE FUNCTION award_signup_bonus()
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- Award 100 points for joining (Early Adopter / Signup Bonus)
+    PERFORM award_points(NEW.id, 100, 'signup_bonus');
+    RETURN NEW;
+END;
+$$;
+
+-- Trigger for Signup Bonus
+DROP TRIGGER IF EXISTS signup_bonus_trigger ON profiles;
+
+CREATE TRIGGER signup_bonus_trigger
+AFTER INSERT ON profiles
+FOR EACH ROW
+EXECUTE FUNCTION award_signup_bonus();

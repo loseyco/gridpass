@@ -131,9 +131,23 @@ export async function submitRecommendation(formData: FormData) {
             });
         }
 
+        // 3. Award Points (Gamification)
+        if (user) {
+            const { error: pointsError } = await supabaseAdmin.rpc('award_points', {
+                target_user_id: user.id,
+                points_amount: 50,
+                reason_text: 'recommendation_given',
+                meta: { target_user_id: targetUserId }
+            });
+
+            if (pointsError) {
+                console.error("Failed to award points:", pointsError);
+            }
+        }
+
     } catch (emailError) {
-        // Don't block the actual submission if email fails, but log it.
-        console.error("Failed to send recommendation emails:", emailError);
+        // Don't block the actual submission if email/points fail, but log it.
+        console.error("Failed to process side effects (email/mn):", emailError);
     }
 
     revalidatePath(`/u/[username]`);
