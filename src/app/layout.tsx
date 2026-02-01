@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PitLane } from "@/components/PitLane";
+import JsonLd from "@/components/JsonLd";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ImpersonationBarWrapper from "@/components/admin/ImpersonationBarWrapper";
@@ -8,6 +10,7 @@ import PageTracker from "@/components/analytics/PageTracker";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 import { Toaster } from 'sonner';
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,9 +60,24 @@ export default async function RootLayout({
   const role = await getUserRole();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <JsonLd />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <GoogleAnalytics />
         <MicrosoftClarity />
@@ -69,7 +87,9 @@ export default async function RootLayout({
         <SuspendedBannerWrapper />
         <PageTracker />
         <Toaster theme="dark" position="top-center" />
+        <PitLane />
         {children}
+        <Footer />
       </body>
     </html>
   );

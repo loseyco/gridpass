@@ -61,11 +61,11 @@ export async function POST(request: Request) {
                     await resend.emails.send({
                         from: 'GridPass Founders <founders@gridpass.app>',
                         to: session.customer_details.email,
-                        subject: 'Welcome to the Founding 50',
+                        subject: 'Welcome to the Founding 100',
                         html: `
                             <div style="font-family: sans-serif; color: #333;">
                                 <h1>Welcome to the Inner Circle.</h1>
-                                <p>You have successfully secured your spot in the GridPass Founding 50.</p>
+                                <p>You have successfully secured your spot in the GridPass Founding 100.</p>
                                 <p>Your profile now displays the exclusive <strong>Founder Badge</strong>.</p>
                                 <br/>
                                 <a href="https://gridpass.app/dashboard" style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px;">

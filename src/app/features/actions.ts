@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { Resend } from 'resend';
 
 export async function getPublicFeatures() {
     const supabase = await createClient();
@@ -104,8 +105,28 @@ export async function submitFeature(formData: FormData) {
 
     if (error) return { error: error.message };
 
-    // Auto-vote for creator?
-    // Not implemented for simplicity, they can click vote.
+    // Send notification email
+    try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+            from: 'GridPass <noreply@gridpass.app>',
+            to: ['admin@gridpass.io', 'pjlosey@gmail.com'],
+            subject: `New Feature Request: ${title}`,
+            html: `
+                <h1>New Feature Request</h1>
+                <p><strong>User:</strong> ${user.email}</p>
+                <p><strong>Title:</strong> ${title}</p>
+                <p><strong>Category:</strong> ${category}</p>
+                <p><strong>Description:</strong></p>
+                <p>${description}</p>
+                <br/>
+                <a href="https://gridpass.app/features">View Features Board</a>
+            `
+        });
+    } catch (err) {
+        console.error('Failed to send email notif:', err);
+        // Don't fail the request if email fails
+    }
 
     revalidatePath('/features');
     return { success: true };

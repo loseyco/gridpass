@@ -29,7 +29,7 @@ export default async function LoginPage() {
                 <LoginForm />
 
                 <div className="mt-8 text-center">
-                    <Link href="/founder/register" className="inline-flex items-center gap-2 text-amber-500 text-xs font-bold uppercase tracking-widest hover:text-amber-400 border border-amber-500/20 bg-amber-500/5 px-4 py-2 rounded-full transition-colors">
+                    <Link href="/founder/checkout" className="inline-flex items-center gap-2 text-amber-500 text-xs font-bold uppercase tracking-widest hover:text-amber-400 border border-amber-500/20 bg-amber-500/5 px-4 py-2 rounded-full transition-colors">
                         Become a Founder <ChevronRight className="w-3 h-3" />
                     </Link>
                 </div>

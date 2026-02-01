@@ -41,3 +41,10 @@ next-env.d.ts
 local-ai/
 
 .vercel
+
+# Electron Artifacts
+**/dist-electron
+**/release
+# Electron Artifacts
+**/dist-electron
+**/release

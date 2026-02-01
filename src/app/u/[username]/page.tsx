@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
 import ProfileActions from './profile-actions';
+import { ShareCard } from '@/components/ShareCard';
 import RecommendationSection from '@/components/profile/RecommendationSection';
 import { CareerEntry } from '@/types/career';
 
@@ -124,11 +125,18 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                             )}
                         </div>
 
-                        <ProfileActions
-                            isOwner={isOwner}
-                            recipientName={profile.full_name || profile.username}
-                            recipientUsername={profile.username}
-                        />
+                        <div className="flex items-center gap-3">
+                            <ShareCard
+                                url={`https://gridpass.app/u/${profile.username}`}
+                                title={`@${profile.username}`}
+                                subtitle="GridPass Racing Profile"
+                            />
+                            <ProfileActions
+                                isOwner={isOwner}
+                                recipientName={profile.full_name || profile.username}
+                                recipientUsername={profile.username}
+                            />
+                        </div>
                     </div>
 
                     {/* Header Card */}

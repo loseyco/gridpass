@@ -32,6 +32,7 @@ export type Database = {
                     full_name?: string | null
                     avatar_url?: string | null
                     role?: Database["public"]["Enums"]["user_role"]
+                    founder_ref?: number | null
                     real_world_info?: Json
                     driver_info?: Json
                     mechanic_info?: Json

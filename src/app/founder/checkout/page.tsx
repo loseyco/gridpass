@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { createClient } from '@/utils/supabase/client';
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+import { calculateFounderPrice } from '@/utils/pricing';
 
 // Initialize Stripe loader (only once)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -203,14 +204,26 @@ export default function FounderRegisterPage() {
                     </ul>
                 </div>
 
-                <div className="border-t border-white/10 pt-6">
-                    <div className="flex justify-between items-center text-lg font-bold">
-                        <span>Total Due</span>
-                        <span>$1,500.00</span>
+                <div className="bg-neutral-800/50 p-4 rounded-lg border border-white/5 mb-6">
+                    <div className="flex justify-between items-center text-sm text-neutral-400 mb-2">
+                        <span>Dynamic Price (Spot #{spotsRemaining !== null ? (100 - spotsRemaining) + 1 : '...'})</span>
                     </div>
-                    <p className="text-xs text-neutral-500 mt-2">One-time payment. No hidden fees.</p>
+                    <div className="flex justify-between items-center text-3xl font-black text-amber-500">
+                        <span>Total Due</span>
+                        <span>
+                            {spotsRemaining !== null
+                                ? `$${calculateFounderPrice(100 - spotsRemaining).toLocaleString()}`
+                                : '...'}
+                        </span>
+                    </div>
                 </div>
+                <p className="text-xs text-neutral-500">
+                    One-time payment. Price locked for 15 minutes.
+                    <br />
+                    <span className="text-amber-500/50">Next spot will be higher.</span>
+                </p>
             </div>
+
 
             {/* Right: Form */}
             <div className="w-full md:w-2/3 p-8 md:p-16 flex items-center justify-center">
@@ -367,6 +380,6 @@ export default function FounderRegisterPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

@@ -15,15 +15,16 @@ export default function ActiveDeviceView({ deviceId, deviceName }: { deviceId: s
 
     const sendCommand = async (command: string, payload: any = {}) => {
         try {
-            await fetch('/api/connect/command', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    device_id: deviceId,
-                    command,
-                    payload
-                })
+            const { error } = await supabase.from('device_commands').insert({
+                device_id: deviceId,
+                type: command,
+                payload
             });
+
+            if (error) {
+                console.error('Command Insert Error:', error);
+                throw error;
+            }
         } catch (err) {
             alert('Failed to send command');
         }
@@ -160,22 +161,22 @@ export default function ActiveDeviceView({ deviceId, deviceName }: { deviceId: s
                     color="orange"
                 />
                 <CommandButton
-                    label="Pit Stop"
+                    label="Exit Sim"
                     icon={<Settings size={16} />}
-                    onClick={() => sendCommand('pit_stop')}
+                    onClick={() => sendCommand('exit_sim')}
                     color="blue"
                 />
                 <CommandButton
                     label="Reboot PC"
                     icon={<Power size={16} />}
-                    onClick={() => sendCommand('system_reboot')}
+                    onClick={() => sendCommand('reboot')}
                     color="red"
                     confirm
                 />
                 <CommandButton
                     label="Shutdown"
                     icon={<Power size={16} />}
-                    onClick={() => sendCommand('system_shutdown')}
+                    onClick={() => sendCommand('shutdown')}
                     color="red"
                     confirm
                 />

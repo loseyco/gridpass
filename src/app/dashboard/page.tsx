@@ -1,9 +1,10 @@
 import { createClient } from '@/utils/supabase/server';
-import { Trophy, Shield, Activity, Star, Globe, Clock, ArrowRight } from 'lucide-react';
+import { Trophy, Shield, Activity, Star, Globe, Clock, ArrowRight, Wrench, Users } from 'lucide-react';
 import Link from 'next/link';
 import QuickLogWidget from './quick-log-widget';
 import PendingRecommendationsWidget from './pending-recommendations-widget';
 import ProfileCompletionWidget from '@/components/dashboard/ProfileCompletionWidget';
+import AffiliateWidget from '@/components/dashboard/AffiliateWidget';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -23,6 +24,9 @@ export default async function DashboardPage() {
         .eq('user_id', user?.id)
         .eq('role', 'Founder')
         .single();
+
+    // Extract Ref from JSON (DDL Bypass)
+    const founderRef = profile?.real_world_info?.founder_ref || null;
 
     const isFounder = !!founderRole || profile?.role?.toLowerCase() === 'founder';
 
@@ -44,7 +48,9 @@ export default async function DashboardPage() {
                                 <Star className="w-3 h-3 fill-amber-500" />
                                 Active Status
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-1">Founding Member</h2>
+                            <h2 className="text-2xl font-bold text-white mb-1">
+                                Founding Member {founderRef ? <span className="text-amber-500">#{founderRef}</span> : ''}
+                            </h2>
                             <p className="text-amber-200/60 text-sm">Your lifetime access is active.</p>
                         </div>
                         <Shield className="w-12 h-12 text-amber-500 opacity-80" />
@@ -54,7 +60,7 @@ export default async function DashboardPage() {
                 <div className="bg-neutral-900 border border-white/5 p-6 rounded-2xl">
                     <h2 className="text-xl font-bold mb-2">Upgrade to Founder</h2>
                     <p className="text-neutral-400 text-sm mb-4">Secure lifetime access and support the development.</p>
-                    <Link href="/founder/register" className="inline-block bg-white text-black px-4 py-2 rounded font-bold text-sm hover:bg-neutral-200">
+                    <Link href="/founder/checkout" className="inline-block bg-white text-black px-4 py-2 rounded font-bold text-sm hover:bg-neutral-200">
                         Become a Founder
                     </Link>
                 </div>
@@ -70,6 +76,52 @@ export default async function DashboardPage() {
                 <div className="lg:col-span-2 space-y-8">
                     {/* Profile Completion - Primary Call to Action */}
                     <ProfileCompletionWidget profile={profile} />
+
+                    {/* ENTERPRISE OS MODULES (Ghosted Upsell) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                            { name: "Shop OS", icon: "Wrench", desc: "Inventory & Repair Management" },
+                            { name: "Team Hub", icon: "Users", desc: "Logistics & Personnel" },
+                            { name: "Cockpit", icon: "Gauge", desc: "Live Telemetry & Data" }
+                        ].map((mod) => (
+                            <Link
+                                key={mod.name}
+                                href={isFounder ? '#' : '/founder/checkout'}
+                                className={`group relative p-6 rounded-xl border transition-all overflow-hidden ${isFounder
+                                    ? 'bg-neutral-900 border-white/5 hover:border-indigo-500/50 cursor-default'
+                                    : 'bg-neutral-950 border-white/5 hover:border-amber-500/30'
+                                    }`}
+                            >
+                                {/* Ghosting Effect */}
+                                {!isFounder && (
+                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center text-center p-4">
+                                        <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center mb-2 animate-pulse">
+                                            <Shield className="w-5 h-5 text-amber-500" />
+                                        </div>
+                                        <span className="text-xs font-bold text-amber-500 uppercase tracking-widest">Founder Exclusive</span>
+                                    </div>
+                                )}
+
+                                {/* Card Content */}
+                                <div className={`flex flex-col h-full ${!isFounder ? 'opacity-30 blur-[1px]' : ''}`}>
+                                    <div className="mb-4 p-3 bg-white/5 w-fit rounded-lg">
+                                        {mod.icon === "Wrench" && <Wrench className="w-5 h-5 text-neutral-300" />}
+                                        {mod.icon === "Users" && <Users className="w-5 h-5 text-neutral-300" />}
+                                        {mod.icon === "Gauge" && <Activity className="w-5 h-5 text-neutral-300" />}
+                                    </div>
+                                    <h3 className="font-bold text-lg text-white mb-1">{mod.name}</h3>
+                                    <p className="text-xs text-neutral-500">{mod.desc}</p>
+
+                                    {isFounder && (
+                                        <div className="mt-auto pt-4 flex items-center gap-2 text-xs text-indigo-400 font-mono">
+                                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                                            COMING SOON
+                                        </div>
+                                    )}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
 
                     {/* Quick Log Widget */}
                     <div className="bg-neutral-900 border border-white/5 rounded-xl p-6">
@@ -88,6 +140,9 @@ export default async function DashboardPage() {
 
                 {/* Right Column: Status & Info */}
                 <div className="space-y-6">
+                    {/* Affiliate / Referral Widget (New) */}
+                    {profile?.username && <AffiliateWidget username={profile.username} />}
+
                     {/* Reputation / Points */}
                     <div className="bg-neutral-900 p-6 rounded-xl border border-white/5 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-16 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none group-hover:bg-indigo-500/20 transition-all"></div>

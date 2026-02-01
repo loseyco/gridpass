@@ -30,7 +30,17 @@ export default async function CommandCenterPage({ searchParams }: { searchParams
     // REVERTING this tool call idea. I will write a NEW component `CommandCenterDashboard` instead,
     // then update the page to use it.
     // The page remains a Server Component, fetches data, and renders the client component.
+
+    const formattedDevices = (devices || []).map(d => {
+        // Simple "Online" check: seen in last 30 seconds
+        const isOnline = d.last_seen_at && (new Date().getTime() - new Date(d.last_seen_at).getTime() < 30000);
+        return {
+            ...d,
+            status: isOnline ? 'online' : 'offline'
+        };
+    });
+
     return (
-        <CommandCenterDashboard initialDevices={devices || []} autoOpenLinking={isLinking} />
+        <CommandCenterDashboard initialDevices={formattedDevices} autoOpenLinking={isLinking} />
     );
 }

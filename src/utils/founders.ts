@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
+import { PRICING_CONSTANTS } from '@/utils/pricing';
 
-export const FOUNDER_LIMIT = 50;
+export const FOUNDER_LIMIT = PRICING_CONSTANTS.TOTAL_SPOTS;
 
 export async function getFounderCount() {
     const supabase = await createClient();

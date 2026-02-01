@@ -153,7 +153,7 @@ export default function JoinFlow({ invite, user, trackingId }: Props) {
                 )}
 
                 {/* 1. Founder Card */}
-                <Link href="/founder/register" className="group relative block w-full">
+                <Link href="/founder/checkout" className="group relative block w-full">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-red-600 rounded-2xl opacity-75 group-hover:opacity-100 blur transition duration-500"></div>
                     <div className="relative flex items-center justify-between p-6 bg-neutral-900 rounded-2xl border border-white/10 hover:bg-neutral-800/90 transition-all">
                         <div className="flex items-center gap-5">

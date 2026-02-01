@@ -57,7 +57,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                             Members Directory
                         </Link>
                         <Link href="/founder" className="text-amber-500 hover:text-amber-400 transition-colors text-sm font-bold uppercase tracking-wide">
-                            Founding 50
+                            Founding 100
                         </Link>
                         <Link href="/features" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Features
@@ -118,7 +118,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                             className="text-amber-500 font-bold uppercase tracking-widest py-2 block"
                             onClick={() => setIsOpen(false)}
                         >
-                            Founding 50
+                            Founding 100
                         </Link>
                         <Link
                             href="/features"

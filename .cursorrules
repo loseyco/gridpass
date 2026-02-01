@@ -1,20 +1,52 @@
-# Antigravity / Agent Rules
+# 🏎️ GridPass: Enterprise Motorsports Operating System (MOS)
 
-## Local AI Governance
-1. **The "Project Manager" Protocol**:
-   - For complex, multi-step features, you MUST verify your plan with the **Local Project Manager** persona (`local-ai/experts/project_manager.md`).
-   - Use `scripts/pm_agent.js` to break down missions if you are unsure of the architectural implications.
-   - Report major milestones to `local-ai/reports/pm_status.md`.
+## 🌍 Strategic Mission
+GridPass is the "Salesforce of Motors"—a multi-tenant, high-security ERP.
+- **Goal**: Standardize the fragmented motorsports industry (Shop, Track, Team).
+- **Architecture**: Scalable, offline-first (PWA), and data-heavy (VIN/Telemetry).
 
-2. **The "Expert" System**:
-   - "Employees" live in `local-ai/experts/`.
-   - When writing code for specific domains (SEO, Frontend, Backend), ADHERE strictly to the personas defined in these files.
-   - Example: When touching `src/app`, consult `local-ai/experts/frontend.md` for styling/component rules.
+## 🛡️ Security & RBAC (Non-Negotiable)
+- **Data Isolation**: Multi-tenant logic is mandatory. Every query MUST filter by `tenant_id` or `organization_id`.
+- **RBAC**: Use Strict Role-Based Access Control.
+    - `/admin`: Super-admin only.
+    - `/shop`: Shop owners and staff.
+    - `/team`: Logistics, crew, and drivers.
+- **Sensitive Data**: Payroll, Staffing, and Financial routes must never be modified without an explicit `<SECURITY_REVIEW>` block in your plan.
 
-3. **SEO & Analytics**:
-   - All new public pages must be scanned by the `scripts/seo_agent.js`.
-   - Check `local-ai/reports/seo_audit.json` before marking SEO tasks as complete.
+## 🏗️ Technical Architecture (Next.js 14+ / Supabase)
+- **Rendering**: Favor React Server Components (RSC) for data fetching. 
+- **State**: Use URL state (`nuqs`) for filters/search to ensure deep-linking works.
+- **Forms**: Use `react-hook-form` + `zod` for all inputs. No unvalidated form data.
+- **Database**: 
+    - Always reference existing migrations before proposing schema changes.
+    - Row Level Security (RLS) must be defined for every new table.
+- **Images**: Auto-convert to WebP/AVIF using Supabase transformations via `next/image`.
 
-## User Preferences
-- **Esthetics**: "Cyberpunk", "Dark Mode", "Premium", "Video Game Style".
-- **Tech Stack**: Next.js 14+, Tailwind, Supabase, Lucide React.
+## 🤖 Agent Governance & Personas
+Before acting, assume the relevant persona from `local-ai/experts/`:
+1. **Architect** (@architect.md): Review large-scale module integrations (e.g., Ticket QR system).
+2. **PM Agent** (@project_manager.md): Break down missions into atomic tasks in `local-ai/reports/pm_status.md`.
+3. **Security Lead** (@security.md): Audit any changes to auth, payroll, or PWA offline sync.
+
+## 📈 SEO & Growth
+- **Dynamic SEO**: Use `generateMetadata` for all vehicle (`/garage/[id]`) and job listings.
+- **Sitemap**: Sitemaps MUST be dynamic to handle thousands of VIN entries.
+- **Structured Data**: Implement `JSON-LD` (Organization, SoftwareApplication, and JobPosting).
+
+## 🎨 Aesthetics & UX
+- **Theme**: "Cyberpunk", "Premium Dark Mode", "High-Contrast Gaming UI".
+- **Feedback**: Use "Racing-themed" loaders (e.g., Progress bars look like tachometers).
+- **Responsive**: Mobile-first is critical. Track staff use the PWA on phones in high-glare environments.
+
+## 🚦 Execution Protocol
+1. **Plan**: Propose changes. Wait for 🟢 approval.
+2. **Analyze**: Search for existing patterns (don't reinvent the wheel).
+3. **Execute**: Write clean, modular code (max 250 lines per file).
+4. **Verify**: Run a type-check and lint. Update `pm_status.md`.
+
+## 📝 Git & Changelog Protocol
+- **Conventional Commits**: You MUST use conventional commit prefixes (feat:, fix:, chore:, docs:, refactor:).
+- **Public-Facing Language**: Commit messages are PUBLIC. Use active, clear language for the live site feed.
+- **[SITE-UPDATE] Trigger**: Any commit intended for the live site changelog MUST include the `[SITE-UPDATE]` tag.
+    - *Example*: `feat: [SITE-UPDATE] added real-time tire pressure logging for JKU profiles`
+- **Changelog Sync**: Ensure `local-ai/reports/pm_status.md` is updated before committing so the "Impact" description is accurate.
