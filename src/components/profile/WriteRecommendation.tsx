@@ -152,6 +152,7 @@ export default function WriteRecommendation({ targetUserId, targetName, autoOpen
                             <option value="Client">Client</option>
                             <option value="Fellow Racer">Fellow Racer</option>
                             <option value="Mentor">Mentor</option>
+                            <option value="Friend">Friend</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
