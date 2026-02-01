@@ -3,7 +3,7 @@ import { Star, MessageSquareQuote, ShieldCheck } from 'lucide-react';
 import WriteRecommendation from './WriteRecommendation';
 import Link from 'next/link';
 
-export default async function RecommendationSection({ targetUserId, targetName }: { targetUserId: string, targetName: string }) {
+export default async function RecommendationSection({ targetUserId, targetName, autoOpen = false }: { targetUserId: string, targetName: string, autoOpen?: boolean }) {
     const recommendations = await getRecommendations(targetUserId);
 
     return (
@@ -26,7 +26,7 @@ export default async function RecommendationSection({ targetUserId, targetName }
                 </div>
 
                 <div className="print:hidden">
-                    <WriteRecommendation targetUserId={targetUserId} targetName={targetName} />
+                    <WriteRecommendation targetUserId={targetUserId} targetName={targetName} autoOpen={autoOpen} />
                 </div>
             </div>
 

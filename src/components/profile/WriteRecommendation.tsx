@@ -6,7 +6,7 @@ import { Loader2, Send, Star, User, Lock, CheckCircle, ShieldCheck } from 'lucid
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 
-export default function WriteRecommendation({ targetUserId, targetName }: { targetUserId: string, targetName: string }) {
+export default function WriteRecommendation({ targetUserId, targetName, autoOpen = false }: { targetUserId: string, targetName: string, autoOpen?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [submitted, setSubmitted] = useState(false);
@@ -14,6 +14,12 @@ export default function WriteRecommendation({ targetUserId, targetName }: { targ
 
     // Client-side auth check
     const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        if (autoOpen) {
+            setIsOpen(true);
+        }
+    }, [autoOpen]);
 
     useEffect(() => {
         const checkUser = async () => {
@@ -58,18 +64,33 @@ export default function WriteRecommendation({ targetUserId, targetName }: { targ
                             Thanks for vouching for {targetName}. Your recommendation is pending approval and will appear on their profile soon.
                         </p>
 
-                        <div className="bg-neutral-800/50 rounded-xl p-6 border border-white/5 mb-6">
-                            <h4 className="text-white font-bold mb-2">Join the Grid</h4>
-                            <p className="text-sm text-neutral-400 mb-4">
-                                Create your own professional racing profile to showcase your career and get discovered.
-                            </p>
-                            <Link
-                                href="/register"
-                                className="block w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors"
-                            >
-                                Create My Profile
-                            </Link>
-                        </div>
+                        {!user ? (
+                            <div className="bg-neutral-800/50 rounded-xl p-6 border border-white/5 mb-6">
+                                <h4 className="text-white font-bold mb-2">Join the Grid</h4>
+                                <p className="text-sm text-neutral-400 mb-4">
+                                    Create your own professional racing profile to showcase your career and get discovered.
+                                </p>
+                                <Link
+                                    href="/register"
+                                    className="block w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors"
+                                >
+                                    Create My Profile
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="bg-neutral-800/50 rounded-xl p-6 border border-white/5 mb-6">
+                                <h4 className="text-white font-bold mb-2">Recommendation Submitted</h4>
+                                <p className="text-sm text-neutral-400 mb-4">
+                                    You can view your submitted recommendations in your dashboard.
+                                </p>
+                                <Link
+                                    href="/dashboard/recommendations"
+                                    className="block w-full py-3 bg-neutral-700 hover:bg-neutral-600 text-white font-bold rounded-lg transition-colors"
+                                >
+                                    Go to Dashboard
+                                </Link>
+                            </div>
+                        )}
 
                         <button
                             onClick={() => {

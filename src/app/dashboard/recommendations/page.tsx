@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { getAllMyRecommendations, updateRecommendationStatus } from '@/app/actions/recommendations';
-import { CheckCircle, XCircle, Star, Clock, User, MessageSquare, Archive, ThumbsDown } from 'lucide-react';
+import { CheckCircle, XCircle, Star, Clock, User, MessageSquare, Archive, ThumbsDown, Link as LinkIcon, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 interface Recommendation {
     id: string;
@@ -22,6 +23,8 @@ interface Recommendation {
 export default function RecommendationsPage() {
     const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [username, setUsername] = useState<string | null>(null); // Store username
+    const [copied, setCopied] = useState(false); // For feedback
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
@@ -29,6 +32,20 @@ export default function RecommendationsPage() {
         try {
             const data = await getAllMyRecommendations();
             setRecommendations(data as Recommendation[]);
+
+            // Fetch username for the link
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // If username is in metadata, use it
+                if (user.user_metadata?.username) {
+                    setUsername(user.user_metadata.username);
+                } else {
+                    // Fallback to profile fetch if needed
+                    const { data: profile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
+                    if (profile) setUsername(profile.username);
+                }
+            }
         } catch (e) {
             console.error(e);
         } finally {
@@ -39,6 +56,14 @@ export default function RecommendationsPage() {
     useEffect(() => {
         fetchAll();
     }, []);
+
+    const copyLink = () => {
+        if (!username) return;
+        const url = `${window.location.origin}/u/${username}?action=recommend`;
+        navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const handleAction = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
         // Optimistic update
@@ -79,9 +104,20 @@ export default function RecommendationsPage() {
 
     return (
         <div className="space-y-12 animate-fade-in max-w-5xl">
-            <div>
-                <h1 className="text-3xl font-bold mb-2">Recommendations</h1>
-                <p className="text-neutral-400">Manage the testimonials linked to your profile.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold mb-2">Recommendations</h1>
+                    <p className="text-neutral-400">Manage the thick skin testimonials linked to your profile.</p>
+                </div>
+                {username && (
+                    <button
+                        onClick={copyLink}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-all text-sm active:scale-95"
+                    >
+                        {copied ? <Check className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+                        {copied ? 'Copied!' : 'Get Request Link'}
+                    </button>
+                )}
             </div>
 
             {/* Pending Section */}

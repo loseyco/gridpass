@@ -44,9 +44,10 @@ export async function generateMetadata({ params }: { params: { username: string 
     };
 }
 
-export default async function PublicProfilePage({ params }: { params: { username: string } }) {
+export default async function PublicProfilePage({ params, searchParams }: { params: Promise<{ username: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const supabase = await createClient();
     const { username } = await params;
+    const { action } = await searchParams;
 
     // 1. Fetch Profile
     const { data: profile } = await supabase
@@ -248,6 +249,7 @@ export default async function PublicProfilePage({ params }: { params: { username
                         <RecommendationSection
                             targetUserId={profile.id}
                             targetName={profile.full_name || profile.username}
+                            autoOpen={action === 'recommend'}
                         />
                     </div>
 
