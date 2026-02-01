@@ -16,7 +16,8 @@ import {
     ShoppingBag,
     Ticket,
     Menu,
-    X
+    X,
+    LineChart
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -27,6 +28,7 @@ const MENU_ITEMS = [
     { name: 'Features', href: '/admin/features', icon: Lightbulb },
     { name: 'Invites', href: '/admin/invites', icon: Ticket },
     { name: 'Classifieds', href: '/admin/classifieds', icon: ShoppingBag },
+    { name: 'Analytics', href: '/admin/analytics', icon: LineChart },
     { name: 'Database', href: '/admin/database', icon: Database },
 ];
 

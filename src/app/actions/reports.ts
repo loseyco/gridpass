@@ -98,3 +98,28 @@ export async function getTopReferrers() {
         .sort((a, b) => b.value - a.value)
         .slice(0, 5); // Top 5
 }
+
+export async function getTrafficByCountry() {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('analytics_events')
+        .select('meta')
+        .eq('event_type', 'page_view')
+        .limit(2000);
+
+    if (error) throw new Error(error.message);
+
+    const countryStats = new Map<string, number>();
+
+    data?.forEach((event: any) => {
+        const country = event.meta?.country || 'Unknown';
+        if (country !== 'Unknown') {
+            countryStats.set(country, (countryStats.get(country) || 0) + 1);
+        }
+    });
+
+    return Array.from(countryStats.entries())
+        .map(([code, count]) => ({ code, count }))
+        .sort((a, b) => b.count - a.count);
+}

@@ -1,6 +1,7 @@
-import { getDailyTraffic, getUserGrowth, getTopReferrers } from '@/app/actions/reports';
+import { getDailyTraffic, getUserGrowth, getTopReferrers, getTrafficByCountry } from '@/app/actions/reports';
 import TrafficChart from '@/components/admin/analytics/TrafficChart';
 import RealtimeTicker from '@/components/admin/analytics/RealtimeTicker';
+import LiveMap from '@/components/admin/analytics/LiveMap';
 import GrowthChart from '@/components/admin/analytics/GrowthChart';
 import ReportHeader from '@/components/admin/analytics/ReportHeader';
 import PrintButton from '@/components/admin/analytics/PrintButton';
@@ -11,10 +12,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function AnalyticsPage() {
     // Fetch data in parallel
-    const [traffic, growth, referrers] = await Promise.all([
+    const [traffic, growth, referrers, trafficByCountry] = await Promise.all([
         getDailyTraffic(30),
         getUserGrowth(30),
-        getTopReferrers()
+        getTopReferrers(),
+        getTrafficByCountry()
     ]);
 
     return (
@@ -37,6 +39,11 @@ export default async function AnalyticsPage() {
 
             {/* Live Activity Feed */}
             <RealtimeTicker />
+
+            {/* World Map */}
+            <div className="mb-8 print:break-inside-avoid">
+                <LiveMap data={trafficByCountry} />
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 {/* Traffic */}

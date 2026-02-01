@@ -2,9 +2,15 @@
 
 import { createClient } from '@/utils/supabase/server';
 
+import { headers } from 'next/headers';
+
 export async function trackPageView(path: string, referrer?: string, userAgent?: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+
+    const headerStore = await headers();
+    const ip = headerStore.get('x-forwarded-for') || 'unknown';
+    const country = headerStore.get('x-vercel-ip-country') || 'unknown';
 
     // Fire and forget - don't block
     try {
@@ -16,7 +22,12 @@ export async function trackPageView(path: string, referrer?: string, userAgent?:
             event_type: 'page_view',
             path,
             user_id: user?.id,
-            meta: { user_agent: userAgent, referrer: referrer || 'direct' }
+            meta: {
+                user_agent: userAgent,
+                referrer: referrer || 'direct',
+                ip,
+                country
+            }
         });
 
         return { success: true };
