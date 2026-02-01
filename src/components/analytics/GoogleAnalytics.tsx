@@ -3,6 +3,9 @@
 import Script from 'next/script';
 
 export default function GoogleAnalytics() {
+    // Don't render in development to avoid pollution
+    if (process.env.NODE_ENV !== 'production') return null;
+
     return (
         <>
             <Script

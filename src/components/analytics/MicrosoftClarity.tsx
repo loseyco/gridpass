@@ -3,6 +3,9 @@
 import Script from 'next/script';
 
 export default function MicrosoftClarity() {
+    // Don't render in development to avoid pollution
+    if (process.env.NODE_ENV !== 'production') return null;
+
     return (
         <Script id="microsoft-clarity" strategy="afterInteractive">
             {`

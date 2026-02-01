@@ -12,6 +12,9 @@ export default function PageTracker() {
 
     useEffect(() => {
         if (pathname) {
+            // Prevent tracking on localhost
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return;
+
             // Fire and forget, passing referrer
             trackPageView(pathname, document.referrer);
         }
