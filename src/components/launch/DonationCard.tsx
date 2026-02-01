@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Shield, Loader2, X, Lock } from "lucide-react";
+import { Heart, Shield, Loader2, X, Lock, Check } from "lucide-react";
 import { loadStripe } from '@stripe/stripe-js';
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
 
