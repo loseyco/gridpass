@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ImpersonationBarWrapper from "@/components/admin/ImpersonationBarWrapper";
 import SuspendedBannerWrapper from "@/components/SuspendedBannerWrapper";
+import PageTracker from "@/components/analytics/PageTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,6 +61,7 @@ export default async function RootLayout({
         <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
         <SuspendedBannerWrapper />
+        <PageTracker />
         {children}
       </body>
     </html>

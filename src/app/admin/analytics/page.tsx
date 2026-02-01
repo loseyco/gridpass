@@ -1,5 +1,6 @@
 import { getDailyTraffic, getUserGrowth, getTopReferrers } from '@/app/actions/reports';
 import TrafficChart from '@/components/admin/analytics/TrafficChart';
+import RealtimeTicker from '@/components/admin/analytics/RealtimeTicker';
 import GrowthChart from '@/components/admin/analytics/GrowthChart';
 import ReportHeader from '@/components/admin/analytics/ReportHeader';
 import PrintButton from '@/components/admin/analytics/PrintButton';
@@ -33,6 +34,9 @@ export default async function AnalyticsPage() {
                 <h2 className="text-xl font-bold text-black mb-2">Platform Performance Report</h2>
                 <p className="text-sm text-gray-600">30-Day Growth & Traffic Analysis</p>
             </div>
+
+            {/* Live Activity Feed */}
+            <RealtimeTicker />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 {/* Traffic */}

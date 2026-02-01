@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 
-export async function trackPageView(path: string, userAgent?: string) {
+export async function trackPageView(path: string, referrer?: string, userAgent?: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -16,7 +16,7 @@ export async function trackPageView(path: string, userAgent?: string) {
             event_type: 'page_view',
             path,
             user_id: user?.id,
-            meta: { user_agent: userAgent, referrer: 'direct' } // Simplified
+            meta: { user_agent: userAgent, referrer: referrer || 'direct' }
         });
 
         return { success: true };
