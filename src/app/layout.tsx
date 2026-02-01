@@ -5,6 +5,8 @@ import Navbar from "@/components/Navbar";
 import ImpersonationBarWrapper from "@/components/admin/ImpersonationBarWrapper";
 import SuspendedBannerWrapper from "@/components/SuspendedBannerWrapper";
 import PageTracker from "@/components/analytics/PageTracker";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +60,8 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <GoogleAnalytics />
+        <MicrosoftClarity />
         <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
         <SuspendedBannerWrapper />
