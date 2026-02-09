@@ -1,5 +1,6 @@
 
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import Link from 'next/link';
 import { User, Trophy, Wrench, Search, Shield } from 'lucide-react';
 
@@ -21,6 +22,31 @@ export default async function MembersPage() {
         .select('*')
         .not('is_banned', 'is', true)
         .order('created_at', { ascending: false });
+
+    // Fetch Shadow Profiles (Leads)
+    const supabaseAdmin = createAdminClient();
+    const { data: leads } = await supabaseAdmin
+        .from('leads')
+        // Filter only those with a username generated
+        // Note: JSONB filtering can be tricky, we'll fetch recent ones and filter in memory if volume is low, 
+        // or rely on the agent having set it.
+        // For efficiency, we should have an index on contact_info->>username but for now:
+        .select('*')
+        .not('contact_info->username', 'is', null)
+        .eq('status', 'new')
+        .order('created_at', { ascending: false })
+        .limit(50); // Limit to 50 for now
+
+    // Map leads to profile structure
+    const shadowProfiles = leads?.map(lead => ({
+        id: lead.id,
+        username: lead.contact_info.username,
+        full_name: lead.name,
+        avatar_url: lead.contact_info.avatar_url,
+        role: 'member', // Default role
+        is_shadow: true, // Marker for UI
+        skills: lead.skills
+    })) || [];
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white font-sans pt-24 px-4 md:px-8 pb-12">
@@ -46,12 +72,30 @@ export default async function MembersPage() {
                         <ClientMemberCard key={profile.id} profile={profile} />
                     ))}
                 </div>
+
+                {/* Divide with a section header */}
+                {shadowProfiles.length > 0 && (
+                    <div className="mt-16 mb-8">
+                        <h2 className="text-3xl font-bold italic uppercase tracking-tighter mb-2">
+                            Newest <span className="text-neutral-500">Additions</span>
+                        </h2>
+                        <p className="text-neutral-400">
+                            Profiles discovered by our agents. Unclaimed but visible.
+                        </p>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {shadowProfiles.map((profile: any) => (
+                        <ClientMemberCard key={profile.id} profile={profile} isShadow={true} />
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
 
-function ClientMemberCard({ profile }: { profile: any }) {
+function ClientMemberCard({ profile, isShadow = false }: { profile: any, isShadow?: boolean }) {
     return (
         <Link
             href={`/u/${profile.username}`}
@@ -101,6 +145,11 @@ function ClientMemberCard({ profile }: { profile: any }) {
                             }
                             return null;
                         })()}
+                        {isShadow && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neutral-800 text-neutral-500 text-[10px] font-bold uppercase tracking-wider border border-neutral-700">
+                                Unverified
+                            </span>
+                        )}
                     </div>
                 </div>
 

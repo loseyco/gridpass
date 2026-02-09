@@ -15,7 +15,9 @@ import {
     Star,
     Menu,
     X,
-    MoreVertical
+    MoreVertical,
+    Wrench,
+    Car
 } from 'lucide-react';
 import NotificationBadge from '@/components/NotificationBadge';
 import LogoutButton from '@/components/LogoutButton';
@@ -36,8 +38,8 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
     };
 
     const linkClass = (path: string) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(path)
-            ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/20'
-            : 'text-neutral-400 hover:text-white hover:bg-white/5'
+        ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/20'
+        : 'text-neutral-400 hover:text-white hover:bg-white/5'
         }`;
 
     return (
@@ -102,6 +104,14 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
                     <Link href="/dashboard/messages" className={linkClass('/dashboard/messages')} onClick={() => setIsOpen(false)}>
                         <Inbox className="w-5 h-5" />
                         Messages
+                    </Link>
+                    <Link href="/dashboard/vehicles" className={linkClass('/dashboard/vehicles')} onClick={() => setIsOpen(false)}>
+                        <Car className="w-5 h-5" />
+                        Vehicles
+                    </Link>
+                    <Link href="/dashboard/tools" className={linkClass('/dashboard/tools')} onClick={() => setIsOpen(false)}>
+                        <Wrench className="w-5 h-5" />
+                        Tools & Gear
                     </Link>
 
                     {/* Founder Exclusive Section */}

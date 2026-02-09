@@ -5,6 +5,7 @@ import QuickLogWidget from './quick-log-widget';
 import PendingRecommendationsWidget from './pending-recommendations-widget';
 import ProfileCompletionWidget from '@/components/dashboard/ProfileCompletionWidget';
 import AffiliateWidget from '@/components/dashboard/AffiliateWidget';
+import JobMatches from './job-matches';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -17,13 +18,14 @@ export default async function DashboardPage() {
         .eq('id', user?.id)
         .single();
 
-    // Fetch Founder Status
-    const { data: founderRole } = await supabase
+    // Fetch All Roles (e.g. Founder, Team Principle)
+    const { data: userRoles } = await supabase
         .from('roles')
         .select('*')
-        .eq('user_id', user?.id)
-        .eq('role', 'Founder')
-        .single();
+        .eq('user_id', user?.id);
+
+    const founderRole = userRoles?.find(r => r.role === 'Founder');
+    const displayRoles = userRoles?.filter(r => r.role !== 'Founder') || [];
 
     // Extract Ref from JSON (DDL Bypass)
     const founderRef = profile?.real_world_info?.founder_ref || null;
@@ -140,6 +142,9 @@ export default async function DashboardPage() {
 
                 {/* Right Column: Status & Info */}
                 <div className="space-y-6">
+                    {/* Job Matches Widget (New) */}
+                    <JobMatches />
+
                     {/* Affiliate / Referral Widget (New) */}
                     {profile?.username && <AffiliateWidget username={profile.username} />}
 
@@ -159,6 +164,20 @@ export default async function DashboardPage() {
                             </p>
                         </div>
                     </div>
+
+                    {/* Active Roles (Newly Added for Claim Verification) */}
+                    {displayRoles.length > 0 && (
+                        <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">
+                            <h3 className="font-bold mb-3 text-white">Active Roles</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {displayRoles.map((role) => (
+                                    <span key={role.id} className="px-3 py-1 bg-violet-500/20 border border-violet-500/30 text-violet-300 rounded-full text-xs font-bold uppercase tracking-wide">
+                                        {role.role}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Pass Status */}
                     <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">

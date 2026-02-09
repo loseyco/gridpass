@@ -121,5 +121,40 @@ export const SCHEMA_CATEGORIES: FieldCategory[] = [
             { key: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+1 555-0123' },
             { key: 'email', label: 'Email', type: 'email', placeholder: 'jane@example.com' }
         ]
+    },
+    {
+        id: 'skills',
+        title: 'Skills & Expertise',
+        icon: Trophy,
+        description: 'Highlight your technical and professional skills.',
+        db_column: 'skills', // Actually a root column, but handled by editor special case or mapped
+        fields: [
+            { key: 'skills', label: 'Skills', type: 'tags', placeholder: 'e.g. Data Analysis, Fabrication, Setup' }
+        ]
+    },
+    {
+        id: 'professional',
+        title: 'Professional',
+        icon: Briefcase,
+        description: 'Resume and professional links.',
+        db_column: 'basic', // some root columns
+        fields: [
+            { key: 'resume_url', label: 'Resume / CV', type: 'file', placeholder: 'Upload PDF' },
+            { key: 'linkedin', label: 'LinkedIn URL', type: 'url', placeholder: 'https://linkedin.com/in/...' },
+            { key: 'portfolio', label: 'Portfolio URL', type: 'url', placeholder: 'https://...' }
+        ]
+    },
+    {
+        id: 'job_preferences',
+        title: 'Job Preferences',
+        icon: MapPin,
+        description: 'Let teams know what you are looking for.',
+        db_column: 'job_preferences',
+        fields: [
+            { key: 'looking_for', label: 'Looking For', type: 'select', options: ['Full-time', 'Part-time', 'Contract / Fly-in', 'Volunteer / Internship'] },
+            { key: 'availability', label: 'Availability', type: 'select', options: ['Immediate', '2 Weeks Notice', '1 Month Notice', 'Open to discussion'] },
+            { key: 'relocation', label: 'Willing to Relocate?', type: 'checkbox' },
+            { key: 'salary_expectations', label: 'Salary Expectations (Optional)', type: 'text', placeholder: 'e.g. $60k+/yr or $500/day' }
+        ]
     }
 ];

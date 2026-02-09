@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { getEffectiveUserId } from '@/utils/rbac';
 import { notFound } from 'next/navigation';
 import {
-    Shield, Calendar, MapPin, Globe, User, Briefcase
+    Shield, Calendar, MapPin, Globe, User, Briefcase, Trophy
 } from 'lucide-react';
 import Link from 'next/link';
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
@@ -11,6 +11,14 @@ import ProfileActions from './profile-actions';
 import { ShareCard } from '@/components/ShareCard';
 import RecommendationSection from '@/components/profile/RecommendationSection';
 import { CareerEntry } from '@/types/career';
+
+import { createAdminClient } from '@/utils/supabase/admin';
+import { getServices } from '@/app/actions/services';
+import { ServiceCard } from '@/components/services/ServiceCard';
+import { getGarage } from '@/app/dashboard/profile/garage-actions';
+import VehicleCard from '@/components/profile/VehicleCard';
+import ToolCard from '@/components/profile/ToolCard';
+import { Vehicle, Tool } from '@/types/garage';
 
 // Force dynamic rendering since we rely on DB data for slugs
 export const dynamic = 'force-dynamic';
@@ -20,11 +28,42 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
     const { username } = await params;
     const { action } = await searchParams;
 
-    const { data: profile } = await supabase
+    let profile = null;
+    let isShadow = false;
+
+    // 1. Try fetching real profile
+    const { data: realProfile } = await supabase
         .from('profiles')
         .select('full_name, username, bio, avatar_url')
         .ilike('username', username)
         .single();
+
+    profile = realProfile;
+
+    // 2. Fallback to Shadow Profile (Leads)
+    if (!profile) {
+        const supabaseAdmin = createAdminClient();
+        // Query leads by username in contact_info JSON
+        const { data: lead } = await supabaseAdmin
+            .from('leads')
+            .select('*')
+            // This is a bit tricky with JSONB in simple query, but Supabase supports arrow operators in filter
+            // .imatch won't work on jsonb field easily without casting?
+            // "contact_info"->>'username' = username
+            .eq('contact_info->>username', username)
+            .single();
+
+        if (lead) {
+            isShadow = true;
+            profile = {
+                username: lead.contact_info?.username || 'user',
+                full_name: lead.name,
+                bio: lead.contact_info?.bio || `Profile for ${lead.name}`,
+                avatar_url: lead.contact_info?.avatar_url,
+                role: lead.role?.toLowerCase() || 'member'
+            };
+        }
+    }
 
     if (!profile) {
         return {
@@ -34,6 +73,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
 
     const displayName = profile.full_name || profile.username;
 
+    // ... rest of metadata logic (keep existing simple return if possible or adapt)
     if (action === 'recommend') {
         return {
             title: `Recommendation Request from ${displayName}`,
@@ -43,13 +83,13 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
                 description: `Vouch for ${displayName} on GridPass to help them build their racing reputation.`,
                 type: 'profile',
                 username: profile.username,
-                images: profile.avatar_url ? [profile.avatar_url] : [], // Optionally use a specific "Help me" image if we had one
+                images: profile.avatar_url ? [profile.avatar_url] : [],
             }
         };
     }
 
     return {
-        title: `${displayName} (@${profile.username})`,
+        title: `${displayName} (@${profile.username}) ${isShadow ? '(Unclaimed)' : ''}`,
         description: profile.bio || `Check out ${displayName}'s racing profile on GridPass.`,
         openGraph: {
             title: `${displayName} (@${profile.username}) - GridPass Racer`,
@@ -66,11 +106,72 @@ export default async function PublicProfilePage({ params, searchParams }: { para
     const { action } = await searchParams;
 
     // 1. Fetch Profile
-    const { data: profile } = await supabase
+    let profile = null;
+    let isShadowProfile = false;
+    let claimToken = null;
+
+    // 1. Fetch Profile
+    const { data: realProfile } = await supabase
         .from('profiles')
-        .select('*') // Wildcard is fine here since we want everything, but good to be explicit usually.
-        .ilike('username', username) // Case-insensitive lookup
+        .select('*')
+        .ilike('username', username)
         .single();
+
+    profile = realProfile;
+
+    // 2. Shadow Profile Fallback
+    if (!profile) {
+        const supabaseAdmin = createAdminClient();
+        const { data: lead } = await supabaseAdmin
+            .from('leads')
+            .select('*')
+            .eq('contact_info->>username', username)
+            .single();
+
+        if (lead) {
+            isShadowProfile = true;
+            // Map Lead to Profile
+            profile = {
+                id: 'shadow-' + lead.id,
+                username: lead.contact_info?.username,
+                full_name: lead.name,
+                role: lead.role, // 'driver' etc
+                bio: lead.contact_info?.bio,
+                avatar_url: lead.contact_info?.avatar_url,
+                location: lead.contact_info?.location,
+                website: lead.contact_info?.profile_link,
+                created_at: lead.created_at,
+                // Map skills to tags if possible, or assume empty
+                skills: lead.skills,
+                // Map Contact Info Career to Schema if possible
+                career_history: lead.contact_info?.career_history || [],
+                // Default empty for others
+                basic_info: {},
+                driver_info: lead.contact_info?.driver_info || {},
+                social_links: lead.contact_info?.social_links || [],
+                sim_racing: {},
+                setup_specialist: {},
+                engineer_info: {},
+                team_owner_info: {},
+                mechanic_info: {},
+                instructor_info: {},
+                photographer_info: {},
+                commentator_info: {},
+                painter_info: {}
+            };
+
+            // Fetch Claim Token
+            const { data: tokenData } = await supabaseAdmin
+                .from('claim_tokens')
+                .select('token')
+                .eq('entity_id', lead.id)
+                .single();
+
+            if (tokenData) {
+                claimToken = tokenData.token;
+            }
+        }
+    }
 
     if (!profile) {
         notFound();
@@ -97,6 +198,20 @@ export default async function PublicProfilePage({ params, searchParams }: { para
             .single();
 
         isViewerSuperAdmin = myProfile?.role === 'superadmin';
+    }
+
+    // 4. Fetch Services
+    const services = await getServices({ userId: profile.id });
+
+    // 5. Fetch Garage
+    let garage: { vehicles: Vehicle[], tools: Tool[] } = { vehicles: [], tools: [] };
+    try {
+        // Only fetch if it's a real profile (not shadow) or if we want to support it for shadow later
+        if (!isShadowProfile) {
+            garage = await getGarage(profile.id);
+        }
+    } catch (e) {
+        console.error('Failed to fetch garage', e);
     }
 
     // Helper to format values
@@ -214,12 +329,96 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                                 <Calendar className="w-4 h-4 print:w-3 print:h-3" />
                                                 Member since {new Date(profile.created_at || Date.now()).getFullYear()}
                                             </div>
+                                            {/* Social Links (Shadow Profile) */}
+                                            {profile.social_links && profile.social_links.length > 0 && (
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    {profile.social_links.map((link: string, i: number) => {
+                                                        const getIcon = (url: string) => {
+                                                            if (url.includes('instagram')) return 'Instagram';
+                                                            if (url.includes('twitter') || url.includes('x.com')) return 'X';
+                                                            if (url.includes('linkedin')) return 'LinkedIn';
+                                                            return 'Link';
+                                                        };
+                                                        return (
+                                                            <a key={i} href={link} target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors text-xs border border-white/10 px-2 py-1 rounded-md">
+                                                                {getIcon(link)}
+                                                            </a>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Skills Section */}
+                    {profile.skills && profile.skills.length > 0 && (
+                        <div className="bg-neutral-900 border border-white/5 rounded-2xl p-6 md:p-8 mb-6 animate-fade-in break-inside-avoid print:bg-white print:border-none print:p-0 print:mb-6">
+                            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5 print:border-gray-300 print:mb-3 print:pb-2">
+                                <div className="p-2 bg-neutral-800 rounded-lg print:hidden">
+                                    <Trophy className="w-5 h-5 text-neutral-300" />
+                                </div>
+                                <h3 className="text-xl font-bold print:text-black print:uppercase print:tracking-widest print:text-sm">Skills & Expertise</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {profile.skills.map((skill: string, i: number) => (
+                                    <span key={i} className="px-3 py-1.5 bg-neutral-800 text-neutral-200 rounded-lg text-sm font-medium border border-white/5 print:bg-gray-100 print:text-black print:border-gray-300">
+                                        {skill}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Services Section */}
+                    {services.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <h3 className="text-xl font-bold text-white">Services Offered</h3>
+                                <div className="h-px flex-1 bg-white/10" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {services.map(service => (
+                                    <ServiceCard key={service.id} service={service} showOwner={false} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Garage Section */}
+                    {(garage.vehicles.length > 0 || garage.tools.length > 0) && (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <h3 className="text-xl font-bold text-white">Garage</h3>
+                                <div className="h-px flex-1 bg-white/10" />
+                            </div>
+
+                            {garage.vehicles.length > 0 && (
+                                <div className="mb-6">
+                                    <h4 className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-4">Vehicles</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {garage.vehicles.map(vehicle => (
+                                            <VehicleCard key={vehicle.id} vehicle={vehicle} readOnly />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {garage.tools.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-4">Tools & Equipment</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {garage.tools.map(tool => (
+                                            <ToolCard key={tool.id} tool={tool} readOnly />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Career History Section */}
                     {profile.career_history && (profile.career_history as CareerEntry[]).length > 0 && (
@@ -321,7 +520,35 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                     </div>
                 </div>
             </div>
-        </div>
+            {/* Shadow Profile Claim Banner */}
+            {
+                isShadowProfile && claimToken && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-indigo-600/95 backdrop-blur-md border-t border-indigo-500/50 p-4 md:p-6 z-50 animate-slide-up print:hidden">
+                        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center shrink-0">
+                                    <User className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold text-lg">Is this you?</h3>
+                                    <p className="text-indigo-100 text-sm">
+                                        Claim this profile to verify your stats, upload media, and get hired.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <Link
+                                    href={`/claim/${claimToken}`}
+                                    className="flex-1 md:flex-none px-6 py-3 bg-white text-indigo-600 hover:bg-indigo-50 font-bold rounded-lg transition-colors text-center shadow-lg"
+                                >
+                                    Claim Profile
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
 

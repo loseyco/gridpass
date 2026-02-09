@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Loader2, Save, User as UserIcon, ChevronDown, Check, Wrench } from 'lucide-react';
+import { Loader2, Save, User as UserIcon, ChevronDown, Check, Wrench, X, Upload } from 'lucide-react';
 import {
-    Trophy, Briefcase, User, AlertTriangle, History, Image as ImageIcon, FileText
+    Trophy, Briefcase, User, AlertTriangle, History, Image as ImageIcon, FileText, Warehouse
 } from 'lucide-react';
 import CareerEditor from '@/app/dashboard/profile/career-editor';
 import { CareerEntry } from '@/types/career';
 
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
 import MediaGalleryEditor from '@/components/profile/MediaGalleryEditor';
+import GarageEditor from '@/components/profile/GarageEditor';
+
 import ImageCropper from '@/components/ui/ImageCropper';
+import TagInput from '@/components/ui/TagInput';
 
 interface ProfileEditorProps {
     targetUserId?: string;
@@ -73,6 +76,15 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
                     ...data.physical_info,
                     ...data.logistics_info,
                     ...data.emergency_contact,
+                    // New schemas
+                    skills: data.skills || [],
+                    tools: data.tools || [],
+                    vehicles: data.vehicles || [],
+                    ...data.job_preferences,
+                    // Flatten resume_url to root for form
+                    resume_url: data.resume_url,
+                    linkedin: data.linkedin,
+                    portfolio: data.portfolio,
                 });
                 setCareerHistory(data.career_history || []);
             }
@@ -140,6 +152,14 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
                 physical_info: extractFields('physical', formData),
                 logistics_info: extractFields('logistics', formData),
                 emergency_contact: extractFields('emergency', formData),
+                job_preferences: extractFields('job_preferences', formData),
+
+                // Root columns
+                skills: formData.skills,
+                tools: formData.tools,
+                vehicles: formData.vehicles,
+                resume_url: formData.resume_url,
+
                 career_history: careerHistory,
             };
 
@@ -174,6 +194,13 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
         if (!e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
+
+        // Special handling for PDFs (Resume)
+        if (field === 'resume_url' && file.type === 'application/pdf') {
+            handleDocumentUpload(file, field);
+            return;
+        }
+
         const reader = new FileReader();
         reader.addEventListener('load', () => {
             setCropImageSrc(reader.result?.toString() || null);
@@ -222,6 +249,35 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
 
             setMessage({ type: 'success', text: 'Image updated successfully!' });
 
+        } catch (error: any) {
+            console.error('Upload error', error);
+            setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDocumentUpload = async (file: File, field: string) => {
+        if (!resolvedUserId) return;
+        setIsLoading(true);
+        setMessage(null);
+
+        try {
+            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            const filePath = `${resolvedUserId}/documents/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('profile_assets')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage.from('profile_assets').getPublicUrl(filePath);
+
+            handleChange(field, publicUrl);
+            await supabase.from('profiles').update({ [field]: publicUrl }).eq('id', resolvedUserId);
+
+            setMessage({ type: 'success', text: 'Document uploaded successfully!' });
         } catch (error: any) {
             console.error('Upload error', error);
             setMessage({ type: 'error', text: 'Upload failed: ' + error.message });
@@ -483,6 +539,46 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
                                                         />
                                                         <span className="text-sm text-neutral-300">{field.placeholder || "Yes"}</span>
                                                     </label>
+                                                ) : field.type === 'tags' ? (
+                                                    <TagInput
+                                                        value={formData[field.key] || []}
+                                                        onChange={(tags) => handleChange(field.key, tags)}
+                                                        placeholder={field.placeholder}
+                                                        suggestions={['Data Analysis', 'Car Setup', 'Fabrication', 'Engine Tuning', 'Logistics', 'Composite Repair']}
+                                                    />
+                                                ) : field.type === 'file' ? (
+                                                    <div className="flex items-center gap-4">
+                                                        {formData[field.key] ? (
+                                                            <div className="flex items-center gap-2 bg-neutral-950 px-3 py-2 rounded border border-white/10">
+                                                                <FileText className="w-4 h-4 text-indigo-400" />
+                                                                <a
+                                                                    href={formData[field.key]}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-sm text-indigo-400 hover:underline truncate max-w-[200px]"
+                                                                >
+                                                                    View Uploaded File
+                                                                </a>
+                                                                <button
+                                                                    onClick={() => handleChange(field.key, null)}
+                                                                    className="text-neutral-500 hover:text-white"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <label className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded cursor-pointer transition-colors text-sm font-medium">
+                                                                <Upload className="w-4 h-4" />
+                                                                Upload PDF
+                                                                <input
+                                                                    type="file"
+                                                                    accept="application/pdf"
+                                                                    className="hidden"
+                                                                    onChange={(e) => handleFileSelect(e, field.key)}
+                                                                />
+                                                            </label>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     <input
                                                         type={field.type}
