@@ -9,7 +9,10 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import { calculateFounderPrice } from '@/utils/pricing';
 
 // Initialize Stripe loader (only once)
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Initialize Stripe loader (only once)
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+    : null;
 
 export default function FounderRegisterPage() {
     const [isLoading, setIsLoading] = useState(false);

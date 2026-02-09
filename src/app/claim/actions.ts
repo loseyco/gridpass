@@ -15,7 +15,7 @@ export async function claimEntity(token: string) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        return { error: 'Not authenticated' };
+        throw new Error('Not authenticated');
     }
 
     // 1. Verify Token (Admin)
@@ -26,11 +26,11 @@ export async function claimEntity(token: string) {
         .single();
 
     if (tokenError || !tokenData) {
-        return { error: 'Invalid or expired token' };
+        throw new Error('Invalid or expired token');
     }
 
     if (tokenData.redeemed_at) {
-        return { error: 'This profile has already been claimed' };
+        throw new Error('This profile has already been claimed');
     }
 
     // 2. Process Claim based on Type
@@ -44,7 +44,7 @@ export async function claimEntity(token: string) {
                 .eq('id', tokenData.entity_id)
                 .single();
 
-            if (!lead) return { error: 'Lead data not found' };
+            if (!lead) throw new Error('Lead data not found');
 
             // Link Lead to User
             await supabase
@@ -94,12 +94,11 @@ export async function claimEntity(token: string) {
             if (lead.role && ['Driver', 'Mechanic', 'Sim Racer'].includes(lead.role)) {
                 await supabase
                     .from('roles')
-                    .insert({
+                    .upsert({
                         user_id: user.id,
                         role: lead.role,
                         verified: true // They claimed a verification token
-                    })
-                    .ignoreKeys(); // Ignore if role already exists
+                    }, { onConflict: 'user_id, role', ignoreDuplicates: true });
             }
 
             // 3. Mark Token Redeemed
@@ -121,7 +120,7 @@ export async function claimEntity(token: string) {
                 .eq('id', tokenData.entity_id)
                 .single();
 
-            if (!job) return { error: 'Job data not found' };
+            if (!job) throw new Error('Job data not found');
 
             // Link Job to User (Team Owner)
             await supabase
@@ -134,12 +133,11 @@ export async function claimEntity(token: string) {
             // Grant "Team Principal" role to user?
             await supabase
                 .from('roles')
-                .insert({
+                .upsert({
                     user_id: user.id,
                     role: 'Team Principal',
                     verified: true
-                })
-                .ignoreKeys();
+                }, { onConflict: 'user_id, role', ignoreDuplicates: true });
 
             // 3. Mark Token Redeemed
             await supabase
@@ -154,6 +152,6 @@ export async function claimEntity(token: string) {
     } catch (e: any) {
         if (e.message === 'NEXT_REDIRECT') throw e; // Let Next.js handle redirect
         console.error('Claim Error:', e);
-        return { error: e.message };
+        throw new Error(e.message);
     }
 }

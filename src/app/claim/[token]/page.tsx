@@ -141,7 +141,9 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
                             <div className="flex-1">
                                 <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
                                     {mockProfile.full_name}
-                                    <ShieldCheck className="w-6 h-6 text-neutral-600 tooltip" title="Unverified" />
+                                    <span title="Unverified" className="inline-flex items-center justify-center">
+                                        <ShieldCheck className="w-6 h-6 text-neutral-600 tooltip" />
+                                    </span>
                                 </h1>
 
                                 <div>

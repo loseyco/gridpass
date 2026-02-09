@@ -3,7 +3,8 @@
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Resend instantiated inside function to prevent build crash
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,6 +12,7 @@ const supabaseAdmin = createClient(
 );
 
 export async function sendContactEmail(formData: FormData) {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const message = formData.get('message') as string;

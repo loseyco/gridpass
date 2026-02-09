@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "@types/d3-scale": "^4.0.9",
     "@types/react-simple-maps": "^3.0.6",
+    "better-sqlite3": "^12.6.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "crypto": "^1.0.1",
