@@ -82,6 +82,28 @@ export default async function AdminPage() {
                                 <PMRequestWidget />
                             </div>
                         </div>
+
+                        {/* Resume Builder Requests */}
+                        <div className="bg-neutral-900/50 border border-white/10 rounded-xl overflow-hidden">
+                            <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                                <div className="font-bold text-white flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                                    Resume Requests
+                                </div>
+                                <Link href="/admin/resumes" className="text-xs text-indigo-400 hover:text-indigo-300">View All</Link>
+                            </div>
+                            <div className="p-6">
+                                <p className="text-sm text-neutral-400 mb-4">
+                                    Manage incoming resume build requests.
+                                </p>
+                                <Link
+                                    href="/admin/resumes"
+                                    className="block w-full text-center bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 py-2 rounded transition-colors text-sm font-bold"
+                                >
+                                    View Requests
+                                </Link>
+                            </div>
+                        </div>
                     </div>
 
                     {/* System Status Column */}

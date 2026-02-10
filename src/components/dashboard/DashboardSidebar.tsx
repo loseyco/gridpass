@@ -88,56 +88,86 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
                     </Link>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
-                    <Link href="/dashboard" className={linkClass('/dashboard')} onClick={() => setIsOpen(false)}>
-                        <LayoutDashboard className="w-5 h-5" />
-                        Dashboard
-                    </Link>
-                    <Link href="/dashboard/profile" className={linkClass('/dashboard/profile')} onClick={() => setIsOpen(false)}>
-                        <User className="w-5 h-5" />
-                        My Profile
-                    </Link>
-                    <Link href="/dashboard/recommendations" className={`${linkClass('/dashboard/recommendations')} relative group`} onClick={() => setIsOpen(false)}>
-                        <Star className="w-5 h-5" />
-                        Recommendations
-                        <NotificationBadge />
-                    </Link>
-                    <Link href="/dashboard/messages" className={linkClass('/dashboard/messages')} onClick={() => setIsOpen(false)}>
-                        <Inbox className="w-5 h-5" />
-                        Messages
-                    </Link>
-                    <Link href="/dashboard/vehicles" className={linkClass('/dashboard/vehicles')} onClick={() => setIsOpen(false)}>
-                        <Car className="w-5 h-5" />
-                        Vehicles
-                    </Link>
-                    <Link href="/dashboard/tools" className={linkClass('/dashboard/tools')} onClick={() => setIsOpen(false)}>
-                        <Wrench className="w-5 h-5" />
-                        Tools & Gear
-                    </Link>
-                    <Link href="/dashboard/services" className={linkClass('/dashboard/services')} onClick={() => setIsOpen(false)}>
-                        <Briefcase className="w-5 h-5" />
-                        My Services
-                    </Link>
-                    <Link href="/dashboard/leads" className={linkClass('/dashboard/leads')} onClick={() => setIsOpen(false)}>
-                        <Trophy className="w-5 h-5" />
-                        Leads
-                    </Link>
+                <nav className="flex-1 p-4 space-y-6 overflow-y-auto custom-scrollbar">
+                    {/* Dashboard Overview */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">Overview</div>
+                        <div className="space-y-1">
+                            <Link href="/dashboard" className={linkClass('/dashboard')} onClick={() => setIsOpen(false)}>
+                                <LayoutDashboard className="w-5 h-5" />
+                                Dashboard
+                            </Link>
+                            <Link href="/dashboard/profile" className={linkClass('/dashboard/profile')} onClick={() => setIsOpen(false)}>
+                                <User className="w-5 h-5" />
+                                My Profile
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* My Garage */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">My Garage</div>
+                        <div className="space-y-1">
+                            <Link href="/dashboard/vehicles" className={linkClass('/dashboard/vehicles')} onClick={() => setIsOpen(false)}>
+                                <Car className="w-5 h-5" />
+                                Vehicles
+                            </Link>
+                            <Link href="/dashboard/tools" className={linkClass('/dashboard/tools')} onClick={() => setIsOpen(false)}>
+                                <Wrench className="w-5 h-5" />
+                                Tools & Gear
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Professional */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">Professional</div>
+                        <div className="space-y-1">
+                            <Link href="/dashboard/services" className={linkClass('/dashboard/services')} onClick={() => setIsOpen(false)}>
+                                <Briefcase className="w-5 h-5" />
+                                My Services
+                            </Link>
+                            <Link href="/dashboard/inquiries" className={linkClass('/dashboard/inquiries')} onClick={() => setIsOpen(false)}>
+                                <Briefcase className="w-5 h-5" />
+                                Inquiries
+                            </Link>
+                            <Link href="/dashboard/leads" className={linkClass('/dashboard/leads')} onClick={() => setIsOpen(false)}>
+                                <Trophy className="w-5 h-5" />
+                                Leads
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Connect */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">Connect</div>
+                        <div className="space-y-1">
+                            <Link href="/dashboard/messages" className={linkClass('/dashboard/messages')} onClick={() => setIsOpen(false)}>
+                                <Inbox className="w-5 h-5" />
+                                Messages
+                            </Link>
+                            <Link href="/dashboard/recommendations" className={`${linkClass('/dashboard/recommendations')} relative group`} onClick={() => setIsOpen(false)}>
+                                <Star className="w-5 h-5" />
+                                Recommendations
+                                <NotificationBadge />
+                            </Link>
+                        </div>
+                    </div>
 
                     {/* Founder Exclusive Section */}
                     {isFounder && (
-                        <div className="mt-8 pt-4 border-t border-white/5">
-                            <div className="px-4 text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">Founder Access</div>
-                            <Link href="#" className="flex items-center gap-3 px-4 py-3 text-amber-200/80 hover:text-amber-100 hover:bg-amber-500/10 rounded-lg transition-colors">
-                                <Shield className="w-5 h-5" />
-                                Advisory Council
-                            </Link>
+                        <div>
+                            <div className="px-4 mb-2 text-xs font-bold text-amber-500 uppercase tracking-widest">Founder Access</div>
+                            <div className="space-y-1">
+                                <Link href="#" className="flex items-center gap-3 px-4 py-3 text-amber-200/80 hover:text-amber-100 hover:bg-amber-500/10 rounded-lg transition-colors">
+                                    <Shield className="w-5 h-5" />
+                                    Advisory Council
+                                </Link>
+                            </div>
                         </div>
                     )}
 
-                    <div className="mt-8 pt-4 border-t border-white/5">
-                        {/* We need to wrap LogoutButton since it might not be styled fully for sidebar or might need onclick close? 
-                             Actually LogoutButton is likely a client component that handles logout. 
-                         */}
+                    <div className="pt-4 border-t border-white/5">
                         <div onClick={() => setIsOpen(false)}>
                             <LogoutButton />
                         </div>

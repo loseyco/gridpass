@@ -78,9 +78,11 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
                     ...data.emergency_contact,
                     // New schemas
                     skills: data.skills || [],
+
                     tools: data.tools || [],
                     vehicles: data.vehicles || [],
                     ...data.job_preferences,
+                    ...data.social_links,
                     // Flatten resume_url to root for form
                     resume_url: data.resume_url,
                     linkedin: data.linkedin,
@@ -153,9 +155,11 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
                 logistics_info: extractFields('logistics', formData),
                 emergency_contact: extractFields('emergency', formData),
                 job_preferences: extractFields('job_preferences', formData),
+                social_links: extractFields('social', formData),
 
                 // Root columns
                 skills: formData.skills,
+
                 tools: formData.tools,
                 vehicles: formData.vehicles,
                 resume_url: formData.resume_url,

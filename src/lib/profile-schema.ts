@@ -1,6 +1,6 @@
 import {
     Trophy, Wrench, Briefcase, User, MapPin,
-    AlertTriangle, Award
+    AlertTriangle, Award, Globe
 } from 'lucide-react';
 
 export type FieldDefinition = {
@@ -132,6 +132,7 @@ export const SCHEMA_CATEGORIES: FieldCategory[] = [
             { key: 'skills', label: 'Skills', type: 'tags', placeholder: 'e.g. Data Analysis, Fabrication, Setup' }
         ]
     },
+
     {
         id: 'professional',
         title: 'Professional',
@@ -155,6 +156,20 @@ export const SCHEMA_CATEGORIES: FieldCategory[] = [
             { key: 'availability', label: 'Availability', type: 'select', options: ['Immediate', '2 Weeks Notice', '1 Month Notice', 'Open to discussion'] },
             { key: 'relocation', label: 'Willing to Relocate?', type: 'checkbox' },
             { key: 'salary_expectations', label: 'Salary Expectations (Optional)', type: 'text', placeholder: 'e.g. $60k+/yr or $500/day' }
+        ]
+    },
+    {
+        id: 'social',
+        title: 'Social Media',
+        icon: Globe,
+        description: 'Connect your social profiles.',
+        db_column: 'social_links',
+        fields: [
+            { key: 'instagram', label: 'Instagram', type: 'url', placeholder: 'https://instagram.com/...' },
+            { key: 'twitter', label: 'Twitter / X', type: 'url', placeholder: 'https://x.com/...' },
+            { key: 'facebook', label: 'Facebook', type: 'url', placeholder: 'https://facebook.com/...' },
+            { key: 'tiktok', label: 'TikTok', type: 'url', placeholder: 'https://tiktok.com/@...' },
+            { key: 'youtube', label: 'YouTube', type: 'url', placeholder: 'https://youtube.com/...' },
         ]
     }
 ];

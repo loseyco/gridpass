@@ -17,7 +17,8 @@ import {
     Ticket,
     Menu,
     X,
-    LineChart
+    LineChart,
+    MessageSquarePlus
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -30,11 +31,20 @@ const MENU_ITEMS = [
     { name: 'Classifieds', href: '/admin/classifieds', icon: ShoppingBag },
     { name: 'Analytics', href: '/admin/analytics', icon: LineChart },
     { name: 'Database', href: '/admin/database', icon: Database },
+    { name: 'Feedback', href: '/admin/feedback', icon: MessageSquarePlus },
 ];
+
+import { getNewResumeCount } from '@/app/actions/resume';
+import { useEffect } from 'react';
 
 export default function AdminSidebar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [newResumeCount, setNewResumeCount] = useState(0);
     const pathname = usePathname();
+
+    useEffect(() => {
+        getNewResumeCount().then(setNewResumeCount);
+    }, []);
 
     return (
         <>
@@ -79,24 +89,74 @@ export default function AdminSidebar() {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
-                    {MENU_ITEMS.map((item) => {
-                        const isActive = pathname === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setIsOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                                    : 'text-neutral-400 hover:text-white hover:bg-white/5'
-                                    }`}
-                            >
-                                <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-neutral-500'}`} />
-                                {item.name}
+                <nav className="flex-1 py-6 px-3 space-y-6 overflow-y-auto custom-scrollbar">
+                    {/* Administration */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">System</div>
+                        <div className="space-y-1">
+                            <Link href="/admin" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <LayoutDashboard className={`w-5 h-5 ${pathname === '/admin' ? 'text-white' : 'text-neutral-500'}`} />
+                                Overview
                             </Link>
-                        );
-                    })}
+                            <Link href="/admin/analytics" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/analytics' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <LineChart className={`w-5 h-5 ${pathname === '/admin/analytics' ? 'text-white' : 'text-neutral-500'}`} />
+                                Analytics
+                            </Link>
+                            <Link href="/admin/database" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/database' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <Database className={`w-5 h-5 ${pathname === '/admin/database' ? 'text-white' : 'text-neutral-500'}`} />
+                                Database
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Users */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">User Management</div>
+                        <div className="space-y-1">
+                            <Link href="/admin/users" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/users' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <Users className={`w-5 h-5 ${pathname === '/admin/users' ? 'text-white' : 'text-neutral-500'}`} />
+                                Users
+                            </Link>
+                            <Link href="/admin/roles" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/roles' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <Shield className={`w-5 h-5 ${pathname === '/admin/roles' ? 'text-white' : 'text-neutral-500'}`} />
+                                Roles
+                            </Link>
+                            <Link href="/admin/invites" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/invites' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <Ticket className={`w-5 h-5 ${pathname === '/admin/invites' ? 'text-white' : 'text-neutral-500'}`} />
+                                Invites
+                            </Link>
+                            <Link href="/admin/resumes" onClick={() => setIsOpen(false)} className={`flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/resumes' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <div className="flex items-center gap-3">
+                                    <FileText className={`w-5 h-5 ${pathname === '/admin/resumes' ? 'text-white' : 'text-neutral-500'}`} />
+                                    Resumes
+                                </div>
+                                {newResumeCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                        {newResumeCount}
+                                    </span>
+                                )}
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">Site Management</div>
+                        <div className="space-y-1">
+                            <Link href="/admin/pages" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/pages' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <FileText className={`w-5 h-5 ${pathname === '/admin/pages' ? 'text-white' : 'text-neutral-500'}`} />
+                                Pages
+                            </Link>
+                            <Link href="/admin/features" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/features' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <Lightbulb className={`w-5 h-5 ${pathname === '/admin/features' ? 'text-white' : 'text-neutral-500'}`} />
+                                Features
+                            </Link>
+                            <Link href="/admin/classifieds" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/classifieds' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <ShoppingBag className={`w-5 h-5 ${pathname === '/admin/classifieds' ? 'text-white' : 'text-neutral-500'}`} />
+                                Classifieds
+                            </Link>
+                        </div>
+                    </div>
                 </nav>
 
                 {/* Footer */}

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Vehicle } from '@/types/garage';
-import { Car, Truck, Monitor, Box, Edit2, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Car, Truck, Monitor, Box, Edit2, Trash2, Wrench } from 'lucide-react';
 
 interface VehicleCardProps {
     vehicle: Vehicle;
@@ -132,6 +133,16 @@ export default function VehicleCard({ vehicle, onEdit, onDelete, readOnly = fals
                         ))}
                     </div>
                 )}
+
+                <div className="mt-4 pt-3 border-t border-white/5 flex justify-end">
+                    <Link
+                        href={`/garage/vehicle/${vehicle.id}/projects`}
+                        className="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                    >
+                        <Wrench className="w-3.5 h-3.5" />
+                        Manage Projects
+                    </Link>
+                </div>
             </div>
         </div>
     );

@@ -27,6 +27,18 @@ export async function getGarage(userId: string) {
         vehicles: vehicles as Vehicle[],
         tools: tools as Tool[]
     };
+};
+
+export async function getVehicle(id: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('user_vehicles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) return null;
+    return data as Vehicle;
 }
 
 // --- Vehicles ---

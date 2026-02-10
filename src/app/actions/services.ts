@@ -113,6 +113,29 @@ export async function deleteService(id: string) {
         throw new Error('Failed to delete service');
     }
 
-    revalidatePath('/dashboard/services');
     revalidatePath(`/u/${user.user_metadata.username}`);
+}
+
+export async function getService(id: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('user_services')
+        .select(`
+            *,
+            profiles (
+                username,
+                full_name,
+                avatar_url,
+                id
+            )
+        `)
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching service:', error);
+        return null;
+    }
+
+    return data;
 }

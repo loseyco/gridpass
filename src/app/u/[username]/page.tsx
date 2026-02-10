@@ -135,6 +135,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                 id: 'shadow-' + lead.id,
                 username: lead.contact_info?.username,
                 full_name: lead.name,
+                source: lead.source, // Map source for badge logic
                 role: lead.role, // 'driver' etc
                 bio: lead.contact_info?.bio,
                 avatar_url: lead.contact_info?.avatar_url,
@@ -299,7 +300,21 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                 </div>
 
                                 <div className="flex-1 print:text-left">
-                                    <h1 className="text-4xl font-bold mb-2 print:text-black print:text-3xl">{profile.full_name || profile.username}</h1>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <h1 className="text-4xl font-bold print:text-black print:text-3xl">{profile.full_name || profile.username}</h1>
+                                        {/* Pro Badge */}
+                                        {(isShadowProfile || profile.source === 'resume_builder') && (
+                                            <div className="group relative">
+                                                <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center text-white cursor-help">
+                                                    <Shield className="w-3.5 h-3.5 fill-white" />
+                                                </div>
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-neutral-900 border border-white/10 rounded-lg p-3 text-xs text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-50">
+                                                    <p className="font-bold text-white mb-1">GridPass Verified</p>
+                                                    Professionally built & verified by the GridPass team.
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
 
                                     <div className="print:flex print:justify-between print:items-start">
                                         <div>
@@ -330,19 +345,19 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                                 <Calendar className="w-4 h-4 print:w-3 print:h-3" />
                                                 Member since {new Date(profile.created_at || Date.now()).getFullYear()}
                                             </div>
-                                            {/* Social Links (Shadow Profile) */}
-                                            {profile.social_links && profile.social_links.length > 0 && (
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    {profile.social_links.map((link: string, i: number) => {
-                                                        const getIcon = (url: string) => {
-                                                            if (url.includes('instagram')) return 'Instagram';
-                                                            if (url.includes('twitter') || url.includes('x.com')) return 'X';
-                                                            if (url.includes('linkedin')) return 'LinkedIn';
-                                                            return 'Link';
-                                                        };
+                                            {/* Social Links */}
+                                            {profile.social_links && Object.keys(profile.social_links).length > 0 && (
+                                                <div className="flex flex-wrap gap-2 mt-3">
+                                                    {Object.entries(profile.social_links).map(([platform, link]: [string, any], i: number) => {
+                                                        if (!link || typeof link !== 'string') return null;
+
+                                                        // Simple icon mapping based on platform key
+                                                        const label = platform === 'twitter' ? 'X' :
+                                                            platform.charAt(0).toUpperCase() + platform.slice(1);
+
                                                         return (
-                                                            <a key={i} href={link} target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-white transition-colors text-xs border border-white/10 px-2 py-1 rounded-md">
-                                                                {getIcon(link)}
+                                                            <a key={i} href={link} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-neutral-400 hover:text-white hover:bg-white/10 transition-all text-xs border border-white/10 px-2.5 py-1 rounded-full">
+                                                                {label}
                                                             </a>
                                                         );
                                                     })}

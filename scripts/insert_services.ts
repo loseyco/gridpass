@@ -43,8 +43,57 @@ async function main() {
     const services = [
         {
             user_id: user.id,
+            title: 'Website Building & Modernization',
+            description: 'Custom websites for race shops and teams. Modern design, mobile responsive, and SEO optimized to help you attract more sponsors and customers.',
+            price: 1500.00,
+            currency: 'USD',
+            unit: 'project',
+            category: 'Engineering',
+            tags: ['Web Design', 'SEO', 'React', 'Next.js'],
+            is_active: true,
+            photo_url: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2069&auto=format&fit=crop'
+        },
+        {
+            user_id: user.id,
+            title: 'Custom Shop Management Suite',
+            description: 'Bespoke software solutions for inventory, scheduling, and customer management. Built tailored to your specific workflow needs.',
+            price: 2000.00,
+            currency: 'USD',
+            unit: 'project',
+            category: 'Engineering',
+            tags: ['Software', 'Inventory', 'CRM', 'Workflow'],
+            is_active: true,
+            photo_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
+        },
+        {
+            user_id: user.id,
+            title: 'Workshop Workflow Optimization',
+            description: 'Physical shop reorganization for maximum workflow efficiency and professional appearance. Lean manufacturing principles applied to race shops.',
+            price: 1000.00,
+            currency: 'USD',
+            unit: 'project',
+            category: 'Mechanic',
+            tags: ['Shop Layout', 'Efficiency', 'Organization', 'Lean'],
+            is_active: true,
+            photo_url: 'https://images.unsplash.com/photo-1581092921461-eab624960965?q=80&w=2070&auto=format&fit=crop'
+        },
+        {
+            user_id: user.id,
+            title: 'Shop Management System Integration',
+            description: 'Expert setup and migration to modern shop management platforms (e.g., Shop Monkey) to digitize your business immediately.',
+            price: 500.00,
+            currency: 'USD',
+            unit: 'project',
+            category: 'Data',
+            tags: ['Shop Monkey', 'Migration', 'Setup', 'Training'],
+            is_active: true,
+            photo_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
+        },
+        // Keeping "Fly In DAG" / Race Engineering as it's core to the profile identity
+        {
+            user_id: user.id,
             title: 'Race Engineering & Strategy',
-            description: 'Full race weekend engineering support, including strategy, setup optimization, and performance analysis. Experienced in IMSA, SRO, and IndyCar paddocks.',
+            description: 'Full race weekend engineering support, including strategy, setup optimization, and performance analysis.',
             price: 1200.00,
             currency: 'USD',
             unit: 'daily',
@@ -52,42 +101,6 @@ async function main() {
             tags: ['Race Strategy', 'Setup', 'Performance Engineering', 'Trackside'],
             is_active: true,
             photo_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2070&auto=format&fit=crop'
-        },
-        {
-            user_id: user.id,
-            title: 'Data Analysis & Telemetry',
-            description: 'In-depth data analysis using Motec i2, McLaren Atlas, or Pi Toolbox. Driver coaching through data, vehicle health monitoring, and system performance evaluation.',
-            price: 150.00,
-            currency: 'USD',
-            unit: 'hourly',
-            category: 'Coaching',
-            tags: ['Motec', 'Data Analysis', 'Driver Coaching', 'Telemetry'],
-            is_active: true,
-            photo_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'
-        },
-        {
-            user_id: user.id,
-            title: 'Wiring & Electronics Integration',
-            description: 'Custom wiring harness design and build, ECU/PDM configuration, and sensor integration. Certified MECP installer with experience in complex motorsport electronics.',
-            price: 100.00,
-            currency: 'USD',
-            unit: 'hourly',
-            category: 'Mechanic',
-            tags: ['Wiring', 'Electronics', 'ECU Tuning', 'PDM'],
-            is_active: true,
-            photo_url: 'https://images.unsplash.com/photo-1581092921461-eab624960965?q=80&w=2070&auto=format&fit=crop'
-        },
-        {
-            user_id: user.id,
-            title: 'Custom Software Solutions',
-            description: 'Bespoke software development for race teams. Strategy tools, inventory management, or custom dashboards using React, Node.js, and Supabase.',
-            price: 5000.00,
-            currency: 'USD',
-            unit: 'project',
-            category: 'Other',
-            tags: ['Software Development', 'Web Apps', 'Tooling', 'React'],
-            is_active: true,
-            photo_url: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=2069&auto=format&fit=crop'
         }
     ];
 

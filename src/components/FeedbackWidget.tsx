@@ -3,44 +3,27 @@
 import { useState } from 'react';
 import { MessageSquarePlus, X, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
-import { createClient } from '@/utils/supabase/client';
+import { submitFeedback } from '@/app/actions/feedback'; // Import the server action
 
 export default function FeedbackWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [type, setType] = useState<'feature' | 'bug'>('feature');
+    const [type, setType] = useState<'feature' | 'bug' | 'contact'>('feature');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setLoading(true);
 
         const formData = new FormData(e.currentTarget);
-        const title = formData.get('title') as string;
-        const description = formData.get('description') as string;
-
-        const supabase = createClient();
-
-        // We'll use the 'features' table for both, prefacing bugs with [BUG]
-        const finalTitle = type === 'bug' ? `[BUG] ${title}` : title;
-        const category = type === 'bug' ? 'General' : 'General'; // Could add 'Bug' category if schema allows
+        // Add additional fields not in the form directly if needed, or rely on hidden inputs
+        formData.append('type', type);
+        formData.append('page_url', window.location.href);
 
         try {
-            const { error } = await supabase
-                .from('features')
-                .insert({
-                    title: finalTitle,
-                    description,
-                    status: 'planned', // Default to planned/backlog
-                    category,
-                    votes: 1
-                });
+            const result = await submitFeedback(formData);
 
-            if (error) {
-                if (error.code === '23505') { // Unique violation
-                    toast.error('A feature with this title already exists!');
-                } else {
-                    throw error;
-                }
+            if (result.error) {
+                toast.error(result.error);
             } else {
                 toast.success('Feedback submitted successfully!');
                 setIsOpen(false);
@@ -85,7 +68,7 @@ export default function FeedbackWidget() {
                             Share your thoughts
                         </h2>
                         <p className="text-neutral-400 text-sm mb-6">
-                            Found a bug or have a feature idea? Let us know!
+                            Found a bug, have a feature idea, or want to contact us?
                         </p>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,32 +78,42 @@ export default function FeedbackWidget() {
                                     type="button"
                                     onClick={() => setType('feature')}
                                     className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${type === 'feature'
-                                            ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'text-neutral-400 hover:text-neutral-200'
+                                        ? 'bg-indigo-600 text-white shadow-sm'
+                                        : 'text-neutral-400 hover:text-neutral-200'
                                         }`}
                                 >
-                                    Feature Request
+                                    Feature
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setType('bug')}
                                     className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${type === 'bug'
-                                            ? 'bg-rose-600 text-white shadow-sm'
-                                            : 'text-neutral-400 hover:text-neutral-200'
+                                        ? 'bg-rose-600 text-white shadow-sm'
+                                        : 'text-neutral-400 hover:text-neutral-200'
                                         }`}
                                 >
-                                    Report Bug
+                                    Bug
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setType('contact')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${type === 'contact'
+                                        ? 'bg-emerald-600 text-white shadow-sm'
+                                        : 'text-neutral-400 hover:text-neutral-200'
+                                        }`}
+                                >
+                                    Contact
                                 </button>
                             </div>
 
                             <div>
                                 <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">
-                                    Title
+                                    Title / Subject
                                 </label>
                                 <input
                                     name="title"
                                     required
-                                    placeholder={type === 'feature' ? "e.g. Dark Mode" : "e.g. Login page error"}
+                                    placeholder={type === 'feature' ? "e.g. Dark Mode" : type === 'bug' ? "e.g. Login Error" : "e.g. Partnership Inquiry"}
                                     className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500 transition-colors"
                                 />
                             </div>
@@ -142,8 +135,10 @@ export default function FeedbackWidget() {
                                 type="submit"
                                 disabled={loading}
                                 className={`w-full py-2.5 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${type === 'feature'
-                                        ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
-                                        : 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/20'
+                                    ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
+                                    : type === 'bug'
+                                        ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/20'
+                                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20'
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 {loading ? (

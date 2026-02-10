@@ -61,6 +61,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/matchmaking" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Arrive & Drive
                         </Link>
+                        <Link href="/network" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                            Network
+                        </Link>
                         <Link href="/founder" className="text-amber-500 hover:text-amber-400 transition-colors text-sm font-bold uppercase tracking-wide">
                             Founding 100
                         </Link>
@@ -127,6 +130,13 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                                 onClick={() => setIsOpen(false)}
                             >
                                 Arrive & Drive
+                            </Link>
+                            <Link
+                                href="/network"
+                                className="text-neutral-300 hover:text-white py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Network
                             </Link>
                             <Link
                                 href="/founder"

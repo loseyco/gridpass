@@ -63,14 +63,14 @@ export default async function Home() {
               </div>
 
               <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white mb-6 leading-[0.9] drop-shadow-2xl">
-                FROM INDYCAR <br />
+                FROM THE TRACK <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">TO YOUR SHOP</span>
               </h1>
 
               <p className="text-xl text-neutral-300 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium drop-shadow-md">
                 We manage the <strong className="text-white">Track</strong> to the <strong className="text-white">Shop</strong> to the <strong className="text-white">Simulator</strong>.
                 Whether it's <strong className="text-white">Pro Level</strong>, <strong className="text-white">Grass Roots</strong>, <strong className="text-white">Sim</strong> or <strong className="text-white">RC</strong>.
-                <span className="block mt-2 text-sm text-neutral-400">Built by Patrick Losey (Ex-HRC).</span>
+                <span className="block mt-2 text-sm text-neutral-400">Built by Patrick "PJ" Losey.</span>
               </p>
 
               {/* Social Proof / Trust */}

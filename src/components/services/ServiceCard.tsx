@@ -17,7 +17,7 @@ interface ServiceCardProps {
 export function ServiceCard({ service, showOwner = true }: ServiceCardProps) {
     return (
         <Link
-            href={`/u/${service.profiles?.username || 'user'}`}
+            href={`/u/${service.profiles?.username || 'user'}/services/${service.id}`}
             className="group relative flex flex-col overflow-hidden rounded-2xl bg-white/5 p-4 transition-all hover:bg-white/10 hover:shadow-xl hover:shadow-purple-500/10 border border-white/10 hover:border-purple-500/50"
         >
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 opacity-0 transition-opacity group-hover:opacity-100" />

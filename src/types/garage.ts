@@ -84,3 +84,43 @@ export interface Setup {
     created_at: string;
     updated_at: string;
 }
+
+export type ProjectStatus = 'planning' | 'in_progress' | 'completed' | 'on_hold';
+export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface GarageProject {
+    id: string;
+    vehicle_id: string;
+    user_id: string;
+    name: string;
+    description?: string;
+    status: ProjectStatus;
+    start_date?: string;
+    target_end_date?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ProjectMember {
+    id: string;
+    project_id: string;
+    user_id: string;
+    role: 'owner' | 'admin' | 'member' | 'mechanic' | 'driver';
+    status: 'pending' | 'accepted' | 'declined';
+    joined_at: string;
+}
+
+export interface ProjectTask {
+    id: string;
+    project_id: string;
+    title: string;
+    description?: string;
+    status: TaskStatus;
+    priority: TaskPriority;
+    assigned_user_id?: string;
+    due_date?: string;
+    created_by?: string;
+    created_at: string;
+    updated_at: string;
+}
