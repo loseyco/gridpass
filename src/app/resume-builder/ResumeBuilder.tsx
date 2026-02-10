@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { submitResumeLead } from '@/app/actions/resume';
 import { Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { event } from '@/lib/analytics';
 
 export default function ResumeBuilder() {
     const [submitting, setSubmitting] = useState(false);
@@ -19,6 +20,12 @@ export default function ResumeBuilder() {
             if (result.error) {
                 setError(result.error);
             } else {
+                event({
+                    action: 'submit',
+                    category: 'resume_builder',
+                    label: 'submission_success',
+                    value: 20 // Optional: track potential value
+                });
                 setSubmitted(true);
             }
         } catch (e) {
