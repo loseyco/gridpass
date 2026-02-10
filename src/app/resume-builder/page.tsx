@@ -3,10 +3,10 @@ import ResumeBuilder from './ResumeBuilder';
 
 export const metadata: Metadata = {
     title: 'Professional Racing Resumes | GridPass',
-    description: 'Stop sending PDFs. Build a live, professional racing resume that gets you hired by top teams. Custom built for $20 for a limited time.',
+    description: 'The New Standard for Motorsports Resumes. Stop sending static PDFs. Build a live, professional racing resume that gets you hired by top teams.',
     openGraph: {
-        title: 'Get Hired in Motorsports with a Pro Resume',
-        description: 'Stop sending PDFs. Build a live, professional racing resume that gets you hired by top teams.',
+        title: 'The New Standard for Motorsports Resumes | GridPass',
+        description: 'Stop sending static PDFs. Build a live, professional racing resume that gets you hired by top teams.',
         url: 'https://gridpass.app/resume-builder',
         siteName: 'GridPass',
         locale: 'en_US',

@@ -64,11 +64,11 @@ export default function ResumeBuilder() {
                 <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
                 <div className="relative z-10 max-w-3xl mx-auto text-center">
                     <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                        Get a <span className="text-indigo-500">Pro Racing Resume</span> <br />
-                        That Gets You Hired.
+                        The New Standard for <br />
+                        <span className="text-indigo-500">Motorsports Resumes.</span>
                     </h1>
                     <p className="text-lg text-neutral-400 mb-8 max-w-2xl mx-auto">
-                        Stop sending PDFs that nobody reads. Get a live, shareable GridPass profile that showcases your stats, experience, and availability perfectly on any device.
+                        Stop sending static PDFs. Join the network used by top teams. Get a live, verified GridPass profile that showcases your stats, experience, and availability perfectly on any device.
                     </p>
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-sm font-medium">
                         <span className="relative flex h-2 w-2">
