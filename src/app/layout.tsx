@@ -44,13 +44,15 @@ export const metadata: Metadata = {
     creator: "@pjlosey",
   },
   icons: {
-    icon: "/logo-square.png",
-    shortcut: "/logo-square.png",
-    apple: "/logo-square.png",
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
   },
 };
 
 import { getUserRole } from "@/utils/rbac";
+
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export default async function RootLayout({
   children,
@@ -89,6 +91,7 @@ export default async function RootLayout({
         <Toaster theme="dark" position="top-center" />
         <PitLane />
         {children}
+        <FeedbackWidget />
         <Footer />
       </body>
     </html>
