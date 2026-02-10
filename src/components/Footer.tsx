@@ -21,9 +21,9 @@ export default function Footer() {
                     <Link href="/features" className="text-neutral-500 hover:text-white transition-colors">
                         Roadmap
                     </Link>
-                    <Link href="/changelog" className="text-neutral-500 hover:text-white transition-colors">
+                    {/* <Link href="/changelog" className="text-neutral-500 hover:text-white transition-colors">
                         Changelog
-                    </Link>
+                    </Link> */}
                     <Link href="/founder" className="text-neutral-500 hover:text-white transition-colors">
                         Founding 100
                     </Link>

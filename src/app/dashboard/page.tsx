@@ -7,6 +7,7 @@ import ProfileCompletionWidget from '@/components/dashboard/ProfileCompletionWid
 import AffiliateWidget from '@/components/dashboard/AffiliateWidget';
 import JobMatches from './job-matches';
 import SocialShareWidget from '@/components/dashboard/SocialShareWidget';
+import { TeamList } from '@/components/dashboard/TeamList';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -84,7 +85,7 @@ export default async function DashboardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
                             { name: "Shop OS", icon: "Wrench", desc: "Inventory & Repair Management" },
-                            { name: "Team Hub", icon: "Users", desc: "Logistics & Personnel" },
+                            // { name: "Team Hub", icon: "Users", desc: "Logistics & Personnel" },
                             { name: "Cockpit", icon: "Gauge", desc: "Live Telemetry & Data" }
                         ].map((mod) => (
                             <Link
@@ -139,6 +140,11 @@ export default async function DashboardPage() {
                         </div>
                         <QuickLogWidget />
                     </div>
+
+                    {/* Team List Section */}
+                    {/* <div className="bg-neutral-900 border border-white/5 rounded-xl p-6">
+                        <TeamList />
+                    </div> */}
                 </div>
 
                 {/* Right Column: Status & Info */}

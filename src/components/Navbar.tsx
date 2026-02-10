@@ -58,9 +58,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/members" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Members Directory
                         </Link>
-                        <Link href="/matchmaking" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                        {/* <Link href="/matchmaking" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Arrive & Drive
-                        </Link>
+                        </Link> */}
                         <Link href="/network" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Network
                         </Link>
@@ -70,9 +70,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/features" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Features
                         </Link>
-                        <Link href="/changelog" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                        {/* <Link href="/changelog" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Changelog
-                        </Link>
+                        </Link> */}
 
 
                         {showLoggedIn ? (
@@ -124,13 +124,13 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                             >
                                 Members Directory
                             </Link>
-                            <Link
+                            {/* <Link
                                 href="/matchmaking"
                                 className="text-neutral-300 hover:text-white py-2 block"
                                 onClick={() => setIsOpen(false)}
                             >
                                 Arrive & Drive
-                            </Link>
+                            </Link> */}
                             <Link
                                 href="/network"
                                 className="text-neutral-300 hover:text-white py-2 block"
@@ -152,13 +152,13 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                             >
                                 Features
                             </Link>
-                            <Link
+                            {/* <Link
                                 href="/changelog"
                                 className="text-neutral-300 hover:text-white py-2 block"
                                 onClick={() => setIsOpen(false)}
                             >
                                 Changelog
-                            </Link>
+                            </Link> */}
 
                             <div className="h-px bg-white/10 my-2"></div>
 
