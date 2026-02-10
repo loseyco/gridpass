@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { getButtonClasses } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 interface TeamCardProps {
@@ -44,15 +44,19 @@ export function TeamCard({ team, role }: TeamCardProps) {
                 </p>
             </CardContent>
             <CardFooter className="gap-2">
-                <Button asChild variant="default" className="w-full">
-                    <Link href={`/team/${team.slug}/dashboard`}>Dashboard</Link>
-                </Button>
-                <Button asChild variant="outline" size="icon">
-                    <Link href={`/team/${team.slug}`}>
-                        <span className="sr-only">View Public Page</span>
-                        ↗
-                    </Link>
-                </Button>
+                <Link
+                    href={`/team/${team.slug}/dashboard`}
+                    className={getButtonClasses('default', 'default', "w-full")}
+                >
+                    Dashboard
+                </Link>
+                <Link
+                    href={`/team/${team.slug}`}
+                    className={getButtonClasses('outline', 'icon')}
+                >
+                    <span className="sr-only">View Public Page</span>
+                    ↗
+                </Link>
             </CardFooter>
         </Card>
     )
