@@ -22,28 +22,9 @@ export default async function ClassifiedsPage({
 
     const supabase = await createClient();
 
-    // Role Check
-    // Allow access in development for testing, otherwise require SUPERADMIN
-    const isSuperAdmin = await hasRole(ROLES.SUPERADMIN);
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const isAllowed = isSuperAdmin || isDevelopment;
-
-    // IF USER IS NOT ALLOWED, RETURN COMING SOON VIEW
-    if (!isAllowed) {
-        return (
-            <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-center p-6">
-                <h1 className="text-4xl font-bold text-white mb-4">Classifieds</h1>
-                <Tag className="w-16 h-16 text-indigo-500 mb-6 opacity-50" />
-                <p className="text-xl text-neutral-400 max-w-md">
-                    The GridPass Marketplace is currently in <span className="text-indigo-500 font-bold">Private Beta</span>.
-                </p>
-                <p className="text-neutral-500 mt-2">Check back soon for public launch.</p>
-                <Link href="/" className="mt-8 px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-neutral-200 transition-colors">
-                    Back to Home
-                </Link>
-            </div>
-        );
-    }
+    // Role Check - REMOVED for public access
+    // const isSuperAdmin = await hasRole(ROLES.SUPERADMIN);
+    // const isAllowed = isSuperAdmin || process.env.NODE_ENV === 'development';
 
     // Build query with category filter
     let query = supabase
@@ -80,8 +61,8 @@ export default async function ClassifiedsPage({
                                     key={cat}
                                     href={cat === 'All' ? '/classifieds' : `/classifieds?category=${cat}`}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${isActive
-                                            ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/25'
-                                            : 'bg-neutral-900 border-white/10 text-neutral-400 hover:bg-neutral-800 hover:text-white hover:border-white/20'
+                                        ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                                        : 'bg-neutral-900 border-white/10 text-neutral-400 hover:bg-neutral-800 hover:text-white hover:border-white/20'
                                         }`}
                                 >
                                     {cat}

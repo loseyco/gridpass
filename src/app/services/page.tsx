@@ -3,7 +3,8 @@ import { getServices } from '@/app/actions/services';
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { ServiceFilter } from '@/components/services/ServiceFilter';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 
 export const metadata: Metadata = {
     title: 'Services | GridPass',
@@ -43,17 +44,13 @@ export default async function ServicesPage({
                 <ServiceFilter />
 
                 {services.length === 0 ? (
-                    <div className="text-center py-20 bg-neutral-900 rounded-2xl border border-white/5">
-                        <h3 className="text-xl font-bold mb-2">No services found</h3>
-                        <p className="text-neutral-400 mb-6">Try adjusting your filters or search terms.</p>
-                        <Link
-                            href="/dashboard/services"
-                            className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            List a Service
-                        </Link>
-                    </div>
+                    <EmptyState
+                        icon={Search}
+                        title="No services found"
+                        description="Try adjusting your filters or search terms."
+                        actionLabel="List a Service"
+                        actionLink="/dashboard/services"
+                    />
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {services.map(service => (

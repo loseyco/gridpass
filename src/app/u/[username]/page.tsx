@@ -250,6 +250,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                 isOwner={isOwner}
                                 recipientName={profile.full_name || profile.username}
                                 recipientUsername={profile.username}
+                                recipientId={profile.id}
                             />
                         </div>
                     </div>

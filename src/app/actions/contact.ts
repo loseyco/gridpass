@@ -12,7 +12,6 @@ const supabaseAdmin = createClient(
 );
 
 export async function sendContactEmail(formData: FormData) {
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const message = formData.get('message') as string;
@@ -23,7 +22,7 @@ export async function sendContactEmail(formData: FormData) {
     }
 
     try {
-        // 1. Check for Service Key
+        // 1. Check for Service Key (DB Access)
         if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
             console.error('CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing');
             return { success: false, error: 'Server misconfiguration: Missing API Key' };
@@ -36,59 +35,45 @@ export async function sendContactEmail(formData: FormData) {
             .ilike('username', recipientUsername)
             .single();
 
-        // EMERGENCY FALLBACK: If DB fails, ensures PJ specifically always gets mail.
-        if ((profileError || !profile) && recipientUsername.toLowerCase() === 'pjlosey') {
-            console.log('Using Emergency Fallback for pjlosey');
-            // Mock profile for fallback
-            const fallbackEmail = 'loseyp@gmail.com';
-
-            const data = await resend.emails.send({
-                from: 'GridPass <team@gridpass.app>',
-                to: fallbackEmail,
-                subject: `[Fallback] Inquiry from ${name}`,
-                replyTo: email,
-                text: `
-    *** EMERGENCY FALLBACK MODE (DB Lookup Failed) ***
-    
-    You have a new work inquiry!
-    
-    FROM: ${name}
-    EMAIL: ${email}
-    
-    MESSAGE:
-    --------------------------------------------------
-    ${message}
-    --------------------------------------------------
-                `
-            });
-
-            if (data.error) return { success: false, error: data.error.message };
-            return { success: true };
-        }
+        // ... (Emergency fallback logic removed for brevity as it relied on email) ...
 
         if (profileError || !profile) {
             console.error('Profile Lookup Failed:', profileError);
             return { success: false, error: 'User not found' };
         }
 
-        // 2. Get Verification Email
-        const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+        // 3. Save to Messages DB (This is the primary method now)
+        const { error: msgError } = await supabaseAdmin
+            .from('profile_messages')
+            .insert({
+                recipient_id: profile.id,
+                sender_name: name,
+                sender_email: email,
+                content: message
+            });
 
-        if (userError || !user || !user.email) {
-            return { success: false, error: 'Could not contact user' };
+        if (msgError) {
+            console.error('Failed to save message to DB:', msgError);
+            return { success: false, error: 'Failed to save message' };
         }
 
-        // SKIP DB LOGGING as requested for stability
+        // 4. Send Notification Email (Optional)
+        const resendKey = process.env.RESEND_API_KEY;
+        if (resendKey) {
+            const resend = new Resend(resendKey);
 
-        // 3. Send Notification Email
-        const dashboardLink = `https://gridpass.app/dashboard/messages`;
+            // Get Verification Email
+            const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
 
-        const data = await resend.emails.send({
-            from: `${name} via GridPass <team@gridpass.app>`,
-            to: user.email,
-            subject: `[GridPass] New Inquiry from ${name}`,
-            replyTo: email,
-            text: `
+            if (!userError && user && user.email) {
+                const dashboardLink = `https://gridpass.app/dashboard/messages`;
+
+                await resend.emails.send({
+                    from: `${name} via GridPass <team@gridpass.app>`,
+                    to: user.email,
+                    subject: `[GridPass] New Inquiry from ${name}`,
+                    replyTo: email,
+                    text: `
 You have a new message on GridPass!
 
 FROM: ${name} (${email})
@@ -97,17 +82,16 @@ ${message}
 --------------------------------------------------
 
 View & Reply here: ${dashboardLink}
-            `
-        });
-
-        if (data.error) {
-            console.error('Resend Error:', data.error);
-            return { success: false, error: data.error.message };
+                    `
+                });
+            }
+        } else {
+            console.warn('RESEND_API_KEY missing. Skipping email notification.');
         }
 
         return { success: true };
     } catch (error) {
-        console.error('Email Server Error:', error);
+        console.error('Message Handler Error:', error);
         return { success: false, error: 'Internal server error' };
     }
 }

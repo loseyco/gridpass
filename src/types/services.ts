@@ -3,29 +3,17 @@ export interface Service {
     user_id: string;
     title: string;
     description: string | null;
-    price: number | null;
-    currency: string;
-    image_url: string | null;
-    category: string | null;
-    tags: string[] | null;
-    is_active: boolean;
+    price: number;
+    currency: string; // Added
+    unit: 'fixed' | 'hourly' | 'daily' | 'project' | 'consultation';
+    category: string | null; // Added
+    tags: string[]; // Added
+    photo_url: string | null; // Standardized on photo_url
+    is_active: boolean; // Added
     created_at: string;
-    updated_at: string;
 }
 
-export interface ServiceFormData {
-    title: string;
-    description?: string;
-    price?: number;
-    currency?: string;
-    image_url?: string;
-    category?: string;
-    tags?: string[];
-    is_active?: boolean;
-}
-
-export interface ServiceFilters {
-    category?: string;
-    search?: string;
-    userId?: string;
-}
+export type ServiceFormData = Omit<Service, 'id' | 'user_id' | 'created_at' | 'price'> & {
+    price: number | undefined; // Allow undefined for form inputs
+    image_url?: string; // Legacy support or alias if needed, but prefer photo_url
+};

@@ -36,6 +36,11 @@ export default function VehicleCard({ vehicle, onEdit, onDelete, readOnly = fals
                         {getIcon()}
                         {vehicle.type}
                     </div>
+                    {vehicle.is_for_sale && (
+                        <div className="absolute top-2 right-2 bg-green-600/90 backdrop-blur-md px-2 py-1 rounded text-xs font-bold uppercase text-white shadow-lg">
+                            For Sale
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="h-24 bg-neutral-800 flex items-center justify-center relative">
@@ -43,6 +48,11 @@ export default function VehicleCard({ vehicle, onEdit, onDelete, readOnly = fals
                         {getIcon()}
                         {vehicle.type}
                     </div>
+                    {vehicle.is_for_sale && (
+                        <div className="absolute top-2 right-2 bg-green-600/90 backdrop-blur-md px-2 py-1 rounded text-xs font-bold uppercase text-white shadow-lg animate-pulse">
+                            For Sale
+                        </div>
+                    )}
                     <Car className="w-8 h-8 text-neutral-600" />
                 </div>
             )}
@@ -53,6 +63,11 @@ export default function VehicleCard({ vehicle, onEdit, onDelete, readOnly = fals
                         <h3 className="font-bold text-white text-lg leading-tight">
                             {vehicle.year} {vehicle.make} {vehicle.model}
                         </h3>
+                        {vehicle.is_for_sale && vehicle.price && (
+                            <p className="text-green-400 font-bold text-sm mt-0.5">
+                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: vehicle.currency || 'USD' }).format(vehicle.price)}
+                            </p>
+                        )}
                     </div>
                     {!readOnly && (
                         <div className="flex gap-1 items-center">

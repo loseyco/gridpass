@@ -67,16 +67,37 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
           }).select().single();
 
           if (inserted) {
-              const link = `https://gridpass.app/jobs/${inserted.id}`; // Fake link for now until route exists
+              const link = `https://gridpass.app/jobs/${inserted.id}`;
+              const postContent = `🏎️ New Gig Alert:\n${title}\n\nApply via GridPass: ${link}\n#GridPass #MotorsportJobs`;
               
-              // Post to GridPass Page
-              console.log('📢 Posting to Page...');
-              await page.goto(PAGE_URL, { waitUntil: 'networkidle2' });
+              console.log('📢 Posting to Page:', postContent);
               
-              // Click "Write something..." (Selector is brittle, trying generic text match)
-              // Note: Posting via Puppeteer is hard because of dynamic classes.
-              // We'll log it for now.
-              console.log(`TODO: Auto-post this link: ${link}`);
+              try {
+                  await page.goto(PAGE_URL, { waitUntil: 'networkidle2' });
+                  
+                  // Wait for "Write something..."
+                  // Generic approach: Find div with "Write something..." text
+                  await page.evaluate(() => {
+                      const createPost = Array.from(document.querySelectorAll('div')).find(el => el.innerText === "Write something...");
+                      if (createPost) createPost.click();
+                  });
+                  
+                  await new Promise(r => setTimeout(r, 3000));
+                  
+                  // Type content
+                  await page.keyboard.type(postContent);
+                  await new Promise(r => setTimeout(r, 2000));
+                  
+                  // Click Post (Look for blue button)
+                  await page.evaluate(() => {
+                      const buttons = Array.from(document.querySelectorAll('div[aria-label="Post"]'));
+                      if (buttons.length > 0) buttons[0].click();
+                  });
+                  
+                  console.log('✅ Posted successfully!');
+              } catch (postErr) {
+                  console.error('❌ Failed to post:', postErr.message);
+              }
           }
       }
   }

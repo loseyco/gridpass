@@ -1,3 +1,9 @@
-2026/02/09-15:22:22.429 59bc Reusing MANIFEST C:\openclaw\gridpass\temp_chrome_profile\Default\Local Storage\leveldb/MANIFEST-000001
-2026/02/09-15:22:22.433 59bc Recovering log #3
-2026/02/09-15:22:22.436 59bc Reusing old log C:\openclaw\gridpass\temp_chrome_profile\Default\Local Storage\leveldb/000003.log 
+2026/02/09-20:00:36.420 5394 Reusing MANIFEST C:\openclaw\gridpass\temp_chrome_profile\Default\Local Storage\leveldb/MANIFEST-000001
+2026/02/09-20:00:36.425 5394 Recovering log #3
+2026/02/09-20:00:36.428 5394 Reusing old log C:\openclaw\gridpass\temp_chrome_profile\Default\Local Storage\leveldb/000003.log 
+2026/02/09-20:01:36.435 75e0 Level-0 table #5: started
+2026/02/09-20:01:36.439 75e0 Level-0 table #5: 9965 bytes OK
+2026/02/09-20:01:36.442 75e0 Delete type=0 #3
+2026/02/09-20:35:31.715 75e0 Level-0 table #7: started
+2026/02/09-20:35:31.720 75e0 Level-0 table #7: 36604 bytes OK
+2026/02/09-20:35:31.726 75e0 Delete type=0 #4

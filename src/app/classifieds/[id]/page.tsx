@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Tag, Calendar, User, DollarSign, Mail, Phone, Image as ImageIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Metadata, ResolvingMetadata } from 'next';
+import ContactSellerButton from '@/components/classifieds/ContactSellerButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,24 +44,42 @@ export default async function ClassifiedDetailPage({ params }: Props) {
     const id = (await params).id;
     const supabase = await createClient();
 
-    const { data: item } = await supabase
+    // Fetch item first without complicated joins
+    const { data: item, error: itemError } = await supabase
         .from('classifieds')
-        .select(`
-            *,
-            profiles:user_id (
-                username,
-                full_name,
-                avatar_url
-            )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
+
+    if (itemError) {
+        console.error('Error fetching classified:', itemError);
+    }
 
     if (!item) {
         notFound();
     }
 
+    // Fetch profile separately
+    let profile = null;
+    if (item.user_id) {
+        const { data: profileData } = await supabase
+            .from('profiles')
+            .select('username, full_name, avatar_url')
+            .eq('id', item.user_id)
+            .single();
+        profile = profileData;
+    }
+
+    // Merge for compatibility with existing JSX
+    // valid item contact_info
     const contactInfo = item.contact_info as any;
+    const itemWithProfile = { ...item, profiles: profile };
+
+    // Update variable references below to use itemWithProfile or just handle it.
+    // Actually, I should just map it to the structure the JSX expects.
+    // The JSX expects `item` to have `profiles`.
+    Object.assign(item, { profiles: profile });
+
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white font-sans p-6 md:p-12">
@@ -145,7 +164,12 @@ export default async function ClassifiedDetailPage({ params }: Props) {
 
                                 {item.status === 'active' ? (
                                     <div className="space-y-3">
-                                        {contactInfo?.email && (
+                                        {profile ? (
+                                            <ContactSellerButton
+                                                recipientName={profile.full_name || profile.username || 'Seller'}
+                                                recipientUsername={profile.username}
+                                            />
+                                        ) : contactInfo?.email && (
                                             <a href={`mailto:${contactInfo.email}`} className="flex items-center justify-center w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition-colors">
                                                 <Mail className="w-4 h-4 mr-2" /> Email Seller
                                             </a>

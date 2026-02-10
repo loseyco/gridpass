@@ -17,7 +17,8 @@ import {
     X,
     MoreVertical,
     Wrench,
-    Car
+    Car,
+    Briefcase
 } from 'lucide-react';
 import NotificationBadge from '@/components/NotificationBadge';
 import LogoutButton from '@/components/LogoutButton';
@@ -112,6 +113,14 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
                     <Link href="/dashboard/tools" className={linkClass('/dashboard/tools')} onClick={() => setIsOpen(false)}>
                         <Wrench className="w-5 h-5" />
                         Tools & Gear
+                    </Link>
+                    <Link href="/dashboard/services" className={linkClass('/dashboard/services')} onClick={() => setIsOpen(false)}>
+                        <Briefcase className="w-5 h-5" />
+                        My Services
+                    </Link>
+                    <Link href="/dashboard/leads" className={linkClass('/dashboard/leads')} onClick={() => setIsOpen(false)}>
+                        <Trophy className="w-5 h-5" />
+                        Leads
                     </Link>
 
                     {/* Founder Exclusive Section */}

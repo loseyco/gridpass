@@ -20,11 +20,7 @@ export default function ToolCard({ tool, onEdit, onDelete, readOnly = false }: T
         <div className="bg-neutral-900 border border-white/5 rounded-lg p-4 hover:border-white/10 transition-colors group flex justify-between items-center gap-4">
             <div className="flex items-center gap-4 overflow-hidden">
                 <div className="w-12 h-12 bg-neutral-800 rounded flex items-center justify-center shrink-0 overflow-hidden">
-                    {tool.photo_url ? (
-                        <img src={tool.photo_url} alt={tool.name} className="w-full h-full object-cover" />
-                    ) : (
-                        <Wrench className="w-6 h-6 text-neutral-500" />
-                    )}
+                    <Wrench className="w-6 h-6 text-neutral-500" />
                 </div>
                 <div className="min-w-0">
                     <h3 className="font-bold text-white truncate">

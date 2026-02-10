@@ -6,6 +6,7 @@ import PendingRecommendationsWidget from './pending-recommendations-widget';
 import ProfileCompletionWidget from '@/components/dashboard/ProfileCompletionWidget';
 import AffiliateWidget from '@/components/dashboard/AffiliateWidget';
 import JobMatches from './job-matches';
+import SocialShareWidget from '@/components/dashboard/SocialShareWidget';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -193,11 +194,9 @@ export default async function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* View Public Page Link (Small) */}
+                    {/* Share Profile Widget */}
                     {profile?.username && (
-                        <Link href={`/u/${profile.username}`} target="_blank" className="block p-4 rounded-xl border border-white/5 hover:bg-white/5 transition-colors text-center text-sm font-bold text-neutral-400 hover:text-white">
-                            View Public Profile <ArrowRight className="w-3 h-3 inline ml-1" />
-                        </Link>
+                        <SocialShareWidget username={profile.username} />
                     )}
                 </div>
 

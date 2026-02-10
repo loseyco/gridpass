@@ -1,3 +1,6 @@
-2026/02/09-15:23:45.554 6d10 Reusing MANIFEST C:\openclaw\gridpass\temp_chrome_profile\Default\IndexedDB\https_www.facebook.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/02/09-15:23:45.554 6d10 Recovering log #3
-2026/02/09-15:23:45.570 6d10 Reusing old log C:\openclaw\gridpass\temp_chrome_profile\Default\IndexedDB\https_www.facebook.com_0.indexeddb.leveldb/000003.log 
+2026/02/09-20:39:29.696 5f40 Reusing MANIFEST C:\openclaw\gridpass\temp_chrome_profile\Default\IndexedDB\https_www.facebook.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/09-20:39:29.702 5f40 Recovering log #13
+2026/02/09-20:39:29.706 5f40 Reusing old log C:\openclaw\gridpass\temp_chrome_profile\Default\IndexedDB\https_www.facebook.com_0.indexeddb.leveldb/000013.log 
+2026/02/09-20:39:29.706 5f40 Delete type=2 #11
+2026/02/09-20:39:29.707 5f40 Delete type=2 #12
+2026/02/09-20:39:29.707 5f40 Delete type=2 #14

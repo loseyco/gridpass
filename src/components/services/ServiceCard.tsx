@@ -24,9 +24,9 @@ export function ServiceCard({ service, showOwner = true }: ServiceCardProps) {
 
             {/* Image / Cover */}
             <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-xl bg-neutral-900">
-                {service.image_url ? (
+                {service.photo_url ? (
                     <img
-                        src={service.image_url}
+                        src={service.photo_url}
                         alt={service.title}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />

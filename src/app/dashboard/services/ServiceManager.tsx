@@ -10,18 +10,21 @@ import { formatCurrency } from '@/utils/format';
 
 interface ServiceManagerProps {
     initialServices: Service[];
+    userId: string;
 }
 
-export function ServiceManager({ initialServices }: ServiceManagerProps) {
+export function ServiceManager({ initialServices, userId }: ServiceManagerProps) {
     const router = useRouter();
     const [isCreating, setIsCreating] = useState(false);
     const [editingService, setEditingService] = useState<Service | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this service?')) return;
+    const handleConfirmDelete = async (id: string) => {
+        // Optimistically set deleting state (already set by button, but ensures loading spinner logic if we added one, 
+        // though here we are using the ID to show confirmation. 
+        // We actually need a separate loading state or reuse deletingId if we want to show a spinner during the delete call.)
+        // But for now, let's just run the delete.
 
-        setDeletingId(id);
         try {
             await deleteService(id);
             router.refresh();
@@ -47,6 +50,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                 </h2>
                 <ServiceForm
                     initialData={editingService}
+                    userId={userId}
                     onSuccess={handleSuccess}
                     onCancel={() => {
                         setIsCreating(false);
@@ -93,8 +97,8 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                             className="group flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-neutral-900 border border-white/5 p-4 rounded-xl hover:border-white/10 transition-colors"
                         >
                             <div className="flex items-center gap-4">
-                                {service.image_url ? (
-                                    <img src={service.image_url} alt={service.title} className="w-16 h-16 rounded-lg object-cover bg-neutral-800" />
+                                {service.photo_url ? (
+                                    <img src={service.photo_url} alt={service.title} className="w-16 h-16 rounded-lg object-cover bg-neutral-800" />
                                 ) : (
                                     <div className="w-16 h-16 rounded-lg bg-neutral-800 flex items-center justify-center text-neutral-600 font-bold text-xs">
                                         NO IMG
@@ -123,25 +127,41 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                             </div>
 
                             <div className="flex items-center gap-2 w-full md:w-auto mt-4 md:mt-0 border-t md:border-t-0 border-white/5 pt-4 md:pt-0">
-                                <button
-                                    onClick={() => setEditingService(service)}
-                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white rounded-lg transition-colors text-sm font-medium"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(service.id)}
-                                    disabled={deletingId === service.id}
-                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
-                                >
-                                    {deletingId === service.id ? (
-                                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <Trash2 className="w-4 h-4" />
-                                    )}
-                                    Delete
-                                </button>
+                                {deletingId === service.id ? (
+                                    <div className="flex items-center gap-2 animate-fade-in">
+                                        <span className="text-xs text-neutral-400 font-medium mr-2">Are you sure?</span>
+                                        <button
+                                            onClick={() => setDeletingId(null)}
+                                            className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => handleConfirmDelete(service.id)}
+                                            className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                            Confirm
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => setEditingService(service)}
+                                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white rounded-lg transition-colors text-sm font-medium"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setDeletingId(service.id)}
+                                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors text-sm font-medium"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            Delete
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))

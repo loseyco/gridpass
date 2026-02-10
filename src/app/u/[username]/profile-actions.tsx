@@ -2,19 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Briefcase, Printer, Mail, Share2, MoreVertical, Flag, X } from 'lucide-react';
+import { Briefcase, Printer, Mail, Share2, MoreVertical, Flag, X, Wrench } from 'lucide-react';
 import ContactModal from '@/components/ContactModal';
 import { reportProfile } from '@/app/actions/report';
+import ServicesManager from '@/components/profile/ServicesManager';
 
 interface ProfileActionsProps {
     isOwner: boolean;
     recipientName: string;
     recipientUsername: string;
+    recipientId?: string; // Added for services
 }
 
-export default function ProfileActions({ isOwner, recipientName, recipientUsername }: ProfileActionsProps) {
+export default function ProfileActions({ isOwner, recipientName, recipientUsername, recipientId }: ProfileActionsProps) {
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const [isServicesOpen, setIsServicesOpen] = useState(false);
     const [reportReason, setReportReason] = useState('');
     const [isReportSubmitting, setIsReportSubmitting] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -103,12 +106,20 @@ export default function ProfileActions({ isOwner, recipientName, recipientUserna
 
                 {/* Owner: Edit Profile */}
                 {isOwner ? (
-                    <Link
-                        href="/dashboard/profile"
-                        className="inline-flex items-center gap-2 bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg font-bold hover:bg-neutral-700 border border-white/5 transition-colors"
-                    >
-                        <Briefcase className="w-4 h-4" /> Edit Profile
-                    </Link>
+                    <>
+                        <Link
+                            href="/dashboard/profile"
+                            className="inline-flex items-center gap-2 bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg font-bold hover:bg-neutral-700 border border-white/5 transition-colors"
+                        >
+                            <Briefcase className="w-4 h-4" /> Edit Profile
+                        </Link>
+                        <button
+                            onClick={() => setIsServicesOpen(true)}
+                            className="inline-flex items-center gap-2 bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg font-bold hover:bg-neutral-700 border border-white/5 transition-colors"
+                        >
+                            <Wrench className="w-4 h-4" /> Services
+                        </button>
+                    </>
                 ) : (
                     /* Visitor: Hire Me */
                     <button
@@ -168,6 +179,25 @@ export default function ProfileActions({ isOwner, recipientName, recipientUserna
                                 {isReportSubmitting ? 'Submitting...' : 'Submit Report'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Services Manager Modal */}
+            {isServicesOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-neutral-950 border border-white/10 rounded-2xl w-full max-w-4xl p-6 relative shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
+                        <button
+                            onClick={() => setIsServicesOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white rounded-full hover:bg-white/10 transition-colors z-10"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        {recipientId ? (
+                            <ServicesManager userId={recipientId} isOwnProfile={true} />
+                        ) : (
+                            <div className="text-red-500">Error: User ID missing</div>
+                        )}
                     </div>
                 </div>
             )}

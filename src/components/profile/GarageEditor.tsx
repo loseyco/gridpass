@@ -273,11 +273,65 @@ export default function GarageEditor({ userId }: GarageEditorProps) {
                             <div>
                                 <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Description</label>
                                 <textarea
-                                    className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white h-24 resize-none"
-                                    value={formData.description || ''}
                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                                     placeholder="Specs, modifications, setup details..."
                                 />
+                            </div>
+
+                            {/* Sale Options */}
+                            <div className="border-t border-white/10 pt-4 mt-4">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <input
+                                        type="checkbox"
+                                        id="isForSale"
+                                        checked={formData.is_for_sale || false}
+                                        onChange={e => setFormData({ ...formData, is_for_sale: e.target.checked })}
+                                        className="w-4 h-4 rounded border-white/10 bg-neutral-950 text-white accent-white"
+                                    />
+                                    <label htmlFor="isForSale" className="text-sm font-bold text-white select-none cursor-pointer">
+                                        Mark for Sale
+                                    </label>
+                                </div>
+
+                                {formData.is_for_sale && (
+                                    <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Price</label>
+                                                <input
+                                                    type="number"
+                                                    className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white"
+                                                    value={formData.price || ''}
+                                                    onChange={e => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Currency</label>
+                                                <select
+                                                    className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white"
+                                                    value={formData.currency || 'USD'}
+                                                    onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                                                >
+                                                    <option value="USD">USD ($)</option>
+                                                    <option value="EUR">EUR (€)</option>
+                                                    <option value="GBP">GBP (£)</option>
+                                                    <option value="CAD">CAD ($)</option>
+                                                    <option value="AUD">AUD ($)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Sale Description</label>
+                                            <textarea
+                                                className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white h-20 resize-none"
+                                                value={formData.sale_description || ''}
+                                                onChange={e => setFormData({ ...formData, sale_description: e.target.value })}
+                                                placeholder="Additional details for the buyer..."
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="pt-4 flex justify-end gap-2">
                                 <button type="button" onClick={() => setIsVehicleModalOpen(false)} className="px-4 py-2 hover:bg-neutral-800 rounded text-neutral-300">Cancel</button>

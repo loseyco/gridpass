@@ -5,16 +5,16 @@ const STATIC_ASSETS = [
     '/offline'
 ];
 
-self.addEventListener('install', (event: any) => {
+self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_ASSETS);
         })
     );
-    (self as any).skipWaiting();
+    self.skipWaiting();
 });
 
-self.addEventListener('activate', (event: any) => {
+self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -24,10 +24,10 @@ self.addEventListener('activate', (event: any) => {
             );
         })
     );
-    (self as any).clients.claim();
+    self.clients.claim();
 });
 
-self.addEventListener('fetch', (event: any) => {
+self.addEventListener('fetch', (event) => {
     // Navigation request strategy
     if (event.request.mode === 'navigate') {
         event.respondWith(

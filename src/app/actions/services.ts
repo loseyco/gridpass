@@ -1,126 +1,118 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { Service, ServiceFormData, ServiceFilters } from '@/types/services';
+import { Service, ServiceFormData } from '@/types/services';
 import { revalidatePath } from 'next/cache';
 
-export async function createService(data: ServiceFormData) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        throw new Error('Not authenticated');
-    }
-
-    const { error } = await supabase.from('services').insert({
-        ...data,
-        user_id: user.id
-    });
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    revalidatePath('/dashboard/services');
-    revalidatePath('/services');
-    // We might not have username easily available here without an extra fetch, 
-    // but we can revalidate the general services page and dashboard.
-}
-
-export async function updateService(id: string, data: ServiceFormData) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        throw new Error('Not authenticated');
-    }
-
-    const { error } = await supabase
-        .from('services')
-        .update(data)
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    revalidatePath('/dashboard/services');
-    revalidatePath('/services');
-}
-
-export async function deleteService(id: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        throw new Error('Not authenticated');
-    }
-
-    const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    revalidatePath('/dashboard/services');
-    revalidatePath('/services');
-}
-
-export async function getServices(filters?: ServiceFilters) {
+export async function getServices({ userId, search, category }: { userId?: string, search?: string, category?: string } = {}): Promise<Service[]> {
     const supabase = await createClient();
 
-    let query = supabase.from('services').select(`
-        *,
-        profiles:user_id (
-            username,
-            full_name,
-            avatar_url
-        )
-    `).eq('is_active', true);
+    let query = supabase
+        .from('user_services')
+        .select('*');
 
-    if (filters?.category) {
-        query = query.eq('category', filters.category);
+    if (userId) {
+        query = query.eq('user_id', userId);
     }
 
-    if (filters?.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+    if (category && category !== 'All') {
+        query = query.eq('category', category);
     }
 
-    if (filters?.userId) {
-        query = query.eq('user_id', filters.userId);
+    if (search) {
+        query = query.ilike('title', `%${search}%`);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('price', { ascending: true });
 
     if (error) {
         console.error('Error fetching services:', error);
         return [];
     }
 
-    return data as any[]; // Type assertion needed for joined data
+    return data as Service[];
 }
 
-export async function getMyServices() {
+export async function getMyServices(): Promise<Service[]> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return [];
 
     const { data, error } = await supabase
-        .from('services')
+        .from('user_services')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
     if (error) {
         console.error('Error fetching my services:', error);
-        return [];
+        throw new Error('Failed to fetch services');
     }
 
     return data as Service[];
+}
+
+export async function createService(formData: ServiceFormData) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+        .from('user_services')
+        .insert({
+            ...formData,
+            user_id: user.id
+        });
+
+    if (error) {
+        console.error('Error creating service:', error);
+        throw new Error('Failed to create service');
+    }
+
+    revalidatePath('/dashboard/services');
+    revalidatePath(`/u/${user.user_metadata.username}`);
+}
+
+export async function updateService(id: string, formData: ServiceFormData) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+        .from('user_services')
+        .update(formData)
+        .eq('id', id)
+        .eq('user_id', user.id); // Ensure ownership
+
+    if (error) {
+        console.error('Error updating service:', error);
+        throw new Error('Failed to update service');
+    }
+
+    revalidatePath('/dashboard/services');
+    revalidatePath(`/u/${user.user_metadata.username}`);
+}
+
+export async function deleteService(id: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+        .from('user_services')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id); // Ensure ownership
+
+    if (error) {
+        console.error('Error deleting service:', error);
+        throw new Error('Failed to delete service');
+    }
+
+    revalidatePath('/dashboard/services');
+    revalidatePath(`/u/${user.user_metadata.username}`);
 }

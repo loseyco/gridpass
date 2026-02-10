@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X, ArrowRight, User } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { UserRole } from '@/utils/rbac-shared';
@@ -9,6 +10,7 @@ import NotificationBadge from './NotificationBadge';
 
 export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | 'public' | null }) {
     const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
     // Use effectiveRole as the primary source of UI truth if provided
     // If effectiveRole is 'public' (from impersonation), we treat as logged out.
     // Otherwise check for actual user session if effectiveRole is undefined (initial load fallback)
@@ -56,6 +58,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/members" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Members Directory
                         </Link>
+                        <Link href="/matchmaking" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                            Arrive & Drive
+                        </Link>
                         <Link href="/founder" className="text-amber-500 hover:text-amber-400 transition-colors text-sm font-bold uppercase tracking-wide">
                             Founding 100
                         </Link>
@@ -74,11 +79,13 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                                         Admin
                                     </Link>
                                 )}
-                                <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10 relative">
-                                    <User className="w-4 h-4" />
-                                    <span>Dashboard</span>
-                                    <NotificationBadge />
-                                </Link>
+                                {!pathname?.startsWith('/dashboard') && (
+                                    <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10 relative">
+                                        <User className="w-4 h-4" />
+                                        <span>Dashboard</span>
+                                        <NotificationBadge />
+                                    </Link>
+                                )}
                             </div>
                         ) : (
                             <div className="flex items-center gap-4">
@@ -103,82 +110,91 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
             </div>
 
             {/* Mobile Menu Overlay */}
-            {isOpen && (
-                <div className="md:hidden bg-neutral-950 border-b border-white/5 animate-fade-in absolute w-full left-0 top-16 shadow-2xl">
-                    <div className="flex flex-col p-4 space-y-4">
-                        <Link
-                            href="/members"
-                            className="text-neutral-300 hover:text-white py-2 block"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Members Directory
-                        </Link>
-                        <Link
-                            href="/founder"
-                            className="text-amber-500 font-bold uppercase tracking-widest py-2 block"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Founding 100
-                        </Link>
-                        <Link
-                            href="/features"
-                            className="text-neutral-300 hover:text-white py-2 block"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Features
-                        </Link>
-                        <Link
-                            href="/changelog"
-                            className="text-neutral-300 hover:text-white py-2 block"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            Changelog
-                        </Link>
+            {
+                isOpen && (
+                    <div className="md:hidden bg-neutral-950 border-b border-white/5 animate-fade-in absolute w-full left-0 top-16 shadow-2xl">
+                        <div className="flex flex-col p-4 space-y-4">
+                            <Link
+                                href="/members"
+                                className="text-neutral-300 hover:text-white py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Members Directory
+                            </Link>
+                            <Link
+                                href="/matchmaking"
+                                className="text-neutral-300 hover:text-white py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Arrive & Drive
+                            </Link>
+                            <Link
+                                href="/founder"
+                                className="text-amber-500 font-bold uppercase tracking-widest py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Founding 100
+                            </Link>
+                            <Link
+                                href="/features"
+                                className="text-neutral-300 hover:text-white py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Features
+                            </Link>
+                            <Link
+                                href="/changelog"
+                                className="text-neutral-300 hover:text-white py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Changelog
+                            </Link>
 
-                        <div className="h-px bg-white/10 my-2"></div>
+                            <div className="h-px bg-white/10 my-2"></div>
 
-                        {showLoggedIn ? (
-                            <>
-                                {isAdmin && (
+                            {showLoggedIn ? (
+                                <>
+                                    {isAdmin && (
+                                        <Link
+                                            href="/admin"
+                                            className="text-center text-red-500 font-bold uppercase tracking-widest py-2 block border border-red-500/20 bg-red-500/5 rounded-lg mb-2"
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Admin Command
+                                        </Link>
+                                    )}
                                     <Link
-                                        href="/admin"
-                                        className="text-center text-red-500 font-bold uppercase tracking-widest py-2 block border border-red-500/20 bg-red-500/5 rounded-lg mb-2"
+                                        href="/dashboard"
+                                        className="flex items-center justify-center gap-2 bg-neutral-800 text-white p-3 rounded-lg font-bold relative"
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        Admin Command
+                                        <User className="w-5 h-5" />
+                                        Go to Dashboard
+                                        <NotificationBadge />
                                     </Link>
-                                )}
-                                <Link
-                                    href="/dashboard"
-                                    className="flex items-center justify-center gap-2 bg-neutral-800 text-white p-3 rounded-lg font-bold relative"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    <User className="w-5 h-5" />
-                                    Go to Dashboard
-                                    <NotificationBadge />
-                                </Link>
-                            </>
-                        ) : (
-                            <>
-                                <Link
-                                    href="/login"
-                                    className="text-center text-neutral-300 hover:text-white py-2 block"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Log In
-                                </Link>
-                                <Link
-                                    href="/register"
-                                    className="text-center bg-indigo-600 text-white p-3 rounded-lg font-bold block"
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    Get Started
-                                </Link>
-                            </>
-                        )}
+                                </>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/login"
+                                        className="text-center text-neutral-300 hover:text-white py-2 block"
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        Log In
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        className="text-center bg-indigo-600 text-white p-3 rounded-lg font-bold block"
+                                        onClick={() => setIsOpen(false)}
+                                    >
+                                        Get Started
+                                    </Link>
+                                </>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
-        </nav>
+                )
+            }
+        </nav >
     );
 }

@@ -1,0 +1,164 @@
+'use client';
+
+import { useState } from 'react';
+import { MessageSquarePlus, X, Loader2, Send } from 'lucide-react';
+import { toast } from 'sonner';
+import { createClient } from '@/utils/supabase/client';
+
+export default function FeedbackWidget() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [type, setType] = useState<'feature' | 'bug'>('feature');
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const formData = new FormData(e.currentTarget);
+        const title = formData.get('title') as string;
+        const description = formData.get('description') as string;
+
+        const supabase = createClient();
+
+        // We'll use the 'features' table for both, prefacing bugs with [BUG]
+        const finalTitle = type === 'bug' ? `[BUG] ${title}` : title;
+        const category = type === 'bug' ? 'General' : 'General'; // Could add 'Bug' category if schema allows
+
+        try {
+            const { error } = await supabase
+                .from('features')
+                .insert({
+                    title: finalTitle,
+                    description,
+                    status: 'planned', // Default to planned/backlog
+                    category,
+                    votes: 1
+                });
+
+            if (error) {
+                if (error.code === '23505') { // Unique violation
+                    toast.error('A feature with this title already exists!');
+                } else {
+                    throw error;
+                }
+            } else {
+                toast.success('Feedback submitted successfully!');
+                setIsOpen(false);
+                (e.target as HTMLFormElement).reset();
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            toast.error('Failed to submit feedback. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <>
+            {/* Floating Button */}
+            <button
+                onClick={() => setIsOpen(true)}
+                className="fixed bottom-6 right-6 z-40 bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 flex items-center justify-center group"
+                aria-label="Submit Feedback"
+            >
+                <MessageSquarePlus className="w-6 h-6" />
+                <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap group-hover:pl-2">
+                    Feedback
+                </span>
+            </button>
+
+            {/* Modal */}
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div
+                        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in slide-in-from-bottom-10 duration-300 sm:slide-in-from-bottom-0 sm:zoom-in-95"
+                    >
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <h2 className="text-xl font-bold text-white mb-2">
+                            Share your thoughts
+                        </h2>
+                        <p className="text-neutral-400 text-sm mb-6">
+                            Found a bug or have a feature idea? Let us know!
+                        </p>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* Type Selection */}
+                            <div className="flex bg-neutral-950 p-1 rounded-lg border border-neutral-800">
+                                <button
+                                    type="button"
+                                    onClick={() => setType('feature')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${type === 'feature'
+                                            ? 'bg-indigo-600 text-white shadow-sm'
+                                            : 'text-neutral-400 hover:text-neutral-200'
+                                        }`}
+                                >
+                                    Feature Request
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setType('bug')}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${type === 'bug'
+                                            ? 'bg-rose-600 text-white shadow-sm'
+                                            : 'text-neutral-400 hover:text-neutral-200'
+                                        }`}
+                                >
+                                    Report Bug
+                                </button>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">
+                                    Title
+                                </label>
+                                <input
+                                    name="title"
+                                    required
+                                    placeholder={type === 'feature' ? "e.g. Dark Mode" : "e.g. Login page error"}
+                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">
+                                    Details
+                                </label>
+                                <textarea
+                                    name="description"
+                                    required
+                                    rows={4}
+                                    placeholder="Tell us more..."
+                                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={`w-full py-2.5 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${type === 'feature'
+                                        ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
+                                        : 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/20'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                {loading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Send className="w-4 h-4" />
+                                        Submit Feedback
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}

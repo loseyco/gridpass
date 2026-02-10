@@ -5,14 +5,16 @@ import { useRouter } from 'next/navigation';
 import { Service, ServiceFormData } from '@/types/services';
 import { createService, updateService } from '@/app/actions/services';
 import { Image as ImageIcon, Loader2, Save, X } from 'lucide-react';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 interface ServiceFormProps {
     initialData?: Service | null;
+    userId: string;
     onSuccess?: () => void;
     onCancel?: () => void;
 }
 
-export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormProps) {
+export function ServiceForm({ initialData, userId, onSuccess, onCancel }: ServiceFormProps) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,8 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
         description: initialData?.description || '',
         price: initialData?.price || 0,
         currency: initialData?.currency || 'USD',
-        image_url: initialData?.image_url || '',
+        unit: initialData?.unit || 'fixed',
+        photo_url: initialData?.photo_url || '',
         category: initialData?.category || '',
         tags: initialData?.tags || [],
         is_active: initialData?.is_active ?? true,
@@ -127,7 +130,7 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
                 </div>
 
                 {/* Price & Currency */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-neutral-300 mb-1">
                             Price
@@ -158,6 +161,23 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
                             <option value="GBP" className="bg-neutral-900">GBP (£)</option>
                         </select>
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-neutral-300 mb-1">
+                            Unit
+                        </label>
+                        <select
+                            name="unit"
+                            value={formData.unit}
+                            onChange={handleChange}
+                            className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-colors appearance-none"
+                        >
+                            <option value="fixed" className="bg-neutral-900">Fixed Price</option>
+                            <option value="hourly" className="bg-neutral-900">Per Hour</option>
+                            <option value="daily" className="bg-neutral-900">Per Day</option>
+                            <option value="project" className="bg-neutral-900">Per Project</option>
+                            <option value="consultation" className="bg-neutral-900">Per Consultation</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Description */}
@@ -175,29 +195,18 @@ export function ServiceForm({ initialData, onSuccess, onCancel }: ServiceFormPro
                     />
                 </div>
 
-                {/* Image URL */}
+                {/* Photo URL */}
                 <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-1">
-                        Cover Image URL
+                        Service Image
                     </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-500">
-                            <ImageIcon className="h-4 w-4" />
-                        </div>
-                        <input
-                            type="url"
-                            name="image_url"
-                            value={formData.image_url || ''}
-                            onChange={handleChange}
-                            className="w-full pl-10 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-white focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-colors"
-                            placeholder="https://..."
-                        />
-                    </div>
-                    {formData.image_url && (
-                        <div className="mt-2 aspect-video w-full max-w-[200px] overflow-hidden rounded-lg bg-neutral-900 border border-white/10">
-                            <img src={formData.image_url} alt="Preview" className="h-full w-full object-cover" />
-                        </div>
-                    )}
+                    <ImageUpload
+                        value={formData.photo_url || ''}
+                        onChange={(url) => setFormData(prev => ({ ...prev, photo_url: url }))}
+                        bucket="garage"
+                        pathPrefix={`services/${userId}`}
+                        className="h-40"
+                    />
                 </div>
 
                 {/* Tags */}

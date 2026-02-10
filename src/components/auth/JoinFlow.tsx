@@ -64,11 +64,29 @@ export default function JoinFlow({ invite, user, trackingId }: Props) {
         setLoading(true);
         setError('');
 
+        const emailTrimmed = email.trim();
+        const passwordTrimmed = password.trim();
+        const nameTrimmed = fullName.trim();
+
+        if (!emailTrimmed || !passwordTrimmed || !nameTrimmed) {
+            setError('Please fill in all fields.');
+            setLoading(false);
+            return;
+        }
+
+        // Basic client-side email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailTrimmed)) {
+            setError('Please enter a valid email address.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const formData = new FormData();
-            formData.append('email', email);
-            formData.append('password', password);
-            formData.append('full_name', fullName);
+            formData.append('email', emailTrimmed);
+            formData.append('password', passwordTrimmed);
+            formData.append('full_name', nameTrimmed);
             if (trackingId) {
                 formData.append('tracking_id', trackingId);
             }
@@ -76,16 +94,29 @@ export default function JoinFlow({ invite, user, trackingId }: Props) {
             const result = await registerUser(formData);
             if (result.error) throw new Error(result.error);
 
-            const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: emailTrimmed,
+                password: passwordTrimmed
+            });
+
             if (signInError) throw signInError;
 
             if (invite) {
                 await handleClaim();
             } else {
                 router.push('/dashboard?welcome=true');
+                router.refresh();
             }
         } catch (err: any) {
-            setError(err.message);
+            console.error('Registration Error:', err);
+            // Handle specific Supabase/Auth error messages properly
+            if (err.message && err.message.includes('invalid format')) {
+                setError('Invalid email format. Please check your email.');
+            } else if (err.message && err.message.includes('already been registered')) {
+                setError('This email is already registered. Please log in.');
+            } else {
+                setError(err.message || 'Registration failed. Please try again.');
+            }
             setLoading(false);
         }
     };

@@ -19,10 +19,13 @@ export default function LoginForm() {
         setIsLoading(true);
         setError(null);
 
+        const emailTrimmed = email.trim();
+        const passwordTrimmed = password.trim();
+
         try {
             const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password
+                email: emailTrimmed,
+                password: passwordTrimmed
             });
 
             if (error) throw error;
@@ -30,7 +33,12 @@ export default function LoginForm() {
             router.push('/dashboard');
             router.refresh();
         } catch (err: any) {
-            setError(err.message || 'Failed to login');
+            console.error('Login Error:', err);
+            if (err.message === 'Invalid login credentials') {
+                setError('Invalid email or password. Please try again.');
+            } else {
+                setError(err.message || 'Failed to login');
+            }
         } finally {
             setIsLoading(false);
         }
