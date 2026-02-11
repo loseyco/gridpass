@@ -18,7 +18,8 @@ import {
     Menu,
     X,
     LineChart,
-    MessageSquarePlus
+    MessageSquarePlus,
+    Bell
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -32,18 +33,25 @@ const MENU_ITEMS = [
     { name: 'Live Stats', href: '/stats', icon: LineChart },
     { name: 'Database', href: '/admin/database', icon: Database },
     { name: 'Feedback', href: '/admin/feedback', icon: MessageSquarePlus },
+    { name: 'Notifications', href: '/admin/notifications', icon: Bell },
 ];
 
 import { getNewResumeCount } from '@/app/actions/resume';
+import { getNewFeedbackCount } from '@/app/actions/feedback';
+import { getNewNotificationCount } from '@/app/actions/notifications';
 import { useEffect } from 'react';
 
 export default function AdminSidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [newResumeCount, setNewResumeCount] = useState(0);
+    const [newFeedbackCount, setNewFeedbackCount] = useState(0);
+    const [newNotificationCount, setNewNotificationCount] = useState(0);
     const pathname = usePathname();
 
     useEffect(() => {
         getNewResumeCount().then(setNewResumeCount);
+        getNewFeedbackCount().then(setNewFeedbackCount);
+        getNewNotificationCount().then(setNewNotificationCount);
     }, []);
 
     return (
@@ -154,6 +162,28 @@ export default function AdminSidebar() {
                             <Link href="/admin/classifieds" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/classifieds' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
                                 <ShoppingBag className={`w-5 h-5 ${pathname === '/admin/classifieds' ? 'text-white' : 'text-neutral-500'}`} />
                                 Classifieds
+                            </Link>
+                            <Link href="/admin/feedback" onClick={() => setIsOpen(false)} className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/feedback' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <div className="flex items-center gap-3">
+                                    <MessageSquarePlus className={`w-5 h-5 ${pathname === '/admin/feedback' ? 'text-white' : 'text-neutral-500'}`} />
+                                    Feedback
+                                </div>
+                                {newFeedbackCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                        {newFeedbackCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link href="/admin/notifications" onClick={() => setIsOpen(false)} className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/notifications' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <div className="flex items-center gap-3">
+                                    <Bell className={`w-5 h-5 ${pathname === '/admin/notifications' ? 'text-white' : 'text-neutral-500'}`} />
+                                    Notifications
+                                </div>
+                                {newNotificationCount > 0 && (
+                                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                        {newNotificationCount}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     </div>

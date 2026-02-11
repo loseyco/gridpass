@@ -38,15 +38,22 @@ export default async function MembersPage() {
         .limit(50); // Limit to 50 for now
 
     // Map leads to profile structure
-    const shadowProfiles = leads?.map(lead => ({
-        id: lead.id,
-        username: lead.contact_info.username,
-        full_name: lead.name,
-        avatar_url: lead.contact_info.avatar_url,
-        role: 'member', // Default role
-        is_shadow: true, // Marker for UI
-        skills: lead.skills
-    })) || [];
+    const seenNames = new Set();
+    const shadowProfiles = leads?.reduce((acc, lead) => {
+        if (!seenNames.has(lead.name)) {
+            seenNames.add(lead.name);
+            acc.push({
+                id: lead.id,
+                username: lead.contact_info.username,
+                full_name: lead.name,
+                avatar_url: lead.contact_info.avatar_url,
+                role: 'member', // Default role
+                is_shadow: true, // Marker for UI
+                skills: lead.skills
+            });
+        }
+        return acc;
+    }, [] as any[]) || [];
 
     return (
         <div className="min-h-screen bg-neutral-950 text-white font-sans pt-24 px-4 md:px-8 pb-12">

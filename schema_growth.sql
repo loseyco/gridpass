@@ -58,3 +58,24 @@ create policy "Listings are viewable by everyone"
 
 -- Service Role / Admin write access (You need this to ingest)
 -- (Assuming PJ is Super Admin or using Service Key)
+
+-- 4. Notifications (Alerts & Nudges)
+create table if not exists public.notifications (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) not null,
+  title text not null,
+  message text,
+  type text default 'info', -- 'alert', 'success', 'nudge', 'warning'
+  link text, -- Optional deep link
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+
+-- RLS for Notifications
+alter table public.notifications enable row level security;
+
+create policy "Users can view their own notifications"
+  on public.notifications for select
+  using ( auth.uid() = user_id );
+
+-- Admins/Service Role can insert notifications

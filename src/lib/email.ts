@@ -39,3 +39,42 @@ export async function sendResumeNotification(data: {
         console.error('Failed to send email notification:', error);
     }
 }
+
+export async function sendFeedbackNotification(data: {
+    type: string;
+    title: string;
+    message: string;
+    page_url: string;
+    user_email?: string;
+}) {
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY is missing. Email notification skipped.');
+        return;
+    }
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Admin <onboarding@resend.dev>',
+            to: 'pjlos@example.com', // TODO: Make dynamic
+            subject: `New Feedback: [${data.type.toUpperCase()}] ${data.title || 'No Title'}`,
+            html: `
+        <h1>New Feedback Submission</h1>
+        <p><strong>Type:</strong> ${data.type}</p>
+        <p><strong>Title:</strong> ${data.title || 'N/A'}</p>
+        <p><strong>Message:</strong> ${data.message}</p>
+        <p><strong>Page:</strong> ${data.page_url}</p>
+        ${data.user_email ? `<p><strong>User Email:</strong> ${data.user_email}</p>` : ''}
+        <br/>
+        <p>
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/admin/feedback" 
+             style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            View in Admin Panel
+          </a>
+        </p>
+      `
+        });
+        console.log('Feedback notification email sent');
+    } catch (error) {
+        console.error('Failed to send feedback notification:', error);
+    }
+}

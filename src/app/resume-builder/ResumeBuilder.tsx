@@ -227,9 +227,30 @@ export default function ResumeBuilder() {
                         </div>
                     </div>
 
+                    {/* Create Account CTA - CLARIFICATION FOR USERS */}
+                    <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 border border-white/10 rounded-xl p-6 mb-8 text-left relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-16 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
+
+                        <div className="relative z-10">
+                            <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                                <User className="w-5 h-5 text-emerald-400" /> Save Your Profile
+                            </h3>
+                            <p className="text-sm text-neutral-400 mb-4 leading-relaxed">
+                                You haven't created an account yet. <strong>Claim this profile</strong> to save your data, make edits later, and apply for jobs.
+                            </p>
+
+                            <Link
+                                href="/register"
+                                className="flex items-center justify-center w-full py-3 bg-white text-black font-bold rounded-lg hover:bg-neutral-200 transition-colors gap-2"
+                            >
+                                <User className="w-4 h-4" /> Create Free Account
+                            </Link>
+                        </div>
+                    </div>
+
                     <Link
                         href="/"
-                        className="inline-flex items-center justify-center w-full px-6 py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors"
+                        className="text-neutral-500 hover:text-white text-sm font-medium transition-colors"
                     >
                         Back to Home
                     </Link>

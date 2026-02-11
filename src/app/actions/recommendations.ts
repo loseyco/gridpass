@@ -242,14 +242,27 @@ export async function updateRecommendationStatus(id: string, status: 'approved' 
     if (!user) throw new Error('Unauthorized');
 
     // Verify ownership implicitly via RLS (policy checks auth.uid() = target_user_id)
-    const { error } = await supabase
+    const { data: recommendation, error } = await supabase
         .from('recommendations')
         .update({ status })
         .eq('id', id)
-        .eq('target_user_id', user.id); // Extra safety
+        .eq('target_user_id', user.id) // Extra safety
+        .select()
+        .single();
 
     if (error) {
         throw new Error('Failed to update status');
+    }
+
+    // Add Notification for the author if approved/rejected
+    if (recommendation && recommendation.author_id) {
+        await supabase.from('notifications').insert({
+            user_id: recommendation.author_id,
+            title: `Recommendation ${status === 'approved' ? 'Approved' : 'Updated'}`,
+            message: `${user.user_metadata?.full_name || 'User'} has ${status} your recommendation.`,
+            type: status === 'approved' ? 'success' : 'info',
+            link: `/u/${user.user_metadata?.username}`
+        });
     }
 
     revalidatePath('/u/[username]');

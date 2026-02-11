@@ -32,7 +32,7 @@ export async function createInvite(role: UserRole, note: string) {
 export async function getInvites() {
     const supabase = await createClient();
     const { data, error } = await supabase.from('invites')
-        .select('*')
+        .select('*, claimer:profiles!used_by(username)')
         .order('created_at', { ascending: false });
 
     if (error) {

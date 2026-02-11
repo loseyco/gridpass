@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ArrowRight, User } from 'lucide-react';
+import { Menu, X, ArrowRight, User, Bell } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { UserRole } from '@/utils/rbac-shared';
 import NotificationBadge from './NotificationBadge';
@@ -88,11 +88,19 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                                     </Link>
                                 )}
                                 {!pathname?.startsWith('/dashboard') && (
-                                    <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10 relative">
-                                        <User className="w-4 h-4" />
-                                        <span>Dashboard</span>
-                                        <NotificationBadge />
-                                    </Link>
+                                    <>
+                                        {/* Notifications */}
+                                        <Link href="/dashboard" className="relative p-2 text-neutral-400 hover:text-white transition-colors">
+                                            <Bell className="w-5 h-5" />
+                                            <NotificationBadge />
+                                        </Link>
+
+                                        {/* Dashboard Link */}
+                                        <Link href="/dashboard" className="flex items-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg transition-colors border border-white/10">
+                                            <User className="w-4 h-4" />
+                                            <span>Dashboard</span>
+                                        </Link>
+                                    </>
                                 )}
                             </div>
                         ) : (

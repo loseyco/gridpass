@@ -8,6 +8,7 @@ import AffiliateWidget from '@/components/dashboard/AffiliateWidget';
 import JobMatches from './job-matches';
 import SocialShareWidget from '@/components/dashboard/SocialShareWidget';
 import { TeamList } from '@/components/dashboard/TeamList';
+import NotificationsWidget from '@/components/dashboard/NotificationsWidget';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -72,6 +73,9 @@ export default async function DashboardPage() {
 
             {/* Pending Recommendations Alert */}
             <PendingRecommendationsWidget />
+
+            {/* Notifications Widget */}
+            <NotificationsWidget />
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

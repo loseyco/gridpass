@@ -41,6 +41,20 @@ export async function submitFeedback(formData: FormData) {
         return { error: 'Failed to submit feedback' };
     }
 
+    // Send Notification
+    try {
+        const { sendFeedbackNotification } = await import('@/lib/email');
+        await sendFeedbackNotification({
+            type,
+            title: title || '',
+            message: description,
+            page_url: page_url || '',
+            user_email: user?.email
+        });
+    } catch (e) {
+        console.error('Failed to send feedback notification:', e);
+    }
+
     return { success: true };
 }
 
@@ -49,14 +63,7 @@ export async function getFeedbackSubmissions(status?: string, type?: string) {
 
     let query = supabase
         .from('feedback_submissions')
-        .select(`
-            *,
-            profiles:user_id (
-                username,
-                full_name,
-                avatar_url
-            )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
     if (status) {
@@ -67,14 +74,48 @@ export async function getFeedbackSubmissions(status?: string, type?: string) {
         query = query.eq('type', type);
     }
 
-    const { data, error } = await query;
+    const { data: submissions, error } = await query;
 
     if (error) {
         console.error('Error fetching feedback:', error);
         return [];
     }
 
-    return data;
+    // Manually fetch profiles to avoid PostgREST join issues if FK is missing
+    if (submissions && submissions.length > 0) {
+        const userIds = Array.from(new Set(submissions.map(s => s.user_id).filter(Boolean)));
+
+        if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, username, full_name, avatar_url')
+                .in('id', userIds);
+
+            const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+            return submissions.map(submission => ({
+                ...submission,
+                profiles: submission.user_id ? profileMap.get(submission.user_id) || null : null
+            }));
+        }
+    }
+
+    return submissions.map(s => ({ ...s, profiles: null }));
+}
+
+export async function getNewFeedbackCount() {
+    const supabase = await createClient();
+    const { count, error } = await supabase
+        .from('feedback_submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'new');
+
+    if (error) {
+        console.error('Error fetching feedback count:', error);
+        return 0;
+    }
+
+    return count || 0;
 }
 
 export async function updateFeedbackStatus(id: string, status: 'new' | 'reviewed' | 'archived') {

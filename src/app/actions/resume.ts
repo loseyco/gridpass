@@ -109,8 +109,8 @@ export async function submitResumeLead(formData: FormData) {
     };
 
     // 3. Insert into DB (Resume Leads)
-    // 3. Insert into DB (Resume Leads)
-    const { data: leadDataResponse, error } = await supabase
+    // Use Admin client to bypass RLS for insert + select
+    const { data: leadDataResponse, error } = await supabaseAdmin
         .from('resume_leads')
         .insert([rawData])
         .select()

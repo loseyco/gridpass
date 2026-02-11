@@ -23,6 +23,16 @@ import { Vehicle, Tool } from '@/types/garage';
 // Force dynamic rendering since we rely on DB data for slugs
 export const dynamic = 'force-dynamic';
 
+import MediaGallery from '@/components/profile/MediaGallery';
+
+interface MediaItem {
+    id: string;
+    url: string;
+    type: 'image' | 'video';
+    caption?: string;
+    sort_order: number;
+}
+
 export async function generateMetadata({ params, searchParams }: { params: Promise<{ username: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const supabase = await createClient();
     const { username } = await params;
@@ -113,7 +123,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
     // 1. Fetch Profile
     const { data: realProfile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, member_number')
         .ilike('username', username)
         .single();
 
@@ -203,6 +213,21 @@ export default async function PublicProfilePage({ params, searchParams }: { para
 
     // 4. Fetch Services
     const services = await getServices({ userId: profile.id });
+
+    // 4.5 Fetch Media
+    let mediaItems: MediaItem[] = [];
+    if (!isShadowProfile) {
+        const { data: media } = await supabase
+            .from('profile_media')
+            .select('*')
+            .eq('user_id', profile.id)
+            .order('sort_order', { ascending: true });
+
+        // Cast to MediaItem[] to satisfy TS if needed, or rely on inference
+        if (media) {
+            mediaItems = media as MediaItem[];
+        }
+    }
 
     // 5. Fetch Garage
     let garage: { vehicles: Vehicle[], tools: Tool[] } = { vehicles: [], tools: [] };
@@ -345,6 +370,13 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                                 <Calendar className="w-4 h-4 print:w-3 print:h-3" />
                                                 Member since {new Date(profile.created_at || Date.now()).getFullYear()}
                                             </div>
+                                            {profile.member_number && (
+                                                <div className="flex items-center gap-2 print:justify-end">
+                                                    <div className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-xs font-mono text-neutral-400">
+                                                        #{profile.member_number}
+                                                    </div>
+                                                </div>
+                                            )}
                                             {/* Social Links */}
                                             {profile.social_links && Object.keys(profile.social_links).length > 0 && (
                                                 <div className="flex flex-wrap gap-2 mt-3">
@@ -435,6 +467,9 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                             )}
                         </div>
                     )}
+
+                    {/* Media Gallery */}
+                    <MediaGallery items={mediaItems} />
 
                     {/* Career History Section */}
                     {profile.career_history && (profile.career_history as CareerEntry[]).length > 0 && (

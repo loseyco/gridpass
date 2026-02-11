@@ -117,9 +117,16 @@ export default function FeedbackWidget() {
 
             {/* Modal */}
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4">
+                    {/* Backdrop */}
                     <div
-                        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md shadow-2xl p-6 relative animate-in slide-in-from-bottom-10 duration-300 sm:slide-in-from-bottom-0 sm:zoom-in-95"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Content */}
+                    <div
+                        className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md shadow-2xl p-6 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-200"
                     >
                         <button
                             onClick={() => setIsOpen(false)}
