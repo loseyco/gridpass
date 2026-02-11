@@ -38,8 +38,9 @@ export async function POST(request: Request) {
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
+        const type = session.metadata?.type;
 
-        if (userId) {
+        if (userId && type === 'founder_membership') {
             console.log(`Processing Founder Upgrade for User: ${userId}`);
 
             // 1. Update User Role
@@ -79,6 +80,9 @@ export async function POST(request: Request) {
             } catch (emailError) {
                 console.error('Failed to send welcome email:', emailError);
             }
+        } else if (type === 'donation') {
+            console.log(`Donation received from ${userId || 'Guest'} - Amount: ${(session.amount_total || 0) / 100}`);
+            // TODO: Add donation tracking table if needed
         }
     }
 

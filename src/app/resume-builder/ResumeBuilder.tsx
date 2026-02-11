@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import { submitResumeLead } from '@/app/actions/resume';
+import VideoGuide from '@/components/VideoGuide';
+import FeatureStatusBadge from '@/components/FeatureStatusBadge';
+import { useTour } from '@/hooks/useTour';
 import { Loader2, CheckCircle2, ChevronRight, ChevronLeft, Calendar, MapPin, Globe, Award, Shield, Plane, Upload, User, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { event } from '@/lib/analytics';
+import { DonationCard } from '@/components/launch/DonationCard';
 
 // Initial State for Form Data
 const INITIAL_DATA = {
@@ -56,6 +60,17 @@ export default function ResumeBuilder() {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { startTour } = useTour();
+
+    const startResumeTour = () => {
+        startTour([
+            { popover: { title: 'Welcome to Resume Builder', description: 'Let\'s create a professional racing resume in minutes. Follow this guide to get started.' } },
+            { element: '#rb-header', popover: { title: 'Track Your Progress', description: 'You can see which step you are on here. You can save your progress by creating an account later.' } },
+            { element: '#rb-videoguide', popover: { title: 'Watch a Video', description: 'Prefer to watch? Click here to see a video walkthrough of the entire process.' } },
+            { element: '#rb-form-area', popover: { title: 'Fill In Your Details', description: 'Enter your information here. We will format it perfectly for teams.' } },
+            { element: '#rb-next-btn', popover: { title: 'Next Step', description: 'Click here to proceed to the next section when you are done.' } },
+        ]);
+    };
 
     // Helper to update simple fields
     const updateField = (field: keyof typeof INITIAL_DATA, value: any) => {
@@ -195,36 +210,8 @@ export default function ResumeBuilder() {
                     </p>
 
                     {/* Donation Section */}
-                    <div className="bg-neutral-800/50 border border-indigo-500/20 rounded-xl p-6 mb-8 text-left">
-                        <h3 className="text-white font-bold mb-2 flex items-center gap-2">
-                            <Award className="w-5 h-5 text-indigo-400" /> Pay What You Want
-                        </h3>
-                        <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
-                            The <strong>Resume Builder is completely free</strong> to help you get your foot in the door.
-                            GridPass relies on community support to build more pro tools. If this helped you, consider chipping in.
-                        </p>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {[5, 10, 20].map((amount) => (
-                                <a
-                                    key={amount}
-                                    href="https://buy.stripe.com/5kA014fbC4yV8G48wx" // Placeholder: User needs to swap these for specific amount links
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center py-2 rounded-lg bg-neutral-700 hover:bg-indigo-600 border border-white/5 hover:border-indigo-500/50 text-white font-medium transition-all"
-                                >
-                                    ${amount}
-                                </a>
-                            ))}
-                            <a
-                                href="https://buy.stripe.com/5kA014fbC4yV8G48wx"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-center py-2 rounded-lg bg-neutral-700 hover:bg-white hover:text-black border border-white/5 text-white font-medium transition-all"
-                            >
-                                Custom
-                            </a>
-                        </div>
+                    <div className="mb-8 flex justify-center">
+                        <DonationCard userEmail={formData.email} />
                     </div>
 
                     {/* Create Account CTA - CLARIFICATION FOR USERS */}
@@ -271,12 +258,24 @@ export default function ResumeBuilder() {
             <div className="sticky top-0 z-50 bg-neutral-950/80 backdrop-blur-md border-b border-white/5 shadow-sm">
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
-                            GridPass <span className="bg-white text-black px-1.5 py-0.5 rounded text-xs font-extrabold uppercase tracking-wider">Pro</span>
-                        </h1>
-                        <span className="text-sm font-medium text-neutral-400">Step {currentStep} of 4</span>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                                GridPass <span className="bg-white text-black px-1.5 py-0.5 rounded text-xs font-extrabold uppercase tracking-wider">Pro</span>
+                            </h1>
+                            <FeatureStatusBadge status="beta" />
+                            <div id="rb-videoguide">
+                                <VideoGuide title="Resume Guide" videoSrc="/guides/resume-builder.webp" className="hidden md:flex" />
+                            </div>
+                            <button onClick={startResumeTour} className="hidden md:flex text-xs font-bold text-neutral-500 hover:text-white transition-colors border border-neutral-800 hover:border-neutral-700 px-3 py-1.5 rounded-full">
+                                Tour
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <VideoGuide title="Guide" videoSrc="/guides/resume-builder.webp" className="md:hidden" triggerLabel="Help" />
+                            <span className="text-sm font-medium text-neutral-400">Step {currentStep} of 4</span>
+                        </div>
                     </div>
-                    <div className="relative h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                    <div id="rb-header" className="relative h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                         <div
                             className="absolute top-0 left-0 h-full bg-indigo-500 transition-all duration-500 ease-out rounded-full"
                             style={{ width: `${(currentStep / 4) * 100}%` }}
@@ -305,7 +304,7 @@ export default function ResumeBuilder() {
                     </p>
                 </div>
 
-                <div key={currentStep} className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-500">
+                <div id="rb-form-area" key={currentStep} className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-500">
 
                     {/* STEP 1: IDENTITY */}
                     {currentStep === 1 && (
@@ -735,6 +734,7 @@ export default function ResumeBuilder() {
                         {currentStep < 4 ? (
                             <button
                                 type="button"
+                                id="rb-next-btn"
                                 onClick={nextStep}
                                 className="flex-1 px-6 py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
                             >

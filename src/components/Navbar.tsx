@@ -47,14 +47,17 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                 <div className="flex items-center justify-between h-16">
 
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/" className="flex items-center gap-2 group">
                         <span className="text-2xl font-black italic uppercase tracking-tighter text-white">
                             Grid<span className="text-red-600">Pass</span>
+                        </span>
+                        <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider translate-y-0.5">
+                            Alpha
                         </span>
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden xl:flex items-center gap-5">
                         <Link href="/members" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Members Directory
                         </Link>
@@ -75,9 +78,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/features" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Features
                         </Link>
-                        {/* <Link href="/changelog" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                        <Link href="/changelog" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Changelog
-                        </Link> */}
+                        </Link>
 
 
                         {showLoggedIn ? (
@@ -117,7 +120,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2 text-neutral-400 hover:text-white"
+                        className="xl:hidden p-2 text-neutral-400 hover:text-white"
                         onClick={() => setIsOpen(!isOpen)}
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -128,7 +131,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
             {/* Mobile Menu Overlay */}
             {
                 isOpen && (
-                    <div className="md:hidden bg-neutral-950 border-b border-white/5 animate-fade-in absolute w-full left-0 top-16 shadow-2xl">
+                    <div className="xl:hidden bg-neutral-950 border-b border-white/5 animate-fade-in absolute w-full left-0 top-16 shadow-2xl">
                         <div className="flex flex-col p-4 space-y-4">
                             <Link
                                 href="/members"
@@ -174,13 +177,13 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                             >
                                 Features
                             </Link>
-                            {/* <Link
+                            <Link
                                 href="/changelog"
                                 className="text-neutral-300 hover:text-white py-2 block"
                                 onClick={() => setIsOpen(false)}
                             >
                                 Changelog
-                            </Link> */}
+                            </Link>
 
                             <div className="h-px bg-white/10 my-2"></div>
 
