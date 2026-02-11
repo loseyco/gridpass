@@ -1,0 +1,22 @@
+{
+    "facebook_groups": [
+        "https://www.facebook.com/groups/373733806854468",
+        "https://www.facebook.com/groups/simracinggeneral"
+    ],
+    "linkedin_queries": [
+        "Sim Racing Team Manager",
+        "Esports Team Owner",
+        "Sim Racing Driver",
+        "Motorsport Marketing"
+    ],
+    "search_keywords": [
+        "Sim Racing",
+        "Karting Center",
+        "Sim Racing Lounge",
+        "Race Track"
+    ],
+    "outreach_templates": {
+        "resume_builder": "Hi {name}, I noticed you're in sim racing. I'm building a free tool to help drivers create professional resumes for teams/sponsors. Would love your feedback on it: gridpass.app/resume-builder",
+        "community_invite": "Hi {name}, we're building a network for sim racing teams and drivers to connect. We'd love to have you in our Discord: discord.gg/gridpass"
+    }
+}

@@ -17,13 +17,29 @@ export async function trackPageView(path: string, referrer?: string, userAgent?:
         // 1. Atomic Counter
         await supabase.rpc('increment_page_view', { page_path: path });
 
+        // Detect Device / OS
+        const ua = userAgent || headerStore.get('user-agent') || '';
+        let device_type = 'desktop';
+        let os = 'unknown';
+
+        if (/mobile/i.test(ua)) device_type = 'mobile';
+        if (/ipad|tablet/i.test(ua)) device_type = 'tablet';
+
+        if (/windows/i.test(ua)) os = 'windows';
+        else if (/macintosh|mac os x/i.test(ua)) os = 'macos';
+        else if (/linux/i.test(ua)) os = 'linux';
+        else if (/android/i.test(ua)) os = 'android';
+        else if (/iphone|ipad|ipod/i.test(ua)) os = 'ios';
+
         // 2. Event Log
         await supabase.from('analytics_events').insert({
             event_type: 'page_view',
             path,
             user_id: user?.id,
             meta: {
-                user_agent: userAgent,
+                user_agent: ua,
+                device_type, // 'mobile', 'tablet', 'desktop'
+                os,
                 referrer: referrer || 'direct',
                 ip,
                 country
@@ -45,7 +61,8 @@ export async function trackPageView(path: string, referrer?: string, userAgent?:
                     await supabase.from('analytics_page_views').insert({
                         profile_id: profile.id,
                         viewer_id: user?.id || null,
-                        path
+                        path,
+                        device_type // Track this for creator analytics later
                     });
                 }
             }

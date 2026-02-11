@@ -60,22 +60,9 @@ async function analyzePost(text) {
 // --- BROWSER ---
 
 async function startBrowser() {
-    console.log('🚀 Starting GridPass Growth Agent...');
-    try {
-        const browser = await puppeteer.connect({
-            browserURL: 'http://127.0.0.1:9222',
-            defaultViewport: null
-        });
-        console.log('✅ Connected to existing browser.');
-        return browser;
-    } catch (e) { }
-
-    return await puppeteer.launch({
-        headless: false,
-        userDataDir: USER_DATA_DIR,
-        defaultViewport: null,
-        args: ['--start-maximized', '--disable-notifications', '--remote-debugging-port=9222']
-    });
+    console.log('🚀 Starting GridPass Growth Agent with User Profile...');
+    const { launchBrowser } = require('./browser_launcher');
+    return await launchBrowser();
 }
 
 // --- ACTIONS ---

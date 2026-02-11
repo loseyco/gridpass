@@ -75,13 +75,8 @@ async function researchCandidate(name, browser) {
 async function run() {
     console.log('🧪 Starting Isolated Research Test...');
 
-    const browser = await puppeteer.launch({
-        headless: false,
-        executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-        userDataDir: USER_DATA_DIR,
-        defaultViewport: null,
-        args: ['--start-maximized']
-    });
+    const { launchBrowser } = require('./browser_launcher');
+    const browser = await launchBrowser();
 
     const richData = await researchCandidate(TARGET_NAME, browser);
     console.log('🎉 Research Complete:', richData);

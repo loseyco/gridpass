@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PitLane } from "@/components/PitLane";
 import JsonLd from "@/components/JsonLd";
@@ -13,6 +13,10 @@ import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 import { Toaster } from 'sonner';
 import Footer from "@/components/Footer";
 import { TimeTracker } from "@/components/analytics/TimeTracker";
+import MobileInstallPrompt from "@/components/mobile/MobileInstallPrompt";
+import { getUserRole } from "@/utils/rbac";
+import FeedbackWidget from "@/components/FeedbackWidget";
+import { createClient } from '@/utils/supabase/server';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -82,13 +86,20 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'GridPass',
+  },
 };
 
-import { getUserRole } from "@/utils/rbac";
-
-import FeedbackWidget from "@/components/FeedbackWidget";
-
-import { createClient } from '@/utils/supabase/server';
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default async function RootLayout({
   children,
@@ -128,6 +139,7 @@ export default async function RootLayout({
 
         <PageTracker />
         <TimeTracker />
+        <MobileInstallPrompt />
         <Toaster theme="dark" position="top-center" />
         <PitLane />
         {children}

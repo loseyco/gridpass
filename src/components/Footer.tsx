@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Heart, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Heart, Twitter, Instagram, Linkedin, MessageSquare } from 'lucide-react';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -29,6 +29,9 @@ export default function Footer() {
                     </Link>
 
                     {/* Socials */}
+                    <Link href="https://discord.gg/gridpass" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-indigo-400 transition-colors" title="Join our Discord">
+                        <MessageSquare className="w-5 h-5" />
+                    </Link>
                     <Link href="https://twitter.com/gridpassapp" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-sky-400 transition-colors" title="GridPass on X">
                         <Twitter className="w-5 h-5" />
                     </Link>

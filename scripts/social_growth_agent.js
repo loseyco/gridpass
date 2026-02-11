@@ -3,10 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-require('dotenv').config({ path: '.env.local' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+
+const CONFIG = require('./growth_config.json');
 
 // --- CONFIG ---
-const GROUP_URL = 'https://www.facebook.com/groups/373733806854468';
+const GROUP_URL = CONFIG.facebook_groups[0]; // Default to first
 const USER_DATA_DIR = path.join(__dirname, '..', 'temp_chrome_profile');
 const SCROLL_PAGES = 5;
 
@@ -34,7 +37,8 @@ async function analyzePost(text) {
         "name": string (extracted name of person or team, or null),
         "role": string (e.g. "Driver", "GT3 Specialist", "Team Manager", or null),
         "skills": string[] (list of skills, car classes, or requirements),
-        "summary": string (brief summary of what they want)
+        "summary": string (brief summary of what they want),
+        "needs_resume": boolean (true if they are a driver looking for a team and might benefit from a resume builder)
     }
 
     Post: "${text.replace(/"/g, '\\"')}"
@@ -126,13 +130,8 @@ async function runScraper() {
     console.log('🚀 Starting Social Growth Agent...');
 
     // 1. Launch Browser
-    const browser = await puppeteer.launch({
-        headless: false,
-        executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Adjust if needed
-        userDataDir: USER_DATA_DIR,
-        defaultViewport: null,
-        args: ['--start-maximized']
-    });
+    const { launchBrowser } = require('./browser_launcher');
+    const browser = await launchBrowser();
 
     const page = await browser.newPage();
 
@@ -244,7 +243,9 @@ async function runScraper() {
                         avatar_url: richData.avatar_url,
                         location: richData.location,
                         profile_link: richData.profileLink || post.url,
-                        email: null // Would need email scraper for this
+                        email: null,
+                        needs_resume: analysis.needs_resume,
+                        suggested_outreach: analysis.needs_resume ? `Hey ${analysis.name}, noticed you're looking for a team. We built a free driver resume builder at gridpass.app/resume-builder to help with that!` : null
                     }
                 }).select().single();
 

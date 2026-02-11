@@ -82,6 +82,13 @@ export default async function Home() {
                   >
                     <Briefcase className="w-4 h-4" /> Build Free Resume
                   </Link>
+                  <Link
+                    href="https://discord.gg/gridpass"
+                    target="_blank"
+                    className="px-8 py-4 bg-indigo-600/20 text-indigo-300 border border-indigo-500/50 font-bold text-sm uppercase tracking-widest rounded-full hover:bg-indigo-600/40 transition-colors flex items-center gap-2"
+                  >
+                    <Users className="w-4 h-4" /> Join Discord
+                  </Link>
                 </div>
               )}
 
