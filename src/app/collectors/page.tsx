@@ -63,7 +63,7 @@ export default async function CollectorsPage() {
                             {mainCtaText}
                         </Link>
                         <Link
-                            href="mailto:pj@gridpass.app"
+                            href="/u/pjlosey/services/8d17b905-9dc2-4a8c-8e0a-738f6584bfc8"
                             className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold text-sm uppercase tracking-widest rounded-full hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                         >
                             Hire a Manager
@@ -75,22 +75,10 @@ export default async function CollectorsPage() {
             {/* Stats Bar */}
             <section className="border-y border-white/5 bg-neutral-900/30 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto px-6 py-12">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div className="flex justify-center text-center">
                         <div>
-                            <div className="text-3xl md:text-4xl font-black text-white mb-1">{stats.vehicleCount > 0 ? stats.vehicleCount : '1,200+'}</div>
-                            <div className="text-xs uppercase tracking-widest text-neutral-500 font-bold">Vehicles Tracked</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl md:text-4xl font-black text-white mb-1">{stats.totalValue > 0 ? formatValue(stats.totalValue) : '$450M+'}</div>
-                            <div className="text-xs uppercase tracking-widest text-neutral-500 font-bold">Assets Managed</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl md:text-4xl font-black text-white mb-1">15k+</div>
-                            <div className="text-xs uppercase tracking-widest text-neutral-500 font-bold">Service Records</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl md:text-4xl font-black text-white mb-1">100%</div>
-                            <div className="text-xs uppercase tracking-widest text-neutral-500 font-bold">Private & Secure</div>
+                            <div className="text-3xl md:text-5xl font-black text-white mb-2">{stats.vehicleCount > 0 ? stats.vehicleCount : '1,200+'}</div>
+                            <div className="text-sm uppercase tracking-widest text-neutral-500 font-bold">Vehicles Tracked</div>
                         </div>
                     </div>
                 </div>
@@ -180,7 +168,7 @@ export default async function CollectorsPage() {
                             </li>
                         </ul>
                         <Link
-                            href="mailto:pj@gridpass.app?subject=Collection Management Inquiry"
+                            href="/u/pjlosey/services/8d17b905-9dc2-4a8c-8e0a-738f6584bfc8"
                             className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm uppercase tracking-widest rounded-full transition-colors shadow-lg shadow-amber-500/20"
                         >
                             Inquire About Management <ArrowRight className="w-4 h-4" />
