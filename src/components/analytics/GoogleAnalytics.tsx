@@ -2,10 +2,13 @@
 
 import Script from 'next/script';
 
-export default function GoogleAnalytics() {
+export default function GoogleAnalytics({ userEmail }: { userEmail?: string | null }) {
     // Don't render in development to avoid pollution
     if (process.env.NODE_ENV !== 'production') return null;
     if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) return null;
+
+    // Don't track specific users
+    if (userEmail === 'pjlosey@outlook.com') return null;
 
     return (
         <>

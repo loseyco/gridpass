@@ -6,11 +6,13 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ImpersonationBarWrapper from "@/components/admin/ImpersonationBarWrapper";
 import SuspendedBannerWrapper from "@/components/SuspendedBannerWrapper";
+import AlphaBanner from "@/components/AlphaBanner";
 import PageTracker from "@/components/analytics/PageTracker";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 import { Toaster } from 'sonner';
 import Footer from "@/components/Footer";
+import { TimeTracker } from "@/components/analytics/TimeTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +31,26 @@ export const metadata: Metadata = {
     template: "%s | GridPass",
   },
   description: "The Business Operating System for Racing.",
+  keywords: [
+    "motorsports",
+    "racing teams",
+    "racing resume",
+    "crew management",
+    "motorsport jobs",
+    "racing sponsorship",
+    "indycar",
+    "imsa",
+    "sro",
+    "formula 1",
+    "karting",
+    "sim racing",
+  ],
+  authors: [{ name: "Patrick Losey", url: "https://pjlosey.com" }],
+  creator: "Patrick Losey",
+  publisher: "GridPass",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "GridPass",
     description: "The Business Operating System for Racing. Managing teams, shops, and careers in one place.",
@@ -42,11 +64,23 @@ export const metadata: Metadata = {
     title: "GridPass",
     description: "The Business Operating System for Racing.",
     creator: "@pjlosey",
+    site: "@gridpassapp",
   },
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
     apple: "/icon.svg",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -54,11 +88,15 @@ import { getUserRole } from "@/utils/rbac";
 
 import FeedbackWidget from "@/components/FeedbackWidget";
 
+import { createClient } from '@/utils/supabase/server';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const role = await getUserRole();
 
   return (
@@ -81,13 +119,15 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <GoogleAnalytics />
+        <GoogleAnalytics userEmail={user?.email} />
         <MicrosoftClarity />
+        <AlphaBanner />
         <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
         <SuspendedBannerWrapper />
 
         <PageTracker />
+        <TimeTracker />
         <Toaster theme="dark" position="top-center" />
         <PitLane />
         {children}

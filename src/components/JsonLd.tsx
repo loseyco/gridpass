@@ -9,8 +9,9 @@ export default function JsonLd() {
                 "url": "https://gridpass.app",
                 "logo": "https://gridpass.app/logo-square.png",
                 "sameAs": [
-                    "https://facebook.com/gridpass",
-                    "https://twitter.com/gridpass"
+                    "https://twitter.com/gridpassapp",
+                    "https://instagram.com/gridpass",
+                    "https://linkedin.com/company/gridpass"
                 ]
             },
             {

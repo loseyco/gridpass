@@ -1,15 +1,18 @@
-import { CreateTeamForm } from '@/components/teams/CreateTeamForm'
-import { Metadata } from 'next'
+import { CreateTeamForm } from '@/components/teams/CreateTeamForm';
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-    title: 'Create Team | GridPass',
-    description: 'Start your racing team on GridPass',
-}
+export default async function CreateTeamPage() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-export default function CreateTeamPage() {
+    if (!user) {
+        redirect('/login?next=/teams/create');
+    }
+
     return (
-        <div className="container py-10">
+        <div className="container mx-auto py-12">
             <CreateTeamForm />
         </div>
-    )
+    );
 }

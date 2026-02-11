@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
+import { Heart, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -21,14 +21,28 @@ export default function Footer() {
                     <Link href="/features" className="text-neutral-500 hover:text-white transition-colors">
                         Roadmap
                     </Link>
-                    {/* <Link href="/changelog" className="text-neutral-500 hover:text-white transition-colors">
+                    <Link href="/changelog" className="text-neutral-500 hover:text-white transition-colors">
                         Changelog
-                    </Link> */}
+                    </Link>
                     <Link href="/founder" className="text-neutral-500 hover:text-white transition-colors">
                         Founding 100
                     </Link>
-                    <Link href="/founder/welcome?type=donation" className="flex items-center gap-2 text-indigo-500 hover:text-indigo-400 transition-colors">
-                        <Heart className="w-4 h-4" />
+
+                    {/* Socials */}
+                    <Link href="https://twitter.com/gridpassapp" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-sky-400 transition-colors" title="GridPass on X">
+                        <Twitter className="w-5 h-5" />
+                    </Link>
+                    <Link href="https://instagram.com/gridpass" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-pink-500 transition-colors" title="GridPass on Instagram">
+                        <Instagram className="w-5 h-5" />
+                    </Link>
+                    <Link href="https://linkedin.com/company/gridpass" target="_blank" rel="noopener noreferrer" className="text-neutral-500 hover:text-blue-600 transition-colors" title="GridPass on LinkedIn">
+                        <Linkedin className="w-5 h-5" />
+                    </Link>
+
+                    <span className="h-4 w-px bg-white/10 mx-2 hidden md:block"></span>
+
+                    <Link href="/founder/welcome?type=donation" className="flex items-center gap-2 text-indigo-500 hover:text-indigo-400 transition-colors font-bold">
+                        <Heart className="w-4 h-4 fill-current" />
                         <span>Support the Mission</span>
                     </Link>
                 </div>

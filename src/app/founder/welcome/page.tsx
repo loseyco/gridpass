@@ -25,10 +25,11 @@ export default async function WelcomeFounderPage({ searchParams }: { searchParam
                             <Shield className="w-6 h-6 text-indigo-500" />
                         </div>
                         <div className="text-left">
-                            <div className="font-bold">Mission Supporter</div>
-                            <div className="text-xs text-neutral-500">Early Contribution • Verified</div>
+                            <div className="font-bold">Donation</div>
+                            <div className="text-xs text-neutral-500">Verified Donation</div>
                         </div>
                     </div>
+                    <div className="mt-2 text-right text-xs text-emerald-500 font-mono">ACTIVE</div>
                 </div>
 
                 <div className="flex flex-col gap-4 w-full max-w-xs">

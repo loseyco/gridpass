@@ -78,3 +78,57 @@ export async function sendFeedbackNotification(data: {
         console.error('Failed to send feedback notification:', error);
     }
 }
+
+export async function sendTeamInviteEmail(data: {
+    to: string;
+    teamName: string;
+    inviterName: string;
+    isExistingUser: boolean;
+    inviteLink: string;
+    role: string;
+}) {
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY is missing. Team invite email skipped.');
+        return;
+    }
+
+    const subject = data.isExistingUser
+        ? `You've been invited to join ${data.teamName} on GridPass`
+        : `${data.inviterName} invited you to join ${data.teamName} on GridPass`;
+
+    const actionText = data.isExistingUser ? 'Accept Invitation' : 'Create Account & Join';
+
+    // For non-users, inviteLink should probably point to signup with a specific query param or just general signup
+    // For now, let's keep it simple: existing users -> dashboard/invites, new users -> root/signup
+
+    const htmlContent = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1>Join ${data.teamName}</h1>
+            <p><strong>${data.inviterName}</strong> has invited you to join their team as a <strong>${data.role}</strong>.</p>
+            
+            ${!data.isExistingUser ? `<p>GridPass is the platform for motorsports professionals. create your profile to join the team and start tracking your career.</p>` : ''}
+            
+            <br/>
+            <p>
+                <a href="${data.inviteLink}" 
+                   style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                    ${actionText}
+                </a>
+            </p>
+            <br/>
+            <p style="color: #666; font-size: 14px;">If you didn't expect this invitation, you can safely ignore this email.</p>
+        </div>
+    `;
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Team <onboarding@resend.dev>',
+            to: data.to,
+            subject: subject,
+            html: htmlContent
+        });
+        console.log(`Team invite email sent to ${data.to}`);
+    } catch (error) {
+        console.error('Failed to send team invite email:', error);
+    }
+}

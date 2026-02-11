@@ -62,9 +62,9 @@ export default async function Home() {
                 Launch Event Live
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white mb-6 leading-[0.9] drop-shadow-2xl">
+              <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white mb-6 leading-[0.9] drop-shadow-2xl pb-2 pr-2">
                 FROM THE TRACK <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">TO YOUR SHOP</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600 pr-2">TO YOUR SHOP</span>
               </h1>
 
               <p className="text-xl text-neutral-300 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium drop-shadow-md">

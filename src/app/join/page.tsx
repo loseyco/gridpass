@@ -3,6 +3,8 @@ import Image from "next/image";
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import JoinFlow from '@/components/auth/JoinFlow';
+import VideoGuide from '@/components/VideoGuide';
+import FeatureStatusBadge from '@/components/FeatureStatusBadge';
 
 interface Props {
     searchParams: Promise<{
@@ -125,12 +127,8 @@ export default async function JoinPage(props: Props) {
 
                     {!invite && (
                         <div className="text-center space-y-3 mb-10">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-4">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                </span>
-                                <span className="text-[10px] font-bold tracking-widest uppercase text-neutral-400">Live Beta</span>
+                            <div className="flex items-center justify-center gap-2 mb-4">
+                                <FeatureStatusBadge status="v1" />
                             </div>
                             <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-2xl">
                                 JOIN THE<br />GRID.
@@ -138,6 +136,9 @@ export default async function JoinPage(props: Props) {
                             <p className="text-lg text-neutral-400 font-medium max-w-xs mx-auto leading-relaxed">
                                 The premium digital identity for the modern motorsport era.
                             </p>
+                            <div className="mt-4 flex justify-center">
+                                <VideoGuide title="Join GridPass Guide" videoSrc="/guides/join.webp" triggerLabel="See How It Works" />
+                            </div>
                         </div>
                     )}
 

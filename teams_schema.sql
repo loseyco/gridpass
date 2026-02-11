@@ -4,6 +4,7 @@
 create table if not exists public.teams (
   id uuid default gen_random_uuid() primary key,
   name text not null,
+  slug text unique not null,
   owner_id uuid references auth.users(id) not null,
   logo_url text,
   description text,

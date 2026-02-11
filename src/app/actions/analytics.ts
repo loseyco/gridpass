@@ -30,11 +30,75 @@ export async function trackPageView(path: string, referrer?: string, userAgent?:
             }
         });
 
+        // 3. Leaderboard Tracking (Profile Views)
+        if (path.startsWith('/u/')) {
+            const username = path.split('/')[2];
+            if (username) {
+                // Get profile ID efficiently
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('username', username)
+                    .single();
+
+                if (profile) {
+                    await supabase.from('analytics_page_views').insert({
+                        profile_id: profile.id,
+                        viewer_id: user?.id || null,
+                        path
+                    });
+                }
+            }
+        }
+
         return { success: true };
     } catch (e) {
         console.error('Failed to track page view:', e);
         return { success: false };
     }
+}
+
+export async function incrementTimeOnSite(seconds: number) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    await supabase.rpc('increment_time_on_site', {
+        user_id: user.id,
+        seconds
+    });
+
+    return { success: true };
+}
+
+export async function getLeaderboardData() {
+    const supabase = await createClient();
+
+    // 1. Most Invites (Referrals)
+    const { data: invites } = await supabase
+        .from('leaderboard_invites_with_profiles')
+        .select('*')
+        .limit(10);
+
+    // 2. Most Page Views
+    const { data: views } = await supabase
+        .from('leaderboard_views_with_profiles')
+        .select('*')
+        .limit(10);
+
+    // 3. Most Time
+    const { data: time } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url, total_time_seconds')
+        .order('total_time_seconds', { ascending: false })
+        .limit(10);
+
+    return {
+        timeLeaderboard: time || [],
+        inviteLeaderboard: invites || [],
+        viewsLeaderboard: views || []
+    };
 }
 
 export async function getPageStats(path: string) {

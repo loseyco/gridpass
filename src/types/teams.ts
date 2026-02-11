@@ -7,10 +7,11 @@ export type LogisticsStatus = 'needed' | 'assigned' | 'packed' | 'ready';
 export interface Team {
     id: string;
     name: string;
+    slug: string;
     owner_id: string;
     logo_url?: string;
     description?: string;
-    invite_code: string;
+    invite_code?: string;
     created_at: string;
     updated_at: string;
 }
