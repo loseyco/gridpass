@@ -2,21 +2,165 @@
 
 import { useState } from 'react';
 import { submitResumeLead } from '@/app/actions/resume';
-import { Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Loader2, CheckCircle2, ChevronRight, ChevronLeft, Calendar, MapPin, Globe, Award, Shield, Plane, Upload, User, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { event } from '@/lib/analytics';
 
+// Initial State for Form Data
+const INITIAL_DATA = {
+    // Step 1: Contact
+    name: '',
+    email: '',
+    phone: '',
+    dob: '',
+    nationality: '',
+    home_airport: '',
+
+    // Step 2: Role
+    job_title: 'driver',
+    experience_years: '0-2',
+    bio: '',
+    skills: '', // stored as string, split on submit
+
+    // Step 3: Motorsports
+    licenses: [] as { type: string; number: string; expiry: string }[],
+    series_experience: [] as string[], // We'll handle this as a comma-sep string in UI for simplicity or tags
+    helmet_size: '',
+    passport_valid: false,
+    visa_status: '',
+    looking_for: '',
+    availability: '',
+    salary_expectations: '',
+
+    // Step 4: Socials & Files
+    linkedin_url: '',
+    indeed_url: '',
+    portfolio_url: '',
+    instagram_url: '',
+    twitter_url: '',
+    resume_file: null as File | null,
+    photo_file: null as File | null,
+    references: [] as { name: string; role: string; contact: string }[]
+};
+
+const STEPS = [
+    { id: 1, title: 'Identity', icon: User },
+    { id: 2, title: 'Role & Bio', icon: Award },
+    { id: 3, title: 'Logistics', icon: Plane },
+    { id: 4, title: 'Files & Socials', icon: Upload }
+];
+
 export default function ResumeBuilder() {
+    const [currentStep, setCurrentStep] = useState(1);
+    const [formData, setFormData] = useState(INITIAL_DATA);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    async function handleSubmit(formData: FormData) {
+    // Helper to update simple fields
+    const updateField = (field: keyof typeof INITIAL_DATA, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    // Helper for array fields (licenses)
+    const addLicense = () => {
+        setFormData(prev => ({
+            ...prev,
+            licenses: [...prev.licenses, { type: '', number: '', expiry: '' }]
+        }));
+    };
+
+    const updateLicense = (index: number, field: string, value: string) => {
+        const newLicenses = [...formData.licenses];
+        newLicenses[index] = { ...newLicenses[index], [field as any]: value };
+        setFormData(prev => ({ ...prev, licenses: newLicenses }));
+    };
+
+    const removeLicense = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            licenses: prev.licenses.filter((_, i) => i !== index)
+        }));
+    };
+
+    // Helper for references
+    const addReference = () => {
+        setFormData(prev => ({
+            ...prev,
+            references: [...prev.references, { name: '', role: '', contact: '' }]
+        }));
+    };
+
+    const updateReference = (index: number, field: string, value: string) => {
+        const newRefs = [...formData.references];
+        newRefs[index] = { ...newRefs[index], [field as any]: value };
+        setFormData(prev => ({ ...prev, references: newRefs }));
+    };
+
+    const removeReference = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            references: prev.references.filter((_, i) => i !== index)
+        }));
+    };
+
+    const validateStep = (step: number) => {
+        setError(null);
+        if (step === 1) {
+            if (!formData.name || !formData.email) return 'Name and Email are required.';
+        }
+        if (step === 2) {
+            if (!formData.bio) return 'A short bio is required.';
+        }
+        return null;
+    };
+
+    const nextStep = () => {
+        const errorMsg = validateStep(currentStep);
+        if (errorMsg) {
+            setError(errorMsg);
+            return;
+        }
+        setCurrentStep(prev => Math.min(prev + 1, 4));
+    };
+
+    const prevStep = () => {
+        setError(null);
+        setCurrentStep(prev => Math.max(prev - 1, 1));
+    };
+
+    async function handleSubmit() {
+        // Final validation
+        const errorMsg = validateStep(currentStep);
+        if (errorMsg) {
+            setError(errorMsg);
+            return;
+        }
+
         setSubmitting(true);
         setError(null);
 
         try {
-            const result = await submitResumeLead(formData);
+            const data = new FormData();
+            // Append all simple fields
+            Object.entries(formData).forEach(([key, value]) => {
+                if (key === 'licenses' || key === 'references') {
+                    data.append(key, JSON.stringify(value));
+                } else if (key === 'resume_file' || key === 'photo_file') {
+                    if (value) data.append(key, value as File);
+                } else if (key === 'passport_valid') {
+                    data.append(key, value ? 'true' : 'false');
+                } else if (key === 'series_experience') {
+                    // For now, let's just assume we want to store it as a JSON string if it was an array, 
+                    // or just pass it through if we changed our mind. 
+                    // In INITIAL_DATA it is string[], let's JSON stringify it.
+                    data.append(key, JSON.stringify(value));
+                } else {
+                    data.append(key, String(value));
+                }
+            });
+
+            const result = await submitResumeLead(data);
             if (result.error) {
                 setError(result.error);
             } else {
@@ -24,7 +168,7 @@ export default function ResumeBuilder() {
                     action: 'submit',
                     category: 'resume_builder',
                     label: 'submission_success',
-                    value: 20 // Optional: track potential value
+                    value: 20
                 });
                 setSubmitted(true);
             }
@@ -37,18 +181,55 @@ export default function ResumeBuilder() {
 
     if (submitted) {
         return (
-            <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-neutral-900 border border-white/10 rounded-2xl p-8 text-center">
-                    <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle2 className="w-8 h-8 text-green-500" />
+            <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4 relative overflow-hidden">
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative max-w-md w-full bg-neutral-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center animate-in fade-in zoom-in duration-500 shadow-2xl shadow-indigo-500/10">
+                    <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-green-500/20">
+                        <CheckCircle2 className="w-10 h-10 text-green-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Request Received!</h2>
-                    <p className="text-neutral-400 mb-8">
-                        We've got your details. PJ will review your info and reach out shortly with next steps to build your pro racing resume.
+                    <h2 className="text-3xl font-bold text-white mb-2">Profile Request Received!</h2>
+                    <p className="text-neutral-400 mb-8 leading-relaxed">
+                        We've received your data. Our team will manually review your credentials and build your professional GridPass profile.
                     </p>
+
+                    {/* Donation Section */}
+                    <div className="bg-neutral-800/50 border border-indigo-500/20 rounded-xl p-6 mb-8 text-left">
+                        <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                            <Award className="w-5 h-5 text-indigo-400" /> Pay What You Want
+                        </h3>
+                        <p className="text-sm text-neutral-400 mb-6 leading-relaxed">
+                            The <strong>Resume Builder is completely free</strong> to help you get your foot in the door.
+                            GridPass relies on community support to build more pro tools. If this helped you, consider chipping in.
+                        </p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[5, 10, 20].map((amount) => (
+                                <a
+                                    key={amount}
+                                    href="https://buy.stripe.com/5kA014fbC4yV8G48wx" // Placeholder: User needs to swap these for specific amount links
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center py-2 rounded-lg bg-neutral-700 hover:bg-indigo-600 border border-white/5 hover:border-indigo-500/50 text-white font-medium transition-all"
+                                >
+                                    ${amount}
+                                </a>
+                            ))}
+                            <a
+                                href="https://buy.stripe.com/5kA014fbC4yV8G48wx"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center py-2 rounded-lg bg-neutral-700 hover:bg-white hover:text-black border border-white/5 text-white font-medium transition-all"
+                            >
+                                Custom
+                            </a>
+                        </div>
+                    </div>
+
                     <Link
                         href="/"
-                        className="inline-flex items-center justify-center w-full px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-neutral-200 transition-colors"
+                        className="inline-flex items-center justify-center w-full px-6 py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors"
                     >
                         Back to Home
                     </Link>
@@ -58,155 +239,235 @@ export default function ResumeBuilder() {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
-            {/* Hero Section */}
-            <div className="relative py-20 px-4 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-                <div className="relative z-10 max-w-3xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                        The New Standard for <br />
-                        <span className="text-indigo-500">Motorsports Resumes.</span>
-                    </h1>
-                    <p className="text-lg text-neutral-400 mb-8 max-w-2xl mx-auto">
-                        Stop sending static PDFs. Join the network used by top teams. Get a live, verified GridPass profile that showcases your stats, experience, and availability perfectly on any device.
-                    </p>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-sm font-medium">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                        </span>
-                        Limited Time Offer: Custom Build for $20
+        <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30 pb-20 font-sans">
+            {/* Background Elements */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-indigo-500/10 rounded-full blur-3xl opacity-50" />
+                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/10 to-transparent" />
+            </div>
+
+            {/* Header / Progress */}
+            <div className="sticky top-0 z-50 bg-neutral-950/80 backdrop-blur-md border-b border-white/5 shadow-sm">
+                <div className="max-w-4xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                            GridPass <span className="bg-white text-black px-1.5 py-0.5 rounded text-xs font-extrabold uppercase tracking-wider">Pro</span>
+                        </h1>
+                        <span className="text-sm font-medium text-neutral-400">Step {currentStep} of 4</span>
+                    </div>
+                    <div className="relative h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                        <div
+                            className="absolute top-0 left-0 h-full bg-indigo-500 transition-all duration-500 ease-out rounded-full"
+                            style={{ width: `${(currentStep / 4) * 100}%` }}
+                        />
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs font-medium text-neutral-500">
+                        {STEPS.map((step) => (
+                            <div key={step.id} className={`${step.id <= currentStep ? 'text-indigo-400' : ''} transition-colors`}>
+                                {step.title}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* Form Section */}
-            <div className="max-w-2xl mx-auto px-4 pb-24 relative z-10">
-                <form action={handleSubmit} className="space-y-8">
+            <div className="max-w-3xl mx-auto px-4 py-12 relative z-10">
+                <div className="mb-10 text-center md:text-left">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-3 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400">
+                        {STEPS[currentStep - 1].title}
+                    </h2>
+                    <p className="text-lg text-neutral-400">
+                        {currentStep === 1 && "Let's start with your professional identity."}
+                        {currentStep === 2 && "Tell teams what you do best."}
+                        {currentStep === 3 && "Logistics and availability are key for pro teams."}
+                        {currentStep === 4 && "Show proof of your work."}
+                    </p>
+                </div>
 
-                    {/* Contact Info */}
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 md:p-8">
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            1. Contact Info
-                        </h3>
+                <div key={currentStep} className="space-y-8 animate-in slide-in-from-right-8 fade-in duration-500">
+
+                    {/* STEP 1: IDENTITY */}
+                    {currentStep === 1 && (
                         <div className="grid gap-6">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-neutral-400 mb-2">Full Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    id="name"
-                                    required
-                                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                    placeholder="e.g. Lewis Hamilton"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-neutral-400 mb-2">Email Address</label>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Full Name *</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        placeholder="e.g. Ayrton Senna"
+                                        value={formData.name}
+                                        onChange={(e) => updateField('name', e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Email Address *</label>
                                     <input
                                         type="email"
-                                        name="email"
-                                        id="email"
-                                        required
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                        placeholder="lewis@mercedesamg.com"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        placeholder="driver@example.com"
+                                        value={formData.email}
+                                        onChange={(e) => updateField('email', e.target.value)}
                                     />
                                 </div>
-                                <div>
-                                    <label htmlFor="phone" className="block text-sm font-medium text-neutral-400 mb-2">Phone Number</label>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Phone</label>
                                     <input
                                         type="tel"
-                                        name="phone"
-                                        id="phone"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                         placeholder="+1 (555) 000-0000"
+                                        value={formData.phone}
+                                        onChange={(e) => updateField('phone', e.target.value)}
                                     />
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Professional Details */}
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 md:p-8">
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            2. Racing Experience
-                        </h3>
-                        <div className="grid gap-6">
-
-                            {/* File Uploads */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="resume_file" className="block text-sm font-medium text-neutral-400 mb-2">Upload Resume (PDF)</label>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Date of Birth</label>
                                     <input
-                                        type="file"
-                                        name="resume_file"
-                                        id="resume_file"
-                                        accept=".pdf"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="photo_file" className="block text-sm font-medium text-neutral-400 mb-2">Profile Photo (Optional)</label>
-                                    <input
-                                        type="file"
-                                        name="photo_file"
-                                        id="photo_file"
-                                        accept="image/*"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                        type="date"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        value={formData.dob}
+                                        onChange={(e) => updateField('dob', e.target.value)}
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="job_title" className="block text-sm font-medium text-neutral-400 mb-2">Primary Role</label>
-                                <select
-                                    name="job_title"
-                                    id="job_title"
-                                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                >
-                                    <option value="driver">Driver (Club/Pro)</option>
-                                    <option value="mechanic">Mechanic / Crew</option>
-                                    <option value="engineer">Engineer / Data</option>
-                                    <option value="media">Media / Content</option>
-                                    <option value="sim">Sim Racer</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label htmlFor="experience_years" className="block text-sm font-medium text-neutral-400 mb-2">Years of Experience</label>
-                                <select
-                                    name="experience_years"
-                                    id="experience_years"
-                                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                >
-                                    <option value="0-2">Rookie (0-2 Years)</option>
-                                    <option value="3-5">Intermediate (3-5 Years)</option>
-                                    <option value="5-10">Experienced (5-10 Years)</option>
-                                    <option value="10+">Veteran (10+ Years)</option>
-                                </select>
-                            </div>
-
-                            {/* New Fields: Skills & Logistics */}
-                            <div>
-                                <label htmlFor="skills" className="block text-sm font-medium text-neutral-400 mb-2">Top Skills (Comma Separated)</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-neutral-300">Nationality</label>
                                 <input
                                     type="text"
-                                    name="skills"
-                                    id="skills"
-                                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                    placeholder="e.g. Data Analysis, Fabrication, Setup, Coaching"
+                                    className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                    placeholder="e.g. Brazilian"
+                                    value={formData.nationality}
+                                    onChange={(e) => updateField('nationality', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 2: ROLE & BIO */}
+                    {currentStep === 2 && (
+                        <div className="grid gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Primary Discipline</label>
+                                    <select
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        value={formData.job_title}
+                                        onChange={(e) => updateField('job_title', e.target.value)}
+                                    >
+                                        <option value="driver">Driver (Professional)</option>
+                                        <option value="driver_am">Driver (Amateur/Club)</option>
+                                        <option value="mechanic">Mechanic / Technician</option>
+                                        <option value="engineer">Race Engineer</option>
+                                        <option value="data">Data Engineer</option>
+                                        <option value="team_manager">Team Manager</option>
+                                        <option value="spotter">Spotter</option>
+                                        <option value="media">Media / Content</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Years Active</label>
+                                    <select
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        value={formData.experience_years}
+                                        onChange={(e) => updateField('experience_years', e.target.value)}
+                                    >
+                                        <option value="0-2">Rookie (0-2 Years)</option>
+                                        <option value="3-5">Intermediate (3-5 Years)</option>
+                                        <option value="5-10">Experienced (5-10 Years)</option>
+                                        <option value="10+">Veteran (10+ Years)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-neutral-300">Professional Bio *</label>
+                                <textarea
+                                    rows={5}
+                                    className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none"
+                                    placeholder="Summarize your career highlights, championships won, and what makes you a valuable team member..."
+                                    value={formData.bio}
+                                    onChange={(e) => updateField('bio', e.target.value)}
                                 />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="helmet_size" className="block text-sm font-medium text-neutral-400 mb-2">Helmet Size</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-neutral-300">Core Skills (Comma separated)</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                    placeholder="e.g. Telemetry Analysis, Suspension Setup, MIG Welding, sponsorship management"
+                                    value={formData.skills}
+                                    onChange={(e) => updateField('skills', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 3: LOGISTICS */}
+                    {currentStep === 3 && (
+                        <div className="grid gap-8">
+
+                            {/* Licenses Section */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium text-neutral-300">Racing Licenses</label>
+                                    <button
+                                        type="button"
+                                        onClick={addLicense}
+                                        className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300"
+                                    >
+                                        <Plus className="w-3 h-3" /> Add License
+                                    </button>
+                                </div>
+                                {formData.licenses.map((lic, idx) => (
+                                    <div key={idx} className="flex gap-2 items-start animate-in slide-in-from-top-2">
+                                        <input
+                                            placeholder="Sanctioning Body (e.g. FIA, IMSA)"
+                                            className="flex-1 bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={lic.type}
+                                            onChange={(e) => updateLicense(idx, 'type', e.target.value)}
+                                        />
+                                        <input
+                                            placeholder="License (e.g. Gold)"
+                                            className="w-32 bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={lic.number}
+                                            onChange={(e) => updateLicense(idx, 'number', e.target.value)}
+                                        />
+                                        <button
+                                            onClick={() => removeLicense(idx)}
+                                            className="p-2 text-neutral-500 hover:text-red-500 transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {formData.licenses.length === 0 && (
+                                    <div className="text-sm text-neutral-600 italic px-2">No licenses added.</div>
+                                )}
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Home Airport Code</label>
+                                    <input
+                                        type="text"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all uppercase"
+                                        placeholder="e.g. LHR"
+                                        maxLength={4}
+                                        value={formData.home_airport}
+                                        onChange={(e) => updateField('home_airport', e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Helmet Size</label>
                                     <select
-                                        name="helmet_size"
-                                        id="helmet_size"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        value={formData.helmet_size}
+                                        onChange={(e) => updateField('helmet_size', e.target.value)}
                                     >
                                         <option value="">Select Size</option>
                                         <option value="XS">XS (53-54cm)</option>
@@ -217,147 +478,271 @@ export default function ResumeBuilder() {
                                         <option value="XXL">XXL (63-64cm)</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label htmlFor="home_airport" className="block text-sm font-medium text-neutral-400 mb-2">Home Airport Code</label>
-                                    <input
-                                        type="text"
-                                        name="home_airport"
-                                        id="home_airport"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all uppercase"
-                                        placeholder="e.g. LHR, LAX, MEL"
-                                        maxLength={4}
-                                    />
-                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="looking_for" className="block text-sm font-medium text-neutral-400 mb-2">Work Preference</label>
+                            <div className="bg-neutral-900/30 p-4 rounded-xl border border-white/5 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        id="passport_valid"
+                                        checked={formData.passport_valid}
+                                        onChange={(e) => updateField('passport_valid', e.target.checked)}
+                                        className="w-5 h-5 rounded border-white/10 bg-neutral-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0"
+                                    />
+                                    <label htmlFor="passport_valid" className="text-sm text-neutral-300 cursor-pointer select-none">
+                                        I have a valid Passport for international travel
+                                    </label>
+                                </div>
+
+                                {formData.passport_valid && (
+                                    <div className="space-y-2 animate-in slide-in-from-top-2">
+                                        <label className="text-sm font-medium text-neutral-300">Visa Status (Optional)</label>
+                                        <input
+                                            type="text"
+                                            className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                            placeholder="e.g. US B1/B2, Schengen, etc."
+                                            value={formData.visa_status}
+                                            onChange={(e) => updateField('visa_status', e.target.value)}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Availability</label>
                                     <select
-                                        name="looking_for"
-                                        id="looking_for"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        value={formData.availability}
+                                        onChange={(e) => updateField('availability', e.target.value)}
                                     >
-                                        <option value="">Select Preference</option>
-                                        <option value="Full-time">Full-time Team Member</option>
-                                        <option value="Contract">Contract / Fly-in</option>
-                                        <option value="Weekend">Weekend Warrior</option>
-                                        <option value="Internship">Internship</option>
+                                        <option value="">Select...</option>
+                                        <option value="immediate">Immediate</option>
+                                        <option value="2_weeks">2 Weeks Notice</option>
+                                        <option value="contract">Per Contract</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label htmlFor="salary_expectations" className="block text-sm font-medium text-neutral-400 mb-2">Salary / Day Rate (Optional)</label>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Salary Expectation</label>
                                     <input
                                         type="text"
-                                        name="salary_expectations"
-                                        id="salary_expectations"
-                                        className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                                         placeholder="e.g. $500/day or Negotiable"
+                                        value={formData.salary_expectations}
+                                        onChange={(e) => updateField('salary_expectations', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 4: FILES & SOCIALS */}
+                    {currentStep === 4 && (
+                        <div className="grid gap-8">
+
+                            {/* File Uploads - Premium Look */}
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Resume PDF</label>
+                                    <div className="relative group">
+                                        <div className={`absolute inset-0 bg-indigo-500/5 rounded-xl border-2 border-dashed ${formData.resume_file ? 'border-indigo-500/50' : 'border-white/10 group-hover:border-indigo-500/30'} transition-all pointer-events-none`} />
+                                        <input
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={(e) => updateField('resume_file', e.target.files?.[0] || null)}
+                                            className="w-full h-32 opacity-0 cursor-pointer z-10 relative"
+                                        />
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none">
+                                            {formData.resume_file ? (
+                                                <>
+                                                    <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
+                                                    <span className="text-sm font-medium text-white break-all line-clamp-1">{formData.resume_file.name}</span>
+                                                    <span className="text-xs text-neutral-500 mt-1">Click to replace</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center mb-3 group-hover:bg-indigo-500/20 transition-colors">
+                                                        <Upload className="w-5 h-5 text-indigo-400" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-neutral-300">Upload Resume PDF</span>
+                                                    <span className="text-xs text-neutral-500 mt-1">Drag & drop or click to browse</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Headshot (Optional)</label>
+                                    <div className="relative group">
+                                        <div className={`absolute inset-0 bg-indigo-500/5 rounded-xl border-2 border-dashed ${formData.photo_file ? 'border-indigo-500/50' : 'border-white/10 group-hover:border-indigo-500/30'} transition-all pointer-events-none`} />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => updateField('photo_file', e.target.files?.[0] || null)}
+                                            className="w-full h-32 opacity-0 cursor-pointer z-10 relative"
+                                        />
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none">
+                                            {formData.photo_file ? (
+                                                <>
+                                                    <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
+                                                    <span className="text-sm font-medium text-white break-all line-clamp-1">{formData.photo_file.name}</span>
+                                                    <span className="text-xs text-neutral-500 mt-1">Click to replace</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-neutral-700 transition-colors">
+                                                        <User className="w-5 h-5 text-neutral-400" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-neutral-300">Upload Headshot</span>
+                                                    <span className="text-xs text-neutral-500 mt-1">Drag & drop or click to browse</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Reference Links */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest border-b border-white/10 pb-2 flex items-center gap-2">
+                                    <Globe className="w-4 h-4" /> Online Presence
+                                </h3>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <input
+                                        type="url"
+                                        placeholder="LinkedIn URL"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-neutral-700"
+                                        value={formData.linkedin_url}
+                                        onChange={(e) => updateField('linkedin_url', e.target.value)}
+                                    />
+                                    <input
+                                        type="url"
+                                        placeholder="Portfolio / Website"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-neutral-700"
+                                        value={formData.portfolio_url}
+                                        onChange={(e) => updateField('portfolio_url', e.target.value)}
+                                    />
+                                    <input
+                                        type="url"
+                                        placeholder="Instagram URL"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-neutral-700"
+                                        value={formData.instagram_url}
+                                        onChange={(e) => updateField('instagram_url', e.target.value)}
+                                    />
+                                    <input
+                                        type="url"
+                                        placeholder="Twitter / X URL"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-neutral-700"
+                                        value={formData.twitter_url}
+                                        onChange={(e) => updateField('twitter_url', e.target.value)}
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="bio" className="block text-sm font-medium text-neutral-400 mb-2">Short Bio / Highlights</label>
-                                <textarea
-                                    name="bio"
-                                    id="bio"
-                                    rows={4}
-                                    className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
-                                    placeholder="Tell us about your biggest wins, championships, or key skills..."
-                                />
-                            </div>
-
-                            {/* URLs & Socials */}
-                            <div className="space-y-4 pt-4 border-t border-white/10">
-                                <h4 className="text-sm font-bold text-neutral-400 uppercase tracking-widest">Links & Socials</h4>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label htmlFor="linkedin_url" className="block text-sm font-medium text-neutral-400 mb-2">LinkedIn URL</label>
-                                        <input
-                                            type="url"
-                                            name="linkedin_url"
-                                            id="linkedin_url"
-                                            className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                            placeholder="https://linkedin.com/in/..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="indeed_url" className="block text-sm font-medium text-neutral-400 mb-2">Indeed Profile</label>
-                                        <input
-                                            type="url"
-                                            name="indeed_url"
-                                            id="indeed_url"
-                                            className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                            placeholder="https://indeed.com/..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="portfolio_url" className="block text-sm font-medium text-neutral-400 mb-2">Portfolio / Website</label>
-                                        <input
-                                            type="url"
-                                            name="portfolio_url"
-                                            id="portfolio_url"
-                                            className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                            placeholder="https://..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="instagram_url" className="block text-sm font-medium text-neutral-400 mb-2">Instagram URL</label>
-                                        <input
-                                            type="url"
-                                            name="instagram_url"
-                                            id="instagram_url"
-                                            className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                            placeholder="https://instagram.com/..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="twitter_url" className="block text-sm font-medium text-neutral-400 mb-2">Twitter/X URL</label>
-                                        <input
-                                            type="url"
-                                            name="twitter_url"
-                                            id="twitter_url"
-                                            className="w-full bg-neutral-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                            placeholder="https://x.com/..."
-                                        />
-                                    </div>
+                            {/* References */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                                        <User className="w-4 h-4" /> References
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        onClick={addReference}
+                                        className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-medium px-3 py-1.5 bg-indigo-500/10 rounded-full hover:bg-indigo-500/20 transition-colors"
+                                    >
+                                        <Plus className="w-3 h-3" /> Add Reference
+                                    </button>
                                 </div>
+                                {formData.references.map((ref, idx) => (
+                                    <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2 animate-in slide-in-from-top-2 relative bg-neutral-900/50 p-3 rounded-xl border border-white/5">
+                                        <input
+                                            placeholder="Name"
+                                            className="bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={ref.name}
+                                            onChange={(e) => updateReference(idx, 'name', e.target.value)}
+                                        />
+                                        <input
+                                            placeholder="Role"
+                                            className="bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={ref.role}
+                                            onChange={(e) => updateReference(idx, 'role', e.target.value)}
+                                        />
+                                        <div className="flex gap-2">
+                                            <input
+                                                placeholder="Contact (Email/Phone)"
+                                                className="flex-1 bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                value={ref.contact}
+                                                onChange={(e) => updateReference(idx, 'contact', e.target.value)}
+                                            />
+                                            <button
+                                                onClick={() => removeReference(idx)}
+                                                className="p-2 text-neutral-500 hover:text-red-500 transition-colors hover:bg-white/5 rounded-lg"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {formData.references.length === 0 && (
+                                    <div className="text-center py-6 bg-neutral-900/30 rounded-xl border border-white/5 border-dashed">
+                                        <p className="text-sm text-neutral-500">No references added yet.</p>
+                                    </div>
+                                )}
                             </div>
-
                         </div>
-                    </div>
+                    )}
 
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center">
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm text-center animate-in shake">
                             {error}
                         </div>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-white text-black font-bold text-lg py-4 rounded-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        {submitting ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Submitting...
-                            </>
-                        ) : (
-                            <>
-                                Submit Request
-                                <ChevronRight className="w-5 h-5" />
-                            </>
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-4 pt-6 border-t border-white/10">
+                        {currentStep > 1 && (
+                            <button
+                                type="button"
+                                onClick={prevStep}
+                                disabled={submitting}
+                                className="flex-1 px-6 py-4 bg-neutral-800 text-white font-bold rounded-xl hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
+                            >
+                                <ChevronLeft className="w-5 h-5" /> Back
+                            </button>
                         )}
-                    </button>
 
-                    <p className="text-center text-neutral-500 text-sm">
-                        By submitting, you agree to be contacted by GridPass regarding your profile build.
-                    </p>
-                </form>
+                        {currentStep < 4 ? (
+                            <button
+                                type="button"
+                                onClick={nextStep}
+                                className="flex-1 px-6 py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
+                            >
+                                Next Step <ChevronRight className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={submitting}
+                                className="flex-1 px-6 py-4 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-400 transition-all flex items-center justify-center gap-2"
+                            >
+                                {submitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Submitting...
+                                    </>
+                                ) : (
+                                    <>
+                                        Submit Profile <CheckCircle2 className="w-5 h-5" />
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
+
+                </div>
             </div>
         </div>
     );
 }
+

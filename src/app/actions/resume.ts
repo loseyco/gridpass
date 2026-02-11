@@ -95,6 +95,16 @@ export async function submitResumeLead(formData: FormData) {
             home_airport: formData.get('home_airport') as string,
             looking_for: formData.get('looking_for') as string,
             salary_expectations: formData.get('salary_expectations') as string,
+
+            // New Fields
+            licenses: formData.get('licenses') ? JSON.parse(formData.get('licenses') as string) : [],
+            series_experience: formData.get('series_experience') ? JSON.parse(formData.get('series_experience') as string) : [],
+            passport_valid: formData.get('passport_valid') === 'true',
+            visa_status: formData.get('visa_status') as string,
+            availability: formData.get('availability') as string, // e.g., "Immediate", "2 weeks notice"
+            references: formData.get('references') ? JSON.parse(formData.get('references') as string) : [],
+            dob: formData.get('dob') as string, // Date of Birth (optional but good for drivers)
+            nationality: formData.get('nationality') as string,
         }
     };
 
@@ -159,10 +169,9 @@ export async function submitResumeLead(formData: FormData) {
         console.error('Error in shadow profile logic:', e);
     }
 
-    // 5. Send Notification & Generate Payment Link
+    // 5. Send Notification (Payment removed, now donation based)
     try {
         const { sendResumeNotification } = await import('@/lib/email');
-        const { createResumePaymentLink } = await import('./resume');
 
         if (leadDataResponse) {
             // Send Email
@@ -172,12 +181,9 @@ export async function submitResumeLead(formData: FormData) {
                 role: rawData.job_title || 'N/A',
                 resumeId: leadDataResponse.id
             });
-
-            // Generate Payment Link
-            await createResumePaymentLink(leadDataResponse.id, rawData.email);
         }
     } catch (e) {
-        console.error('Notification/Payment automation failed:', e);
+        console.error('Notification failed:', e);
     }
 
     revalidatePath('/admin/resumes');
@@ -241,50 +247,4 @@ export async function getNewResumeCount() {
     return count || 0;
 }
 
-export async function createResumePaymentLink(leadId: string, email: string) {
-    // Dynamic import to avoid build errors if lib/stripe missing
-    try {
-        const { stripe } = await import('@/lib/stripe');
 
-        if (!process.env.STRIPE_SECRET_KEY) {
-            console.warn('Stripe key missing');
-            return null;
-        }
-
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: 'GridPass Pro Resume Build',
-                            description: 'Professional resume build and verification service.',
-                            images: ['https://gridpass.app/og-image.png'], // Optional
-                        },
-                        unit_amount: 2000, // $20.00
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?canceled=true`,
-            customer_email: email,
-            metadata: {
-                leadId: leadId,
-                type: 'resume_build'
-            }
-        });
-
-        if (session.url) {
-            // Update the lead with the link
-            await updatePaymentLink(leadId, session.url);
-            return session.url;
-        }
-
-    } catch (error) {
-        console.error('Stripe error:', error);
-    }
-    return null;
-}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageSquarePlus, X, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitFeedback } from '@/app/actions/feedback'; // Import the server action
@@ -9,6 +9,47 @@ export default function FeedbackWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [type, setType] = useState<'feature' | 'bug' | 'contact'>('feature');
+    const [showNudge, setShowNudge] = useState(false);
+
+    // Periodic nudge logic
+    useEffect(() => {
+        // Don't show nudge if widget is already open
+        if (isOpen) {
+            setShowNudge(false);
+            return;
+        }
+
+        const NUDGE_DURATION = 6000; // 6 seconds
+        const NUDGE_INTERVAL = 300000; // 5 minutes
+        const INITIAL_DELAY = 10000; // 10 seconds
+
+        let nudgeTimer: NodeJS.Timeout;
+        let hideTimer: NodeJS.Timeout;
+
+        // Function to show nudge and auto-hide
+        const triggerNudge = () => {
+            // Double check if open before showing
+            if (!isOpen) {
+                setShowNudge(true);
+                hideTimer = setTimeout(() => {
+                    setShowNudge(false);
+                }, NUDGE_DURATION);
+            }
+        };
+
+        // Initial delay
+        const initialTimer = setTimeout(() => {
+            triggerNudge();
+            // Start the interval after the initial delay
+            nudgeTimer = setInterval(triggerNudge, NUDGE_INTERVAL);
+        }, INITIAL_DELAY);
+
+        return () => {
+            clearTimeout(initialTimer);
+            clearInterval(nudgeTimer);
+            clearTimeout(hideTimer);
+        };
+    }, [isOpen]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -37,17 +78,40 @@ export default function FeedbackWidget() {
         }
     };
 
+    const toggleOpen = () => {
+        setIsOpen(!isOpen);
+        if (!isOpen) {
+            setShowNudge(false);
+        }
+    };
+
     return (
         <>
+            {/* Nudge Tooltip */}
+            <div
+                className={`fixed bottom-8 right-24 z-40 transition-all duration-300 transform pointer-events-none ${showNudge ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
+                    }`}
+            >
+                <div className="bg-white text-neutral-900 px-4 py-2 rounded-xl shadow-xl font-medium text-sm whitespace-nowrap relative">
+                    👋 Hey! I'm down here if you need me!
+                    {/* Arrow/Triangle */}
+                    <div className="absolute top-1/2 -right-1 w-3 h-3 bg-white transform -translate-y-1/2 rotate-45 rotate-y-6" />
+                </div>
+            </div>
+
             {/* Floating Button */}
             <button
-                onClick={() => setIsOpen(true)}
+                onClick={toggleOpen}
                 className="fixed bottom-6 right-6 z-40 bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 flex items-center justify-center group"
                 aria-label="Submit Feedback"
             >
-                <MessageSquarePlus className="w-6 h-6" />
+                {isOpen ? (
+                    <X className="w-6 h-6" />
+                ) : (
+                    <MessageSquarePlus className="w-6 h-6" />
+                )}
                 <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap group-hover:pl-2">
-                    Feedback
+                    {isOpen ? 'Close' : 'Feedback'}
                 </span>
             </button>
 
