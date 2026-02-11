@@ -86,7 +86,7 @@ export default async function RootLayout({
         <Navbar effectiveRole={role} />
         <ImpersonationBarWrapper />
         <SuspendedBannerWrapper />
-        <SuspendedBannerWrapper />
+
         <PageTracker />
         <Toaster theme="dark" position="top-center" />
         <PitLane />

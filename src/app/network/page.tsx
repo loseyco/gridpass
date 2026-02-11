@@ -50,8 +50,8 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
             <section className="pt-32 pb-12 px-6">
                 <div className="max-w-4xl mx-auto text-center">
                     <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter mb-6 leading-[0.9]">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-500">INDUSTRY</span> <br />
-                        <span className="text-indigo-500">NETWORK</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-500 py-1">INDUSTRY</span> <br />
+                        <span className="text-indigo-500 py-1">NETWORK</span>
                     </h1>
                     <p className="text-xl text-neutral-400 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
                         {subtitle}
@@ -72,7 +72,7 @@ export default async function NetworkPage({ searchParams }: { searchParams: Prom
                                 type="text"
                                 name="search"
                                 defaultValue={search}
-                                placeholder="Search tracks, shops, people..."
+                                placeholder={`Search ${type === 'all' ? 'tracks, shops, people' : type + 's'}...`}
                                 className="block w-full pl-11 pr-4 py-4 bg-neutral-900 border border-white/10 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all font-medium"
                             />
                         </form>
