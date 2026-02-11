@@ -29,7 +29,7 @@ const MENU_ITEMS = [
     { name: 'Features', href: '/admin/features', icon: Lightbulb },
     { name: 'Invites', href: '/admin/invites', icon: Ticket },
     { name: 'Classifieds', href: '/admin/classifieds', icon: ShoppingBag },
-    { name: 'Analytics', href: '/admin/analytics', icon: LineChart },
+    { name: 'Live Stats', href: '/stats', icon: LineChart },
     { name: 'Database', href: '/admin/database', icon: Database },
     { name: 'Feedback', href: '/admin/feedback', icon: MessageSquarePlus },
 ];
@@ -98,9 +98,9 @@ export default function AdminSidebar() {
                                 <LayoutDashboard className={`w-5 h-5 ${pathname === '/admin' ? 'text-white' : 'text-neutral-500'}`} />
                                 Overview
                             </Link>
-                            <Link href="/admin/analytics" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/analytics' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
-                                <LineChart className={`w-5 h-5 ${pathname === '/admin/analytics' ? 'text-white' : 'text-neutral-500'}`} />
-                                Analytics
+                            <Link href="/stats" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/stats' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <LineChart className={`w-5 h-5 ${pathname === '/stats' ? 'text-white' : 'text-neutral-500'}`} />
+                                Live Stats
                             </Link>
                             <Link href="/admin/database" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/database' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
                                 <Database className={`w-5 h-5 ${pathname === '/admin/database' ? 'text-white' : 'text-neutral-500'}`} />

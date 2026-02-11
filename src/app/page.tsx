@@ -73,6 +73,18 @@ export default async function Home() {
                 <span className="block mt-2 text-sm text-neutral-400">Built by Patrick "PJ" Losey.</span>
               </p>
 
+              {/* Hero CTA */}
+              {!user && (
+                <div className="flex flex-wrap gap-4 mb-10 justify-center lg:justify-start">
+                  <Link
+                    href="/resume-builder"
+                    className="px-8 py-4 bg-white text-black font-bold text-sm uppercase tracking-widest rounded-full hover:bg-neutral-200 transition-colors flex items-center gap-2"
+                  >
+                    <Briefcase className="w-4 h-4" /> Build Free Resume
+                  </Link>
+                </div>
+              )}
+
               {/* Social Proof / Trust */}
               <div className="flex flex-col items-center lg:items-start gap-4 mb-10">
                 <div className="text-xs font-mono uppercase tracking-widest text-neutral-500">Trusted Engineering Pedigree</div>
@@ -183,7 +195,7 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
 
             {/* Resume Builder Module (Active & Prominent) */}
-            <Link href={user ? "/dashboard/profile" : "/register"} className="col-span-2 md:col-span-2 row-span-2 bg-gradient-to-br from-indigo-900/40 to-neutral-950 p-8 rounded-[2.5rem] border border-indigo-500/50 flex flex-col justify-between group hover:border-indigo-500 transition-colors relative overflow-hidden shadow-2xl shadow-indigo-900/20 block">
+            <Link href={user ? "/dashboard/profile" : "/resume-builder"} className="col-span-2 md:col-span-2 row-span-2 bg-gradient-to-br from-indigo-900/40 to-neutral-950 p-8 rounded-[2.5rem] border border-indigo-500/50 flex flex-col justify-between group hover:border-indigo-500 transition-colors relative overflow-hidden shadow-2xl shadow-indigo-900/20 block">
               <div className="absolute top-0 right-0 p-40 bg-indigo-500/10 blur-[80px] rounded-full group-hover:bg-indigo-500/20 transition-all"></div>
 
               <div className="relative z-10">
