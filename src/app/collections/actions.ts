@@ -347,22 +347,19 @@ export async function getPlatformStats() {
 
     // Get total vehicles
     const { count: vehicleCount } = await supabase
-        .from('vehicles')
+        .from('user_vehicles')
         .select('*', { count: 'exact', head: true });
 
-    // Get total value (for now, capping at 5000 to be safe on performance, though sum(value) is better if numeric)
-    // The schema says value is text? "numeric" in valid SQL but let's check. 
-    // Actually just fetch value and sum in JS for MVP.
+    // Get total value
     const { data: vehicleValues } = await supabase
-        .from('vehicles')
-        .select('value')
-        .not('value', 'is', null)
-        .limit(5000);
+        .from('user_vehicles')
+        .select('current_value')
+        .not('current_value', 'is', null)
+        .limit(5000); // Cap for performance
 
     const totalValue = vehicleValues?.reduce((acc, curr) => {
-        // Remove non-numeric chars except dot
-        const val = parseFloat(curr.value?.toString().replace(/[^0-9.]/g, '') || '0');
-        return acc + (isNaN(val) ? 0 : val);
+        const val = Number(curr.current_value) || 0;
+        return acc + val;
     }, 0) || 0;
 
     return {
