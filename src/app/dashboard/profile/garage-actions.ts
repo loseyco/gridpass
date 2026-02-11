@@ -9,7 +9,7 @@ export async function getGarage(userId: string) {
 
     const { data: vehicles, error: vehiclesError } = await supabase
         .from('user_vehicles')
-        .select('*')
+        .select('*, collection:collections(owner_type, visibility, is_default, name)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 

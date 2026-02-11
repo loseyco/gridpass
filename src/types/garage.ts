@@ -1,4 +1,4 @@
-export type VehicleType = 'Sim Rig' | 'Race Car' | 'Street Car' | 'Trailer' | 'Kart' | 'Other';
+export type VehicleType = 'Race Car' | 'Street Car' | 'Sim Rig' | 'Kart' | 'Trailer' | 'Motorcycle' | 'Boat' | 'Plane' | 'Other';
 export type PartStatus = 'good' | 'worn' | 'failed' | 'replaced';
 export type LogType = 'maintenance' | 'repair' | 'upgrade' | 'setup';
 
@@ -14,6 +14,9 @@ export interface Vehicle {
     sim_platform?: string;
     description?: string;
     photo_url?: string; // Matches DB column
+    license_plate?: string;
+    mileage?: number;
+    mileage_unit?: string;
     metadata?: Record<string, any>;
     specs?: Record<string, any>; // Used in VehicleCard
     is_for_sale?: boolean;
@@ -23,6 +26,12 @@ export interface Vehicle {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    collection?: {
+        owner_type: string;
+        visibility?: string;
+        is_default?: boolean;
+        name?: string;
+    };
 }
 
 export interface Tool {
@@ -121,6 +130,21 @@ export interface ProjectTask {
     assigned_user_id?: string;
     due_date?: string;
     created_by?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Collection {
+    id: string;
+    owner_id: string;
+    owner_type: 'user' | 'team';
+    name: string;
+    description?: string;
+    visibility: 'Public' | 'Private' | 'Team';
+    location?: string;
+    type: string;
+    archived_at?: string;
+    is_default?: boolean;
     created_at: string;
     updated_at: string;
 }

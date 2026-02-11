@@ -101,23 +101,14 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
                                 <User className="w-5 h-5" />
                                 My Profile
                             </Link>
+                            <Link href="/collections" className={linkClass('/collections')} onClick={() => setIsOpen(false)}>
+                                <LayoutDashboard className="w-5 h-5" />
+                                Collections
+                            </Link>
                         </div>
                     </div>
 
-                    {/* My Garage */}
-                    <div>
-                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">My Garage</div>
-                        <div className="space-y-1">
-                            <Link href="/dashboard/vehicles" className={linkClass('/dashboard/vehicles')} onClick={() => setIsOpen(false)}>
-                                <Car className="w-5 h-5" />
-                                Vehicles
-                            </Link>
-                            <Link href="/dashboard/tools" className={linkClass('/dashboard/tools')} onClick={() => setIsOpen(false)}>
-                                <Wrench className="w-5 h-5" />
-                                Tools & Gear
-                            </Link>
-                        </div>
-                    </div>
+
 
                     {/* Professional */}
                     <div>
@@ -134,6 +125,10 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
                             <Link href="/dashboard/leads" className={linkClass('/dashboard/leads')} onClick={() => setIsOpen(false)}>
                                 <Trophy className="w-5 h-5" />
                                 Leads
+                            </Link>
+                            <Link href="/collectors" className={linkClass('/collectors')} onClick={() => setIsOpen(false)}>
+                                <Shield className="w-5 h-5" />
+                                Manage Fleet
                             </Link>
                         </div>
                     </div>

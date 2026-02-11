@@ -11,9 +11,11 @@ interface Props {
     invite?: any;  // If present, we are in "Golden Ticket" mode
     user?: any;    // Current logged in user
     trackingId?: string; // Business Card ID
+    teamSlug?: string;
+    inviteCode?: string;
 }
 
-export default function JoinFlow({ invite, user, trackingId }: Props) {
+export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCode }: Props) {
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'initial' | 'view' | 'login' | 'register'>(invite ? 'view' : 'initial');
     const [fullName, setFullName] = useState('');
@@ -89,6 +91,12 @@ export default function JoinFlow({ invite, user, trackingId }: Props) {
             formData.append('full_name', nameTrimmed);
             if (trackingId) {
                 formData.append('tracking_id', trackingId);
+            }
+            if (teamSlug) {
+                formData.append('team_slug', teamSlug);
+            }
+            if (inviteCode) {
+                formData.append('invite_code', inviteCode);
             }
 
             const result = await registerUser(formData);

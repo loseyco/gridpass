@@ -61,11 +61,17 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         <Link href="/members" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Members
                         </Link>
+                        <Link href="/collectors" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                            Collectors
+                        </Link>
                         {/* <Link href="/matchmaking" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Arrive & Drive
                         </Link> */}
                         <Link href="/network" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Network
+                        </Link>
+                        <Link href="/collections" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
+                            Collections
                         </Link>
                         {!showLoggedIn && (
                             <Link href="/resume-builder" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
@@ -153,6 +159,13 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                                 onClick={() => setIsOpen(false)}
                             >
                                 Network
+                            </Link>
+                            <Link
+                                href="/collections"
+                                className="text-neutral-300 hover:text-white py-2 block"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                Collections
                             </Link>
                             {!showLoggedIn && (
                                 <Link

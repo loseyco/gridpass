@@ -9,6 +9,7 @@ import JobMatches from './job-matches';
 import SocialShareWidget from '@/components/dashboard/SocialShareWidget';
 import { TeamList } from '@/components/dashboard/TeamList';
 import NotificationsWidget from '@/components/dashboard/NotificationsWidget';
+import CollectionsWidget from '@/components/dashboard/CollectionsWidget';
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -144,6 +145,9 @@ export default async function DashboardPage() {
                         </div>
                         <QuickLogWidget />
                     </div>
+
+                    {/* Collections Widget */}
+                    <CollectionsWidget />
 
                     {/* Team List Section */}
                     {/* <div className="bg-neutral-900 border border-white/5 rounded-xl p-6">

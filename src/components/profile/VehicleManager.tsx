@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Vehicle } from '@/types/garage';
 import { getGarage, addVehicle, updateVehicle, deleteVehicle } from '@/app/dashboard/profile/garage-actions';
 import VehicleCard from './VehicleCard';
-import ImageUpload from '@/components/ui/ImageUpload';
+import VehicleForm from './VehicleForm';
 import { Plus, Loader2, X } from 'lucide-react';
 
 interface VehicleManagerProps {
@@ -40,22 +40,19 @@ export default function VehicleManager({ userId }: VehicleManagerProps) {
     const openVehicleModal = (vehicle?: Vehicle) => {
         if (vehicle) {
             setEditingVehicle(vehicle);
-            setFormData({ ...vehicle });
         } else {
             setEditingVehicle(null);
-            setFormData({ type: 'Sim Rig', make: '', model: '', year: new Date().getFullYear(), description: '' });
         }
         setIsVehicleModalOpen(true);
     };
 
-    const handleSaveVehicle = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSaveVehicle = async (data: any) => {
         setIsSaving(true);
         try {
             if (editingVehicle) {
-                await updateVehicle(editingVehicle.id, formData);
+                await updateVehicle(editingVehicle.id, data);
             } else {
-                await addVehicle(formData);
+                await addVehicle(data);
             }
             await loadData();
             setIsVehicleModalOpen(false);
@@ -122,89 +119,15 @@ export default function VehicleManager({ userId }: VehicleManagerProps) {
                             <h3 className="font-bold text-lg">{editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}</h3>
                             <button onClick={() => setIsVehicleModalOpen(false)} className="text-neutral-400 hover:text-white"><X className="w-5 h-5" /></button>
                         </div>
-                        <form onSubmit={handleSaveVehicle} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Type</label>
-                                    <select
-                                        className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white"
-                                        value={formData.type || 'Sim Rig'}
-                                        onChange={e => setFormData({ ...formData, type: e.target.value })}
-                                        required
-                                    >
-                                        <option value="Sim Rig">Sim Rig</option>
-                                        <option value="Race Car">Race Car</option>
-                                        <option value="Street Car">Street Car</option>
-                                        <option value="Trailer">Trailer</option>
-                                        <option value="Kart">Kart</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Year</label>
-                                    <input
-                                        type="number"
-                                        className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white"
-                                        value={formData.year || ''}
-                                        onChange={e => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                                        placeholder="2024"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Make</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white"
-                                        value={formData.make || ''}
-                                        onChange={e => setFormData({ ...formData, make: e.target.value })}
-                                        placeholder="e.g. Porsche"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Model</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white"
-                                        value={formData.model || ''}
-                                        onChange={e => setFormData({ ...formData, model: e.target.value })}
-                                        placeholder="e.g. 911 GT3"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Photo</label>
-                                <ImageUpload
-                                    value={formData.photo_url || ''}
-                                    onChange={(url) => setFormData({ ...formData, photo_url: url })}
-                                    bucket="garage"
-                                    pathPrefix={`vehicles/${userId}`}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Description</label>
-                                <textarea
-                                    className="w-full bg-neutral-950 border border-white/10 p-2 rounded text-white h-24 resize-none"
-                                    value={formData.description || ''}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Specs, modifications, setup details..."
-                                />
-                            </div>
-                            <div className="pt-4 flex justify-end gap-2">
-                                <button type="button" onClick={() => setIsVehicleModalOpen(false)} className="px-4 py-2 hover:bg-neutral-800 rounded text-neutral-300">Cancel</button>
-                                <button
-                                    type="submit"
-                                    disabled={isSaving}
-                                    className="px-6 py-2 bg-white text-black font-bold rounded hover:bg-neutral-200 disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Save
-                                </button>
-                            </div>
-                        </form>
+                        <div className="p-6">
+                            <VehicleForm
+                                userId={userId}
+                                initialData={editingVehicle || undefined}
+                                onSubmit={handleSaveVehicle}
+                                onCancel={() => setIsVehicleModalOpen(false)}
+                                isLoading={isSaving}
+                            />
+                        </div>
                     </div>
                 </div>
             )}

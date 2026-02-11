@@ -15,7 +15,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
 
     // Fetch Vehicle
     const { data: vehicle, error: vehicleError } = await supabase
-        .from('vehicles')
+        .from('user_vehicles')
         .select('*')
         .eq('id', id)
         .eq('user_id', user.id)

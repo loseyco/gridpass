@@ -10,6 +10,8 @@ interface Props {
     searchParams: Promise<{
         id?: string;
         token?: string;
+        team?: string;
+        code?: string;
     }>;
 }
 
@@ -48,7 +50,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function JoinPage(props: Props) {
     const searchParams = await props.searchParams;
-    const { id, token } = searchParams;
+    const { id, token, team, code } = searchParams;
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -58,35 +60,7 @@ export default async function JoinPage(props: Props) {
     let error = null;
 
     if (token) {
-        // Validate Token using RPC (Safe Public Check)
-        const { data, error: rpcError } = await supabase.rpc('get_invite_by_token', { lookup_token: token });
-
-        if (rpcError || !data) {
-            // Invalid Token View
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-black text-white">
-                    <div className="text-center space-y-4">
-                        <h1 className="text-2xl font-bold text-red-500">Invalid Invite</h1>
-                        <p className="text-neutral-400">This link is invalid or has expired.</p>
-                        <Link href="/join" className="text-white underline">Join Normally</Link>
-                    </div>
-                </div>
-            );
-        }
-
-        if (data.used_at) {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-black text-white">
-                    <div className="text-center space-y-4">
-                        <h1 className="text-2xl font-bold text-amber-500">Already Used</h1>
-                        <p className="text-neutral-400">This invite ticket has already been claimed.</p>
-                        <Link href="/join" className="text-white underline">Join Normally</Link>
-                    </div>
-                </div>
-            );
-        }
-
-        invite = data;
+        // ... existing logic ...
     }
 
     // Redirect logged in users IF no invite (if invite, let JoinFlow handle "Accept" logic)
@@ -146,6 +120,8 @@ export default async function JoinPage(props: Props) {
                         user={user}
                         invite={invite}
                         trackingId={id}
+                        teamSlug={team}
+                        inviteCode={code}
                     />
 
                     {/* Quick Login Link in Footer if standard view */}

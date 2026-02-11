@@ -233,11 +233,53 @@ export default async function PublicProfilePage({ params, searchParams }: { para
     let garage: { vehicles: Vehicle[], tools: Tool[] } = { vehicles: [], tools: [] };
     try {
         // Only fetch if it's a real profile (not shadow) or if we want to support it for shadow later
+        // Only fetch if it's a real profile (not shadow) or if we want to support it for shadow later
         if (!isShadowProfile) {
             garage = await getGarage(profile.id);
+            // Filter logic:
+            // 1. Show ONLY vehicles in the Default Personal Collection
+            garage.vehicles = garage.vehicles.filter(v => {
+                return v.collection?.is_default === true && v.collection?.owner_type === 'user';
+            });
         }
     } catch (e) {
         console.error('Failed to fetch garage', e);
+    }
+
+    // 6. Fetch Managed Collections
+    let managedCollections: any[] = [];
+    if (!isShadowProfile) {
+        // Fetch collections where user is a team member (admin/owner)
+        // This is complex to query directly with simple select on collections if using RLS, 
+        // but we can fetch teams first then collections.
+        // OR we can use the `getCollections` logic but for a specific user.
+        // Let's assume we want to show collections that are Public and owned by Teams this user is in.
+        // Simplified: Fetch collections where owner_type = 'team' and visibility = 'Public' (or whatever logic user wants).
+        // User said: "collections we manage".
+        // Let's fetch all public collections where owner_type = 'team' that are linked to this user?
+        // Actually, "Managed Collections" might just be "Collections I created" or "Collections I am admin of".
+
+        // Let's fetch collections owned by teams where this user is admin/owner.
+        // First get teams.
+        const { data: teamMemberships } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', profile.id)
+            .in('role', ['owner', 'admin']);
+
+        const teamIds = teamMemberships?.map(tm => tm.team_id) || [];
+
+        if (teamIds.length > 0) {
+            const { data: collections } = await supabase
+                .from('collections')
+                .select('*, teams(name, avatar_url)')
+                .in('owner_id', teamIds)
+                .is('archived_at', null)
+                .eq('owner_type', 'team')
+                .eq('visibility', 'Public'); // Assuming only public ones
+
+            managedCollections = collections || [];
+        }
     }
 
     // Helper to format values
@@ -465,6 +507,47 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Managed Collections Section */}
+                    {managedCollections.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-6">
+                                <h3 className="text-xl font-bold text-white">Managed Collections</h3>
+                                <div className="h-px flex-1 bg-white/10" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {managedCollections.map(collection => (
+                                    <Link key={collection.id} href={`/collections/${collection.id}`} className="group block bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-600 transition-all hover:shadow-xl">
+                                        <div className="h-32 bg-neutral-800 relative">
+                                            {/* Placeholder or cover image if available */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent opacity-60"></div>
+                                            <div className="absolute bottom-4 left-4 right-4">
+                                                <h4 className="font-bold text-white text-lg truncate group-hover:text-indigo-400 transition-colors">{collection.name}</h4>
+                                                <div className="flex items-center gap-2 text-xs text-neutral-400 mt-1">
+                                                    {collection.teams?.avatar_url && <img src={collection.teams.avatar_url} className="w-4 h-4 rounded-full" />}
+                                                    <span>{collection.teams?.name || 'Team Collection'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="p-4">
+                                            <div className="text-sm text-neutral-400 line-clamp-2">
+                                                {collection.description || 'No description provided.'}
+                                            </div>
+                                            <div className="mt-4 flex items-center justify-between text-xs font-medium text-neutral-500">
+                                                <div className="flex items-center gap-1">
+                                                    <MapPin className="w-3 h-3" />
+                                                    {collection.location || 'Unknown Location'}
+                                                </div>
+                                                <div className="bg-neutral-800 px-2 py-1 rounded">
+                                                    {collection.type || 'Collection'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
                     )}
 

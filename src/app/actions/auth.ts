@@ -95,6 +95,45 @@ export async function registerUser(formData: FormData) {
     // Notify Admin (Fire and Forget)
     notifyNewUser(email, trackingId);
 
+    // 3. Check for Team Invite (Auto-Join)
+    const teamSlug = formData.get('team_slug') as string | null;
+    const inviteCode = formData.get('invite_code') as string | null;
+
+    if (userId && teamSlug && inviteCode) {
+        console.log(`Processing auto-join for team: ${teamSlug}`);
+        try {
+            // Find Team
+            const { data: team } = await supabase
+                .from('teams')
+                .select('id, invite_code')
+                .eq('slug', teamSlug)
+                .single();
+
+            if (team && team.invite_code === inviteCode) {
+                // Add Member
+                const { error: memberError } = await supabase
+                    .from('team_members')
+                    .insert({
+                        team_id: team.id,
+                        user_id: userId,
+                        role: 'member', // Default role for auto-join
+                        status: 'active', // Direct active status since they used the link
+                        joined_at: new Date().toISOString()
+                    });
+
+                if (memberError) {
+                    console.error('Auto-join failed:', memberError);
+                } else {
+                    console.log(`User ${userId} auto-joined team ${team.id}`);
+                }
+            } else {
+                console.warn('Invalid team slug or invite code for auto-join');
+            }
+        } catch (e) {
+            console.error('Error in auto-join flow:', e);
+        }
+    }
+
     return { success: true };
 }
 

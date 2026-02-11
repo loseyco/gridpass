@@ -34,14 +34,16 @@ export async function inviteMember(formData: FormData) {
         throw new Error('Email, Role, and Team ID are required');
     }
 
-    // Fetch team name for email
+    // Fetch team details for email
     const { data: team } = await adminSupabase
         .from('teams')
-        .select('name')
+        .select('name, slug, invite_code')
         .eq('id', teamId)
         .single();
 
     const teamName = team?.name || 'the team';
+    const teamSlug = team?.slug || slug;
+    const inviteCode = team?.invite_code || '';
 
     // 1. Check if user exists
     // querying auth.users is restricted, so we use admin client
@@ -60,12 +62,14 @@ export async function inviteMember(formData: FormData) {
             status: 'pending'
         });
 
+        const signupLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/join?ref=team_invite&by=${sender.id}&team=${teamSlug}&code=${inviteCode}`;
+
         await sendTeamInviteEmail({
             to: email,
             teamName,
             inviterName,
             isExistingUser: false,
-            inviteLink: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/signup?ref=team_invite&by=${sender.id}`,
+            inviteLink: signupLink,
             role
         });
 

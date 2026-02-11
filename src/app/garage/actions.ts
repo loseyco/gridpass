@@ -14,6 +14,7 @@ const vehicleSchema = z.object({
     vin: z.string().optional(),
     sim_platform: z.string().optional(),
     description: z.string().optional(),
+    collection_id: z.string().uuid().optional().nullable(),
 });
 
 export async function addVehicle(formData: FormData) {
@@ -33,6 +34,7 @@ export async function addVehicle(formData: FormData) {
         vin: formData.get('vin'),
         sim_platform: formData.get('sim_platform'),
         description: formData.get('description'),
+        collection_id: formData.get('collection_id') || null,
     };
 
     const validatedFields = vehicleSchema.safeParse(rawData);
@@ -41,20 +43,51 @@ export async function addVehicle(formData: FormData) {
         return { error: 'Invalid fields', fields: validatedFields.error.flatten().fieldErrors };
     }
 
+    const dataToInsert = { ...validatedFields.data, user_id: user.id };
+
+    // Verify collection access if provided
+    if (dataToInsert.collection_id) {
+        const { data: collection } = await supabase
+            .from('collections')
+            .select('owner_type, owner_id')
+            .eq('id', dataToInsert.collection_id)
+            .single();
+
+        if (!collection) {
+            return { error: 'Collection not found' };
+        }
+
+        if (collection.owner_type === 'user') {
+            if (collection.owner_id !== user.id) return { error: 'Unauthorized access to collection' };
+        } else if (collection.owner_type === 'team') {
+            const { data: member } = await supabase
+                .from('team_members')
+                .select('role')
+                .eq('team_id', collection.owner_id)
+                .eq('user_id', user.id)
+                .single();
+
+            // Allow members to add vehicles? Maybe only admins? Let's allow members for now.
+            if (!member) return { error: 'You are not a member of this team collection' };
+        }
+    }
+
     const { error } = await supabase
         .from('user_vehicles')
-        .insert({
-            ...validatedFields.data,
-            user_id: user.id
-        });
+        .insert(dataToInsert);
 
     if (error) {
         console.error('Database Error:', error);
         return { error: 'Failed to create vehicle.' };
     }
 
-    revalidatePath('/garage');
-    redirect('/garage');
+    if (dataToInsert.collection_id) {
+        revalidatePath(`/collections/${dataToInsert.collection_id}`);
+        redirect(`/collections/${dataToInsert.collection_id}`);
+    } else {
+        revalidatePath('/garage');
+        redirect('/garage');
+    }
 }
 export async function deleteVehicle(id: string) {
     const supabase = await createClient();
@@ -63,6 +96,13 @@ export async function deleteVehicle(id: string) {
     if (!user) {
         throw new Error('Unauthorized');
     }
+
+    // Fetch vehicle first to check collection_id for redirect
+    const { data: vehicle } = await supabase
+        .from('user_vehicles')
+        .select('collection_id')
+        .eq('id', id)
+        .single();
 
     const { error } = await supabase
         .from('user_vehicles')
@@ -75,8 +115,13 @@ export async function deleteVehicle(id: string) {
         return { error: 'Failed to delete vehicle.' };
     }
 
-    revalidatePath('/garage');
-    redirect('/garage');
+    if (vehicle?.collection_id) {
+        revalidatePath(`/collections/${vehicle.collection_id}`);
+        redirect(`/collections/${vehicle.collection_id}`);
+    } else {
+        revalidatePath('/garage');
+        redirect('/garage');
+    }
 }
 
 const partSchema = z.object({

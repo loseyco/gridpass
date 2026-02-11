@@ -36,6 +36,25 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/garage',
+        destination: '/collections',
+        permanent: false,
+      },
+      {
+        source: '/dashboard/vehicles',
+        destination: '/collections',
+        permanent: false,
+      },
+      {
+        source: '/dashboard/tools',
+        destination: '/collections',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
