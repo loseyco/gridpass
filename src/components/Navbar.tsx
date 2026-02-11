@@ -57,9 +57,9 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden xl:flex items-center gap-5">
+                    <div className="hidden lg:flex items-center gap-6">
                         <Link href="/members" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
-                            Members Directory
+                            Members
                         </Link>
                         {/* <Link href="/matchmaking" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Arrive & Drive
@@ -69,11 +69,11 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
                         </Link>
                         {!showLoggedIn && (
                             <Link href="/resume-builder" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
-                                Resume Builder
+                                Resume
                             </Link>
                         )}
                         <Link href="/founder" className="text-amber-500 hover:text-amber-400 transition-colors text-sm font-bold uppercase tracking-wide">
-                            Founding 100
+                            Founders
                         </Link>
                         <Link href="/features" className="text-neutral-400 hover:text-white transition-colors text-sm font-medium">
                             Features
@@ -120,7 +120,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="xl:hidden p-2 text-neutral-400 hover:text-white"
+                        className="lg:hidden p-2 text-neutral-400 hover:text-white"
                         onClick={() => setIsOpen(!isOpen)}
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -131,7 +131,7 @@ export default function Navbar({ effectiveRole }: { effectiveRole?: UserRole | '
             {/* Mobile Menu Overlay */}
             {
                 isOpen && (
-                    <div className="xl:hidden bg-neutral-950 border-b border-white/5 animate-fade-in absolute w-full left-0 top-16 shadow-2xl">
+                    <div className="lg:hidden bg-neutral-950 border-b border-white/5 animate-fade-in absolute w-full left-0 top-16 shadow-2xl">
                         <div className="flex flex-col p-4 space-y-4">
                             <Link
                                 href="/members"
