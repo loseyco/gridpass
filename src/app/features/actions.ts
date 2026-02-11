@@ -13,6 +13,7 @@ export async function getPublicFeatures() {
         .select('*')
         .neq('status', 'denied')
         .neq('status', 'completed')
+        .neq('status', 'internal')
         .order('votes', { ascending: false });
 
     if (error) {

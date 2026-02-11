@@ -235,7 +235,21 @@ export default function FeatureItem({ feature: initialFeature, isAdmin }: { feat
             <div className="flex-1 space-y-2">
                 <div className="flex items-start justify-between gap-4">
                     <div>
-                        <h3 className="text-lg font-bold text-white">{feature.title}</h3>
+                        <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors flex items-center gap-2">
+                            {feature.title}
+                            {feature.status === 'completed' && (feature as any).link && (
+                                <a
+                                    href={(feature as any).link}
+                                    className="ml-2 inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[10px] uppercase font-bold tracking-wider rounded-full border border-emerald-500/20 transition-all hover:scale-105"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    View Feature
+                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
+                            )}
+                        </h3>
                         <div className="flex items-center gap-2 mt-1">
                             <span className={cn("px-2 py-0.5 rounded text-[10px] uppercase font-bold border tracking-wider", statusColors[feature.status] || statusColors['backlog'])}>
                                 {statusLabels[feature.status] || feature.status}
