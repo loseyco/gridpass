@@ -3,6 +3,7 @@
 import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
+import { logActivity } from '@/utils/analytics-logger';
 
 // ... existing imports
 
@@ -133,6 +134,54 @@ export async function registerUser(formData: FormData) {
             console.error('Error in auto-join flow:', e);
         }
     }
+
+    // 4. Check for Referral Cookie
+    try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const refCode = cookieStore.get('gridpass_ref')?.value;
+
+        if (refCode && userId) {
+            console.log(`Processing referral: ${refCode} for user ${userId}`);
+            // Find affiliate
+            const { data: affiliate } = await supabase
+                .from('affiliates')
+                .select('id')
+                .eq('referral_code', refCode)
+                .single();
+
+            if (affiliate) {
+                // Create referral record
+                const { error: refError } = await supabase
+                    .from('referrals')
+                    .insert({
+                        referrer_id: affiliate.id,
+                        referred_user_id: userId,
+                        status: 'pending'
+                    });
+
+                if (refError) {
+                    console.error('Failed to create referral record:', refError);
+                } else {
+                    console.log(`Referral recorded: Affiliate ${affiliate.id} -> User ${userId}`);
+                }
+            } else {
+                console.warn(`Invalid referral code found: ${refCode}`);
+            }
+        }
+    } catch (e) {
+        console.error('Error processing referral:', e);
+    }
+
+
+    // 5. Log Activity
+    await logActivity('auth.signup', {
+        email,
+        username,
+        full_name: fullName,
+        tracking_id: trackingId,
+        team_invite: !!(teamSlug && inviteCode)
+    }, '/register', userId);
 
     return { success: true };
 }

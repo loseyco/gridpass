@@ -9,6 +9,7 @@ export async function sendResumeNotification(data: {
     email: string;
     role: string;
     resumeId: string;
+    paymentLink?: string;
 }) {
     if (!process.env.RESEND_API_KEY) {
         console.warn('RESEND_API_KEY is missing. Email notification skipped.');
@@ -32,6 +33,12 @@ export async function sendResumeNotification(data: {
             View Request in Admin
           </a>
         </p>
+        ${data.paymentLink ? `
+        <p style="margin-top: 20px;">
+            <strong>Auto-Generated Payment Link:</strong><br/>
+            <a href="${data.paymentLink}">${data.paymentLink}</a>
+        </p>
+        ` : ''}
       `
         });
         console.log('Notification email sent for', data.name);

@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
+import { logActivity } from '@/utils/analytics-logger';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
     if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 401 });
     }
+
+    // Log successful login
+    await logActivity('auth.login', { email }, new URL(request.url).pathname, data.user.id);
 
     return NextResponse.json({ success: true, data: { user: data.user, session: data.session } }, { status: 200 });
 }

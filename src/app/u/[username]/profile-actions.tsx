@@ -7,20 +7,36 @@ import ContactModal from '@/components/ContactModal';
 import { reportProfile } from '@/app/actions/report';
 import ServicesManager from '@/components/profile/ServicesManager';
 
+import { loadStripe } from '@stripe/stripe-js';
+import {
+    EmbeddedCheckoutProvider,
+    EmbeddedCheckout
+} from '@stripe/react-stripe-js';
+
+// Make sure to call `loadStripe` outside of a component’s render to avoid
+// recreating the `Stripe` object on every render.
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
 interface ProfileActionsProps {
     isOwner: boolean;
     recipientName: string;
     recipientUsername: string;
     recipientId?: string; // Added for services
+    guestRegisterUrl?: string | null; // For Guest Owners
+    clientSecret?: string | null;
+    paymentStatus?: string | null;
 }
 
-export default function ProfileActions({ isOwner, recipientName, recipientUsername, recipientId }: ProfileActionsProps) {
+export default function ProfileActions({ isOwner, recipientName, recipientUsername, recipientId, guestRegisterUrl, clientSecret, paymentStatus }: ProfileActionsProps) {
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isServicesOpen, setIsServicesOpen] = useState(false);
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [reportReason, setReportReason] = useState('');
     const [isReportSubmitting, setIsReportSubmitting] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+
+    // ... (rest of hook logic unchanged)
 
     const handleReport = async () => {
         setIsReportSubmitting(true);
@@ -73,7 +89,39 @@ export default function ProfileActions({ isOwner, recipientName, recipientUserna
                 >
                     <Printer className="w-5 h-5" />
                 </button>
-                {!isOwner && (
+
+                {/* Guest Owner Controls (Payment & Finish Setup) */}
+                {guestRegisterUrl && (
+                    <>
+                        {clientSecret && paymentStatus !== 'paid' && (
+                            <button
+                                onClick={() => setIsCheckoutOpen(true)}
+                                className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 animate-pulse"
+                            >
+                                <Briefcase className="w-4 h-4" /> Complete Payment
+                            </button>
+                        )}
+
+                        <Link
+                            href={guestRegisterUrl}
+                            className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-bold transition-all ${clientSecret && paymentStatus !== 'paid'
+                                    ? "bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700"
+                                    : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 hover:scale-105"
+                                }`}
+                        >
+                            <Wrench className="w-4 h-4" /> {clientSecret && paymentStatus !== 'paid' ? 'Finish Setup Later' : 'Finish Setup'}
+                        </Link>
+                        <Link
+                            href={guestRegisterUrl}
+                            className="inline-flex items-center gap-2 bg-neutral-800 text-neutral-300 px-4 py-2 rounded-lg font-bold hover:bg-neutral-700 border border-white/5 transition-colors"
+                        >
+                            Edit
+                        </Link>
+                    </>
+                )}
+
+
+                {!isOwner && !guestRegisterUrl && (
                     <div className="relative">
                         <button
                             onClick={() => setMenuOpen(!menuOpen)}
@@ -105,7 +153,7 @@ export default function ProfileActions({ isOwner, recipientName, recipientUserna
                 )}
 
                 {/* Owner: Edit Profile */}
-                {isOwner ? (
+                {isOwner && !guestRegisterUrl && (
                     <>
                         <Link
                             href="/dashboard/profile"
@@ -120,8 +168,10 @@ export default function ProfileActions({ isOwner, recipientName, recipientUserna
                             <Wrench className="w-4 h-4" /> Services
                         </button>
                     </>
-                ) : (
-                    /* Visitor: Hire Me */
+                )}
+
+                {/* Visitor: Hire Me (Only if not owner and not guest owner) */}
+                {!isOwner && !guestRegisterUrl && (
                     <button
                         onClick={() => setIsContactOpen(true)}
                         className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 transition-all hover:scale-105"
@@ -131,6 +181,26 @@ export default function ProfileActions({ isOwner, recipientName, recipientUserna
                     </button>
                 )}
             </div>
+
+            {/* Embedded Checkout Modal */}
+            {isCheckoutOpen && clientSecret && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl w-full max-w-4xl p-2 relative shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
+                        <button
+                            onClick={() => setIsCheckoutOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-neutral-500 hover:text-black rounded-full hover:bg-neutral-100 transition-colors z-10"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <EmbeddedCheckoutProvider
+                            stripe={stripePromise}
+                            options={{ clientSecret }}
+                        >
+                            <EmbeddedCheckout />
+                        </EmbeddedCheckoutProvider>
+                    </div>
+                </div>
+            )}
 
             <ContactModal
                 isOpen={isContactOpen}

@@ -205,7 +205,7 @@ export default async function FounderPage() {
                     </div>
 
                     {/* Not Ready? Donate. */}
-                    <div className="max-w-xl mx-auto border-t border-white/5 pt-16 animate-fade-in">
+                    <div id="donate" className="max-w-xl mx-auto border-t border-white/5 pt-16 animate-fade-in">
                         <div className="text-center mb-8">
                             <h3 className="text-xl font-bold text-white mb-2">Not Ready for a Pass?</h3>
                             <p className="text-neutral-400 text-sm">You can still fuel the mission. 100% of contributions go to server costs.</p>

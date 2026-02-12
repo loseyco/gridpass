@@ -16,12 +16,23 @@ export const metadata: Metadata = {
 export default async function MembersPage() {
     const supabase = await createClient();
 
-    // Fetch all profiles    // Fetch Profiles
-    const { data: profiles } = await supabase
+    // Fetch all profiles - exclude incomplete resume builder submissions
+    // (those with source='resume_builder' AND role='user' and no upgrades)
+    const { data: allProfiles } = await supabase
         .from('profiles')
         .select('*')
         .not('is_banned', 'is', true)
         .order('created_at', { ascending: false });
+
+    // Filter out incomplete resume builder profiles (haven't upgraded from 'user' role)
+    const profiles = allProfiles?.filter(p => {
+        // Keep if not from resume builder
+        if (p.source !== 'resume_builder') return true;
+        // Keep if they've been upgraded (founder, member, superadmin, etc.)
+        if (p.role && p.role !== 'user') return true;
+        // Filter out if they're just basic resume builder submissions
+        return false;
+    });
 
     // Fetch Shadow Profiles (Leads)
     const supabaseAdmin = createAdminClient();

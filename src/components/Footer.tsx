@@ -44,7 +44,7 @@ export default function Footer() {
 
                     <span className="h-4 w-px bg-white/10 mx-2 hidden md:block"></span>
 
-                    <Link href="/founder/welcome?type=donation" className="flex items-center gap-2 text-indigo-500 hover:text-indigo-400 transition-colors font-bold">
+                    <Link href="/founder#donate" className="flex items-center gap-2 text-indigo-500 hover:text-indigo-400 transition-colors font-bold">
                         <Heart className="w-4 h-4 fill-current" />
                         <span>Support the Mission</span>
                     </Link>

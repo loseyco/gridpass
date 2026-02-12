@@ -127,9 +127,12 @@ export default async function AdminPage() {
                                 <p>&gt; SEO Check: PASS</p>
                                 <p>&gt; RBAC: Enforced</p>
                             </div>
-                            <button className="w-full border border-white/10 text-neutral-400 hover:text-white hover:bg-white/5 py-2 rounded text-xs transition-colors">
+                            <Link
+                                href="/admin/live"
+                                className="block w-full border border-white/10 text-neutral-400 hover:text-white hover:bg-white/5 py-2 rounded text-xs transition-colors text-center"
+                            >
                                 VIEW FULL LOGS
-                            </button>
+                            </Link>
                         </div>
                     </div>
 

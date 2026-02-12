@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
 import { CareerEntry } from '@/types/career';
+import GuestMessageButton from '@/components/public/GuestMessageButton';
 
 export default async function ClaimPage({ params }: { params: Promise<{ token: string }> }) {
     const supabase = await createClient(); // For User Session
@@ -44,10 +45,27 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
     let entityPreview: any = null;
     let mockProfile: any = {};
 
+    let paymentStatus = 'unpaid';
+
     if (tokenData.entity_type === 'lead') {
         const { data: lead } = await supabaseAdmin.from('leads').select('*').eq('id', tokenData.entity_id).single();
         if (lead) {
             entityPreview = lead;
+
+            // Fetch Payment Status from Resume Lead (by email)
+            if (lead.contact_info?.email) {
+                const { data: resumeLead } = await supabaseAdmin
+                    .from('resume_leads')
+                    .select('payment_status')
+                    .eq('email', lead.contact_info.email)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (resumeLead?.payment_status) {
+                    paymentStatus = resumeLead.payment_status;
+                }
+            }
 
             // MOCK PROFILE DATA FROM LEAD (using contact_info extensions)
             const ci = lead.contact_info || {};
@@ -126,7 +144,17 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
                     {/* Profile Info Overlay */}
                     <div className="px-8 pb-8 relative -mt-16 md:-mt-20">
                         {/* Unverified Badge */}
-                        <div className="absolute top-4 right-4 md:top-20 md:right-8">
+                        <div className="absolute top-4 right-4 md:top-20 md:right-8 flex flex-col items-end gap-2">
+                            {paymentStatus === 'authorized' && (
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest rounded-full border border-emerald-500/20">
+                                    <Check className="w-3 h-3" /> Prepaid
+                                </span>
+                            )}
+                            {paymentStatus === 'paid' && (
+                                <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-widest rounded-full border border-emerald-500/30">
+                                    <Check className="w-3 h-3" /> Paid In Full
+                                </span>
+                            )}
                             <span className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800 text-neutral-400 text-xs font-bold uppercase tracking-widest rounded-full border border-white/10">
                                 <Lock className="w-3 h-3" /> Unverified Member
                             </span>
@@ -180,25 +208,15 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
 
                 {/* Career History Section (Rendered) */}
                 <div className="bg-neutral-900 border border-white/5 rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden">
-                    {/* Blur Overlay */}
-                    <div className="absolute inset-0 bg-neutral-950/50 backdrop-blur-[1px] z-10 flex items-center justify-center pointer-events-none">
-                        {/* Content is partially visible */}
-                    </div>
-                    <div className="absolute inset-0 z-20 flex items-center justify-center">
-                        <div className="bg-black/80 px-4 py-2 rounded-full border border-white/10 flex items-center gap-2 shadow-xl">
-                            <Lock className="w-4 h-4 text-neutral-400" />
-                            <span className="text-xs font-bold text-neutral-300 uppercase tracking-wide">Detailed History Locked</span>
-                        </div>
-                    </div>
 
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5 opacity-50">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
                         <div className="p-2 bg-neutral-800 rounded-lg">
                             <Briefcase className="w-5 h-5 text-neutral-300" />
                         </div>
                         <h3 className="text-xl font-bold">Career & Race History</h3>
                     </div>
 
-                    <div className="space-y-6 opacity-30 blur-sm select-none">
+                    <div className="space-y-6">
                         {(mockProfile.career_history as CareerEntry[])
                             .map(entry => (
                                 <div key={entry.id} className="relative pl-0 md:pl-0">
@@ -208,6 +226,8 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
                                             <div className="text-neutral-400 text-sm mb-1">
                                                 <span className="font-medium text-neutral-300">{entry.organization}</span>
                                             </div>
+                                            {/* Description included for verification */}
+                                            <p className="text-neutral-400 text-sm mt-2 max-w-2xl">{entry.description}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -239,22 +259,26 @@ export default async function ClaimPage({ params }: { params: Promise<{ token: s
                     </div>
 
                     {user ? (
-                        <form action={claimEntity.bind(null, token)} className="w-full md:w-auto">
-                            <button type="submit" className="w-full md:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
-                                Confirm & Claim <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </form>
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <GuestMessageButton token={token} />
+                            <form action={claimEntity.bind(null, token)} className="w-full md:w-auto">
+                                <button type="submit" className="w-full md:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+                                    Confirm & Claim <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </form>
+                        </div>
                     ) : (
-                        <div className="flex gap-2 w-full md:w-auto">
+                        <div className="flex gap-2 w-full md:w-auto items-center">
+                            <GuestMessageButton token={token} />
                             <Link
-                                href={`/register?next=/claim/${token}`}
-                                className="flex-1 md:flex-none px-6 py-3 bg-white text-black font-bold rounded-lg hover:bg-neutral-200 transition-colors text-center"
+                                href={`/register?next=/claim/${token}&email=${encodeURIComponent(entityPreview?.contact_info?.email || '')}`}
+                                className="flex-1 md:flex-none px-6 py-2 bg-white text-black font-bold rounded-lg hover:bg-neutral-200 transition-colors text-center"
                             >
-                                Create Account
+                                Set Password & Claim
                             </Link>
                             <Link
                                 href={`/login?next=/claim/${token}`}
-                                className="flex-1 md:flex-none px-6 py-3 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors border border-white/5 text-center"
+                                className="flex-1 md:flex-none px-6 py-2 bg-neutral-800 text-white font-bold rounded-lg hover:bg-neutral-700 transition-colors border border-white/5 text-center"
                             >
                                 Sign In
                             </Link>

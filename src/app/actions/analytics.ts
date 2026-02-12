@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server';
-
+import { logActivity } from '@/utils/analytics-logger';
 import { headers } from 'next/headers';
 
 export async function trackPageView(path: string, referrer?: string, userAgent?: string) {
@@ -9,7 +9,14 @@ export async function trackPageView(path: string, referrer?: string, userAgent?:
     const { data: { user } } = await supabase.auth.getUser();
 
     const headerStore = await headers();
-    const ip = headerStore.get('x-forwarded-for') || 'unknown';
+    let ip = headerStore.get('x-forwarded-for') || 'unknown';
+    if (ip !== 'unknown' && ip.includes(',')) {
+        ip = ip.split(',')[0].trim();
+    }
+    // Fallback if needed
+    if (ip === 'unknown') {
+        ip = headerStore.get('x-real-ip') || 'unknown';
+    }
     const country = headerStore.get('x-vercel-ip-country') || 'unknown';
 
     // Fire and forget - don't block
@@ -31,20 +38,14 @@ export async function trackPageView(path: string, referrer?: string, userAgent?:
         else if (/android/i.test(ua)) os = 'android';
         else if (/iphone|ipad|ipod/i.test(ua)) os = 'ios';
 
-        // 2. Event Log
-        await supabase.from('analytics_events').insert({
-            event_type: 'page_view',
-            path,
-            user_id: user?.id,
-            meta: {
-                user_agent: ua,
-                device_type, // 'mobile', 'tablet', 'desktop'
-                os,
-                referrer: referrer || 'direct',
-                ip,
-                country
-            }
-        });
+        // 2. Event Log (Centralized)
+        await logActivity('page_view', {
+            device_type,
+            os,
+            referrer: referrer || 'direct',
+            ip,
+            country
+        }, path, user?.id);
 
         // 3. Leaderboard Tracking (Profile Views)
         if (path.startsWith('/u/')) {

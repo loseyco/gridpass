@@ -4,7 +4,7 @@ import Link from 'next/link';
 import QuickLogWidget from './quick-log-widget';
 import PendingRecommendationsWidget from './pending-recommendations-widget';
 import ProfileCompletionWidget from '@/components/dashboard/ProfileCompletionWidget';
-import AffiliateWidget from '@/components/dashboard/AffiliateWidget';
+
 import JobMatches from './job-matches';
 import SocialShareWidget from '@/components/dashboard/SocialShareWidget';
 import { TeamList } from '@/components/dashboard/TeamList';
@@ -160,8 +160,7 @@ export default async function DashboardPage() {
                     {/* Job Matches Widget (New) */}
                     <JobMatches />
 
-                    {/* Affiliate / Referral Widget (New) */}
-                    {profile?.username && <AffiliateWidget username={profile.username} />}
+
 
                     {/* Reputation / Points */}
                     <div className="bg-neutral-900 p-6 rounded-xl border border-white/5 relative overflow-hidden group">

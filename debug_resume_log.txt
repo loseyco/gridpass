@@ -1,0 +1,27 @@
+Profile Updates: {
+  "username": "verification-user-6-7",
+  "full_name": "Verification User 6",
+  "bio": "This is a test bio for verification.",
+  "avatar_url": null,
+  "resume_url": null,
+  "driver_info": {
+    "status": "active"
+  },
+  "logistics_info": {
+    "home_airport": ""
+  },
+  "physical_info": {
+    "helmet_size": ""
+  },
+  "social_links": {
+    "instagram": "",
+    "twitter": "",
+    "facebook": null,
+    "tiktok": null,
+    "youtube": null
+  },
+  "website": "",
+  "skills": [],
+  "location": ""
+}
+Profile Upsert Success

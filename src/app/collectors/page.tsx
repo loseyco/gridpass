@@ -15,7 +15,28 @@ import { createClient } from '@/utils/supabase/server';
 
 export const metadata = {
     title: 'Collectors Edition | GridPass',
-    description: 'Professional grade software for automotive collections, museums, and racing fleets.',
+    description: 'Professional grade software for automotive collections, museums, and racing fleets. Track value, service history, and logistics in one digital vault.',
+    openGraph: {
+        title: 'Collectors Edition | GridPass',
+        description: 'Professional grade software for automotive collections, museums, and racing fleets. Track value, service history, and logistics.',
+        url: 'https://gridpass.app/collectors',
+        siteName: 'GridPass',
+        images: [
+            {
+                url: '/hero-launch-generic.png',
+                width: 1200,
+                height: 630,
+                alt: 'GridPass Collectors Edition',
+            },
+        ],
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Collectors Edition | GridPass',
+        description: 'Professional grade software for automotive collections, museums, and racing fleets.',
+        images: ['/hero-launch-generic.png'],
+    },
 };
 
 export default async function CollectorsPage() {

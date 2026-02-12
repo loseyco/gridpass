@@ -13,13 +13,17 @@ interface Props {
     trackingId?: string; // Business Card ID
     teamSlug?: string;
     inviteCode?: string;
+    initialEmail?: string; // Pre-fill email for "Claim" flow
 }
 
-export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCode }: Props) {
+export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCode, initialEmail }: Props) {
     const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState<'initial' | 'view' | 'login' | 'register'>(invite ? 'view' : 'initial');
+    // If we have an email, default to register mode immediately
+    const [mode, setMode] = useState<'initial' | 'view' | 'login' | 'register'>(
+        invite ? 'view' : (initialEmail ? 'register' : 'initial')
+    );
     const [fullName, setFullName] = useState('');
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(initialEmail || '');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
@@ -248,7 +252,7 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
             </button>
 
             <h2 className="text-2xl font-bold text-white mb-6 text-center">
-                {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                {mode === 'login' ? 'Welcome Back' : (initialEmail ? 'Set Your Password' : 'Create Account')}
             </h2>
 
             {error && (

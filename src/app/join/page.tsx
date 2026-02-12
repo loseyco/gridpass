@@ -50,7 +50,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
 export default async function JoinPage(props: Props) {
     const searchParams = await props.searchParams;
-    const { id, token, team, code } = searchParams;
+    const { id, token, team, code, email } = searchParams as any;
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -105,14 +105,16 @@ export default async function JoinPage(props: Props) {
                                 <FeatureStatusBadge status="v1" />
                             </div>
                             <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-2xl">
-                                JOIN THE<br />GRID.
+                                {email ? 'COMPLETE\nPROFILE' : 'JOIN THE\nGRID.'}
                             </h1>
                             <p className="text-lg text-neutral-400 font-medium max-w-xs mx-auto leading-relaxed">
-                                The premium digital identity for the modern motorsport era.
+                                {email ? 'Set a password to secure your account.' : 'The premium digital identity for the modern motorsport era.'}
                             </p>
-                            <div className="mt-4 flex justify-center">
-                                <VideoGuide title="Join GridPass Guide" videoSrc="/guides/join.webp" triggerLabel="See How It Works" />
-                            </div>
+                            {!email && (
+                                <div className="mt-4 flex justify-center">
+                                    <VideoGuide title="Join GridPass Guide" videoSrc="/guides/join.webp" triggerLabel="See How It Works" />
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -122,6 +124,7 @@ export default async function JoinPage(props: Props) {
                         trackingId={id}
                         teamSlug={team}
                         inviteCode={code}
+                        initialEmail={email}
                     />
 
                     {/* Quick Login Link in Footer if standard view */}

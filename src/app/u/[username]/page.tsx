@@ -119,6 +119,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
     let profile = null;
     let isShadowProfile = false;
     let claimToken = null;
+    let leadEmail = null; // Store email for guest logic
 
     // 1. Fetch Profile
     const { data: realProfile } = await supabase
@@ -140,6 +141,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
 
         if (lead) {
             isShadowProfile = true;
+            leadEmail = lead.contact_info?.email; // Capture email
             // Map Lead to Profile
             profile = {
                 id: 'shadow-' + lead.id,
@@ -200,6 +202,89 @@ export default async function PublicProfilePage({ params, searchParams }: { para
     // We must use the REAL user ID, not effective ID, to ensure Admins can still see this button even if impersonating.
     let isViewerSuperAdmin = false;
     const { data: { user: realUser } } = await supabase.auth.getUser();
+
+    // 3.5 Check for Secret Token (Guest Owner Mode)
+    // If a valid secret is provided that matches a claim token for this lead/user, 
+    // we treat them as a "Guest Owner" allow them to finish setup.
+    // 3.5 Check for Secret Token (Guest Owner Mode)
+    const { secret } = await searchParams;
+    let isGuestOwner = false;
+    let guestRegisterUrl = null; // Still relevant if they want to "finish setup" = maybe set password?
+    let clientSecret: string | null = null;
+    let paymentStatus: string | null = null;
+
+    if (secret && !realUser) { // Only relevant if not logged in
+        const supabaseAdmin = createAdminClient();
+
+        // Check token validity for this profile (Shadow OR Real)
+        let isValidToken = false;
+
+        if (isShadowProfile && claimToken === secret) {
+            isValidToken = true;
+        } else if (!isShadowProfile) {
+            // For real profiles, we didn't fetch token yet. Let's check DB.
+            const { data: tokenData } = await supabaseAdmin
+                .from('claim_tokens')
+                .select('token')
+                .eq('entity_id', profile.id)
+                .eq('token', secret) // Check strict match
+                .single();
+            if (tokenData) isValidToken = true;
+        }
+
+        if (isValidToken) {
+            isGuestOwner = true;
+
+            // Fetch Payment Info
+            // We need to find the related resume_lead.
+            // For Shadow: use email.
+            // For Real: use user_id.
+
+            let resumeLead = null;
+            if (isShadowProfile && leadEmail) {
+                const { data } = await supabaseAdmin
+                    .from('resume_leads')
+                    .select('id, stripe_payment_link, payment_status, name, email')
+                    .eq('email', leadEmail)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                resumeLead = data;
+            } else if (!isShadowProfile) {
+                const { data } = await supabaseAdmin
+                    .from('resume_leads')
+                    .select('id, stripe_payment_link, payment_status, name, email')
+                    .eq('user_id', profile.id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                resumeLead = data;
+            }
+
+            if (resumeLead) {
+                // For Real Users, "Register" might just be "Set Password" or "Login".
+                // But for now, we keep the register link or maybe hide it?
+                // Actually, if they are 'Real' but 'Shadow User' (no password), they might need to use reset password flow or magic link?
+                // Current /register page might not handle "claim existing user".
+                // Let's assume for now we just want them to Pay and Edit.
+
+                // If real user, guestRegisterUrl might be redundant or could point to a "finalize account" page.
+                // We'll keep it as is or set it if needed.
+                if (resumeLead.email) {
+                    guestRegisterUrl = `/register?next=/u/${username}&email=${encodeURIComponent(resumeLead.email)}`;
+                }
+
+                paymentStatus = resumeLead.payment_status;
+                if (paymentStatus !== 'paid') {
+                    const { createResumeCheckoutSession } = await import('@/app/actions/stripe-payment');
+                    const sessionData = await createResumeCheckoutSession(resumeLead.id, resumeLead.email, resumeLead.name);
+                    if (sessionData && typeof sessionData === 'object') {
+                        clientSecret = sessionData.clientSecret;
+                    }
+                }
+            }
+        }
+    }
 
     if (realUser) {
         const { data: myProfile } = await supabase
@@ -315,10 +400,13 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                                 subtitle="GridPass Racing Profile"
                             />
                             <ProfileActions
-                                isOwner={isOwner}
+                                isOwner={isOwner || isGuestOwner}
                                 recipientName={profile.full_name || profile.username}
-                                recipientUsername={profile.username}
+                                recipientUsername={profile.username!}
                                 recipientId={profile.id}
+                                guestRegisterUrl={guestRegisterUrl}
+                                clientSecret={clientSecret}
+                                paymentStatus={paymentStatus}
                             />
                         </div>
                     </div>

@@ -350,20 +350,8 @@ export async function getPlatformStats() {
         .from('user_vehicles')
         .select('*', { count: 'exact', head: true });
 
-    // Get total value
-    const { data: vehicleValues } = await supabase
-        .from('user_vehicles')
-        .select('current_value')
-        .not('current_value', 'is', null)
-        .limit(5000); // Cap for performance
-
-    const totalValue = vehicleValues?.reduce((acc, curr) => {
-        const val = Number(curr.current_value) || 0;
-        return acc + val;
-    }, 0) || 0;
-
     return {
         vehicleCount: vehicleCount || 0,
-        totalValue: totalValue,
+        totalValue: 0,
     };
 }

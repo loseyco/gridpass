@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { createResumeCheckoutSession } from './stripe-payment';
 
 // Initialize Supabase Admin client for Storage operations (bypassing RLS)
 const supabaseAdmin = createAdminClient(
@@ -108,11 +109,13 @@ export async function submitResumeLead(formData: FormData) {
         }
     };
 
-    // 3. Insert into DB (Resume Leads)
-    // Use Admin client to bypass RLS for insert + select
+    // 3. Insert into DB (Resume Leads) with pending payment status
     const { data: leadDataResponse, error } = await supabaseAdmin
         .from('resume_leads')
-        .insert([rawData])
+        .insert([{
+            ...rawData,
+            payment_status: 'unpaid', // User must authorize payment for work to begin
+        }])
         .select()
         .single();
 
@@ -121,65 +124,134 @@ export async function submitResumeLead(formData: FormData) {
         return { error: 'Failed to submit form. Please try again.' };
     }
 
-    // 4. Create Shadow Profile (Leads Table)
-    // We use supabaseAdmin to bypass RLS if needed, or just to be safe.
-    try {
-        const username = rawData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000);
+    // 4. Create User Account (FREE - No payment required for account)
+    let claimPath = null;
+    let userId = null;
 
-        const leadData = {
-            name: rawData.name,
-            role: rawData.job_title || 'Member',
-            source: 'resume_builder',
-            contact_info: {
+    try {
+        // Try to create the user with password
+        const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email: rawData.email,
+            password: formData.get('password') as string, // From form
+            email_confirm: true,
+            user_metadata: { full_name: rawData.name }
+        });
+
+        if (userData?.user) {
+            userId = userData.user.id;
+        } else if (createError?.message?.includes('already registered')) {
+            // User exists - look them up
+            const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+            const match = users.users.find(u => u.email === rawData.email);
+            if (match) userId = match.id;
+        }
+
+        if (userId) {
+            // 4a. Create Profile
+            const username = rawData.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000);
+
+            const profileUpdates = {
                 username: username,
-                email: rawData.email,
-                phone: rawData.phone,
+                full_name: rawData.name,
                 bio: rawData.bio,
                 avatar_url: photoUrl,
                 resume_url: resumeUrl,
-                linkedin: rawData.linkedin_url,
-                website: rawData.portfolio_url,
-                location: rawData.metadata.home_airport || 'Unknown',
-                social_links: rawData.social_links,
-                experience_years: rawData.experience_years,
-                physical_info: {
-                    helmet_size: rawData.metadata.helmet_size
+                driver_info: {
+                    status: 'active',
                 },
                 logistics_info: {
                     home_airport: rawData.metadata.home_airport
                 },
-                job_preferences: {
-                    looking_for: rawData.metadata.looking_for,
-                    salary_expectations: rawData.metadata.salary_expectations
-                }
-            },
-            skills: rawData.metadata.skills,
-            status: 'new'
-        };
+                physical_info: {
+                    helmet_size: rawData.metadata.helmet_size
+                },
+                social_links: rawData.social_links,
+                website: rawData.portfolio_url,
+                skills: rawData.metadata.skills,
+                location: rawData.metadata.home_airport
+            };
 
-        const { error: leadError } = await supabaseAdmin
-            .from('leads')
-            .insert([leadData]);
+            const { error: profileError } = await supabaseAdmin
+                .from('profiles')
+                .upsert({
+                    id: userId,
+                    ...profileUpdates,
+                    updated_at: new Date().toISOString(),
+                });
 
-        if (leadError) {
-            console.error('Error creating shadow profile:', leadError);
-            // We don't fail the whole request since the resume lead is saved
+            if (profileError) {
+                console.error('Profile Upsert Error:', profileError);
+            }
+
+            // 4b. Link Lead to User
+            await supabaseAdmin
+                .from('resume_leads')
+                .update({ user_id: userId })
+                .eq('id', leadDataResponse.id);
+
+            // 4c. Generate Claim Token (for immediate access)
+            const { randomBytes } = await import('crypto');
+            const token = randomBytes(16).toString('hex');
+
+            const { error: tokenError } = await supabaseAdmin
+                .from('claim_tokens')
+                .insert({
+                    token,
+                    entity_type: 'lead',
+                    entity_id: userId,
+                });
+
+            if (!tokenError) {
+                claimPath = `/u/${username}?secret=${token}`;
+            }
+
+            // NEW: Create checkout session for payment pre-auth
+            const sessionData = await createResumeCheckoutSession(
+                leadDataResponse.id,
+                rawData.email,
+                rawData.name
+            );
+
+            if (sessionData && sessionData.clientSecret) {
+                // Update lead with payment session info
+                await supabaseAdmin
+                    .from('resume_leads')
+                    .update({
+                        stripe_payment_link: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/resume-builder/checkout?session_id=${sessionData.sessionId}`,
+                    })
+                    .eq('id', leadDataResponse.id);
+
+                // Return checkout redirect instead of direct profile access
+                return {
+                    success: true,
+                    checkoutPath: `/resume-builder/checkout?session_id=${sessionData.sessionId}&lead_id=${leadDataResponse.id}`,
+                    leadId: leadDataResponse.id,
+                    clientSecret: sessionData.clientSecret
+                };
+            }
         }
+
     } catch (e) {
-        console.error('Error in shadow profile logic:', e);
+        console.error('Error in user creation logic:', e);
+        return { error: 'An unexpected error occurred during account creation.' };
     }
 
-    // 5. Send Notification (Payment removed, now donation based)
+    // 5. Send Notification
     try {
         const { sendResumeNotification } = await import('@/lib/email');
 
         if (leadDataResponse) {
+            // Construct full URL for the email button
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gridpass.app';
+            const actionUrl = claimPath ? `${baseUrl}${claimPath}` : undefined;
+
             // Send Email
             await sendResumeNotification({
                 name: rawData.name,
                 email: rawData.email,
                 role: rawData.job_title || 'N/A',
-                resumeId: leadDataResponse.id
+                resumeId: leadDataResponse.id,
+                paymentLink: actionUrl // Direct them to the profile to pay
             });
         }
     } catch (e) {
@@ -187,7 +259,7 @@ export async function submitResumeLead(formData: FormData) {
     }
 
     revalidatePath('/admin/resumes');
-    return { success: true };
+    return { success: true, claimPath };
 }
 
 export async function updateResumeLeadStatus(id: string, status: string) {
@@ -229,6 +301,31 @@ export async function updatePaymentLink(id: string, link: string) {
     }
 
     revalidatePath(`/admin/resumes/${id}`);
+    return { success: true };
+}
+
+export async function updatePaymentStatus(id: string, status: 'authorized' | 'paid' | 'unpaid') {
+    const supabase = await createClient();
+
+    // Auth check
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    const { error } = await supabase
+        .from('resume_leads')
+        .update({
+            payment_status: status,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error updating payment status:', error);
+        return { error: 'Failed to update payment status' };
+    }
+
+    revalidatePath(`/admin/resumes/${id}`);
+    revalidatePath('/admin/resumes');
     return { success: true };
 }
 

@@ -1,7 +1,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { updateResumeLeadStatus, updatePaymentLink } from '@/app/actions/resume';
+import { updateResumeLeadStatus, updatePaymentLink, updatePaymentStatus } from '@/app/actions/resume';
+import ResumeTools from '@/components/admin/ResumeTools';
 import { ArrowLeft, User, Briefcase, Mail, Phone, ExternalLink, Calendar, CreditCard, CheckCircle, Save } from 'lucide-react';
 
 export default async function ResumeLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +22,45 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
 
     if (error || !lead) {
         return <div className="p-8 text-red-500">Lead not found</div>;
+    }
+
+    // Fetch Shadow Profile (Lead)
+    // We need this to link to the editor
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+    const supabaseAdmin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Resume Lead Email -> Real User Profile
+    // We want to find the user profile associated with this lead email
+    let userProfile = null;
+    let existingToken = '';
+
+    // First try by user_id if we store it (we should add it to resume_leads schema if not present, but for now scan profiles)
+    // Actually, let's just look up the user by email in public.profiles or auth
+    // We can use the admin client to find the user ID from the email
+    const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+    const match = users.users.find(u => u.email === lead.email);
+
+    if (match) {
+        // Fetch the full profile to get the username
+        const { data: profileData } = await supabaseAdmin
+            .from('profiles')
+            .select('username')
+            .eq('id', match.id)
+            .single();
+
+        userProfile = { id: match.id, email: match.email, username: profileData?.username }; // minimal info
+
+        const { data: tokenData } = await supabaseAdmin
+            .from('claim_tokens')
+            .select('token')
+            .eq('entity_id', match.id)
+            .eq('entity_type', 'lead') // Changed to 'lead' (hack)
+            .limit(1)
+            .single();
+        if (tokenData) existingToken = tokenData.token;
     }
 
     return (
@@ -206,40 +246,86 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
                                 <CreditCard className="w-4 h-4" />
                                 Stripe Payment
                             </h3>
-                            <form action={async (formData) => {
-                                'use server';
-                                await updatePaymentLink(lead.id, formData.get('link') as string);
-                            }}>
-                                <input
-                                    name="link"
-                                    type="url"
-                                    defaultValue={lead.stripe_payment_link || ''}
-                                    placeholder="https://buy.stripe.com/..."
-                                    className="w-full bg-neutral-800 border border-white/10 rounded-lg p-2 text-white text-sm mb-4"
-                                />
-                                <button type="submit" className="w-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-bold py-2 rounded hover:bg-indigo-600/30 transition-colors flex items-center justify-center gap-2">
-                                    <Save className="w-4 h-4" />
-                                    Save Link
-                                </button>
-                            </form>
+
+                            {/* Payment Status Badge */}
+                            <div className="mb-4">
+                                {lead.payment_status === 'authorized' && (
+                                    <div className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                                        Authorized (Action Required)
+                                    </div>
+                                )}
+                                {lead.payment_status === 'paid' && (
+                                    <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                                        <CheckCircle className="w-4 h-4" />
+                                        Paid In Full
+                                    </div>
+                                )}
+                                {(!lead.payment_status || lead.payment_status === 'unpaid') && (
+                                    <div className="text-neutral-500 text-xs uppercase tracking-widest font-bold">
+                                        Status: Unpaid
+                                    </div>
+                                )}
+
+                                {/* Manual Override Controls */}
+                                <div className="flex gap-2 mt-2">
+                                    {lead.payment_status !== 'authorized' && lead.payment_status !== 'paid' && (
+                                        <form action={async () => {
+                                            'use server';
+                                            await updatePaymentStatus(lead.id, 'authorized');
+                                        }}>
+                                            <button type="submit" className="text-[10px] bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 px-2 py-1 rounded border border-amber-500/20">
+                                                Force Auth
+                                            </button>
+                                        </form>
+                                    )}
+                                    {lead.payment_status !== 'paid' && (
+                                        <form action={async () => {
+                                            'use server';
+                                            await updatePaymentStatus(lead.id, 'paid');
+                                        }}>
+                                            <button type="submit" className="text-[10px] bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-2 py-1 rounded border border-emerald-500/20">
+                                                Mark Paid
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
+                            </div>
+
+                            {lead.stripe_payment_link ? (
+                                <div className="space-y-3">
+                                    <a
+                                        href={lead.stripe_payment_link}
+                                        target="_blank"
+                                        className="flex items-center justify-center gap-2 w-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-bold py-2 rounded hover:bg-indigo-600/30 transition-colors"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        Open Payment Link
+                                    </a>
+                                </div>
+                            ) : (
+                                <div className="text-sm text-neutral-500 italic p-4 text-center border border-white/5 rounded-lg bg-white/5">
+                                    No payment link generated.
+                                </div>
+                            )}
                         </div>
 
-                        {/* Create User Hint */}
-                        <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
-                            <h3 className="font-bold mb-2 text-neutral-300">Next Steps</h3>
-                            <p className="text-xs text-neutral-500 mb-4">
-                                Once paid, generate the profile manually or send an invite link.
-                            </p>
+                        {/* Resume Tools (Research + Claim) */}
+                        <ResumeTools
+                            name={lead.name}
+                            email={lead.email}
+                            jobTitle={lead.job_title}
+                            userId={userProfile?.id} // CHANGED: Pass userId
+                            username={userProfile?.username}
+                            leadStatus={lead.status}
+                            initialToken={existingToken}
+                        />
 
-                            <Link href={`/admin/invites?email=${encodeURIComponent(lead.email)}`} className="block w-full text-center bg-neutral-800 text-neutral-300 py-2 rounded text-sm hover:bg-neutral-700">
-                                Go to Invite User &rarr;
-                            </Link>
-                        </div>
 
                     </div>
 
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

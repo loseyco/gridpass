@@ -18,9 +18,11 @@ import {
     MoreVertical,
     Wrench,
     Car,
-    Briefcase
+    Briefcase,
+    DollarSign
 } from 'lucide-react';
 import NotificationBadge from '@/components/NotificationBadge';
+import InquiryBadge from '@/components/dashboard/InquiryBadge';
 import LogoutButton from '@/components/LogoutButton';
 
 interface SidebarProps {
@@ -120,15 +122,17 @@ export default function DashboardSidebar({ userEmail, isFounder }: SidebarProps)
                             </Link>
                             <Link href="/dashboard/inquiries" className={linkClass('/dashboard/inquiries')} onClick={() => setIsOpen(false)}>
                                 <Briefcase className="w-5 h-5" />
-                                Inquiries
+                                <span className="flex-1">Inquiries</span>
+                                <InquiryBadge />
                             </Link>
                             <Link href="/dashboard/leads" className={linkClass('/dashboard/leads')} onClick={() => setIsOpen(false)}>
                                 <Trophy className="w-5 h-5" />
                                 Leads
                             </Link>
-                            <Link href="/collectors" className={linkClass('/collectors')} onClick={() => setIsOpen(false)}>
-                                <Shield className="w-5 h-5" />
-                                Manage Fleet
+
+                            <Link href="/dashboard/affiliate" className={linkClass('/dashboard/affiliate')} onClick={() => setIsOpen(false)}>
+                                <DollarSign className="w-5 h-5" />
+                                Affiliate Program
                             </Link>
                         </div>
                     </div>

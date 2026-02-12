@@ -15,6 +15,14 @@ export default function InviteManager() {
     const [role, setRole] = useState<UserRole>('founder');
 
     useEffect(() => {
+        // Hydrate from URL
+        const params = new URLSearchParams(window.location.search);
+        const emailParam = params.get('email');
+        const noteParam = params.get('note');
+
+        if (emailParam) setNote(`Invite for ${emailParam}`);
+        if (noteParam) setNote(noteParam);
+
         loadInvites();
     }, []);
 

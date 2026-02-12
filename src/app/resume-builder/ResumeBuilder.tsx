@@ -5,8 +5,9 @@ import { submitResumeLead } from '@/app/actions/resume';
 import VideoGuide from '@/components/VideoGuide';
 import FeatureStatusBadge from '@/components/FeatureStatusBadge';
 import { useTour } from '@/hooks/useTour';
-import { Loader2, CheckCircle2, ChevronRight, ChevronLeft, Calendar, MapPin, Globe, Award, Shield, Plane, Upload, User, Plus, X } from 'lucide-react';
+import { Loader2, CheckCircle2, ChevronRight, ChevronLeft, Calendar, MapPin, Globe, Award, Shield, Plane, Upload, User, Plus, X, Sparkles, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { event } from '@/lib/analytics';
 import { DonationCard } from '@/components/launch/DonationCard';
 
@@ -19,6 +20,8 @@ const INITIAL_DATA = {
     dob: '',
     nationality: '',
     home_airport: '',
+    password: '',
+    confirmPassword: '',
 
     // Step 2: Role
     job_title: 'driver',
@@ -59,6 +62,7 @@ export default function ResumeBuilder() {
     const [formData, setFormData] = useState(INITIAL_DATA);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [claimPath, setClaimPath] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const { startTour } = useTour();
 
@@ -123,6 +127,8 @@ export default function ResumeBuilder() {
         setError(null);
         if (step === 1) {
             if (!formData.name || !formData.email) return 'Name and Email are required.';
+            if (!formData.password || formData.password.length < 8) return 'Password must be at least 8 characters.';
+            if (formData.password !== formData.confirmPassword) return 'Passwords do not match.';
         }
         if (step === 2) {
             if (!formData.bio) return 'A short bio is required.';
@@ -143,6 +149,8 @@ export default function ResumeBuilder() {
         setError(null);
         setCurrentStep(prev => Math.max(prev - 1, 1));
     };
+
+    const router = useRouter();
 
     async function handleSubmit() {
         // Final validation
@@ -166,9 +174,6 @@ export default function ResumeBuilder() {
                 } else if (key === 'passport_valid') {
                     data.append(key, value ? 'true' : 'false');
                 } else if (key === 'series_experience') {
-                    // For now, let's just assume we want to store it as a JSON string if it was an array, 
-                    // or just pass it through if we changed our mind. 
-                    // In INITIAL_DATA it is string[], let's JSON stringify it.
                     data.append(key, JSON.stringify(value));
                 } else {
                     data.append(key, String(value));
@@ -178,6 +183,7 @@ export default function ResumeBuilder() {
             const result = await submitResumeLead(data);
             if (result.error) {
                 setError(result.error);
+                setSubmitting(false);
             } else {
                 event({
                     action: 'submit',
@@ -185,11 +191,20 @@ export default function ResumeBuilder() {
                     label: 'submission_success',
                     value: 20
                 });
-                setSubmitted(true);
+
+                // Redirect to checkout for payment preauth
+                if (result.checkoutPath) {
+                    router.push(result.checkoutPath);
+                } else if (result.claimPath) {
+                    // Fallback for legacy flow
+                    router.push(result.claimPath);
+                } else {
+                    setSubmitted(true);
+                    setSubmitting(false);
+                }
             }
         } catch (e) {
             setError('An unexpected error occurred.');
-        } finally {
             setSubmitting(false);
         }
     }
@@ -213,6 +228,25 @@ export default function ResumeBuilder() {
                     <div className="mb-8 flex justify-center">
                         <DonationCard userEmail={formData.email} />
                     </div>
+
+                    {/* Profile Preview - NEW */}
+                    {claimPath && (
+                        <div className="mb-8">
+                            <h3 className="text-white font-bold mb-3 flex items-center justify-center gap-2">
+                                <Sparkles className="w-5 h-5 text-indigo-400" />
+                                Your Profile is Ready!
+                            </h3>
+                            <a
+                                href={claimPath}
+                                className="block w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 mb-2"
+                            >
+                                <ExternalLink className="w-5 h-5" /> View Your Profile
+                            </a>
+                            <p className="text-xs text-neutral-500">
+                                This is a private link. You can enable public access after verifying your account.
+                            </p>
+                        </div>
+                    )}
 
                     {/* Create Account CTA - CLARIFICATION FOR USERS */}
                     <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 border border-white/10 rounded-xl p-6 mb-8 text-left relative overflow-hidden group">
@@ -363,6 +397,36 @@ export default function ResumeBuilder() {
                                     value={formData.nationality}
                                     onChange={(e) => updateField('nationality', e.target.value)}
                                 />
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6 border-t border-white/5 pt-6 mt-6">
+                                <div className="md:col-span-2 mb-2">
+                                    <p className="text-sm text-neutral-400 flex items-center gap-2">
+                                        <Shield className="w-4 h-4 text-indigo-400" />
+                                        Create a password to secure your account
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Password *</label>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        placeholder="Min 8 characters"
+                                        value={formData.password}
+                                        onChange={(e) => updateField('password', e.target.value)}
+                                        minLength={8}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-neutral-300">Confirm Password *</label>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-neutral-900 border border-white/10 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                        placeholder="Re-enter password"
+                                        value={formData.confirmPassword}
+                                        onChange={(e) => updateField('confirmPassword', e.target.value)}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
