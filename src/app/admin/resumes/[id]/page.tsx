@@ -2,8 +2,9 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { updateResumeLeadStatus, updatePaymentLink, updatePaymentStatus } from '@/app/actions/resume';
+import { capturePreAuthPayment, grantVerifiedBadge } from '@/app/actions/stripe-capture';
 import ResumeTools from '@/components/admin/ResumeTools';
-import { ArrowLeft, User, Briefcase, Mail, Phone, ExternalLink, Calendar, CreditCard, CheckCircle, Save } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Mail, Phone, ExternalLink, Calendar, CreditCard, CheckCircle, Save, DollarSign, Award } from 'lucide-react';
 
 export default async function ResumeLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();
@@ -244,7 +245,7 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
                         <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
                             <h3 className="font-bold mb-4 text-neutral-300 flex items-center gap-2">
                                 <CreditCard className="w-4 h-4" />
-                                Stripe Payment
+                                Payment & Verification
                             </h3>
 
                             {/* Payment Status Badge */}
@@ -252,62 +253,103 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
                                 {lead.payment_status === 'authorized' && (
                                     <div className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
                                         <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-                                        Authorized (Action Required)
+                                        Pre-Authorized - Ready to Capture
                                     </div>
                                 )}
                                 {lead.payment_status === 'paid' && (
                                     <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
                                         <CheckCircle className="w-4 h-4" />
-                                        Paid In Full
+                                        Payment Complete
                                     </div>
                                 )}
                                 {(!lead.payment_status || lead.payment_status === 'unpaid') && (
-                                    <div className="text-neutral-500 text-xs uppercase tracking-widest font-bold">
-                                        Status: Unpaid
+                                    <div className="bg-neutral-800 text-neutral-400 border border-white/10 px-3 py-2 rounded-lg text-sm font-bold">
+                                        Awaiting Payment
                                     </div>
                                 )}
-
-                                {/* Manual Override Controls */}
-                                <div className="flex gap-2 mt-2">
-                                    {lead.payment_status !== 'authorized' && lead.payment_status !== 'paid' && (
-                                        <form action={async () => {
-                                            'use server';
-                                            await updatePaymentStatus(lead.id, 'authorized');
-                                        }}>
-                                            <button type="submit" className="text-[10px] bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 px-2 py-1 rounded border border-amber-500/20">
-                                                Force Auth
-                                            </button>
-                                        </form>
-                                    )}
-                                    {lead.payment_status !== 'paid' && (
-                                        <form action={async () => {
-                                            'use server';
-                                            await updatePaymentStatus(lead.id, 'paid');
-                                        }}>
-                                            <button type="submit" className="text-[10px] bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-2 py-1 rounded border border-emerald-500/20">
-                                                Mark Paid
-                                            </button>
-                                        </form>
-                                    )}
-                                </div>
                             </div>
 
-                            {lead.stripe_payment_link ? (
-                                <div className="space-y-3">
+                            {/* Contextual Action Buttons */}
+                            <div className="space-y-3">
+                                {/* Capture Pre-Auth Payment */}
+                                {lead.payment_status === 'authorized' && (
+                                    <form action={async () => {
+                                        'use server';
+                                        const result = await capturePreAuthPayment(lead.id);
+                                        if (!result.success) {
+                                            console.error('Capture failed:', result.error);
+                                        }
+                                    }}>
+                                        <button
+                                            type="submit"
+                                            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg"
+                                        >
+                                            <DollarSign className="w-4 h-4" />
+                                            Capture Payment ($20)
+                                        </button>
+                                    </form>
+                                )}
+
+                                {/* Grant Verified Badge */}
+                                {lead.payment_status === 'paid' && (
+                                    <form action={async () => {
+                                        'use server';
+                                        const result = await grantVerifiedBadge(lead.id);
+                                        if (!result.success) {
+                                            console.error('Badge grant failed:', result.error);
+                                        }
+                                    }}>
+                                        <button
+                                            type="submit"
+                                            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg"
+                                        >
+                                            <Award className="w-4 h-4" />
+                                            Grant Verified Badge
+                                        </button>
+                                    </form>
+                                )}
+
+                                {/* Show Payment Link if exists */}
+                                {lead.stripe_payment_link && (
                                     <a
                                         href={lead.stripe_payment_link}
                                         target="_blank"
-                                        className="flex items-center justify-center gap-2 w-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-bold py-2 rounded hover:bg-indigo-600/30 transition-colors"
+                                        className="flex items-center justify-center gap-2 w-full bg-neutral-800 text-neutral-300 border border-white/10 font-bold py-2 rounded-lg hover:bg-neutral-700 transition-colors"
                                     >
                                         <ExternalLink className="w-4 h-4" />
-                                        Open Payment Link
+                                        View Payment Link
                                     </a>
-                                </div>
-                            ) : (
-                                <div className="text-sm text-neutral-500 italic p-4 text-center border border-white/5 rounded-lg bg-white/5">
-                                    No payment link generated.
-                                </div>
-                            )}
+                                )}
+
+                                {/* Manual Override Controls (collapsed) */}
+                                <details className="mt-4">
+                                    <summary className="text-xs text-neutral-500 cursor-pointer hover:text-neutral-400">
+                                        Manual Overrides
+                                    </summary>
+                                    <div className="flex gap-2 mt-2">
+                                        {lead.payment_status !== 'authorized' && lead.payment_status !== 'paid' && (
+                                            <form action={async () => {
+                                                'use server';
+                                                await updatePaymentStatus(lead.id, 'authorized');
+                                            }}>
+                                                <button type="submit" className="text-[10px] bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 px-2 py-1 rounded border border-amber-500/20">
+                                                    Force Auth
+                                                </button>
+                                            </form>
+                                        )}
+                                        {lead.payment_status !== 'paid' && (
+                                            <form action={async () => {
+                                                'use server';
+                                                await updatePaymentStatus(lead.id, 'paid');
+                                            }}>
+                                                <button type="submit" className="text-[10px] bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-2 py-1 rounded border border-emerald-500/20">
+                                                    Mark Paid
+                                                </button>
+                                            </form>
+                                        )}
+                                    </div>
+                                </details>
+                            </div>
                         </div>
 
                         {/* Resume Tools (Research + Claim) */}
