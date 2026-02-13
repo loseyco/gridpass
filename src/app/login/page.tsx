@@ -33,15 +33,6 @@ export default function V2LoginPage() {
         }
     }
 
-    const handleOAuthLogin = async (provider: 'google') => {
-        await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback?next=/`,
-            },
-        })
-    }
-
     return (
         <div className="v2-container v2-auth-container">
             {/* Header Background */}

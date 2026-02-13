@@ -1,34 +1,28 @@
-import { Metadata } from 'next';
-import ResumeBuilder from './ResumeBuilder';
+'use client'
 
-export const metadata: Metadata = {
-    title: 'Professional Racing Resumes | GridPass',
-    description: 'The New Standard for Motorsports Resumes. Stop sending static PDFs. Build a live, professional racing resume that gets you hired by top teams.',
-    openGraph: {
-        title: 'The New Standard for Motorsports Resumes | GridPass',
-        description: 'Stop sending static PDFs. Build a live, professional racing resume that gets you hired by top teams.',
-        url: 'https://gridpass.app/resume-builder',
-        siteName: 'GridPass',
-        locale: 'en_US',
-        type: 'website',
-        images: [
-            {
-                url: 'https://gridpass.app/og-resume.png',
-                width: 1200,
-                height: 630,
-                alt: 'GridPass Professional Racing Resumes',
-            },
-        ],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Get Hired in Motorsports with a Pro Resume',
-        description: 'Stop sending PDFs. Build a live, professional racing resume that gets you hired by top teams.',
-        images: ['https://gridpass.app/og-resume.png'],
-        creator: '@pjlosey',
-    },
-};
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function ResumeBuilderPage() {
-    return <ResumeBuilder />;
+export default function ResumeBuilderRedirect() {
+    const router = useRouter()
+
+    useEffect(() => {
+        router.push('/')
+    }, [router])
+
+    return (
+        <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#0a0a0a',
+            color: 'white'
+        }}>
+            <div style={{ textAlign: 'center' }}>
+                <h1>Redirecting...</h1>
+                <p>Taking you back to the home page</p>
+            </div>
+        </div>
+    )
 }
