@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase } from 'lucide-react'
+import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers } from 'lucide-react'
+import VehicleCard from '@/components/profile/VehicleCard'
+import { Vehicle } from '@/types/garage'
 
 interface PublicProfileClientProps {
   profile: any
@@ -11,6 +13,8 @@ interface PublicProfileClientProps {
   skills: string[]
   mediaItems: any[]
   recommendations: any[]
+  vehicles: Vehicle[]
+  collections: any[]
 }
 
 export default function PublicProfileClient({
@@ -20,7 +24,9 @@ export default function PublicProfileClient({
   career,
   skills,
   mediaItems,
-  recommendations
+  recommendations,
+  vehicles,
+  collections
 }: PublicProfileClientProps) {
   return (
     <>
@@ -221,6 +227,44 @@ export default function PublicProfileClient({
             </section>
           )}
 
+          {/* Garage / Vehicles */}
+          {vehicles && vehicles.length > 0 && (
+            <section className="v2-section">
+              <div className="v2-section-header">
+                <h2 className="v2-heading-2">Garage</h2>
+                <span className="section-count">{vehicles.length}</span>
+              </div>
+              <div className="vehicle-grid">
+                {vehicles.map((vehicle) => (
+                  <VehicleCard key={vehicle.id} vehicle={vehicle} readOnly={true} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Collections */}
+          {collections && collections.length > 0 && (
+            <section className="v2-section">
+              <div className="v2-section-header">
+                <h2 className="v2-heading-2">Collections</h2>
+                <span className="section-count">{collections.length}</span>
+              </div>
+              <div className="v2-list">
+                {collections.map((collection, idx) => (
+                  <div key={idx} className="v2-card v2-flex v2-items-center v2-gap-4 v2-mb-2 cursor-default">
+                    <div className="v2-bg-secondary v2-p-3 rounded-lg">
+                      <Layers className="v2-text-accent" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="v2-heading-3 v2-mb-0">{collection.name}</h3>
+                      <p className="v2-text-secondary v2-text-sm">{collection.description || 'No description'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Media Gallery */}
           {mediaItems && mediaItems.length > 0 && (
             <section className="v2-section">
@@ -248,7 +292,7 @@ export default function PublicProfileClient({
                 <h2 className="v2-heading-2">Career</h2>
               </div>
               <div className="v2-list">
-                {career.slice(0, 5).map((entry: any, idx: number) => (
+                {career.map((entry: any, idx: number) => (
                   <div key={idx} className="v2-card v2-mb-4">
                     <div className="career-header">
                       <h3 className="v2-heading-3 v2-text-white">{entry.title || entry.position}</h3>
@@ -271,47 +315,45 @@ export default function PublicProfileClient({
 
 
           {/* Recommendations */}
-          {(recommendations && recommendations.length > 0) || isOwner ? (
-            <section className="v2-section">
-              <div className="v2-section-header">
-                <h2 className="v2-heading-2">Recommendations</h2>
-              </div>
-              {recommendations && recommendations.length > 0 ? (
-                <div className="v2-list">
-                  {recommendations.slice(0, 3).map((rec: any) => (
-                    <div key={rec.id} className="v2-card v2-mb-4">
-                      <div className="rec-header">
-                        <div className="rec-author">
-                          {rec.from_profile?.avatar_url ? (
-                            <img src={rec.from_profile.avatar_url} alt={rec.from_profile.full_name} className="rec-avatar" />
-                          ) : (
-                            <div className="rec-avatar-placeholder">
-                              {(rec.from_profile?.full_name || rec.author_name || 'G')?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div className="rec-author-info">
-                            <div className="rec-author-name">
-                              {rec.from_profile?.full_name || rec.author_name || 'Guest User'}
-                            </div>
-                            {rec.from_profile?.username ? (
-                              <div className="rec-author-username">@{rec.from_profile.username}</div>
-                            ) : (
-                              <div className="rec-author-username">Verified Guest</div>
-                            )}
+          <section className="v2-section">
+            <div className="v2-section-header">
+              <h2 className="v2-heading-2">Recommendations</h2>
+            </div>
+            {recommendations && recommendations.length > 0 ? (
+              <div className="v2-list">
+                {recommendations.slice(0, 3).map((rec: any) => (
+                  <div key={rec.id} className="v2-card v2-mb-4">
+                    <div className="rec-header">
+                      <div className="rec-author">
+                        {rec.from_profile?.avatar_url ? (
+                          <img src={rec.from_profile.avatar_url} alt={rec.from_profile.full_name} className="rec-avatar" />
+                        ) : (
+                          <div className="rec-avatar-placeholder">
+                            {(rec.from_profile?.full_name || rec.author_name || 'G')?.charAt(0).toUpperCase()}
                           </div>
+                        )}
+                        <div className="rec-author-info">
+                          <div className="rec-author-name">
+                            {rec.from_profile?.full_name || rec.author_name || 'Guest User'}
+                          </div>
+                          {rec.from_profile?.username ? (
+                            <div className="rec-author-username">@{rec.from_profile.username}</div>
+                          ) : (
+                            <div className="rec-author-username">Verified Guest</div>
+                          )}
                         </div>
                       </div>
-                      <p className="v2-text-secondary v2-italic">"{rec.content}"</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="v2-card v2-text-center v2-py-8">
-                  <p className="v2-text-secondary">No recommendations yet.</p>
-                </div>
-              )}
-            </section>
-          ) : null}
+                    <p className="v2-text-secondary v2-italic">"{rec.content}"</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="v2-card v2-text-center v2-py-8">
+                <p className="v2-text-secondary">No recommendations yet.</p>
+              </div>
+            )}
+          </section>
         </div>
 
         <style jsx>{`
@@ -606,6 +648,12 @@ export default function PublicProfileClient({
             font-size: 0.75rem;
             color: var(--v2-text-tertiary);
             font-family: monospace;
+        }
+
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
         }
 
         .skills-grid {

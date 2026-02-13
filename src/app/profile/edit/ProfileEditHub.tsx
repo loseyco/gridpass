@@ -13,7 +13,7 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
             id: 'basic',
             label: 'Basic Information',
             description: 'Name, bio, avatar, location',
-            href: '//profile/edit/basic',
+            href: '/profile/edit/basic',
             icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -25,7 +25,7 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
             id: 'career',
             label: 'Career History',
             description: 'Jobs, positions, experience',
-            href: '//profile/edit/career',
+            href: '/profile/edit/career',
             icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
@@ -37,7 +37,7 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
             id: 'skills',
             label: 'Skills & Badges',
             description: 'Expertise tags, specializations',
-            href: '//profile/edit/skills',
+            href: '/profile/edit/skills',
             icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -49,7 +49,7 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
             id: 'media',
             label: 'Media Gallery',
             description: 'Photos, videos, portfolio',
-            href: '//profile/edit/media',
+            href: '/profile/edit/media',
             icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -62,7 +62,7 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
             id: 'social',
             label: 'Social Links',
             description: 'Instagram, LinkedIn, Website',
-            href: '//profile/edit/social',
+            href: '/profile/edit/social',
             icon: (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />

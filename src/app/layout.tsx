@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import BottomTabBar from './components/BottomTabBar'
 import InstallPrompt from './components/InstallPrompt'
@@ -15,6 +15,9 @@ export const metadata: Metadata = {
         statusBarStyle: 'default',
         title: 'GridPass',
     },
+}
+
+export const viewport: Viewport = {
     themeColor: '#e31e24',
 }
 
