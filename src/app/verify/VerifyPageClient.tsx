@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { createVerificationCheckoutSession } from '@/app/actions/stripe-verification'
-import '../.css'
 
 // Initialize Stripe outside component
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)

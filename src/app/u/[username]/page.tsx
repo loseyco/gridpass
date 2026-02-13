@@ -15,7 +15,7 @@ import { CareerEntry } from '@/types/career';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getServices } from '@/app/actions/services';
 import { ServiceCard } from '@/components/services/ServiceCard';
-import { getGarage } from '@/app/_legacy/dashboard/profile/garage-actions';
+import { getGarage } from '@/actions/garage-actions';
 import VehicleCard from '@/components/profile/VehicleCard';
 import ToolCard from '@/components/profile/ToolCard';
 import { Vehicle, Tool } from '@/types/garage';

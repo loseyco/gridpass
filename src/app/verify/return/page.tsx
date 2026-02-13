@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import '../../.css'
 
 export default function ReturnPage() {
     const [status, setStatus] = useState<string | null>(null)
