@@ -91,7 +91,7 @@ export default async function JoinPage(props: Props) {
                         hideFounder={true}
                         theme="v2"
                         defaultToRegister={true}
-                        loginUrl="//login"
+                        loginUrl="/login"
                     />
                 </div>
             </div>
