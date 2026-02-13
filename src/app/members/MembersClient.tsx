@@ -71,8 +71,8 @@ export default function MembersClient({ initialProfiles, user }: MembersClientPr
 
                 <div className="v2-card v2-mb-4" style={{ padding: 0, overflow: 'hidden' }}>
                     {filteredProfiles.map(profile => (
-                        <Link key={profile.id} href={`//u/${profile.username}`} className="v2-list-item">
-                            <div className="v2-list-item-icon">
+                        <Link key={profile.id} href={`/u/${profile.username}`} className="v2-list-item">
+                            <div className="v2-list-item-icon" style={{ width: '48px', height: '48px', flexShrink: 0 }}>
                                 {profile.avatar_url ? (
                                     <img
                                         src={profile.avatar_url}
