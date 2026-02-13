@@ -139,3 +139,49 @@ export async function sendTeamInviteEmail(data: {
         console.error('Failed to send team invite email:', error);
     }
 }
+
+export async function sendPaymentLinkEmail(data: {
+    to: string;
+    name: string;
+    paymentLink: string;
+}) {
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY is missing. Payment link email skipped.');
+        return;
+    }
+
+    const htmlContent = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #1a1a1a;">Complete Your GridPass Resume Payment</h1>
+            <p>Hi <strong>${data.name}</strong>,</p>
+            
+            <p>Thank you for submitting your resume to GridPass! To complete your professional resume and verify your profile, please complete your payment.</p>
+            
+            <p style="margin: 30px 0;">
+                <a href="${data.paymentLink}" 
+                   style="background-color: #ef4444; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                    Complete Payment & Verify Profile
+                </a>
+            </p>
+            
+            <p style="color: #666; font-size: 14px;">Once payment is complete, our team will build your professional resume page and it will go live on GridPass.</p>
+            
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">If you have any questions, feel free to reply to this email.</p>
+            
+            <p style="color: #999; font-size: 12px; margin-top: 40px;">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+    `;
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass <onboarding@resend.dev>',
+            to: data.to,
+            subject: 'Complete Your GridPass Resume Payment',
+            html: htmlContent
+        });
+        console.log(`Payment link email sent to ${data.to}`);
+    } catch (error) {
+        console.error('Failed to send payment link email:', error);
+        throw error;
+    }
+}

@@ -15,7 +15,7 @@ import { CareerEntry } from '@/types/career';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { getServices } from '@/app/actions/services';
 import { ServiceCard } from '@/components/services/ServiceCard';
-import { getGarage } from '@/app/dashboard/profile/garage-actions';
+import { getGarage } from '@/app/_legacy/dashboard/profile/garage-actions';
 import VehicleCard from '@/components/profile/VehicleCard';
 import ToolCard from '@/components/profile/ToolCard';
 import { Vehicle, Tool } from '@/types/garage';
@@ -106,6 +106,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
             description: profile.bio || `Check out ${displayName}'s racing profile on GridPass.`,
             type: 'profile',
             username: profile.username,
+            images: profile.avatar_url ? [profile.avatar_url] : [],
         }
     };
 }

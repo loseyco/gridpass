@@ -6,7 +6,7 @@ import { Loader2, Save, User as UserIcon, ChevronDown, Check, Wrench, X, Upload 
 import {
     Trophy, Briefcase, User, AlertTriangle, History, Image as ImageIcon, FileText, Warehouse
 } from 'lucide-react';
-import CareerEditor from '@/app/dashboard/profile/career-editor';
+import CareerHistoryEditor from '@/components/profile/CareerHistoryEditor';
 import { CareerEntry } from '@/types/career';
 
 import { SCHEMA_CATEGORIES } from '@/lib/profile-schema';
@@ -402,7 +402,7 @@ export default function ProfileEditor({ targetUserId }: ProfileEditorProps) {
                 {/* Form Content */}
                 <div className="lg:col-span-3 space-y-6">
                     {activeSection === 'career' ? (
-                        <CareerEditor entries={careerHistory} onChange={handleCareerUpdate} />
+                        <CareerHistoryEditor entries={careerHistory} onChange={handleCareerUpdate} />
                     ) : activeSection === 'media' ? (
                         <div className="bg-neutral-900 border border-white/5 rounded-xl p-6 md:p-8 animate-fade-in">
                             <div className="mb-6">

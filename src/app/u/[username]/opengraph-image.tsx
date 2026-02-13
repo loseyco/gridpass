@@ -2,7 +2,7 @@
 import { ImageResponse } from 'next/og';
 import { createClient } from '@supabase/supabase-js';
 
-// export const runtime = 'edge';
+export const runtime = 'edge';
 
 export const alt = 'GridPass Profile';
 export const size = {

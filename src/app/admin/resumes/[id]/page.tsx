@@ -3,8 +3,16 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { updateResumeLeadStatus, updatePaymentLink, updatePaymentStatus } from '@/app/actions/resume';
 import { capturePreAuthPayment, grantVerifiedBadge } from '@/app/actions/stripe-capture';
+import { syncToProfile } from '@/app/actions/admin-resume';
 import ResumeTools from '@/components/admin/ResumeTools';
-import { ArrowLeft, User, Briefcase, Mail, Phone, ExternalLink, Calendar, CreditCard, CheckCircle, Save, DollarSign, Award } from 'lucide-react';
+import ResumeFieldChecklist from '@/components/admin/ResumeFieldChecklist';
+import ResumeUploader from '@/components/admin/ResumeUploader';
+import { ProfilePhotoUploader } from '@/components/admin/ProfilePhotoUploader';
+import { BackgroundImageUploader } from '@/components/admin/BackgroundImageUploader';
+import { AIVerificationPanel } from '@/components/admin/AIVerificationPanel';
+import { ArrowLeft, User, Briefcase, Mail, Phone, ExternalLink, Calendar, CreditCard, CheckCircle, Save, DollarSign, Award, RefreshCw, Send } from 'lucide-react';
+import { AIAutoPilot } from '@/components/admin/AIAutoPilot';
+import { generateAndSendPaymentLink } from '@/app/actions/resume';
 
 export default async function ResumeLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();
@@ -74,146 +82,21 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-
-                        {/* Header */}
-                        <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
-                            <h1 className="text-3xl font-bold mb-2">{lead.name}</h1>
-                            <div className="flex items-center gap-4 text-neutral-400 text-sm">
-                                <span className="flex items-center gap-1">
-                                    <Mail className="w-4 h-4" />
-                                    {lead.email}
-                                </span>
-                                {lead.phone && (
-                                    <span className="flex items-center gap-1">
-                                        <Phone className="w-4 h-4" />
-                                        {lead.phone}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Details */}
-                        <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
-                            <div className="flex justify-between items-start mb-6">
-                                <h2 className="text-xl font-bold flex items-center gap-2 text-indigo-400">
-                                    <Briefcase className="w-5 h-5" />
-                                    Professional Info
-                                </h2>
-                                {lead.photo_url && (
-                                    <img src={lead.photo_url} alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-white/10" />
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <label className="text-xs text-neutral-500 uppercase tracking-widest block mb-1">Current Role</label>
-                                    <p className="font-bold">{lead.job_title || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-neutral-500 uppercase tracking-widest block mb-1">Experience</label>
-                                    <p className="font-bold">{lead.experience_years}</p>
-                                </div>
-                            </div>
-
-                            {/* Metadata Display */}
-                            {lead.metadata && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-white/5 rounded-lg border border-white/5">
-                                    {lead.metadata.home_airport && (
-                                        <div>
-                                            <label className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Home Airport</label>
-                                            <p className="font-mono text-sm">{lead.metadata.home_airport}</p>
-                                        </div>
-                                    )}
-                                    {lead.metadata.helmet_size && (
-                                        <div>
-                                            <label className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Helmet</label>
-                                            <p className="font-mono text-sm">{lead.metadata.helmet_size}</p>
-                                        </div>
-                                    )}
-                                    {lead.metadata.looking_for && (
-                                        <div className="col-span-2 md:col-span-1">
-                                            <label className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Seeking</label>
-                                            <p className="font-bold text-sm text-indigo-400">{lead.metadata.looking_for}</p>
-                                        </div>
-                                    )}
-                                    {lead.metadata.salary_expectations && (
-                                        <div className="col-span-2 md:col-span-1">
-                                            <label className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-1">Rate</label>
-                                            <p className="font-mono text-sm text-emerald-400">{lead.metadata.salary_expectations}</p>
-                                        </div>
-                                    )}
-                                    {lead.metadata.skills && lead.metadata.skills.length > 0 && (
-                                        <div className="col-span-2 md:col-span-4 mt-2 pt-2 border-t border-white/5">
-                                            <label className="text-[10px] text-neutral-500 uppercase tracking-widest block mb-2">Skills</label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {lead.metadata.skills.map((skill: string, i: number) => (
-                                                    <span key={i} className="text-xs bg-neutral-800 px-2 py-1 rounded text-neutral-300 border border-white/5">
-                                                        {skill}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <label className="text-xs text-neutral-500 uppercase tracking-widest block mb-1">Bio / Notes</label>
-                                <p className="text-neutral-300 bg-black/20 p-4 rounded-lg whitespace-pre-wrap">
-                                    {lead.bio || 'No bio provided.'}
-                                </p>
-                            </div>
-
-                            <div className="space-y-3">
-                                <h3 className="text-xs text-neutral-500 uppercase tracking-widest border-b border-white/5 pb-1">Links & Files</h3>
-
-                                {lead.resume_url && (
-                                    <a href={lead.resume_url} target="_blank" className="flex items-center gap-2 text-white bg-white/5 hover:bg-white/10 p-3 rounded-lg transition-colors border border-white/10">
-                                        <Save className="w-4 h-4 text-orange-400" />
-                                        Download Resume (PDF)
-                                    </a>
-                                )}
-
-                                {lead.linkedin_url && (
-                                    <a href={lead.linkedin_url} target="_blank" className="flex items-center gap-2 text-blue-400 hover:underline">
-                                        <ExternalLink className="w-4 h-4" />
-                                        LinkedIn Profile
-                                    </a>
-                                )}
-                                {lead.indeed_url && (
-                                    <a href={lead.indeed_url} target="_blank" className="flex items-center gap-2 text-blue-600 hover:underline">
-                                        <ExternalLink className="w-4 h-4" />
-                                        Indeed Profile
-                                    </a>
-                                )}
-                                {lead.portfolio_url && (
-                                    <a href={lead.portfolio_url} target="_blank" className="flex items-center gap-2 text-emerald-400 hover:underline">
-                                        <ExternalLink className="w-4 h-4" />
-                                        Portfolio URL
-                                    </a>
-                                )}
-
-                                {/* Social Links */}
-                                {lead.social_links && (
-                                    <div className="pt-2 flex flex-wrap gap-3">
-                                        {Object.entries(lead.social_links).map(([key, value]) => {
-                                            if (!value) return null;
-                                            return (
-                                                <a key={key} href={value as string} target="_blank" className="text-xs bg-neutral-800 px-2 py-1 rounded text-neutral-400 hover:text-white capitalize">
-                                                    {key}
-                                                </a>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
+                    {/* Auto-Pilot Section - Full Width */}
+                    <div className="lg:col-span-3">
+                        <AIAutoPilot
+                            leadId={lead.id}
+                            leadName={lead.name}
+                            resumeUrl={lead.resume_url}
+                        />
                     </div>
 
-                    {/* Sidebar Actions */}
+                    {/* Left Column - Field Checklist */}
+                    <div className="lg:col-span-2">
+                        <ResumeFieldChecklist leadId={lead.id} leadData={lead} />
+                    </div>
+
+                    {/* Right Column - Actions */}
                     <div className="space-y-6">
 
                         {/* Status Manager */}
@@ -241,7 +124,7 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
                             </form>
                         </div>
 
-                        {/* Payment Link */}
+                        {/* Payment & Verification */}
                         <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
                             <h3 className="font-bold mb-4 text-neutral-300 flex items-center gap-2">
                                 <CreditCard className="w-4 h-4" />
@@ -307,18 +190,23 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
                                             Grant Verified Badge
                                         </button>
                                     </form>
-                                )}
-
-                                {/* Show Payment Link if exists */}
-                                {lead.stripe_payment_link && (
-                                    <a
-                                        href={lead.stripe_payment_link}
-                                        target="_blank"
-                                        className="flex items-center justify-center gap-2 w-full bg-neutral-800 text-neutral-300 border border-white/10 font-bold py-2 rounded-lg hover:bg-neutral-700 transition-colors"
-                                    >
-                                        <ExternalLink className="w-4 h-4" />
-                                        View Payment Link
-                                    </a>
+                                )}\n\n                                {/* Send Payment Link */}
+                                {(!lead.payment_status || lead.payment_status === 'unpaid') && (
+                                    <form action={async () => {
+                                        'use server';
+                                        const result = await generateAndSendPaymentLink(lead.id);
+                                        if (!result.success) {
+                                            console.error('Failed to send payment link:', result.error);
+                                        }
+                                    }}>
+                                        <button
+                                            type="submit"
+                                            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Send Payment Link via Email
+                                        </button>
+                                    </form>
                                 )}
 
                                 {/* Manual Override Controls (collapsed) */}
@@ -352,17 +240,79 @@ export default async function ResumeLeadDetailPage({ params }: { params: Promise
                             </div>
                         </div>
 
+                        {/* AI Verification */}
+                        <AIVerificationPanel
+                            leadId={lead.id}
+                            resumeUrl={lead.resume_url}
+                            currentData={lead}
+                        />
+
+                        {/* Resume Upload */}
+                        <ResumeUploader leadId={lead.id} currentResumeUrl={lead.resume_url} />
+
+                        {/* Profile Photo */}
+                        <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
+                            <h3 className="font-bold mb-4 text-neutral-300">Profile Photo</h3>
+                            <ProfilePhotoUploader
+                                leadId={lead.id}
+                                currentPhotoUrl={lead.photo_url}
+                            />
+                        </div>
+
+                        {/* Background Image */}
+                        <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
+                            <h3 className="font-bold mb-4 text-neutral-300">Background Image</h3>
+                            <BackgroundImageUploader
+                                leadId={lead.id}
+                                currentBackgroundUrl={lead.metadata?.background_url}
+                            />
+                        </div>
+
+                        {/* Sync to Profile */}
+                        <div className="border border-white/10 bg-neutral-900/30 rounded-xl p-6">
+                            <h3 className="font-bold mb-4 text-neutral-300 flex items-center gap-2">
+                                <RefreshCw className="w-4 h-4" />
+                                Profile Sync
+                            </h3>
+                            <form action={async () => {
+                                'use server';
+                                const result = await syncToProfile(lead.id);
+                                if (!result.success) {
+                                    console.error('Sync failed:', result.error);
+                                }
+                            }}>
+                                <button
+                                    type="submit"
+                                    disabled={lead.payment_status !== 'paid'}
+                                    className={`
+                                        w-full flex items-center justify-center gap-2 font-bold py-3 rounded-lg transition-all
+                                        ${lead.payment_status === 'paid'
+                                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg'
+                                            : 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
+                                        }
+                                    `}
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                    Push Data to Profile
+                                </button>
+                                {lead.payment_status !== 'paid' && (
+                                    <p className="text-xs text-neutral-500 mt-2 text-center">
+                                        Payment must be captured first
+                                    </p>
+                                )}
+                            </form>
+                        </div>
+
                         {/* Resume Tools (Research + Claim) */}
                         <ResumeTools
                             name={lead.name}
                             email={lead.email}
                             jobTitle={lead.job_title}
-                            userId={userProfile?.id} // CHANGED: Pass userId
+                            userId={userProfile?.id}
                             username={userProfile?.username}
                             leadStatus={lead.status}
                             initialToken={existingToken}
                         />
-
 
                     </div>
 

@@ -1,7 +1,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, User, Clock, CheckCircle, ExternalLink, Mail, ArrowRight } from 'lucide-react';
+import { ShieldCheck, User, Clock, CheckCircle, ExternalLink, Mail, ArrowRight, Send } from 'lucide-react';
+import { generateAndSendPaymentLink } from '@/app/actions/resume';
 
 export default async function ResumeLeadsPage() {
     const supabase = await createClient();
@@ -84,13 +85,33 @@ export default async function ResumeLeadsPage() {
                                         {new Date(lead.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="p-4">
-                                        <Link
-                                            href={`/admin/resumes/${lead.id}`}
-                                            className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 text-sm font-medium"
-                                        >
-                                            View
-                                            <ArrowRight className="w-4 h-4" />
-                                        </Link>
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={`/admin/resumes/${lead.id}`}
+                                                className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 text-sm font-medium"
+                                            >
+                                                View
+                                                <ArrowRight className="w-4 h-4" />
+                                            </Link>
+                                            {(lead.payment_status === 'unpaid' || !lead.payment_status) && (
+                                                <form action={async () => {
+                                                    'use server';
+                                                    const result = await generateAndSendPaymentLink(lead.id);
+                                                    if (!result.success) {
+                                                        console.error('Failed to send payment link:', result.error);
+                                                    }
+                                                }}>
+                                                    <button
+                                                        type="submit"
+                                                        className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-sm font-medium"
+                                                        title="Send payment link via email"
+                                                    >
+                                                        <Send className="w-4 h-4" />
+                                                        Pay
+                                                    </button>
+                                                </form>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

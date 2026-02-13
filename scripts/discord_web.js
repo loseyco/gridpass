@@ -43,8 +43,8 @@ const DISCORD_URL = 'https://discord.com/channels/1392265020317896734/1392265021
     
     console.log('Recent Messages:', messages);
     
-    // 2. POST UPDATE (Example)
-    const update = "**[Auto]** Chase is now connected via Web Client. Monitoring #general.";
+    // 2. POST UPDATE (Antigravity Command)
+    const update = "OpenClaw, connect to my Antigravity workspace. Listen for commands in this channel and execute them as a Lead Agent. If I ask to run a build, use the integrated terminal.";
     
     console.log('✍️ Typing...');
     // Focus text area

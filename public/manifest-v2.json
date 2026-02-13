@@ -1,0 +1,24 @@
+{
+    "name": "GridPass V2",
+    "short_name": "GridPass",
+    "description": "Mobile-first experience for automotive professionals",
+    "start_url": "/v2",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#e31e24",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo-square.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

@@ -36,6 +36,7 @@ export async function registerUser(formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('full_name') as string;
+    const phone = formData.get('phone') as string;
     const trackingId = formData.get('tracking_id') as string | null;
 
     if (!email || !password) {
@@ -60,10 +61,13 @@ export async function registerUser(formData: FormData) {
     const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
+        phone, // Pass phone number (Auth User)
         email_confirm: true,
+        phone_confirm: true, // Auto-confirm phone if passed
         user_metadata: {
             full_name: fullName,
             username: username, // Pass to metadata as well
+            phone: phone, // Pass to metadata as well
             tracking_id: trackingId || null
         }
     });

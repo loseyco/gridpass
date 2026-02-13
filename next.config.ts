@@ -33,9 +33,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   async redirects() {
     return [
       {
@@ -51,6 +48,11 @@ const nextConfig: NextConfig = {
       {
         source: '/dashboard/tools',
         destination: '/collections',
+        permanent: false,
+      },
+      {
+        source: '/v2/register',
+        destination: '/v2/join',
         permanent: false,
       },
     ];

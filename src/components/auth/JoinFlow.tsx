@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Loader2, ArrowRight, Mail, Lock, UserPlus, LogIn, ChevronLeft, Shield, Users, ChevronRight, User } from 'lucide-react';
+import { Loader2, ArrowRight, Mail, Lock, UserPlus, LogIn, ChevronLeft, Shield, Users, ChevronRight, User, Phone } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { registerUser } from '@/app/actions/auth';
 import Link from 'next/link';
@@ -14,17 +14,23 @@ interface Props {
     teamSlug?: string;
     inviteCode?: string;
     initialEmail?: string; // Pre-fill email for "Claim" flow
+    hideFounder?: boolean;
+    theme?: 'v1' | 'v2';
+    defaultToRegister?: boolean;
+    loginUrl?: string;
 }
 
-export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCode, initialEmail }: Props) {
+export default function JoinFlow(props: Props) {
+    const { invite, user, trackingId, teamSlug, inviteCode, initialEmail, theme = 'v1', defaultToRegister = false, loginUrl } = props;
     const [loading, setLoading] = useState(false);
     // If we have an email, default to register mode immediately
     const [mode, setMode] = useState<'initial' | 'view' | 'login' | 'register'>(
-        invite ? 'view' : (initialEmail ? 'register' : 'initial')
+        invite ? 'view' : (initialEmail || defaultToRegister ? 'register' : 'initial')
     );
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState(initialEmail || '');
     const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
     const [error, setError] = useState('');
 
     const router = useRouter();
@@ -56,7 +62,8 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
             if (invite) {
                 await handleClaim();
             } else {
-                router.push('/dashboard');
+                const next = new URLSearchParams(window.location.search).get('next');
+                router.push(next || '/v2');
             }
         } catch (err: any) {
             setError(err.message);
@@ -73,8 +80,9 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
         const emailTrimmed = email.trim();
         const passwordTrimmed = password.trim();
         const nameTrimmed = fullName.trim();
+        const phoneTrimmed = phone.trim();
 
-        if (!emailTrimmed || !passwordTrimmed || !nameTrimmed) {
+        if (!emailTrimmed || !passwordTrimmed || !nameTrimmed || !phoneTrimmed) {
             setError('Please fill in all fields.');
             setLoading(false);
             return;
@@ -93,6 +101,7 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
             formData.append('email', emailTrimmed);
             formData.append('password', passwordTrimmed);
             formData.append('full_name', nameTrimmed);
+            formData.append('phone', phoneTrimmed);
             if (trackingId) {
                 formData.append('tracking_id', trackingId);
             }
@@ -116,7 +125,8 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
             if (invite) {
                 await handleClaim();
             } else {
-                router.push('/dashboard?welcome=true');
+                const next = new URLSearchParams(window.location.search).get('next');
+                router.push(next || '/v2?welcome=true');
                 router.refresh();
             }
         } catch (err: any) {
@@ -196,22 +206,24 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
                 )}
 
                 {/* 1. Founder Card */}
-                <Link href="/founder/checkout" className="group relative block w-full">
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-red-600 rounded-2xl opacity-75 group-hover:opacity-100 blur transition duration-500"></div>
-                    <div className="relative flex items-center justify-between p-6 bg-neutral-900 rounded-2xl border border-white/10 hover:bg-neutral-800/90 transition-all">
-                        <div className="flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-red-600 flex items-center justify-center shadow-lg shadow-amber-900/40">
-                                <Shield className="w-6 h-6 text-white fill-white/20" />
+                {!props.hideFounder && (
+                    <Link href="/founder/checkout" className="group relative block w-full">
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-red-600 rounded-2xl opacity-75 group-hover:opacity-100 blur transition duration-500"></div>
+                        <div className="relative flex items-center justify-between p-6 bg-neutral-900 rounded-2xl border border-white/10 hover:bg-neutral-800/90 transition-all">
+                            <div className="flex items-center gap-5">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-red-600 flex items-center justify-center shadow-lg shadow-amber-900/40">
+                                    <Shield className="w-6 h-6 text-white fill-white/20" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-amber-500 text-xs font-bold uppercase tracking-wider mb-0.5">Limited Access</div>
+                                    <h3 className="text-xl font-bold text-white">Founding 50</h3>
+                                    <p className="text-neutral-400 text-xs">Lifetime Membership + Badge</p>
+                                </div>
                             </div>
-                            <div className="text-left">
-                                <div className="text-amber-500 text-xs font-bold uppercase tracking-wider mb-0.5">Limited Access</div>
-                                <h3 className="text-xl font-bold text-white">Founding 50</h3>
-                                <p className="text-neutral-400 text-xs">Lifetime Membership + Badge</p>
-                            </div>
+                            <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
                         </div>
-                        <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                    </div>
-                </Link>
+                    </Link>
+                )}
 
                 {/* 2. Driver Card (Triggers Inline Register) */}
                 <button onClick={() => setMode('register')} className="group block w-full text-left">
@@ -244,12 +256,14 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
     // ----------------------------------------------------
     return (
         <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-2xl p-8 shadow-2xl relative z-10 animate-fade-in-up mx-auto">
-            <button
-                onClick={() => setMode(invite ? 'view' : 'initial')}
-                className="text-neutral-500 hover:text-white mb-6 flex items-center gap-1 text-sm"
-            >
-                <ChevronLeft className="w-4 h-4" /> Back
-            </button>
+            {(!defaultToRegister || mode === 'login') && (
+                <button
+                    onClick={() => setMode(invite ? 'view' : 'initial')}
+                    className="text-neutral-500 hover:text-white mb-6 flex items-center gap-1 text-sm"
+                >
+                    <ChevronLeft className="w-4 h-4" /> Back
+                </button>
+            )}
 
             <h2 className="text-2xl font-bold text-white mb-6 text-center">
                 {mode === 'login' ? 'Welcome Back' : (initialEmail ? 'Set Your Password' : 'Create Account')}
@@ -263,11 +277,18 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
 
             <form onSubmit={mode === 'login' ? handleLogin : handleRegister} className="space-y-4">
                 {mode === 'register' && (
-                    <div className="relative">
-                        <User className="w-5 h-5 text-neutral-500 absolute left-3 top-3.5" />
-                        <input type="text" required placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)}
-                            className="w-full bg-neutral-950 border border-neutral-800 p-3 pl-10 rounded text-white focus:border-amber-500 outline-none" />
-                    </div>
+                    <>
+                        <div className="relative">
+                            <User className="w-5 h-5 text-neutral-500 absolute left-3 top-3.5" />
+                            <input type="text" required placeholder="Full Name" value={fullName} onChange={e => setFullName(e.target.value)}
+                                className="w-full bg-neutral-950 border border-neutral-800 p-3 pl-10 rounded text-white focus:border-amber-500 outline-none" />
+                        </div>
+                        <div className="relative">
+                            <Phone className="w-5 h-5 text-neutral-500 absolute left-3 top-3.5" />
+                            <input type="tel" required placeholder="Phone Number" value={phone} onChange={e => setPhone(e.target.value)}
+                                className="w-full bg-neutral-950 border border-neutral-800 p-3 pl-10 rounded text-white focus:border-amber-500 outline-none" />
+                        </div>
+                    </>
                 )}
                 <div className="relative">
                     <Mail className="w-5 h-5 text-neutral-500 absolute left-3 top-3.5" />
@@ -280,7 +301,7 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
                         className="w-full bg-neutral-950 border border-neutral-800 p-3 pl-10 rounded text-white focus:border-amber-500 outline-none" />
                 </div>
 
-                <button type="submit" disabled={loading} className={`w-full font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 ${mode === 'register' ? 'bg-[#635BFF] hover:bg-[#5851E1] text-white' : 'bg-white hover:bg-neutral-200 text-black'}`}>
+                <button type="submit" disabled={loading} className={`w-full font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 ${theme === 'v2' ? 'v2-btn v2-btn-primary' : (mode === 'register' ? 'bg-[#635BFF] hover:bg-[#5851E1] text-white' : 'bg-white hover:bg-neutral-200 text-black')}`}>
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                         <>
                             {mode === 'login' ? (invite ? 'Log In & Claim' : 'Log In') : (invite ? 'Create & Claim' : 'Create Account')}
@@ -288,6 +309,27 @@ export default function JoinFlow({ invite, user, trackingId, teamSlug, inviteCod
                         </>
                     )}
                 </button>
+
+                {mode === 'register' && !invite && (
+                    <div className="text-center mt-4">
+                        {loginUrl ? (
+                            <Link href={loginUrl} className="text-neutral-400 text-sm hover:text-white transition-colors">
+                                Already have an account? <span className="font-bold underline">Log in</span>
+                            </Link>
+                        ) : (
+                            <button type="button" onClick={() => setMode('login')} className="text-neutral-400 text-sm hover:text-white transition-colors">
+                                Already have an account? <span className="font-bold underline">Log in</span>
+                            </button>
+                        )}
+                    </div>
+                )}
+                {mode === 'login' && !invite && (
+                    <div className="text-center mt-4">
+                        <button type="button" onClick={() => setMode('register')} className="text-neutral-400 text-sm hover:text-white transition-colors">
+                            Need an account? <span className="font-bold underline">Sign up</span>
+                        </button>
+                    </div>
+                )}
             </form>
         </div>
     );

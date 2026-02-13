@@ -205,28 +205,47 @@ export async function submitResumeLead(formData: FormData) {
                 claimPath = `/u/${username}?secret=${token}`;
             }
 
-            // NEW: Create checkout session for payment pre-auth
-            const sessionData = await createResumeCheckoutSession(
-                leadDataResponse.id,
-                rawData.email,
-                rawData.name
-            );
+            // Check if user wants premium service
+            const wantsPremiumService = formData.get('wants_premium_service') === 'true';
 
-            if (sessionData && sessionData.clientSecret) {
-                // Update lead with payment session info
+            // Only create checkout session if user wants premium service
+            if (wantsPremiumService) {
+                const sessionData = await createResumeCheckoutSession(
+                    leadDataResponse.id,
+                    rawData.email,
+                    rawData.name
+                );
+
+                if (sessionData && sessionData.clientSecret) {
+                    // Update lead with payment session info
+                    await supabaseAdmin
+                        .from('resume_leads')
+                        .update({
+                            stripe_payment_link: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/resume-builder/checkout?session_id=${sessionData.sessionId}`,
+                        })
+                        .eq('id', leadDataResponse.id);
+
+                    // Return checkout redirect for premium service
+                    return {
+                        success: true,
+                        checkoutPath: `/resume-builder/checkout?session_id=${sessionData.sessionId}&lead_id=${leadDataResponse.id}`,
+                        leadId: leadDataResponse.id,
+                        clientSecret: sessionData.clientSecret
+                    };
+                }
+            } else {
+                // Free profile - mark as free tier and return claim path
                 await supabaseAdmin
                     .from('resume_leads')
                     .update({
-                        stripe_payment_link: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/resume-builder/checkout?session_id=${sessionData.sessionId}`,
+                        payment_status: 'free', // Mark as free tier
                     })
                     .eq('id', leadDataResponse.id);
 
-                // Return checkout redirect instead of direct profile access
+                // Return claim path directly for free profile
                 return {
                     success: true,
-                    checkoutPath: `/resume-builder/checkout?session_id=${sessionData.sessionId}&lead_id=${leadDataResponse.id}`,
-                    leadId: leadDataResponse.id,
-                    clientSecret: sessionData.clientSecret
+                    claimPath: claimPath
                 };
             }
         }
@@ -342,6 +361,81 @@ export async function getNewResumeCount() {
     }
 
     return count || 0;
+}
+
+/**
+ * Generate a Stripe payment link and send it to the applicant via email
+ */
+export async function generateAndSendPaymentLink(leadId: string) {
+    const supabase = await createClient();
+
+    // Auth check
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Unauthorized' };
+
+    // Fetch the lead
+    const { data: lead, error: fetchError } = await supabaseAdmin
+        .from('resume_leads')
+        .select('*')
+        .eq('id', leadId)
+        .single();
+
+    if (fetchError || !lead) {
+        console.error('Error fetching lead:', fetchError);
+        return { error: 'Lead not found' };
+    }
+
+    // Check if already paid
+    if (lead.payment_status === 'paid' || lead.payment_status === 'authorized') {
+        return { error: 'Payment already completed or authorized' };
+    }
+
+    try {
+        // Create Stripe checkout session
+        const sessionData = await createResumeCheckoutSession(
+            lead.id,
+            lead.email,
+            lead.name
+        );
+
+        if (!sessionData || !sessionData.clientSecret) {
+            return { error: 'Failed to create payment session' };
+        }
+
+        // Construct payment link
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gridpass.app';
+        const paymentLink = `${baseUrl}/resume-builder/checkout?session_id=${sessionData.sessionId}&lead_id=${lead.id}`;
+
+        // Update lead with payment link
+        await supabaseAdmin
+            .from('resume_leads')
+            .update({
+                stripe_payment_link: paymentLink,
+                status: 'contacted',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', leadId);
+
+        // Send email with payment link
+        const { sendPaymentLinkEmail } = await import('@/lib/email');
+        await sendPaymentLinkEmail({
+            to: lead.email,
+            name: lead.name,
+            paymentLink: paymentLink
+        });
+
+        revalidatePath(`/admin/resumes/${leadId}`);
+        revalidatePath('/admin/resumes');
+
+        return {
+            success: true,
+            message: `Payment link sent to ${lead.email}`,
+            paymentLink
+        };
+    } catch (error) {
+        console.error('Error generating payment link:', error);
+        return { error: 'Failed to generate and send payment link' };
+    }
 }
 
 

@@ -1,0 +1,98 @@
+/* GridPass V2 Design Tokens - F1 Modern Theme */
+
+:root {
+    /* Pro Racing Dark Theme - Carbon, Red, White */
+    --v2-bg-primary: #050505;
+    --v2-bg-secondary: #0f0f0f;
+    /* Surface */
+    --v2-bg-elevated: #141414;
+    --v2-bg-card: #0a0a0a;
+
+    /* GridPass Brand Red - F1 Red */
+    --v2-accent-primary: #E10600;
+    /* Racing Red */
+    --v2-accent-primary-hover: #ff1a1a;
+    --v2-accent-light: rgba(225, 6, 0, 0.15);
+
+    /* Text - White to Aluminum */
+    --v2-text-primary: #ffffff;
+    --v2-text-secondary: #e4e4e7;
+    /* Zinc-200 */
+    --v2-text-tertiary: #a1a1aa;
+    /* Zinc-400 */
+
+    /* Borders - Subtle Carbon */
+    --v2-border: #262626;
+    /* Semantic Border */
+    --v2-border-focus: #E10600;
+
+    /* Shadows - Deep Glows */
+    --v2-shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    --v2-shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.6), 0 2px 6px -1px rgba(0, 0, 0, 0.4);
+    --v2-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+    --v2-shadow-accent: 0 0 25px rgba(225, 6, 0, 0.25);
+
+    /* Tab Colors */
+    --v2-tab-home: #E10600;
+    --v2-tab-garage: #ffffff;
+    --v2-tab-network: #ffffff;
+    --v2-tab-profile: #ffffff;
+
+    /* Typography - Clean and Modern */
+    --v2-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    /* Racing Font - Falls back to sans-serif but styled with CSS */
+    --v2-font-racing: 'Inter', sans-serif;
+
+    --v2-text-xs: 0.7rem;
+    --v2-text-sm: 0.8rem;
+    /* 14px */
+    --v2-text-base: 0.95rem;
+    /* 16px (Body) */
+    --v2-text-lg: 1.125rem;
+    --v2-text-xl: 1.25rem;
+    /* 20px (Titles) */
+    --v2-text-2xl: 1.5rem;
+    --v2-text-3xl: 2rem;
+    --v2-text-4xl: 2.5rem;
+
+    --v2-font-normal: 400;
+    --v2-font-medium: 500;
+    --v2-font-semibold: 600;
+    --v2-font-bold: 700;
+    --v2-font-black: 900;
+
+    /* Spacing (Strict 8px Grid) */
+    --v2-space-1: 0.25rem;
+    /* 4px (Half grid) */
+    --v2-space-2: 0.5rem;
+    /* 8px */
+    --v2-space-3: 1rem;
+    /* 16px */
+    --v2-space-4: 1.5rem;
+    /* 24px */
+    --v2-space-5: 2rem;
+    /* 32px */
+    --v2-space-6: 2.5rem;
+    /* 40px */
+
+    /* Radius - Modern Sharpness */
+    --v2-radius-sm: 2px;
+    --v2-radius-md: 4px;
+    --v2-radius-lg: 8px;
+    --v2-radius-xl: 16px;
+
+    /* Effects */
+    --v2-glass-bg: rgba(10, 10, 10, 0.7);
+    --v2-glass-border: rgba(255, 255, 255, 0.08);
+    --v2-glass-blur: 12px;
+
+    /* Z-index */
+    --v2-z-tab-bar: 100;
+    --v2-z-header: 50;
+
+    /* Layout */
+    --v2-tab-bar-height: 64px;
+    --v2-header-height: 60px;
+    --v2-max-width: 480px;
+    --v2-touch-min: 44px;
+}

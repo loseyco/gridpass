@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* V2 Card List Styles */
+.v2-list-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.v2-list-item:last-child {
+  border-bottom: none;
+}
+
+.v2-list-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.v2-list-item-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--v2-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: var(--v2-text-secondary);
+  transition: all 0.2s;
+}
+
+.v2-list-item:hover .v2-list-item-icon {
+  color: var(--v2-accent-primary);
+  background: rgba(227, 30, 36, 0.1);
+}
+
+.v2-list-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.v2-list-item-label {
+  color: white;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.v2-list-item-desc {
+  color: var(--v2-text-secondary);
+  font-size: 0.8rem;
+}
+
+.v2-list-item-chevron {
+  color: var(--v2-text-tertiary);
+  transition: transform 0.2s;
+}
+
+.v2-list-item:hover .v2-list-item-chevron {
+  color: var(--v2-accent-primary);
+  transform: translateX(2px);
+}
