@@ -2,7 +2,12 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config({ path: '.env.local' });
 
 async function listModels() {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    console.log("Environment Keys Check:");
+    console.log("GEMINI_API_KEY:", !!process.env.GEMINI_API_KEY);
+    console.log("GOOGLE_API_KEY:", !!process.env.GOOGLE_API_KEY);
+    console.log("OPENAI_API_KEY:", !!process.env.OPENAI_API_KEY);
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         // There isn't a direct listModels on the client instance in some versions, 
@@ -29,7 +34,7 @@ async function listModels() {
                 console.log(`✅ SUCCESS: ${modelName}`);
                 return; // Found one!
             } catch (e) {
-                console.log(`❌ FAILED: ${modelName} - ${e.message.split(']')[0]}`);
+                console.log(`❌ FAILED: ${modelName} - ${e.message}`);
             }
         }
 

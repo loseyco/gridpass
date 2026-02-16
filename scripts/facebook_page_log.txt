@@ -1,0 +1,125 @@
+[2026-02-13T13:25:47.585Z] 🚀 Starting GridPass Facebook Page Monitor...
+[2026-02-13T13:25:47.591Z] 🚀 Launching Chrome with automation profile...
+[2026-02-13T13:25:47.907Z] 🔗 Navigating to GridPass Facebook page...
+[2026-02-13T13:25:49.834Z] ⏳ Waiting for page to load...
+[2026-02-13T13:25:54.836Z] 🔄 Attempting to switch to page admin view...
+[2026-02-13T13:25:54.840Z] 📄 Page: (2) Facebook
+[2026-02-13T13:25:54.840Z] 🔔 Notifications found: 10
+[2026-02-13T13:25:54.840Z] 📬 Badge indicators: 22
+[2026-02-13T13:25:54.841Z] 📝 Recent posts: 0
+[2026-02-13T13:25:54.841Z] ⚠️ NOTIFICATIONS DETECTED:
+[2026-02-13T13:25:54.842Z]   1. Number of unread notifications
+2
+[2026-02-13T13:25:54.842Z]   2. Unread
+[2026-02-13T13:25:54.843Z]   3. Mark as read
+[2026-02-13T13:25:54.843Z]   4. Mark as read
+[2026-02-13T13:25:54.843Z]   5. Mark as read
+[2026-02-13T13:25:54.843Z]   6. Mark as read
+[2026-02-13T13:25:54.844Z]   7. Mark as read
+[2026-02-13T13:25:54.844Z]   8. Mark as read
+[2026-02-13T13:25:54.844Z]   9. Mark as read
+[2026-02-13T13:25:54.844Z]   10. See previous notifications
+[2026-02-13T13:25:54.845Z] 💾 Detailed results saved to C:\openclaw\gridpass\scripts\facebook_page_result.json
+[2026-02-13T13:25:54.877Z] ✅ Agent completed successfully
+[2026-02-13T13:25:54.877Z] ✅ Done. Browser will stay open.
+[2026-02-13T13:26:30.769Z] 🚀 Starting GridPass Facebook Page Monitor...
+[2026-02-13T13:26:30.772Z] 🚀 Launching Chrome with automation profile...
+[2026-02-13T13:26:30.832Z] 💥 Fatal error: The browser is already running for C:\openclaw\gridpass\chrome_automation_profile. Use a different `userDataDir` or stop the running browser first.
+[2026-02-13T13:26:44.025Z] 🚀 Starting GridPass Facebook Page Monitor...
+[2026-02-13T13:26:44.028Z] 🚀 Launching Chrome with automation profile...
+[2026-02-13T13:26:44.348Z] 🔗 Navigating to GridPass Facebook page...
+[2026-02-13T13:26:45.853Z] ⏳ Waiting for page to load...
+[2026-02-13T13:26:50.856Z] 🔄 Attempting to switch to page admin view...
+[2026-02-13T13:26:50.860Z] 📄 Page: (2) Facebook
+[2026-02-13T13:26:50.860Z] 🔔 Notifications found: 10
+[2026-02-13T13:26:50.860Z] 📬 Badge indicators: 48
+[2026-02-13T13:26:50.861Z] 📝 Recent posts: 2
+[2026-02-13T13:26:50.861Z] ⚠️ NOTIFICATIONS DETECTED:
+[2026-02-13T13:26:50.861Z]   1. Number of unread notifications
+2
+[2026-02-13T13:26:50.862Z]   2. Unread
+[2026-02-13T13:26:50.862Z]   3. Mark as read
+[2026-02-13T13:26:50.862Z]   4. Mark as read
+[2026-02-13T13:26:50.862Z]   5. Mark as read
+[2026-02-13T13:26:50.863Z]   6. Mark as read
+[2026-02-13T13:26:50.863Z]   7. Mark as read
+[2026-02-13T13:26:50.863Z]   8. Mark as read
+[2026-02-13T13:26:50.863Z]   9. Mark as read
+[2026-02-13T13:26:50.863Z]   10. See previous notifications
+[2026-02-13T13:26:50.864Z] 💾 Detailed results saved to C:\openclaw\gridpass\scripts\facebook_page_result.json
+[2026-02-13T13:26:50.907Z] ✅ Agent completed successfully
+[2026-02-13T13:26:50.908Z] ✅ Done. Browser will stay open.
+[2026-02-13T13:28:34.072Z] 🚀 Starting GridPass Facebook Page Monitor...
+[2026-02-13T13:28:34.075Z] 🚀 Launching Chrome with automation profile...
+[2026-02-13T13:28:34.515Z] 🔗 Navigating to GridPass Facebook page...
+[2026-02-13T13:28:36.095Z] ⏳ Waiting for page to load...
+[2026-02-13T13:28:41.107Z] 🔍 Detecting page admin mode...
+[2026-02-13T13:28:41.127Z] 📄 Page: (2) Facebook
+[2026-02-13T13:28:41.128Z] 👤 Page Admin Mode: YES ✅
+[2026-02-13T13:28:41.128Z] 📬 Inbox links found: 2
+[2026-02-13T13:28:41.128Z] 🔔 Notification badges: UnreadMotorsport Jobs: "Hi all, I'm looking for a historic race mechanic, UK based (Leicestershire). Group C and similar..."1dMark as read, UnreadGardner’s Tint & Detail, LLC. added to their story.11hMark as read, Lucas Drew and Kuba Schenk mentioned you in their comments.2d, UnreadAn admin approved your post in Racing Jobs.2dMark as read, UnreadSteve Johnson left a comment in iRacing Community: "If it's something I'm actually interested in..."2dMark as read
+[2026-02-13T13:28:41.129Z] 📝 Recent posts: 2
+[2026-02-13T13:28:41.129Z] ⚠️ NEW ACTIVITY DETECTED:
+[2026-02-13T13:28:41.129Z]   1.  
+number of unread notifications
+2
+manage page
+grid pass
+professional dashboard
+insights
+ad center
+c
+[2026-02-13T13:28:41.130Z]   2.  
+number of unread notifications
+2
+manage page
+grid pass
+professional dashboard
+insights
+ad center
+c
+[2026-02-13T13:28:41.130Z]   3. {"require":[["scheduledserverjs","handle",null,[{"__bbox":{"require":[["relayprefetchedstreamcache",
+[2026-02-13T13:28:41.130Z]   4. {"require":[["scheduledserverjs","handle",null,[{"__bbox":{"require":[["relayprefetchedstreamcache",
+[2026-02-13T13:28:41.130Z]   5. {"require":[["scheduledserverjs","handle",null,[{"__bbox":{"define":[["cr:4562",[],{"__rc":[null,nul
+[2026-02-13T13:28:41.131Z]   6.  
+number of unread notifications
+2
+manage page
+grid pass
+professional dashboard
+insights
+ad center
+c
+[2026-02-13T13:28:41.131Z]   7.  
+number of unread notifications
+2
+manage page
+grid pass
+professional dashboard
+insights
+ad center
+c
+[2026-02-13T13:28:41.131Z]   8.  
+number of unread notifications
+2
+manage page
+grid pass
+professional dashboard
+insights
+ad center
+c
+[2026-02-13T13:28:41.131Z]   9.  
+number of unread notifications
+2
+manage page
+grid pass
+professional dashboard
+insights
+ad center
+c
+[2026-02-13T13:28:41.132Z]   10.  
+number of unread notifications
+2
+[2026-02-13T13:28:41.133Z] 💾 Detailed results saved to C:\openclaw\gridpass\scripts\facebook_page_result.json
+[2026-02-13T13:28:41.170Z] ✅ Agent completed successfully
+[2026-02-13T13:28:41.170Z] ✅ Done. Browser will stay open.

@@ -12,6 +12,8 @@ export default function V2LayoutClient({
 }) {
     const pathname = usePathname()
     const isLandingPage = pathname === '/' && !isLoggedIn
+    const isStudio = pathname?.startsWith('/studio')
+    const isOutreach = pathname?.startsWith('/outreach')
 
     useEffect(() => {
         // Hide V1 navbar, footer, and other chrome elements
@@ -58,12 +60,14 @@ export default function V2LayoutClient({
     }, [])
 
     return (
-        <div className={`v2-container ${isLandingPage ? 'v2-landing-container' : ''}`}>
+        <div className={`v2-container ${isLandingPage ? 'v2-landing-container' : ''} ${isStudio ? 'v2-studio-container' : ''} ${isOutreach ? 'v2-outreach-container' : ''}`}>
             {children}
             <style jsx global>{`
-                /* Full width override for landing page */
+                /* Full width override for landing page AND Studio AND Outreach */
                 @media (min-width: 768px) {
-                    .v2-container.v2-landing-container {
+                    .v2-container.v2-landing-container,
+                    .v2-container.v2-studio-container,
+                    .v2-container.v2-outreach-container {
                         max-width: 100%;
                         border: none;
                         box-shadow: none;

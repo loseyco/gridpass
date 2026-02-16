@@ -102,7 +102,7 @@ export default function MembersClient({ initialProfiles, user }: MembersClientPr
                             </div>
                             <div className="v2-list-item-content">
                                 <span className="v2-list-item-label">{profile.full_name || profile.username}</span>
-                                <span className="v2-list-item-desc">@{profile.username} {profile.role && `• ${profile.role}`}</span>
+                                <span className="v2-list-item-desc">{profile.role}</span>
                             </div>
                             <div className="v2-list-item-chevron">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

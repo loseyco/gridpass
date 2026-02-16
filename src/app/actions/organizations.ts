@@ -17,9 +17,20 @@ export type Organization = {
     status: 'active' | 'pending_claim' | 'verified' | 'archived'
     lead_status?: 'prospect' | 'contacted' | 'interested' | 'client' | 'rejected'
     notes?: string
+    slug?: string
+    site_enabled?: boolean
+    site_template?: string
+    site_schema?: any
+    latitude?: number
+    longitude?: number
 }
 
-export async function getOrganizations(filter?: { type?: string, search?: string }) {
+export async function getOrganizations(filter?: {
+    type?: string,
+    search?: string,
+    site_enabled?: boolean,
+    bounds?: { north: number, south: number, east: number, west: number }
+}) {
     const supabase = await createClient()
 
     let query = supabase
@@ -34,6 +45,18 @@ export async function getOrganizations(filter?: { type?: string, search?: string
 
     if (filter?.search) {
         query = query.ilike('name', `%${filter.search}%`)
+    }
+
+    if (filter?.site_enabled !== undefined) {
+        query = query.eq('site_enabled', filter.site_enabled)
+    }
+
+    if (filter?.bounds) {
+        query = query
+            .gte('latitude', filter.bounds.south)
+            .lte('latitude', filter.bounds.north)
+            .gte('longitude', filter.bounds.west)
+            .lte('longitude', filter.bounds.east)
     }
 
     const { data, error } = await query
@@ -133,3 +156,81 @@ export async function updateOrganizationNotes(id: string, notes: string) {
     if (error) throw error
     revalidatePath('/admin/orgs')
 }
+
+export async function updateOrganizationLocation(id: string, lat: number, lng: number) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Unauthorized')
+
+    // Verify ownership
+    const { data: org } = await supabase
+        .from('organizations')
+        .select('claimed_by')
+        .eq('id', id)
+        .single()
+
+    if (!org || org.claimed_by !== user.id) {
+        throw new Error('Not authorized')
+    }
+
+    const { error } = await supabase
+        .from('organizations')
+        .update({ latitude: lat, longitude: lng })
+        .eq('id', id)
+
+    if (error) throw error
+    revalidatePath('/map')
+    revalidatePath(`/biz/${id}`) // In case it's used there
+}
+
+export async function getOrganizationBySlug(slug: string) {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('slug', slug)
+        .single()
+
+    if (error) {
+        console.error('Error fetching organization:', error)
+        return null
+    }
+
+    return data as Organization
+}
+
+export async function updateOrganizationSite(orgId: string, updates: {
+    site_schema?: object
+    site_template?: string
+    site_enabled?: boolean
+}) {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Unauthorized')
+
+    // Verify ownership
+    const { data: org } = await supabase
+        .from('organizations')
+        .select('claimed_by')
+        .eq('id', orgId)
+        .single()
+
+    if (!org || org.claimed_by !== user.id) {
+        throw new Error('Not authorized to edit this organization')
+    }
+
+    const { error } = await supabase
+        .from('organizations')
+        .update(updates)
+        .eq('id', orgId)
+
+    if (error) throw error
+
+    revalidatePath(`/biz/*`)
+    revalidatePath(`/studio/site/${orgId}`)
+
+    return { success: true }
+}
+

@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 // CONFIG
-// Use your personal Chrome profile (already logged into Facebook, etc.)
-const USER_DATA_DIR = path.join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'User Data');
+// Use dedicated automation profile (first run: login manually, then it's saved)
+const USER_DATA_DIR = path.join(__dirname, '..', 'chrome_automation_profile');
 const MESSAGES_URL = 'https://www.facebook.com/messages';
 const LOG_FILE = path.join(__dirname, 'facebook_agent_log.txt');
 
@@ -20,7 +20,14 @@ async function checkMessages(browser) {
 
     try {
         log('🔗 Navigating to Facebook Messages...');
-        await page.goto(MESSAGES_URL, { waitUntil: 'networkidle2', timeout: 60000 });
+        await page.goto(MESSAGES_URL, {
+            waitUntil: 'domcontentloaded', // Less strict than networkidle2
+            timeout: 90000 // 90 seconds
+        });
+
+        // Wait for manual login if needed (first run)
+        log('⏳ Waiting 60 seconds for manual login (if needed)...');
+        await new Promise(r => setTimeout(r, 60000));
 
         // Wait a bit for messages to load
         await new Promise(r => setTimeout(r, 5000));
@@ -80,24 +87,20 @@ async function checkMessages(browser) {
     try {
         log('🚀 Starting Facebook Message Agent...');
 
+        log('🚀 Launching Chrome with automation profile...');
         browser = await puppeteer.launch({
-            headless: process.env.PUPPETEER_HEADLESS === 'true', // Headless for scheduled runs
+            headless: false, // Always visible
             executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
             userDataDir: USER_DATA_DIR,
             defaultViewport: null,
             args: ['--start-maximized', '--no-sandbox']
         });
-
         const result = await checkMessages(browser);
 
         log('✅ Agent completed successfully');
 
-        // Keep browser open for 10 seconds so you can see the result
-        log('👋 Closing in 10 seconds...');
-        await new Promise(r => setTimeout(r, 10000));
-
-        await browser.close();
-        process.exit(0);
+        // Don't close browser in visible mode - user might want to see results or log in
+        log('✅ Done. Browser will stay open.');
 
     } catch (err) {
         log(`💥 Fatal error: ${err.message}`);

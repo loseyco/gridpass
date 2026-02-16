@@ -1,7 +1,6 @@
 {
     "facebook_groups": [
-        "https://www.facebook.com/groups/373733806854468",
-        "https://www.facebook.com/groups/simracinggeneral"
+        "https://www.facebook.com/groups/feed/"
     ],
     "linkedin_queries": [
         "Sim Racing Team Manager",
@@ -13,10 +12,20 @@
         "Sim Racing",
         "Karting Center",
         "Sim Racing Lounge",
-        "Race Track"
+        "Race Track",
+        "Race Shop",
+        "Car Collection",
+        "Restoration Shop",
+        "Ferrari Challenge",
+        "IMSA Team",
+        " Porsche Club"
     ],
     "outreach_templates": {
-        "resume_builder": "Hi {name}, I noticed you're in sim racing. I'm building a free tool to help drivers create professional resumes for teams/sponsors. Would love your feedback on it: gridpass.app/resume-builder",
-        "community_invite": "Hi {name}, we're building a network for sim racing teams and drivers to connect. We'd love to have you in our Discord: discord.gg/gridpass"
+        "resume_builder": "Hi {name}, I noticed you're looking for a seat. You should create a free driver profile on GridPass (like mine: gridpass.app/u/pjlosey) - it might help you get discovered by teams!",
+        "community_invite": "Hi {name}, we're building a network for sim racing teams and drivers to connect. We'd love to have you in our Discord: discord.gg/gridpass",
+        "tech_support": "Hi {name}, saw your post about {topic}. I do iRacing/PC tech support - message me @pjlosey if you need help! gridpass.app/u/pjlosey",
+        "custom_tool": "Hi {name}, I build custom racing apps (like dashboards). Message @pjlosey if you need a specific tool built. gridpass.app/u/pjlosey",
+        "race_shop": "Hi {name}, I specialize in building custom inventory/management software for race shops (similar to my work with Defender builds). If you need to streamline operations, let's chat. Resume: gridpass.app/u/pjlosey (@pjlosey)",
+        "collector": "Hi {name}, I offer private digital management for high-end car collections. If you need a better way to track history/maintenance, I can help. Profile: gridpass.app/u/pjlosey (@pjlosey)"
     }
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { GarageProject, Vehicle } from '@/types/garage';
-import { createProject } from '@/app/dashboard/profile/project-actions';
+import { createProject } from '@/app/actions/project';
 import { Plus, Folder, Calendar, ArrowRight, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -84,8 +84,8 @@ export default function ProjectList({ vehicle, initialProjects }: ProjectListPro
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <div className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${project.status === 'in_progress' ? 'bg-blue-600/20 text-blue-400' :
-                                        project.status === 'completed' ? 'bg-green-600/20 text-green-400' :
-                                            'bg-neutral-700 text-neutral-300'
+                                    project.status === 'completed' ? 'bg-green-600/20 text-green-400' :
+                                        'bg-neutral-700 text-neutral-300'
                                     }`}>
                                     {project.status.replace('_', ' ')}
                                 </div>

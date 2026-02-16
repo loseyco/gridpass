@@ -18,7 +18,7 @@ export default async function V2Home() {
     // Fetch user profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, avatar_url')
+      .select('id, username, full_name, avatar_url')
       .eq('id', user.id)
       .single()
 

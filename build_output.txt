@@ -1,0 +1,182 @@
+﻿
+> gridpass@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+
+node.exe : ΓÜá The "middleware" file convention 
+is deprecated. Please use "proxy" instead. Learn 
+more: https://nextjs.org/docs/messages/middleware-
+to-proxy
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified:     
+(ΓÜá The "middle...leware-to-proxy:Strin    g) 
+[], RemoteException
+    + FullyQualifiedErrorId : NativeCommandE    
+rror
+ 
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 3 errors:
+./src/app/verify/return/page.tsx:6:1
+Module not found: Can't resolve '../../.css'
+[0m [90m 4 |[39m [36mimport[39m { 
+useRouter[33m,[39m useSearchParams } 
+[36mfrom[39m [32m'next/navigation'[39m
+ [90m 5 |[39m [36mimport[39m [33mLink[39m 
+[36mfrom[39m [32m'next/link'[39m
+[31m[1m>[22m[39m[90m 6 |[39m 
+[36mimport[39m [32m'../../.css'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [36mexport[39m 
+[36mdefault[39m [36mfunction[39m 
+[33mReturnPage[39m() {
+ [90m 9 |[39m     [36mconst[39m 
+[status[33m,[39m setStatus] [33m=[39m 
+useState[33m<[39m[33mstring[39m [33m|[39m 
+[36mnull[39m[33m>[39m([36mnull[39m)[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/verify/return/page.tsx [Client 
+Component Browser]
+    ./src/app/verify/return/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/verify/return/page.tsx [Client 
+Component SSR]
+    ./src/app/verify/return/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/verify/VerifyPageClient.tsx:8:1
+Module not found: Can't resolve '../.css'
+[0m [90m  6 |[39m [36mimport[39m { 
+[33mEmbeddedCheckoutProvider[39m[33m,[39m 
+[33mEmbeddedCheckout[39m } [36mfrom[39m 
+[32m'@stripe/react-stripe-js'[39m
+ [90m  7 |[39m [36mimport[39m { 
+createVerificationCheckoutSession } 
+[36mfrom[39m 
+[32m'@/app/actions/stripe-verification'[39m
+[31m[1m>[22m[39m[90m  8 |[39m 
+[36mimport[39m [32m'../.css'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  9 |[39m
+ [90m 10 |[39m [90m// Initialize Stripe 
+outside component[39m
+ [90m 11 |[39m [36mconst[39m stripePromise 
+[33m=[39m loadStripe(process[33m.[39menv[33m.
+[39m[33mNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY[39m 
+[36mas[39m string)[0m
+
+
+
+Import trace:
+  Server Component:
+    ./src/app/verify/VerifyPageClient.tsx
+    ./src/app/verify/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/u/[username]/page.tsx:18:1
+Module not found: Can't resolve 
+'@/app/_legacy/dashboard/profile/garage-actions'
+[0m [90m 16 |[39m [36mimport[39m { 
+getServices } [36mfrom[39m 
+[32m'@/app/actions/services'[39m[33m;[39m
+ [90m 17 |[39m [36mimport[39m { 
+[33mServiceCard[39m } [36mfrom[39m [32m'@/com
+ponents/services/ServiceCard'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 18 |[39m 
+[36mimport[39m { getGarage } [36mfrom[39m [32
+m'@/app/_legacy/dashboard/profile/garage-actions'
+[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m
+ [90m 19 |[39m [36mimport[39m 
+[33mVehicleCard[39m [36mfrom[39m [32m'@/compo
+nents/profile/VehicleCard'[39m[33m;[39m
+ [90m 20 |[39m [36mimport[39m 
+[33mToolCard[39m [36mfrom[39m [32m'@/componen
+ts/profile/ToolCard'[39m[33m;[39m
+ [90m 21 |[39m [36mimport[39m { 
+[33mVehicle[39m[33m,[39m [33mTool[39m } 
+[36mfrom[39m 
+[32m'@/types/garage'[39m[33m;[39m[0m
+
+Import map: aliased to relative './src/app/_legacy
+/dashboard/profile/garage-actions' inside of 
+[project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> 
+(./src/app/verify/return/page.tsx:6:1)
+    at <unknown> (https://nextjs.org/docs/messages
+/module-not-found)
+    at <unknown> 
+(./src/app/verify/VerifyPageClient.tsx:8:1)
+    at <unknown> (https://nextjs.org/docs/messages
+/module-not-found)
+    at <unknown> 
+(./src/app/u/[username]/page.tsx:18:1)
+    at <unknown> (https://nextjs.org/docs/messages
+/module-not-found)

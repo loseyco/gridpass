@@ -1,6 +1,6 @@
 
-import { getVehicle } from '@/app/dashboard/profile/garage-actions';
-import { getProjects } from '@/app/dashboard/profile/project-actions';
+import { getVehicle } from '@/app/actions/garage';
+import { getProjects } from '@/app/actions/project';
 import { notFound, redirect } from 'next/navigation';
 import ProjectList from '@/components/garage/ProjectList';
 import Link from 'next/link';

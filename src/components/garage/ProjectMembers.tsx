@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { GarageProject, ProjectMember } from '@/types/garage';
-import { addMemberByUserId, removeMember } from '@/app/dashboard/profile/project-actions'; // inviteMember not implemented yet fully
+import { addMemberByUserId, removeMember } from '@/app/actions/project'; // inviteMember not implemented yet fully
 import { Plus, User, Trash2, Shield, Wrench, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

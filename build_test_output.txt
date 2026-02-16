@@ -1,0 +1,648 @@
+﻿
+> gridpass@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+
+node.exe : ΓÜá The "middleware" file 
+convention is deprecated. Please use "proxy" 
+instead. Learn more: https://nextjs.org/docs/
+messages/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified   
+ : (ΓÜá The "middle...leware-to-proxy:S    
+tring) [], RemoteException
+    + FullyQualifiedErrorId : NativeComman   
+ dError
+ 
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 12.7s
+  Skipping validation of types
+  Collecting page data using 7 workers ...
+ΓÜá Using edge runtime on a page currently 
+disables static generation for that page
+  Generating static pages using 7 workers (0/146) ...
+ΓÜá metadataBase property in metadata export 
+is not set for resolving social open graph 
+or twitter images, using 
+"http://localhost:3000". See https://nextjs.o
+rg/docs/app/api-reference/functions/generate-
+metadata#metadatabase
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /profile. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+  Generating static pages using 7 workers (36/146) 
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /register. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá metadataBase property in metadata export 
+is not set for resolving social open graph 
+or twitter images, using 
+"http://localhost:3000". See https://nextjs.o
+rg/docs/app/api-reference/functions/generate-
+metadata#metadatabase
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/_not-found. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/reset-password. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /admin/api. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/resume-builder/checkout. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá metadataBase property in metadata export 
+is not set for resolving social open graph 
+or twitter images, using 
+"http://localhost:3000". See https://nextjs.o
+rg/docs/app/api-reference/functions/generate-
+metadata#metadatabase
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/changelog. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/founder/checkout. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/resume-builder/checkout/return. Please move 
+it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/classifieds/new. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/database. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/resume-builder. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/features. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/resume/success. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/feedback. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá metadataBase property in metadata export 
+is not set for resolving social open graph 
+or twitter images, using 
+"http://localhost:3000". See https://nextjs.o
+rg/docs/app/api-reference/functions/generate-
+metadata#metadatabase
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/automotive. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+  Generating static pages using 7 workers (72/146) 
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/forgot-password. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/businesses. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /founder. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/founder/welcome. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/garage/add. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/growth. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/invites. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /services. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/live. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /social. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/social/new. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /teams. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /garage. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/teams/create. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/operations. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /thank-you. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /admin. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /tools. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/orgs. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/notifications. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/collections/add. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /changelog. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/u/checkout/return. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/update-password. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/collections/public. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+  Generating static pages using 7 workers (109/146) 
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /vehicles. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/collectors. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/resumes. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /verify. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/collections. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/command-center. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/verify/return. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /connect. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /features. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /login. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /link. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /map/new. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /map. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/matchmaking/create/request. Please move it 
+to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/matchmaking/create/seat. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/matchmaking. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /. Please 
+move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/profile/edit/basic. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/roles. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /members. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/social. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/profile/edit/career. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/training. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/admin/users. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in /network. 
+Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/profile/edit/media. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/profile/edit. Please move it to viewport 
+export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/profile/edit/skills. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+ΓÜá Unsupported metadata themeColor is 
+configured in metadata export in 
+/profile/edit/social. Please move it to 
+viewport export instead.
+Read more: https://nextjs.org/docs/app/api-re
+ference/functions/generate-viewport
+Γ£ô Generating static pages using 7 workers (146/146) in 554.3ms
+  Finalizing page optimization ...
+
+Route (app)
+Γöî ╞Æ /
+Γö£ ╞Æ /_not-found
+Γö£ ╞Æ /admin
+Γö£ ╞Æ /admin/analytics
+Γö£ ╞Æ /admin/api
+Γö£ ╞Æ /admin/changelog
+Γö£ ╞Æ /admin/classifieds
+Γö£ ╞Æ /admin/classifieds/[id]
+Γö£ ╞Æ /admin/classifieds/new
+Γö£ ╞Æ /admin/database
+Γö£ ╞Æ /admin/features
+Γö£ ╞Æ /admin/feedback
+Γö£ ╞Æ /admin/growth
+Γö£ ╞Æ /admin/invites
+Γö£ ╞Æ /admin/leads/[id]/edit
+Γö£ ╞Æ /admin/live
+Γö£ ╞Æ /admin/notifications
+Γö£ ╞Æ /admin/operations
+Γö£ ╞Æ /admin/orgs
+Γö£ ╞Æ /admin/orgs/[id]
+Γö£ ╞Æ /admin/pages
+Γö£ ╞Æ /admin/resumes
+Γö£ ╞Æ /admin/resumes/[id]
+Γö£ ╞Æ /admin/roles
+Γö£ ╞Æ /admin/social
+Γö£ ╞Æ /admin/training
+Γö£ ╞Æ /admin/users
+Γö£ ╞Æ /admin/users/[id]
+Γö£ ╞Æ /api/admin/ai-status
+Γö£ ╞Æ /api/admin/audit-log
+Γö£ ╞Æ /api/admin/background-check
+Γö£ ╞Æ /api/admin/cross-reference
+Γö£ ╞Æ /api/admin/health
+Γö£ ╞Æ /api/admin/invite
+Γö£ ╞Æ /api/admin/parse-resume
+Γö£ ╞Æ /api/admin/registry
+Γö£ ╞Æ /api/admin/registry/status
+Γö£ ╞Æ /api/admin/remove-user
+Γö£ ╞Æ /api/admin/reset-roadmap
+Γö£ ╞Æ /api/admin/rls-tests
+Γö£ ╞Æ /api/admin/run-ai-autopilot
+Γö£ ╞Æ /api/admin/send-candidate-report
+Γö£ ╞Æ /api/admin/stats
+Γö£ ╞Æ /api/admin/stubs
+Γö£ ╞Æ /api/admin/system/stats
+Γö£ ╞Æ /api/admin/update-resume-field
+Γö£ ╞Æ /api/admin/update-resume-fields
+Γö£ ╞Æ /api/admin/upload-profile-image
+Γö£ ╞Æ /api/admin/upload-resume
+Γö£ ╞Æ /api/ai/local
+Γö£ ╞Æ /api/applications/[id]
+Γö£ ╞Æ /api/auth
+Γö£ ╞Æ /api/auth/login
+Γö£ ╞Æ /api/auth/logout
+Γö£ ╞Æ /api/auth/recover
+Γö£ ╞Æ /api/auth/refresh
+Γö£ ╞Æ /api/auth/register
+Γö£ ╞Æ /api/auth/reset-password
+Γö£ ╞Æ /api/auth/set-password
+Γö£ ╞Æ /api/career/optimize
+Γö£ ╞Æ /api/career/parse-resume
+Γö£ ╞Æ /api/connect/command
+Γö£ ╞Æ /api/connect/handshake
+Γö£ ╞Æ /api/features
+Γö£ ╞Æ /api/features/[id]
+Γö£ ╞Æ /api/features/[id]/vote
+Γö£ ╞Æ /api/founder/count
+Γö£ ╞Æ /api/founder/join
+Γö£ ╞Æ /api/inventory
+Γö£ ╞Æ /api/inventory/[id]
+Γö£ ╞Æ /api/jobs
+Γö£ ╞Æ /api/jobs/[id]
+Γö£ ╞Æ /api/link-device
+Γö£ ╞Æ /api/listings
+Γö£ ╞Æ /api/notifications
+Γö£ ╞Æ /api/orgs
+Γö£ ╞Æ /api/profile/update
+Γö£ ╞Æ /api/profiles/me/avatar
+Γö£ ╞Æ /api/resumes/me/verify
+Γö£ ╞Æ /api/stripe/checkout
+Γö£ ╞Æ /api/stripe/get-session
+Γö£ ╞Æ /api/stripe/verify-payment
+Γö£ ╞Æ /api/task-lists
+Γö£ ╞Æ /api/tasks
+Γö£ ╞Æ /api/test/backfill-zach
+Γö£ ╞Æ /api/test/list-founders
+Γö£ ╞Æ /api/test/migrate-founders
+Γö£ ╞Æ /api/threads
+Γö£ ╞Æ /api/threads/[id]/messages
+Γö£ ╞Æ /api/trips
+Γö£ ╞Æ /api/uploads/complete
+Γö£ ╞Æ /api/uploads/presign
+Γö£ ╞Æ /api/users
+Γö£ ╞Æ /api/users/me
+Γö£ ╞Æ /api/v1/checkins
+Γö£ ╞Æ /api/v1/credentials
+Γö£ ╞Æ /api/v1/credentials/[id]/verify
+Γö£ ╞Æ /api/v1/events
+Γö£ ╞Æ /api/v1/events/[id]/requirements
+Γö£ ╞Æ /api/v1/roles
+Γö£ ╞Æ /api/v1/roles/[id]/verify
+Γö£ ╞Æ /api/v1/tracks
+Γö£ ╞Æ /api/v1/tracks/[id]
+Γö£ ╞Æ /api/vehicles
+Γö£ ╞Æ /api/voice/webhook
+Γö£ ╞Æ /api/wallet/documents
+Γö£ ╞Æ /api/wallet/shares
+Γö£ ╞Æ /api/webhooks
+Γö£ ╞Æ /api/webhooks/[id]
+Γö£ ╞Æ /api/webhooks/stripe
+Γö£ ╞Æ /automotive
+Γö£ ╞Æ /businesses
+Γö£ ╞Æ /changelog
+Γö£ ╞Æ /claim/[token]
+Γö£ ╞Æ /classifieds
+Γö£ ╞Æ /classifieds/[id]
+Γö£ ╞Æ /collections
+Γö£ ╞Æ /collections/[id]
+Γö£ ╞Æ /collections/[id]/concierge
+Γö£ ╞Æ /collections/add
+Γö£ ╞Æ /collections/public
+Γö£ ╞Æ /collectors
+Γö£ ╞Æ /command-center
+Γö£ ╞Æ /connect
+Γö£ ╞Æ /features
+Γö£ ╞Æ /forgot-password
+Γö£ ╞Æ /founder
+Γö£ ╞Æ /founder/checkout
+Γö£ ╞Æ /founder/welcome
+Γö£ ╞Æ /garage
+Γö£ ╞Æ /garage/add
+Γö£ Γùï /icon.png
+Γö£ ╞Æ /invite/[token]
+Γö£ ╞Æ /jobs
+Γö£ ╞Æ /join
+Γö£ ╞Æ /leaderboard
+Γö£ ╞Æ /link
+Γö£ ╞Æ /login
+Γö£ Γùï /manifest.webmanifest
+Γö£ ╞Æ /map
+Γö£ ╞Æ /map/new
+Γö£ ╞Æ /matchmaking
+Γö£ ╞Æ /matchmaking/create/request
+Γö£ ╞Æ /matchmaking/create/seat
+Γö£ ╞Æ /members
+Γö£ ╞Æ /network
+Γö£ ╞Æ /opengraph-image
+Γö£ ╞Æ /organization/[id]
+Γö£ ╞Æ /profile
+Γö£ ╞Æ /profile/edit
+Γö£ ╞Æ /profile/edit/basic
+Γö£ ╞Æ /profile/edit/career
+Γö£ ╞Æ /profile/edit/media
+Γö£ ╞Æ /profile/edit/skills
+Γö£ ╞Æ /profile/edit/social
+Γö£ ╞Æ /register
+Γö£ ╞Æ /reset-password
+Γö£ ╞Æ /resume-builder
+Γö£ ╞Æ /resume-builder/checkout
+Γö£ ╞Æ /resume-builder/checkout/return
+Γö£ ╞Æ /resume/success
+Γö£ Γùï /robots.txt
+Γö£ ╞Æ /services
+Γö£ Γùï /sitemap.xml
+Γö£ ╞Æ /social
+Γö£ ╞Æ /social/new
+Γö£ ╞Æ /stats
+Γö£ ╞Æ /team/[slug]
+Γö£ ╞Æ /team/[slug]/dashboard
+Γö£ ╞Æ /teams
+Γö£ ╞Æ /teams/create
+Γö£ ╞Æ /test-ai-seo/[id]
+Γö£ ╞Æ /test-u/[slug]
+Γö£ ╞Æ /thank-you
+Γö£ ╞Æ /tools
+Γö£ ╞Æ /u/[username]
+Γö£ ╞Æ /u/[username]/concierge
+Γö£ ╞Æ /u/[username]/opengraph-image
+Γö£ ╞Æ /u/[username]/services/[serviceId]
+Γö£ ╞Æ /u/checkout/return
+Γö£ ╞Æ /update-password
+Γö£ ╞Æ /vehicles
+Γö£ ╞Æ /verify
+Γöö ╞Æ /verify/return
+
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

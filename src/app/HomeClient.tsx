@@ -6,6 +6,8 @@ import { Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell, Wrench, 
 interface HomeClientProps {
   hasUser: boolean
   userProfile: {
+    id: string
+    username: string
     full_name: string
     avatar_url: string | null
   } | null
@@ -65,6 +67,18 @@ export default function HomeClient({
               </div>
               <div className="hero-shine"></div>
             </Link>
+
+            {/* Quick Edit Profile - New Action */}
+            <Link href={`/apps/simple-editor?id=${userProfile?.username || userProfile?.id || ''}`} className="action-card primary-card">
+              <div className="action-icon">
+                <Wrench size={24} />
+              </div>
+              <div className="action-text">
+                <span className="action-label">Quick Edit Info</span>
+                <span className="action-sublabel">Via Simple Editor App</span>
+              </div>
+            </Link>
+
 
             {/* Messages - Coming Soon */}
             <div className="action-card disabled">

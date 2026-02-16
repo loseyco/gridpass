@@ -19,7 +19,8 @@ import {
     X,
     LineChart,
     MessageSquarePlus,
-    Bell
+    Bell,
+    Megaphone
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -143,6 +144,17 @@ export default function AdminSidebar() {
                                         {newResumeCount}
                                     </span>
                                 )}
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Growth */}
+                    <div>
+                        <div className="px-4 mb-2 text-xs font-bold text-neutral-500 uppercase tracking-widest">Growth</div>
+                        <div className="space-y-1">
+                            <Link href="/admin/outreach" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${pathname === '/admin/outreach' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}>
+                                <Megaphone className={`w-5 h-5 ${pathname === '/admin/outreach' ? 'text-white' : 'text-neutral-500'}`} />
+                                Outreach
                             </Link>
                         </div>
                     </div>

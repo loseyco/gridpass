@@ -1,0 +1,41 @@
+{
+  "slug": "simple-editor",
+  "schema": {
+    "props": {
+      "style": {
+        "padding": "2rem"
+      }
+    },
+    "children": [
+      {
+        "bind": "os_user_profiles.first_name",
+        "props": {
+          "name": "fn",
+          "label": "Full Name"
+        },
+        "component": "GridInput",
+        "id": "node_033692eb-1d0e-457e-b764-f3cd6dd5c869"
+      },
+      {
+        "bind": "os_user_profiles.bio",
+        "props": {
+          "name": "bio",
+          "label": "Bio"
+        },
+        "component": "GridInput",
+        "id": "node_6a06aeb1-9d45-41d2-9326-cf381d4cc7d6"
+      },
+      {
+        "id": "node_1771024581416",
+        "component": "GridButton",
+        "props": {
+          "label": "Save",
+          "action": "submit",
+          "variant": "primary"
+        },
+        "children": []
+      }
+    ],
+    "component": "Container"
+  }
+}

@@ -74,7 +74,7 @@ export default function VehicleDetails({ vehicle, parts, logs, setups, readOnly 
         // or just add it to imports
         // But for client component, server actions need to be imported at top
         try {
-            const { updateVehicle } = await import('@/app/dashboard/profile/garage-actions');
+            const { updateVehicle } = await import('@/app/actions/garage');
             await updateVehicle(vehicle.id, data);
             toast.success('Vehicle updated');
             setIsEditing(false);

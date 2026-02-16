@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: Rounded Square Dark Grey -->
+  <rect x="0" y="0" width="100" height="100" rx="20" fill="#111111" />
+  
+  <!-- Mountains: White Silhouette -->
+  <path d="M 20 40 L 35 25 L 50 40 L 65 20 L 80 40 L 85 45 L 15 45 Z" 
+        fill="#FFFFFF" />
+        
+  <!-- Road: Red Curve with perspective -->
+  <path d="M 30 90 C 30 90, 50 60, 90 55 L 90 65 C 60 70, 50 90, 50 90 Z" 
+        fill="#D32F2F" />
+        
+  <!-- Curb: White Dashed Line following the road's inner curve -->
+  <path d="M 28 90 C 28 90, 48 60, 88 55" 
+        fill="none" 
+        stroke="#FFFFFF" 
+        stroke-width="3" 
+        stroke-dasharray="4 4" 
+        stroke-linecap="butt" />
+</svg>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Tool } from '@/types/garage';
-import { getGarage, addTool, updateTool, deleteTool } from '@/app/dashboard/profile/garage-actions';
+import { getGarage, addTool, updateTool, deleteTool } from '@/app/actions/garage';
 import ToolCard from './ToolCard';
 import ImageUpload from '@/components/ui/ImageUpload';
 import { Plus, Loader2, X } from 'lucide-react';

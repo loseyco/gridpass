@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import VehicleForm from '@/components/profile/VehicleForm';
-import { addVehicle } from '@/app/dashboard/profile/garage-actions';
+import { addVehicle } from '@/app/actions/garage';
 import { toast } from 'sonner';
 
 export default function AddVehicleClient({ userId }: { userId: string }) {

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, getButtonClasses } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -24,15 +24,13 @@ export default function AutomotiveConsultingPage() {
                             IndyCar engineering precision brought to your private collection.
                         </p>
                         <div className="flex flex-col gap-2 min-[400px]:flex-row pt-4">
-                            <Button asChild size="lg" className="bg-amber-600 hover:bg-amber-700 text-white border-none">
-                                <Link href="#contact">
-                                    Book a 10-Minute Coffee
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
-                            <Button asChild variant="outline" size="lg" className="border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white">
-                                <Link href="/u/pjlosey">View Full Profile</Link>
-                            </Button>
+                            <Link href="#contact" className={getButtonClasses("default", "lg", "bg-amber-600 hover:bg-amber-700 text-white border-none")}>
+                                Book a 10-Minute Coffee
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                            <Link href="/u/pjlosey" className={getButtonClasses("outline", "lg", "border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white")}>
+                                View Full Profile
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -164,9 +162,9 @@ export default function AutomotiveConsultingPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-2">
-                                <Button className="w-full bg-slate-100 text-slate-900 hover:bg-slate-200" size="lg" asChild>
-                                    <a href="mailto:pj@pjlosey.com">Email: pj@pjlosey.com</a>
-                                </Button>
+                                <a href="mailto:pj@pjlosey.com" className={getButtonClasses("default", "lg", "w-full bg-slate-100 text-slate-900 hover:bg-slate-200")}>
+                                    Email: pj@pjlosey.com
+                                </a>
                                 {/* Placeholder for a real form integration later */}
                                 <div className="relative">
                                     <div className="absolute inset-0 flex items-center">

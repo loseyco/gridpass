@@ -10,8 +10,7 @@ $Date = Get-Date
 Set-Location "C:\openclaw\gridpass"
 
 try {
-    # Run the agent (headless mode for scheduled runs)
-    $env:PUPPETEER_HEADLESS = "true"
+    # Run the agent in VISIBLE mode (no headless)
     node scripts/facebook_message_agent.js | Out-File -FilePath $LogFile -Append
     
     "[$Date] Agent completed. Check facebook_agent_log.txt for details." | Out-File -FilePath $LogFile -Append

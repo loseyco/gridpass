@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Vehicle, Tool } from '@/types/garage';
-import { getGarage, addVehicle, updateVehicle, deleteVehicle, addTool, updateTool, deleteTool } from '@/app/dashboard/profile/garage-actions';
+import { getGarage, addVehicle, updateVehicle, deleteVehicle, addTool, updateTool, deleteTool } from '@/app/actions/garage';
 import VehicleCard from './VehicleCard';
 import ToolCard from './ToolCard';
 import { Plus, Loader2, X, AlertTriangle } from 'lucide-react';

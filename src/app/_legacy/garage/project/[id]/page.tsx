@@ -1,5 +1,5 @@
 
-import { getProject, getProjectTasks, getProjectMembers } from '@/app/dashboard/profile/project-actions';
+import { getProject, getProjectTasks, getProjectMembers } from '@/app/actions/project';
 import { notFound } from 'next/navigation';
 import ProjectBoard from '@/components/garage/ProjectBoard';
 import ProjectMembers from '@/components/garage/ProjectMembers';
@@ -39,8 +39,8 @@ export default async function ProjectPage({ params }: PageProps) {
                             <h1 className="text-3xl font-black italic tracking-tighter uppercase flex items-center gap-3">
                                 {project.name}
                                 <span className={`text-xs px-2 py-1 rounded font-sans not-italic font-bold tracking-normal ${project.status === 'in_progress' ? 'bg-blue-600/20 text-blue-400' :
-                                        project.status === 'completed' ? 'bg-green-600/20 text-green-400' :
-                                            'bg-neutral-800 text-neutral-400'
+                                    project.status === 'completed' ? 'bg-green-600/20 text-green-400' :
+                                        'bg-neutral-800 text-neutral-400'
                                     }`}>
                                     {project.status.replace('_', ' ')}
                                 </span>

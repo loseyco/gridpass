@@ -1,14 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [isIOS, setIsIOS] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
+    if (pathname?.startsWith('/studio')) return;
+
     // Check if already installed (standalone mode)
     const standalone = window.matchMedia('(display-mode: standalone)').matches
     setIsStandalone(standalone)

@@ -101,7 +101,7 @@ export default function PublicProfileClient({
                   </div>
                 )}
                 {/* Validated Verification Badge */}
-                <div className={`driver-badge ${isVerified ? 'verified-active' : 'verified-inactive'}`} title={isVerified ? "Verified Driver" : "Unverified Driver"}>
+                <div className={`driver-badge ${isVerified ? 'verified-active' : 'verified-inactive'}`} title={isVerified ? "Verified Profile" : "Unverified Profile"}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill={isVerified ? "white" : "#666"} />
                   </svg>
@@ -114,6 +114,29 @@ export default function PublicProfileClient({
                 {profile.full_name || profile.username}
               </h1>
               <p className="driver-handle">@{profile.username}</p>
+
+              {/* Location Info - Small */}
+              {(profile.logistics_info?.hometown || profile.logistics_info?.home_airport) && (
+                <div className="driver-location">
+                  {profile.logistics_info?.hometown && (
+                    <span className="location-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      {profile.logistics_info.hometown}
+                    </span>
+                  )}
+                  {profile.logistics_info?.home_airport && (
+                    <span className="location-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+                      </svg>
+                      {profile.logistics_info.home_airport}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Roles / Badges */}
               <div className="v2-badges v2-mt-2 v2-flex v2-gap-2 v2-flex-wrap">
@@ -313,6 +336,55 @@ export default function PublicProfileClient({
 
 
 
+
+          {/* Gear & Physical Stats */}
+          {(profile.physical_info?.helmet_size || profile.physical_info?.suit_size || profile.physical_info?.shoe_size) && (
+            <section className="v2-section">
+              <div className="v2-section-header">
+                <h2 className="v2-heading-2">Gear & Physical Stats</h2>
+              </div>
+              <div className="v2-card">
+                <div className="gear-grid">
+                  {profile.physical_info?.helmet_size && (
+                    <div className="gear-stat">
+                      <div className="gear-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="10" r="8" />
+                          <path d="M12 18c-2.21 0-4-1.79-4-4V10" />
+                        </svg>
+                      </div>
+                      <div className="gear-label">Helmet</div>
+                      <div className="gear-value">{profile.physical_info.helmet_size}</div>
+                    </div>
+                  )}
+                  {profile.physical_info?.suit_size && (
+                    <div className="gear-stat">
+                      <div className="gear-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2c3 0 5 2 5 5v4h2v10H5V11h2V7c0-3 2-5 5-5z" />
+                        </svg>
+                      </div>
+                      <div className="gear-label">Suit</div>
+                      <div className="gear-value">{profile.physical_info.suit_size}</div>
+                    </div>
+                  )}
+                  {profile.physical_info?.shoe_size && (
+                    <div className="gear-stat">
+                      <div className="gear-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 18v-1c0-3.87 3.13-7 7-7h6c3.87 0 7 3.13 7 7v1" />
+                          <ellipse cx="9" cy="20" rx="3" ry="2" />
+                          <ellipse cx="15" cy="20" rx="3" ry="2" />
+                        </svg>
+                      </div>
+                      <div className="gear-label">Shoes</div>
+                      <div className="gear-value">{profile.physical_info.shoe_size}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Recommendations */}
           <section className="v2-section">
@@ -531,6 +603,25 @@ export default function PublicProfileClient({
             opacity: 0.7;
         }
 
+        .driver-location {
+            display: flex;
+            gap: 1rem;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .location-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            color: var(--v2-text-tertiary);
+        }
+
+        .location-item svg {
+            opacity: 0.6;
+        }
+
         .driver-bio {
             margin-top: 12px;
             color: var(--v2-text-primary);
@@ -715,6 +806,44 @@ export default function PublicProfileClient({
         .rec-author-username {
             font-size: 0.8rem;
             color: var(--v2-text-tertiary);
+        }
+
+        .gear-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gear-stat {
+            text-align: center;
+        }
+
+        .gear-icon {
+            background: rgba(227, 30, 36, 0.08);
+            border: 1px solid rgba(227, 30, 36, 0.15);
+            border-radius: 12px;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            color: var(--v2-accent-primary);
+        }
+
+        .gear-label {
+            font-size: 0.7rem;
+            color: var(--v2-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .gear-value {
+            font-size: 1.1rem;
+            color: white;
+            font-weight: 700;
         }
         `}</style>
       </div>

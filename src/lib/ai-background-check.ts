@@ -263,9 +263,9 @@ WARNINGS: ...|...|...`;
         const result = await model.generateContent(prompt);
         const text = result.response.text();
 
-        const summaryMatch = text.match(/SUMMARY:\s*(.+?)(?=CONFIDENCE|$)/s);
-        const confidenceMatch = text.match(/CONFIDENCE:\s*(high|medium|low)/i);
-        const warningsMatch = text.match(/WARNINGS:\s*(.+?)$/s);
+        const summaryMatch = text.match(new RegExp('SUMMARY:\\s*(.+?)(?=CONFIDENCE|$)', 's'));
+        const confidenceMatch = text.match(new RegExp('CONFIDENCE:\\s*(high|medium|low)', 'i'));
+        const warningsMatch = text.match(new RegExp('WARNINGS:\\s*(.+?)$', 's'));
 
         return {
             summary: summaryMatch?.[1]?.trim() || 'Unable to generate summary',

@@ -15,6 +15,10 @@ interface Tab {
 export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const pathname = usePathname()
 
+  if (pathname?.startsWith('/studio')) {
+    return null
+  }
+
   const tabs: Tab[] = [
     {
       id: 'home',

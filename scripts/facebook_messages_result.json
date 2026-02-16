@@ -1,4 +1,33 @@
 {
-  "unreadCount": 0,
-  "conversations": []
+  "unreadCount": 92,
+  "conversations": [
+    {
+      "text": "Chris Murphy\nYes place is awesome\n \n·\n10h\n \n·\nReply?",
+      "isUnread": false
+    },
+    {
+      "text": "Zach Shaw\nYou: Def will bud.\n \n·\n10h",
+      "isUnread": false
+    },
+    {
+      "text": "Kristina Anderson\nKristina sent an attachment.\n \n·\n16h",
+      "isUnread": false
+    },
+    {
+      "text": "Marketplace\n \n·\n18h",
+      "isUnread": false
+    },
+    {
+      "text": "Henry Buckland\nYou: Hey Henry, thanks for connecting! You were one of the first to test the GridPass Resume Builder—really appreciate it. I'm actively building the system right now. I'll be updating y",
+      "isUnread": false
+    },
+    {
+      "text": "Bob Gosch\nYou sent a photo.\n \n·\n1d",
+      "isUnread": false
+    },
+    {
+      "text": "Cesare Smetters\nCesare sent an attachment.\n \n·\n2d",
+      "isUnread": false
+    }
+  ]
 }

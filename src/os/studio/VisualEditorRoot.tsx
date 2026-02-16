@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react'
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, MouseSensor, TouchSensor, DragStartEvent, DragEndEvent, closestCorners } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { Palette, Settings, Monitor, Layers, Move, Code, Eye } from 'lucide-react'
+import { Palette, Settings, Monitor, Layers, Move, Code, Eye, ArrowRight, AlertTriangle } from 'lucide-react'
 import { VisualCanvas } from './VisualCanvas'
 import { PropertyInspector } from './PropertyInspector'
 import { saveAppSchema } from '@/os/actions/studio-actions'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface VisualEditorRootProps {
     app: any
@@ -39,6 +41,33 @@ export function VisualEditorRoot({ app, initialSchema, osData }: VisualEditorRoo
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<'visual' | 'code'>('visual')
     const [mobilePanel, setMobilePanel] = useState<'canvas' | 'inspector'>('canvas')
+
+    // Code Editor State
+    const [schemaJson, setSchemaJson] = useState(JSON.stringify(schema, null, 2))
+    const [codeError, setCodeError] = useState<string | null>(null)
+
+    // Sync Schema -> JSON when in Visual Mode
+    useEffect(() => {
+        if (activeTab === 'visual') {
+            setSchemaJson(JSON.stringify(schema, null, 2))
+        }
+    }, [schema, activeTab])
+
+    const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = e.target.value
+        setSchemaJson(value)
+        try {
+            const parsed = JSON.parse(value)
+            // Basic validation: must be object
+            if (typeof parsed !== 'object' || parsed === null) {
+                throw new Error("Root must be an object")
+            }
+            setSchema(parsed)
+            setCodeError(null)
+        } catch (err: any) {
+            setCodeError(err.message)
+        }
+    }
 
     // Sensors
     const sensors = useSensors(
@@ -261,9 +290,41 @@ export function VisualEditorRoot({ app, initialSchema, osData }: VisualEditorRoo
         setSelectedId(newComponent.id)
     }
 
+    const [isSaving, setIsSaving] = useState(false)
+
     const handleSave = async () => {
-        await saveAppSchema(app.slug, schema)
-        router.refresh()
+        setIsSaving(true)
+        try {
+            const res = await saveAppSchema(app.slug, schema)
+            if (res?.error) {
+                toast.error(res.error)
+            } else {
+                toast.success('App saved successfully')
+                router.refresh()
+            }
+        } catch (e) {
+            toast.error('Failed to save')
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    const handleSaveAndExit = async () => {
+        setIsSaving(true)
+        try {
+            const res = await saveAppSchema(app.slug, schema)
+            if (res?.error) {
+                toast.error(res.error)
+                setIsSaving(false)
+            } else {
+                toast.success('Saved! Exiting...')
+                router.push('/studio')
+                router.refresh()
+            }
+        } catch (e) {
+            toast.error('Failed to save')
+            setIsSaving(false)
+        }
     }
 
     const [mounted, setMounted] = useState(false)
@@ -284,18 +345,42 @@ export function VisualEditorRoot({ app, initialSchema, osData }: VisualEditorRoo
                 {/* ... Header ... */}
                 <div style={{ height: '50px', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 600 }}>{app.name}</span>
-                        <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>v{app.version || '1.0'}</span>
+                        <Link href="/studio" className="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white transition-colors" title="Back to Studio">
+                            <ArrowRight size={16} className="rotate-180" />
+                        </Link>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }} className="hidden sm:inline">{app.name}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <button onClick={() => setActiveTab('visual')} style={{ opacity: activeTab === 'visual' ? 1 : 0.5 }}>
-                            <Move size={18} />
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <div className="flex bg-zinc-800 rounded p-0.5 mr-2">
+                            <button
+                                onClick={() => setActiveTab('visual')}
+                                className={`p-1.5 rounded ${activeTab === 'visual' ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                                title="Visual Editor"
+                            >
+                                <Move size={14} />
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('code')}
+                                className={`p-1.5 rounded ${activeTab === 'code' ? 'bg-zinc-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
+                                title="Code Editor"
+                            >
+                                <Code size={14} />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving || !!codeError}
+                            className="text-zinc-300 hover:text-white px-3 py-1.5 rounded hover:bg-zinc-800 text-xs font-medium transition-colors disabled:opacity-50"
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
                         </button>
-                        <button onClick={() => setActiveTab('code')} style={{ opacity: activeTab === 'code' ? 1 : 0.5 }}>
-                            <Code size={18} />
-                        </button>
-                        <button onClick={handleSave} className="v2-btn v2-btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}>
-                            Save
+                        <button
+                            onClick={handleSaveAndExit}
+                            disabled={isSaving || !!codeError}
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors shadow-sm disabled:opacity-50"
+                        >
+                            {isSaving ? 'Saving...' : 'Save & Exit'}
                         </button>
                     </div>
                 </div>
@@ -303,7 +388,7 @@ export function VisualEditorRoot({ app, initialSchema, osData }: VisualEditorRoo
                 {/* Main Workspace */}
                 <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-                    {/* Center: Canvas */}
+                    {/* Center: Canvas or Code */}
                     <div style={{
                         flex: 1,
                         background: '#111',
@@ -311,63 +396,105 @@ export function VisualEditorRoot({ app, initialSchema, osData }: VisualEditorRoo
                         flexDirection: 'column',
                     }}>
                         {/* Viewport Toolbar */}
-                        <div style={{ height: '40px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                            <Monitor size={14} color="#666" />
-                            <span style={{ fontSize: '0.8rem', color: '#666' }}>Canvas</span>
+                        <div style={{ height: '40px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: '#09090b' }}>
+                            {activeTab === 'visual' ? (
+                                <>
+                                    <Monitor size={14} color="#666" />
+                                    <span style={{ fontSize: '0.8rem', color: '#666' }}>Canvas</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Code size={14} color="#666" />
+                                    <span style={{ fontSize: '0.8rem', color: '#666' }}>JSON Schema</span>
+                                    {codeError && (
+                                        <div className="flex items-center gap-1 text-red-500 ml-4 animate-pulse">
+                                            <AlertTriangle size={12} />
+                                            <span style={{ fontSize: '0.75rem' }}>Invalid JSON</span>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
 
-                        {/* The Canvas */}
-                        <div style={{ flex: 1, overflow: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center', position: 'relative' }}>
-                            <VisualCanvas
-                                schema={schema}
-                                onSelect={setSelectedId}
-                                selectedId={selectedId}
-                                onMove={handleMove}
-                                onDelete={handleDelete}
-                                onInsert={handleInsert}
-                            />
-
-                            {/* Mobile Panel Overlays */}
-                            <div className="mobile-only" style={{
-                                position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 20,
-                                display: mobilePanel === 'canvas' ? 'none' : 'flex',
-                                flexDirection: 'column'
-                            }}>
-                                {mobilePanel === 'inspector' && (
-                                    <PropertyInspector
-                                        selectedId={selectedId}
+                        {/* The Canvas or Editor */}
+                        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+                            {activeTab === 'visual' ? (
+                                <div style={{ height: '100%', overflow: 'auto', padding: '2rem', display: 'flex', justifyContent: 'center' }}>
+                                    <VisualCanvas
                                         schema={schema}
-                                        onChange={(newSchema: any) => setSchema(newSchema)}
-                                        osData={osData}
+                                        onSelect={setSelectedId}
+                                        selectedId={selectedId}
+                                        onMove={handleMove}
+                                        onDelete={handleDelete}
+                                        onInsert={handleInsert}
                                     />
-                                )}
-                            </div>
+
+                                    {/* Mobile Panel Overlays for Visual Mode */}
+                                    <div className="mobile-only" style={{
+                                        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 20,
+                                        display: mobilePanel === 'canvas' ? 'none' : 'flex',
+                                        flexDirection: 'column'
+                                    }}>
+                                        {mobilePanel === 'inspector' && (
+                                            <PropertyInspector
+                                                selectedId={selectedId}
+                                                schema={schema}
+                                                onChange={(newSchema: any) => setSchema(newSchema)}
+                                                osData={osData}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <textarea
+                                    value={schemaJson}
+                                    onChange={handleCodeChange}
+                                    spellCheck={false}
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        background: '#1a1a1a',
+                                        color: codeError ? '#fca5a5' : '#e4e4e7',
+                                        border: 'none',
+                                        padding: '1.5rem',
+                                        fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+                                        fontSize: '14px',
+                                        lineHeight: '1.6',
+                                        resize: 'none',
+                                        outline: 'none'
+                                    }}
+                                />
+                            )}
                         </div>
                     </div>
 
-                    {/* Right: Inspector (Desktop) */}
-                    <div className="desktop-only" style={{ width: '300px', borderLeft: '1px solid #333', display: 'none', flexDirection: 'column' }}>
-                        <PropertyInspector
-                            selectedId={selectedId}
-                            schema={schema}
-                            onChange={(newSchema: any) => setSchema(newSchema)}
-                            osData={osData}
-                        />
+                    {/* Right: Inspector (Desktop) - Only match Visual Mode */}
+                    {activeTab === 'visual' && (
+                        <div className="desktop-only" style={{ width: '300px', borderLeft: '1px solid #333', display: 'none', flexDirection: 'column' }}>
+                            <PropertyInspector
+                                selectedId={selectedId}
+                                schema={schema}
+                                onChange={(newSchema: any) => setSchema(newSchema)}
+                                osData={osData}
+                            />
+                        </div>
+                    )}
+
+                </div>
+
+                {/* Mobile Bottom Nav (Visible only on mobile via CSS) - Only for Visual Mode */}
+                {activeTab === 'visual' && (
+                    <div className="mobile-only" style={{ height: '60px', borderTop: '1px solid #333', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                        <button onClick={() => setMobilePanel('canvas')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: mobilePanel === 'canvas' ? 1 : 0.5 }}>
+                            <Eye size={20} />
+                            <span style={{ fontSize: '0.7rem' }}>View</span>
+                        </button>
+                        <button onClick={() => setMobilePanel('inspector')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: mobilePanel === 'inspector' ? 1 : 0.5 }}>
+                            <Settings size={20} />
+                            <span style={{ fontSize: '0.7rem' }}>Edit</span>
+                        </button>
                     </div>
-
-                </div>
-
-                {/* Mobile Bottom Nav (Visible only on mobile via CSS) */}
-                <div className="mobile-only" style={{ height: '60px', borderTop: '1px solid #333', display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-                    <button onClick={() => setMobilePanel('canvas')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: mobilePanel === 'canvas' ? 1 : 0.5 }}>
-                        <Eye size={20} />
-                        <span style={{ fontSize: '0.7rem' }}>View</span>
-                    </button>
-                    <button onClick={() => setMobilePanel('inspector')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: mobilePanel === 'inspector' ? 1 : 0.5 }}>
-                        <Settings size={20} />
-                        <span style={{ fontSize: '0.7rem' }}>Edit</span>
-                    </button>
-                </div>
+                )}
 
                 {/* Mobile Overlays */}
                 {/* Implementation detail: Show Palette/Inspector based on mobilePanel state */}

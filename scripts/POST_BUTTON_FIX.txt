@@ -1,0 +1,30 @@
+// IMPROVED POST BUTTON CLICK - PASTE INTO gridpass_facebook_bot.js
+// Replace lines 110-123 with this:
+
+        await new Promise(r => setTimeout(r, 3000));
+
+        // Screenshot the draft
+        await page.screenshot({ path: path.join(__dirname, 'facebook_draft.png') });
+        log('📸  Draft screenshot saved');
+
+        //  Click Post button by text
+        log('📤 Looking for Post button...');
+        const postClicked = await page.evaluate(() => {
+            const allButtons = document.querySelectorAll('div[role="button"], button');
+            for (const btn of allButtons) {
+                if ((btn.textContent || '').trim() === 'Post') {
+                    if (btn.getAttribute('aria-disabled') !== 'true' && btn.offsetParent) {
+                        btn.click();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+
+        if (postClicked) {
+            log('✅ Post button clicked!');
+            await new Promise(r => setTimeout(r, 3000));
+        } else {
+            log('⚠️ Could not find/click Post button - may need manual click');
+        }

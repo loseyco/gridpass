@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -62,33 +62,27 @@ export default function CollectionForm({ teams, userId }: { teams: Team[], userI
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="type">Type</Label>
-                    <Select name="type" required defaultValue="Private">
-                        <SelectTrigger className="bg-neutral-900 border-neutral-800">
-                            <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Private">Private</SelectItem>
-                            <SelectItem value="Museum">Museum</SelectItem>
-                            <SelectItem value="Commercial Fleet">Commercial Fleet</SelectItem>
-                            <SelectItem value="Racing Team">Racing Team</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-md">
+                        <Select name="type" required defaultValue="Private" className="w-full bg-transparent border-none">
+                            <option value="Private">Private</option>
+                            <option value="Museum">Museum</option>
+                            <option value="Commercial Fleet">Commercial Fleet</option>
+                            <option value="Racing Team">Racing Team</option>
+                            <option value="Other">Other</option>
+                        </Select>
+                    </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="visibility">Visibility</Label>
-                    <Select name="visibility" required defaultValue="Public">
-                        <SelectTrigger className="bg-neutral-900 border-neutral-800">
-                            <SelectValue placeholder="Select visibility" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Public">Public (Visible to everyone)</SelectItem>
-                            <SelectItem value="Private">Private (Only you/team)</SelectItem>
-                            <SelectItem value="Unlisted">Unlisted (Link only)</SelectItem>
-                            <SelectItem value="Team">Team Only</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-md">
+                        <Select name="visibility" required defaultValue="Public" className="w-full bg-transparent border-none">
+                            <option value="Public">Public (Visible to everyone)</option>
+                            <option value="Private">Private (Only you/team)</option>
+                            <option value="Unlisted">Unlisted (Link only)</option>
+                            <option value="Team">Team Only</option>
+                        </Select>
+                    </div>
                 </div>
             </div>
 
@@ -99,22 +93,20 @@ export default function CollectionForm({ teams, userId }: { teams: Team[], userI
 
             <div className="space-y-2">
                 <Label htmlFor="owner">Owner</Label>
-                <Select
-                    value={ownerComposite}
-                    onValueChange={setOwnerComposite}
-                >
-                    <SelectTrigger className="bg-neutral-900 border-neutral-800">
-                        <SelectValue placeholder="Select owner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={`user:${userId}`}>Personal (Me)</SelectItem>
+                <div className="bg-neutral-900 border border-neutral-800 rounded-md">
+                    <Select
+                        value={ownerComposite}
+                        onChange={(e: any) => setOwnerComposite(e.target.value)}
+                        className="w-full bg-transparent border-none"
+                    >
+                        <option value={`user:${userId}`}>Personal (Me)</option>
                         {teams.map(team => (
-                            <SelectItem key={team.id} value={`team:${team.id}`}>
+                            <option key={team.id} value={`team:${team.id}`}>
                                 {team.name} (Team)
-                            </SelectItem>
+                            </option>
                         ))}
-                    </SelectContent>
-                </Select>
+                    </Select>
+                </div>
                 <p className="text-xs text-neutral-500">
                     Who owns this collection? If you select a Team, other team admins can also manage it.
                 </p>

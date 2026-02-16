@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Vehicle } from '@/types/garage';
-import { getGarage, addVehicle, updateVehicle, deleteVehicle } from '@/app/dashboard/profile/garage-actions';
+import { getGarage, addVehicle, updateVehicle, deleteVehicle } from '@/app/actions/garage';
 import VehicleCard from './VehicleCard';
 import VehicleForm from './VehicleForm';
 import { Plus, Loader2, X } from 'lucide-react';

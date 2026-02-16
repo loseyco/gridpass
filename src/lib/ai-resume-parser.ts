@@ -37,11 +37,11 @@ export async function parseResumeWithAI(resumeUrl: string): Promise<ParsedResume
 
         console.log('Parsing PDF...');
 
-        // Import PDFParse class from pdf-parse
-        // This library exports a class, not a function
-        const { PDFParse } = await import('pdf-parse');
-        const parser = new PDFParse();
-        const pdfData = await parser.parse(buffer);
+        // Import pdf-parse
+        // Handle both ESM and CommonJS
+        const pdfModule = await import('pdf-parse');
+        const pdf = (pdfModule as any).default || pdfModule;
+        const pdfData = await pdf(buffer);
         const resumeText = pdfData.text;
 
         if (!resumeText || resumeText.trim().length < 10) {

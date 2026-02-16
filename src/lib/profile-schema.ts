@@ -103,6 +103,7 @@ export const SCHEMA_CATEGORIES: FieldCategory[] = [
         description: 'Travel and employment eligibility.',
         db_column: 'logistics_info',
         fields: [
+            { key: 'hometown', label: 'Hometown', type: 'text', placeholder: 'City, State' },
             { key: 'home_airport', label: 'Home Airport Code', type: 'text', placeholder: 'AUS' },
             { key: 'passport_status', label: 'Passport Valid?', type: 'checkbox' },
             { key: 'drivers_license_state', label: 'DL State', type: 'text', placeholder: 'TX' },

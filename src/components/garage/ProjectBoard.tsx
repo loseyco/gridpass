@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { GarageProject, ProjectTask } from '@/types/garage';
-import { createTask, updateTask, deleteTask } from '@/app/dashboard/profile/project-actions'; // deleteTask updateTask needed
+import { createTask, updateTask, deleteTask } from '@/app/actions/project'; // deleteTask updateTask needed
 import { Plus, GripVertical, CheckCircle, Circle, Clock, MoreVertical, X, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

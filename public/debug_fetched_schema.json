@@ -1,0 +1,29 @@
+{
+  "slug": "simple-editor",
+  "schema": {
+    "props": {
+      "style": {
+        "padding": "2rem"
+      }
+    },
+    "children": [
+      {
+        "bind": "os_user_profiles.first_name",
+        "props": {
+          "name": "fn",
+          "label": "Full Name"
+        },
+        "component": "GridInput"
+      },
+      {
+        "bind": "os_user_profiles.bio",
+        "props": {
+          "name": "bio",
+          "label": "Bio"
+        },
+        "component": "GridInput"
+      }
+    ],
+    "component": "Container"
+  }
+}

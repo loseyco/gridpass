@@ -21,7 +21,7 @@ const InsertDivider = ({ parentId, index, onInsert }: { parentId: string | null,
     const [isOpen, setIsOpen] = useState(false)
 
     // Quick list of common components
-    const COMMON_COMPONENTS = ['GridInput', 'GridToggle', 'Container', 'Row', 'Col', 'GridChart']
+    const COMMON_COMPONENTS = ['GridInput', 'GridToggle', 'GridButton', 'Container', 'Row', 'Col', 'GridChart']
 
     return (
         <div className="group relative py-3 -my-3 z-20 cursor-pointer">
