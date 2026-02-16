@@ -1,100 +1,73 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import Stripe from 'stripe';
 
-const getStripe = () => {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        throw new Error('STRIPE_SECRET_KEY is missing');
-    }
-    return new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2026-01-28.clover', // Update to latest stable if needed
-    });
-};
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2024-12-18.acacia', // Updated to match type definition
+});
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
     try {
-        const stripe = getStripe();
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        let { userId, email, isDonation, amount, message, isAnonymous } = await request.json();
-
-        if (user) {
-            userId = user.id;
-            email = user.email;
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Donations do not require User ID (can be anonymous guest)
-        if (!userId && !isDonation) {
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+        const body = await req.json();
+        const { seasonId } = body;
+
+        if (!seasonId) {
+            return NextResponse.json({ error: 'Missing seasonId' }, { status: 400 });
         }
 
-        let priceInCents = 0;
-        let productName = '';
-        let productDesc = '';
-        let metadata = {
-            userId: userId || 'guest',
-            type: isDonation ? 'donation' : 'founder_membership',
-            message: message || '',
-            isAnonymous: isAnonymous ? 'true' : 'false'
-        };
+        // 1. Fetch Season Details
+        const { data: season, error: seasonError } = await supabase
+            .from('os_league_seasons')
+            .select('*')
+            .eq('id', seasonId)
+            .single();
 
-        if (isDonation) {
-            // --- DONATION LOGIC ---
-            if (!amount || amount < 1) {
-                return NextResponse.json({ error: 'Valid donation amount required' }, { status: 400 });
-            }
-            priceInCents = Math.round(amount * 100); // Amount passed in dollars
-            productName = 'GridPass Contribution';
-            productDesc = 'Fueling the Vision';
-        } else {
-            // --- FOUNDER MEMBER LOGIC ---
-            // 1. Get current sold count
-            const { count, error: countError } = await supabase
-                .from('profiles')
-                .select('*', { count: 'exact', head: true })
-                .eq('role', 'founder');
-
-            const soldCount = count || 0;
-
-            // 2. Calculate dynamic price
-            const { calculateFounderPrice } = await import('@/utils/pricing');
-            const priceInDollars = calculateFounderPrice(soldCount);
-            priceInCents = priceInDollars * 100;
-
-            productName = `Founding Member Pass #${soldCount + 1}`;
-            productDesc = 'Lifetime Access + Founder Badge';
+        if (seasonError || !season) {
+            return NextResponse.json({ error: 'Season not found' }, { status: 404 });
         }
 
-        const origin = request.headers.get('origin') || 'https://gridpass.app';
+        const amount = season.entry_fee_amount || 0;
+        const currency = season.currency || 'usd';
 
-        // Created Embedded Session
+        if (amount <= 0) {
+            return NextResponse.json({ error: 'This season is free to join.' }, { status: 400 });
+        }
+
+        // 2. Create Checkout Session
         const session = await stripe.checkout.sessions.create({
-            ui_mode: 'embedded',
             payment_method_types: ['card'],
+            customer_email: user.email,
             line_items: [
                 {
                     price_data: {
-                        currency: 'usd',
+                        currency: currency,
                         product_data: {
-                            name: productName,
-                            description: productDesc,
-                            images: ['https://gridpass.app/logo-square.png'],
+                            name: `Entry Fee: ${season.name}`,
+                            description: `Join the GridPass ${season.name}.`,
                         },
-                        unit_amount: priceInCents,
+                        // Stripe expects amount in cents for USD
+                        unit_amount: Math.round(amount * 100),
                     },
                     quantity: 1,
                 },
             ],
-            mode: 'payment',
-            return_url: `${origin}/founder/welcome?session_id={CHECKOUT_SESSION_ID}&type=${isDonation ? 'donation' : 'founder'}`,
-            customer_email: email, // Optional for guests, but good if we have it
-            metadata: metadata,
+            ui_mode: 'embedded',
+            return_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/league/join/return?session_id={CHECKOUT_SESSION_ID}&season_id=${seasonId}`,
+            metadata: {
+                userId: user.id,
+                seasonId: seasonId,
+                leagueId: season.league_id
+            },
         });
 
-        // Return client_secret instead of sessionId
         return NextResponse.json({ clientSecret: session.client_secret });
-
     } catch (err: any) {
         console.error('Stripe Checkout Error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });

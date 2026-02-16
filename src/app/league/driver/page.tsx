@@ -54,9 +54,7 @@ export default async function LeagueDashboardPage() {
                         <h1 className="text-3xl font-bold tracking-tight">Driver Dashboard</h1>
                         <p className="text-gray-400">{activeSeason?.name || 'No Active Season'} &bull; 2026</p>
                     </div>
-                    <div className="flex flex-col gap-1 items-end">
-                        <span className="text-xs text-gray-500">API: {apiStatus}</span>
-                        <span className="text-xs text-gray-500">{dbInfo}</span>
+                    <div className="flex gap-3 items-center">
                         <div className="flex gap-3">
                             <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
                                 <User className="mr-2 h-4 w-4" /> My Driver Profile

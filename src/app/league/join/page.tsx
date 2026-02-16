@@ -1,29 +1,94 @@
+'use client';
+
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Check, CreditCard, ShieldCheck, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { loadStripe } from '@stripe/stripe-js';
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 export default function LeagueJoinPage() {
+    const [loading, setLoading] = useState(false);
+    const [clientSecret, setClientSecret] = useState<string | null>(null);
+    const [showCheckout, setShowCheckout] = useState(false);
+
+    const handleCheckout = useCallback(async () => {
+        setLoading(true);
+        try {
+            // 1. Get Active Season
+            const seasonRes = await fetch('/api/league/test');
+            const seasonData = await seasonRes.json();
+            const activeSeason = seasonData.seasons?.find((s: any) => s.is_active);
+
+            if (!activeSeason) {
+                alert('No active season found.');
+                setLoading(false);
+                return;
+            }
+
+            // 2. Create Embedded Checkout Session
+            const res = await fetch('/api/stripe/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ seasonId: activeSeason.id })
+            });
+
+            const data = await res.json();
+            if (data.clientSecret) {
+                setClientSecret(data.clientSecret);
+                setShowCheckout(true);
+            } else {
+                alert(data.error || 'Failed to initialize checkout');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error starting checkout');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return (
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+            {/* Checkout Modal */}
+            <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
+                <DialogContent className="sm:max-w-2xl bg-white text-black p-0 overflow-hidden h-[600px]">
+                    {clientSecret && (
+                        <EmbeddedCheckoutProvider
+                            stripe={stripePromise}
+                            options={{ clientSecret }}
+                        >
+                            <EmbeddedCheckout className="h-full w-full" />
+                        </EmbeddedCheckoutProvider>
+                    )}
+                </DialogContent>
+            </Dialog>
+
             <div className="max-w-4xl w-full grid md:grid-cols-2 gap-8 items-center">
 
                 {/* Left: Value Prop */}
                 <div className="space-y-6">
                     <Link href="/league" className="text-cyan-500 hover:text-cyan-400 font-medium mb-4 inline-block">&larr; Back to League</Link>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 text-xs font-bold uppercase tracking-wider mb-4 border border-yellow-500/20">
+                        🚧 Alpha Release
+                    </div>
                     <h1 className="text-5xl font-black tracking-tight">
                         Race for glory.<br />
                         <span className="text-cyan-500">Win real cash.</span>
                     </h1>
                     <p className="text-xl text-gray-400 leading-relaxed">
-                        Join the GridPass Official League and compete against the best.
+                        Join the GridPass Official League (Alpha) and help shape the future of sim racing.
                         Your membership includes entry to all Season 1 events,
-                        premium setups for every car/track combo, and exclusive team paints.
+                        community access, and exclusive team paints.
                     </p>
 
                     <ul className="space-y-4 pt-4">
                         <BenefitItem text="12 Official Championship Rounds" />
-                        <BenefitItem text="Pro-level Setups included ($50/mo value)" />
+                        <BenefitItem text="Community Setups & Tips" />
                         <BenefitItem text="Live Broadcasts on YouTube" />
                         <BenefitItem text="Stewarding & Incident Review" />
                         <BenefitItem text="Entry to $10,000 Prize Pool" />
@@ -44,9 +109,12 @@ export default function LeagueJoinPage() {
                         <CardDescription className="text-gray-500">Cancel anytime. Billed monthly.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-6">
-                        <Button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold h-12 text-lg shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-shadow hover:shadow-[0_0_30px_rgba(6,182,212,0.4)]">
+                        <Button
+                            onClick={handleCheckout}
+                            disabled={loading}
+                            className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold h-12 text-lg shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-shadow hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed">
                             <CreditCard className="mr-2 h-5 w-5" />
-                            Subscribe Now
+                            {loading ? 'Processing...' : 'Subscribe Now'}
                         </Button>
                         <p className="text-xs text-center text-gray-500 mt-4">
                             Secured by Stripe. 100% Money-back guarantee for first race.

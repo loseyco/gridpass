@@ -28,7 +28,7 @@ export default function HomeClient({
   return (
     <>
       <div className="v2-header">
-        <Link href="/public" className="v2-title-link" style={{ textDecoration: 'none' }}>
+        <Link href="/public" className="v2-title-link md:hidden" style={{ textDecoration: 'none' }}>
           <h1 className="v2-title">
             <span className="v2-text-white">GRIDPASS</span>
             <span className="v2-text-accent">OS</span>
