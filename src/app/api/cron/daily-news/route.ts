@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 import { scrapeLatestNews } from '@/lib/news/scraper';
 import { generateDailySummary } from '@/lib/news/summarizer';
 
@@ -7,8 +8,19 @@ export const dynamic = 'force-dynamic'; // Ensure it's not cached
 export async function GET(req: NextRequest) {
     // Verify Cron secret if deployed (Vercel protects cron jobs, but good to have)
     const authHeader = req.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const hasValidSecret = process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`;
+
+    if (!hasValidSecret) {
+        // Fallback: Check for authenticated ADMIN user (manual trigger)
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Hardcoded admin check for safety + Role check
+        const isAdmin = user && (user.email === 'pjlosey@outlook.com' || user.user_metadata?.role === 'superadmin');
+
+        if (!isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
     }
 
     try {
