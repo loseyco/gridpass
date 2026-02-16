@@ -1,133 +1,179 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect, useRef } from "react";
+import { Share2, Copy, Check, Twitter, Facebook, Linkedin, Mail, X } from "lucide-react";
+import { toast } from "sonner";
+import { usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 
-export default function ShareButton() {
-  const [showToast, setShowToast] = useState(false)
-  const pathname = usePathname()
+interface ShareButtonProps {
+  title?: string;
+  text?: string;
+  url?: string;
+  className?: string;
+  variant?: "icon" | "button";
+}
 
-  // Hide on edit pages
-  if (pathname?.includes('/edit')) return null
+export default function ShareButton({
+  title = "GridPass",
+  text = "Check out this profile on GridPass!",
+  url,
+  className = "",
+  variant = "icon"
+}: ShareButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const pathname = usePathname();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Determines the URL to share (prop or current location)
+  const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "");
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleShare = async () => {
-    // Get current URL and append affiliate code
-    // For now using placeholder - you'll need to fetch actual user affiliate code
-    const baseUrl = window.location.origin + pathname
-    const affiliateCode = 'ref=user123' // TODO: Replace with actual user's affiliate code
-    const shareUrl = `${baseUrl}?${affiliateCode}`
-
-    const shareData = {
-      title: 'GridPass',
-      text: 'Check out GridPass - The Business Operating System for Racing',
-      url: shareUrl,
-    }
-
-    try {
-      // Try native share API (mobile)
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData)
-      } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(shareUrl)
-        setShowToast(true)
-        setTimeout(() => setShowToast(false), 2000)
+    // Try Native Share First (Mobile/Safari)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          text,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.log('Share canceled or failed', err);
+        } else {
+          return;
+        }
       }
-    } catch (err) {
-      // User cancelled or error
-      console.log('Share cancelled')
     }
-  }
+
+    // Fallback to Desktop Modal
+    setIsOpen(!isOpen);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    toast.success("Link copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareLinks = [
+    {
+      name: "X",
+      icon: Twitter,
+      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`,
+      color: "hover:text-sky-400 hover:bg-sky-400/10"
+    },
+    {
+      name: "Facebook",
+      icon: Facebook,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+      color: "hover:text-blue-500 hover:bg-blue-500/10"
+    },
+    {
+      name: "LinkedIn",
+      icon: Linkedin,
+      url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+      color: "hover:text-blue-600 hover:bg-blue-600/10"
+    },
+    {
+      name: "Email",
+      icon: Mail,
+      url: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(text + "\n\n" + shareUrl)}`,
+      color: "hover:text-emerald-500 hover:bg-emerald-500/10"
+    }
+  ];
 
   return (
-    <>
-      <button onClick={handleShare} className="share-button" aria-label="Share">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="18" cy="5" r="3" />
-          <circle cx="6" cy="12" r="3" />
-          <circle cx="18" cy="19" r="3" />
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-        </svg>
-      </button>
-
-      {showToast && (
-        <div className="share-toast">
-          Link copied!
-        </div>
+    <div ref={containerRef} className="relative inline-block">
+      {variant === "icon" ? (
+        <button
+          onClick={handleShare}
+          className={`v2-btn v2-btn-icon v2-btn-ghost ${className} ${isOpen ? "bg-white/10" : ""}`}
+          aria-label="Share"
+        >
+          <Share2 className="w-5 h-5" />
+        </button>
+      ) : (
+        <button
+          onClick={handleShare}
+          className={`v2-btn v2-btn-primary gap-2 ${className}`}
+        >
+          <Share2 className="w-4 h-4" />
+          <span>Share</span>
+        </button>
       )}
 
-      <style jsx>{`
-        .share-button {
-          position: fixed;
-          top: 1rem;
-          right: 1rem;
-          width: 48px;
-          height: 48px;
-          background: var(--v2-glass-bg);
-          border: 1px solid var(--v2-glass-border);
-          backdrop-filter: blur(var(--v2-glass-blur));
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          z-index: 80;
-          box-shadow: var(--v2-shadow-md);
-          color: white;
-          transition: all 0.2s;
-        }
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-full mt-2 w-72 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden"
+          >
+            <div className="p-4 border-b border-white/5 flex justify-between items-center">
+              <span className="text-sm font-bold text-white">Share Via</span>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-        .share-button:hover {
-          background: rgba(255,255,255,0.1);
-          box-shadow: var(--v2-shadow-lg);
-          transform: scale(1.05);
-          border-color: white;
-        }
+            <div className="p-2 grid grid-cols-4 gap-1">
+              {shareLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-lg text-neutral-400 transition-colors ${link.color}`}
+                  title={link.name}
+                >
+                  <link.icon className="w-5 h-5" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider">{link.name}</span>
+                </a>
+              ))}
+            </div>
 
-        .share-button:active {
-          transform: scale(0.95);
-        }
-
-        .share-toast {
-          position: fixed;
-          top: 5rem;
-          right: 1rem;
-          background: var(--v2-accent-primary);
-          color: white;
-          padding: 0.75rem 1rem;
-          border-radius: var(--v2-radius-sm);
-          font-size: var(--v2-text-sm);
-          font-weight: var(--v2-font-bold);
-          box-shadow: var(--v2-shadow-lg);
-          z-index: 90;
-          animation: slideIn 0.2s ease-out;
-          font-family: var(--v2-font-racing);
-          font-style: italic;
-          text-transform: uppercase;
-        }
-
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @media (min-width: 768px) {
-          .share-button {
-            right: calc(50% - var(--v2-max-width) / 2 + 1rem);
-          }
-
-          .share-toast {
-            right: calc(50% - var(--v2-max-width) / 2 + 1rem);
-          }
-        }
-      `}</style>
-    </>
-  )
+            <div className="p-3 bg-black/20 border-t border-white/5">
+              <div className="flex items-center gap-2 bg-black/30 border border-white/5 rounded-lg p-2">
+                <span className="flex-1 text-xs text-neutral-400 truncate font-mono">
+                  {shareUrl}
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className="p-1.5 hover:bg-white/10 rounded transition-colors text-white"
+                  title="Copy Link"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers } from 'lucide-react'
 import VehicleCard from '@/components/profile/VehicleCard'
+import ShareButton from '@/app/components/ShareButton'
 import { Vehicle } from '@/types/garage'
 
 interface PublicProfileClientProps {
@@ -48,45 +49,12 @@ export default function PublicProfileClient({
             </h1>
           </Link>
 
-          <button
-            className="v2-btn v2-btn-icon v2-btn-ghost"
-            onClick={async () => {
-              const btn = document.activeElement as HTMLElement
-
-              if (navigator.share) {
-                try {
-                  await navigator.share({
-                    title: `${profile.full_name || profile.username} on GridPass`,
-                    text: `Check out ${profile.full_name || profile.username}'s racing profile.`,
-                    url: window.location.href,
-                  })
-                  return // Share successful
-                } catch (err) {
-                  // user canceled or share failed, might want to fallback or just do nothing
-                  if ((err as Error).name !== 'AbortError') {
-                    // Only fallback if it wasn't a user cancellation
-                    // Continue to clipboard block below
-                  } else {
-                    return // User cancelled, do nothing
-                  }
-                }
-              }
-
-              // Fallback to clipboard
-              navigator.clipboard.writeText(window.location.href)
-
-              // Visual feedback
-              const originalContent = btn.innerHTML
-              btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
-              setTimeout(() => {
-                btn.innerHTML = originalContent
-              }, 2000)
-            }}
-            title="Share Profile"
-            style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-          </button>
+          <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}>
+            <ShareButton
+              title={`${profile.full_name || profile.username} on GridPass`}
+              text={`Check out ${profile.full_name || profile.username}'s racing profile.`}
+            />
+          </div>
         </div>
 
         <div className="v2-content profile-content">
