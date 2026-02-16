@@ -45,7 +45,7 @@ export default async function LeagueDashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-4 md:p-8">
+        <div className="min-h-screen bg-black text-white p-4 md:p-8 pt-24 md:pt-28">
             <div className="max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
@@ -70,10 +70,10 @@ export default async function LeagueDashboardPage() {
 
                 {/* Key Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <StatCard label="Championship Rank" value="4th" icon={<Trophy className="text-yellow-500" />} />
-                    <StatCard label="Total Points" value="86" icon={<Flag className="text-cyan-500" />} />
-                    <StatCard label="Races Run" value={totalRaces.toString()} icon={<User className="text-green-500" />} />
-                    <StatCard label="Next Race" value="Daytona" icon={<Calendar className="text-purple-500" />} />
+                    <StatCard label="Championship Rank" value="-" icon={<Trophy className="text-yellow-500" />} />
+                    <StatCard label="Total Points" value="0" icon={<Flag className="text-cyan-500" />} />
+                    <StatCard label="Races Run" value="0" icon={<User className="text-green-500" />} />
+                    <StatCard label="Next Race" value="TBD" icon={<Calendar className="text-purple-500" />} />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -96,26 +96,11 @@ export default async function LeagueDashboardPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {[
-                                            { pos: 1, name: 'Max Verstappen', points: 120, wins: 3, top5: 4 },
-                                            { pos: 2, name: 'Charles Leclerc', points: 105, wins: 1, top5: 4 },
-                                            { pos: 3, name: 'Lando Norris', points: 98, wins: 0, top5: 4 },
-                                            { pos: 4, name: 'You (PJ Losey)', points: 86, wins: 0, top5: 3, active: true },
-                                            { pos: 5, name: 'Oscar Piastri', points: 75, wins: 0, top5: 2 },
-                                        ].map((driver) => (
-                                            <TableRow key={driver.pos} className={`border-white/5 ${driver.active ? 'bg-cyan-900/20 hover:bg-cyan-900/30' : 'hover:bg-white/5'}`}>
-                                                <TableCell className="font-mono text-lg font-bold">{driver.pos}</TableCell>
-                                                <TableCell className="font-medium">
-                                                    <div className="flex items-center gap-2">
-                                                        {driver.active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>}
-                                                        {driver.name}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-right font-bold text-white">{driver.points}</TableCell>
-                                                <TableCell className="text-right text-gray-500">{driver.wins}</TableCell>
-                                                <TableCell className="text-right text-gray-500">{driver.top5}</TableCell>
-                                            </TableRow>
-                                        ))}
+                                        <TableRow className="border-white/5 hover:bg-white/5">
+                                            <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                                                No standings available yet. Season starting soon.
+                                            </TableCell>
+                                        </TableRow>
                                     </TableBody>
                                 </Table>
                             </CardContent>

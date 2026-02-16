@@ -32,22 +32,32 @@ export function SimRacingLanding() {
             </div>
 
             {/* Features */}
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl w-full">
-                <FeatureCard
-                    icon={<Monitor className="h-8 w-8 text-blue-500" />}
-                    title="Remote Launch"
-                    desc="Start iRacing, Assetto Corsa, and other sims from your phone or laptop while walking to your rig."
-                />
-                <FeatureCard
-                    icon={<Gauge className="h-8 w-8 text-yellow-500" />}
-                    title="Live Telemetry"
-                    desc="View real-time speed, RPM, fuel, and lap times from any device on your network."
-                />
-                <FeatureCard
-                    icon={<Smartphone className="h-8 w-8 text-green-500" />}
-                    title="Hardware Stats"
-                    desc="Monitor CPU/GPU temps and usage to ensure your PC is ready to race."
-                />
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl w-full">
+                <Link href="/sim-racing/stewards" className="group">
+                    <Card className="bg-red-900/20 border-red-800 hover:bg-red-900/40 transition-all cursor-pointer h-full">
+                        <CardContent className="p-8 text-center space-y-4">
+                            <div className="mx-auto bg-red-600 w-16 h-16 rounded-full flex items-center justify-center border border-red-500 group-hover:scale-110 transition-transform">
+                                <Gauge className="h-8 w-8 text-white" />
+                            </div>
+                            <h3 className="font-black text-2xl text-white italic">SIM STEWARDS</h3>
+                            <p className="text-zinc-400">Post incidents, vote on fault, and getting community verdicts.</p>
+                            <Button variant="secondary" className="mt-4">Enter Stewards Room</Button>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <div className="space-y-4">
+                    <FeatureCard
+                        icon={<Monitor className="h-6 w-6 text-blue-500" />}
+                        title="Remote Launch"
+                        desc="Start iRacing, Assetto Corsa, and other sims from your phone."
+                    />
+                    <FeatureCard
+                        icon={<Smartphone className="h-6 w-6 text-green-500" />}
+                        title="Hardware Stats"
+                        desc="Monitor CPU/GPU temps and usage remotely."
+                    />
+                </div>
             </div>
 
             {/* How to Start */}
