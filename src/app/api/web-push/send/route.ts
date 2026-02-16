@@ -2,18 +2,22 @@ import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import webPush from 'web-push'
 
-if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    console.error('VAPID keys are missing')
-}
 
-webPush.setVapidDetails(
-    process.env.NEXT_PUBLIC_VAPID_SUBJECT || 'mailto:support@gridpass.app',
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-)
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+        console.error('VAPID keys are missing');
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     try {
+        webPush.setVapidDetails(
+            process.env.NEXT_PUBLIC_VAPID_SUBJECT || 'mailto:support@gridpass.app',
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+            process.env.VAPID_PRIVATE_KEY
+        );
+
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 

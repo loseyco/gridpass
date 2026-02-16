@@ -63,7 +63,7 @@ export default function JoinFlow(props: Props) {
                 await handleClaim();
             } else {
                 const next = new URLSearchParams(window.location.search).get('next');
-                router.push(next || '/v2');
+                router.push(next || '/');
             }
         } catch (err: any) {
             setError(err.message);
@@ -126,7 +126,7 @@ export default function JoinFlow(props: Props) {
                 await handleClaim();
             } else {
                 const next = new URLSearchParams(window.location.search).get('next');
-                router.push(next || '/v2?welcome=true');
+                router.push(next || '/?welcome=true');
                 router.refresh();
             }
         } catch (err: any) {
@@ -205,25 +205,7 @@ export default function JoinFlow(props: Props) {
                     </div>
                 )}
 
-                {/* 1. Founder Card */}
-                {!props.hideFounder && (
-                    <Link href="/founder/checkout" className="group relative block w-full">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-red-600 rounded-2xl opacity-75 group-hover:opacity-100 blur transition duration-500"></div>
-                        <div className="relative flex items-center justify-between p-6 bg-neutral-900 rounded-2xl border border-white/10 hover:bg-neutral-800/90 transition-all">
-                            <div className="flex items-center gap-5">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-red-600 flex items-center justify-center shadow-lg shadow-amber-900/40">
-                                    <Shield className="w-6 h-6 text-white fill-white/20" />
-                                </div>
-                                <div className="text-left">
-                                    <div className="text-amber-500 text-xs font-bold uppercase tracking-wider mb-0.5">Limited Access</div>
-                                    <h3 className="text-xl font-bold text-white">Founding 50</h3>
-                                    <p className="text-neutral-400 text-xs">Lifetime Membership + Badge</p>
-                                </div>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </div>
-                    </Link>
-                )}
+                {/* 1. Founder Card Removed */}
 
                 {/* 2. Driver Card (Triggers Inline Register) */}
                 <button onClick={() => setMode('register')} className="group block w-full text-left">

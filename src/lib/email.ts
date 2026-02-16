@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 
 // Initialize Resend with API Key from environment variables
 // Note: You must add RESEND_API_KEY to your .env.local file
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_mock_key_for_build');
 
 export async function sendResumeNotification(data: {
     name: string;

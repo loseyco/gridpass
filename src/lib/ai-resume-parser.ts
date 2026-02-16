@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export interface ParsedResumeData {
     name?: string;
@@ -59,6 +59,7 @@ export async function parseResumeWithAI(resumeUrl: string): Promise<ParsedResume
 }
 
 async function parseWithGemini(resumeText: string): Promise<ParsedResumeData> {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
     });

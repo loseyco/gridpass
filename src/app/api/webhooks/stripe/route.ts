@@ -1,23 +1,20 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import { stripe } from '@/lib/stripe';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
-// Use Admin client to bypass RLS for role updates
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2026-01-28.clover',
-});
+export const dynamic = 'force-dynamic';
 
 // const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const resend = new Resend(process.env.RESEND_API_KEY || 're_mock_key_for_build');
     const body = await request.text();
     const headersList = await headers(); // Await the headers() promise
     const signature = headersList.get('stripe-signature')!; // Use headersList

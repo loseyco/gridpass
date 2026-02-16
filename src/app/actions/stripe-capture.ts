@@ -4,20 +4,20 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2026-01-28.clover',
-});
+import { stripe } from '@/lib/stripe';
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-);
+// const stripe = ...
+// const supabaseAdmin = ...
 
 /**
  * Capture a pre-authorized payment for a resume lead
  */
 export async function capturePreAuthPayment(leadId: string) {
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     try {
         // 1. Fetch the resume lead
         const { data: lead, error: fetchError } = await supabaseAdmin
@@ -117,6 +117,11 @@ export async function capturePreAuthPayment(leadId: string) {
  * Grant verified badge to a user after payment is complete
  */
 export async function grantVerifiedBadge(leadId: string) {
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     try {
         // 1. Fetch the resume lead
         const { data: lead, error: fetchError } = await supabaseAdmin
@@ -235,6 +240,11 @@ export async function grantVerifiedBadge(leadId: string) {
  * Upload final resume PDF for a lead
  */
 export async function uploadFinalResume(leadId: string, resumeUrl: string) {
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+    );
     try {
         // Update the resume URL and status
         const { error } = await supabaseAdmin

@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export interface BackgroundCheckResult {
     linkedin: {
@@ -170,6 +170,7 @@ async function searchSocialMedia(
     city?: string
 ): Promise<{ platforms: string[]; notes: string[] }> {
     // Use  AI to search Google for social media presence
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const searchQuery = city
@@ -207,6 +208,7 @@ function extractNotes(text: string): string[] {
 async function searchPublicRecords(
     leadData: any
 ): Promise<{ found: boolean; inconsistencies: string[] }> {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `Given this resume data: ${JSON.stringify(leadData, null, 2)}
@@ -239,6 +241,7 @@ async function analyzeBackgroundData(
     leadData: any,
     checkResult: Partial<BackgroundCheckResult>
 ): Promise<{ summary: string; confidence: 'high' | 'medium' | 'low'; warnings: string[] }> {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `Analyze this background check data:

@@ -14,6 +14,8 @@ import { ArrowLeft, User, Briefcase, Mail, Phone, ExternalLink, Calendar, Credit
 import { AIAutoPilot } from '@/components/admin/AIAutoPilot';
 import { generateAndSendPaymentLink } from '@/app/actions/resume';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ResumeLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();
     const { id } = await params;

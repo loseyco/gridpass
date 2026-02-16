@@ -127,6 +127,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
     const displayCollections: any[] = []
     const visibleVehicles: any[] = []
 
+    // Fetch owned organizations (if owner)
+    let ownedOrgs: any[] = []
+    if (isOwner && user) {
+        const { data: orgs } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('claimed_by', user.id)
+            .order('created_at', { ascending: false })
+
+        ownedOrgs = orgs || []
+    }
 
     return (
         <PublicProfileClient
@@ -139,6 +150,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             recommendations={recommendations || []}
             vehicles={visibleVehicles}
             collections={displayCollections}
+            ownedOrgs={ownedOrgs}
         />
     )
 }

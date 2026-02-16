@@ -64,7 +64,6 @@ export default function ResumeBuilder() {
     const [submitted, setSubmitted] = useState(false);
     const [claimPath, setClaimPath] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [wantsPremiumService, setWantsPremiumService] = useState(false);
     const { startTour } = useTour();
 
     const startResumeTour = () => {
@@ -181,8 +180,8 @@ export default function ResumeBuilder() {
                 }
             });
 
-            // Add premium service flag
-            data.append('wants_premium_service', wantsPremiumService ? 'true' : 'false');
+            // Add premium service flag (force false)
+            data.append('wants_premium_service', 'false');
 
             const result = await submitResumeLead(data);
             if (result.error) {
@@ -192,14 +191,11 @@ export default function ResumeBuilder() {
                 event({
                     action: 'submit',
                     category: 'resume_builder',
-                    label: wantsPremiumService ? 'submission_with_premium' : 'submission_free',
-                    value: wantsPremiumService ? 20 : 0
+                    label: 'submission_free',
+                    value: 0
                 });
 
-                // If user wants premium service, redirect to checkout
-                if (wantsPremiumService && result.checkoutPath) {
-                    router.push(result.checkoutPath);
-                } else if (result.claimPath) {
+                if (result.claimPath) {
                     // Free profile - redirect to profile
                     router.push(result.claimPath);
                 } else {
@@ -729,68 +725,7 @@ export default function ResumeBuilder() {
                                 </div>
                             </div>
 
-                            {/* Premium Service Offering */}
-                            <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 backdrop-blur-sm border border-indigo-500/40 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
-                                <div className="relative z-10">
-                                    <div className="flex items-start gap-4 mb-4">
-                                        <div className="bg-indigo-500/20 p-3 rounded-xl">
-                                            <Shield className="w-6 h-6 text-indigo-400" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Upgrade to Verified Profile</h3>
-                                            <p className="text-neutral-300 leading-relaxed">
-                                                Get your resume professionally evaluated with our AI tools and earn a <strong className="text-indigo-300">verified badge</strong> on your profile for just <strong className="text-white">$20</strong>.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid md:grid-cols-3 gap-3 mb-6">
-                                        <div className="flex items-center gap-2 text-sm text-neutral-300">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                            <span>AI Resume Analysis</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-neutral-300">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                            <span>Verified Badge</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm text-neutral-300">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                            <span>Stand Out to Teams</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setWantsPremiumService(true)}
-                                            className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${wantsPremiumService
-                                                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/50'
-                                                : 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20'
-                                                }`}
-                                        >
-                                            {wantsPremiumService && <CheckCircle2 className="w-5 h-5" />}
-                                            Yes, Add Verified Badge — $20
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setWantsPremiumService(false)}
-                                            className={`flex-1 px-6 py-4 rounded-xl font-medium transition-all ${!wantsPremiumService
-                                                ? 'bg-neutral-700 text-white'
-                                                : 'bg-neutral-800/50 text-neutral-400 border border-white/10 hover:bg-neutral-800'
-                                                }`}
-                                        >
-                                            Skip — Continue with Free Profile
-                                        </button>
-                                    </div>
-
-                                    {!wantsPremiumService && (
-                                        <p className="mt-4 text-center text-sm text-neutral-500">
-                                            You can always upgrade later from your dashboard
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                            {/* Premium Service Offering Removed */}
 
                             {/* References */}
                             <div className="space-y-4">

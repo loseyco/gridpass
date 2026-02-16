@@ -79,6 +79,13 @@ export default async function ProfilePage() {
     .order('created_at', { ascending: false })
 
 
+  // Fetch owned organizations
+  const { data: ownedOrgs } = await supabase
+    .from('organizations')
+    .select('*')
+    .eq('claimed_by', user.id)
+    .order('created_at', { ascending: false })
+
   return (
     <ProfileClient
       profile={profile}
@@ -86,6 +93,7 @@ export default async function ProfilePage() {
       connectionsCount={connectionsCount || 0}
       memberSince={memberSince}
       isVerified={isVerified}
+      ownedOrgs={ownedOrgs || []}
     />
   )
 }

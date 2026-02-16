@@ -6,12 +6,13 @@ import { revalidatePath } from 'next/cache';
 import { createResumeCheckoutSession } from './stripe-payment';
 
 // Initialize Supabase Admin client for Storage operations (bypassing RLS)
-const supabaseAdmin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// const supabaseAdmin = createAdminClient(...);
 
 export async function submitResumeLead(formData: FormData) {
+    const supabaseAdmin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     const supabase = await createClient();
 
     // 1. Handle File Uploads
@@ -367,6 +368,10 @@ export async function getNewResumeCount() {
  * Generate a Stripe payment link and send it to the applicant via email
  */
 export async function generateAndSendPaymentLink(leadId: string) {
+    const supabaseAdmin = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     const supabase = await createClient();
 
     // Auth check

@@ -15,6 +15,7 @@ interface PublicProfileClientProps {
   recommendations: any[]
   vehicles: Vehicle[]
   collections: any[]
+  ownedOrgs?: any[]
 }
 
 export default function PublicProfileClient({
@@ -26,7 +27,8 @@ export default function PublicProfileClient({
   mediaItems,
   recommendations,
   vehicles,
-  collections
+  collections,
+  ownedOrgs = []
 }: PublicProfileClientProps) {
   return (
     <>
@@ -39,7 +41,7 @@ export default function PublicProfileClient({
         </div>
 
         <div className="v2-header profile-nav">
-          <Link href="/v2" className="v2-title-link">
+          <Link href="/" className="v2-title-link">
             <h1 className="v2-title">
               <span className="v2-text-white">GRID</span>
               <span className="v2-text-accent">PASS</span>
@@ -211,9 +213,9 @@ export default function PublicProfileClient({
 
 
             {/* Pit Wall Controls */}
-            <div className="pit-wall-controls">
+            <div className="pit-wall-controls" style={{ flexDirection: 'column' }}>
               {isOwner ? (
-                <Link href="/v2/profile/edit" className="v2-btn v2-btn-primary v2-btn-full v2-justify-center">
+                <Link href="/profile/edit" className="v2-btn v2-btn-primary v2-btn-full v2-justify-center">
                   Edit Profile
                 </Link>
               ) : (

@@ -5,9 +5,9 @@ import { discoverCandidateProfile } from '@/lib/ai-candidate-discovery';
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
 export async function POST(request: NextRequest) {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
     try {
         const { leadId, resumeUrl } = await request.json();
 

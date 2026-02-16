@@ -288,50 +288,60 @@ export function GridBookingForm({ orgId, services = [], onSubmit }: GridBookingF
                     onChange={(val) => handleChange('customer_phone', val)}
                 />
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <GridInput
-                        label="Preferred Date"
-                        name="preferred_date"
-                        type="date"
-                        value={formData.preferred_date}
-                        onChange={(val) => handleChange('preferred_date', val)}
-                    />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <GridInput
+                            label="Preferred Date"
+                            name="preferred_date"
+                            type="date"
+                            value={formData.preferred_date}
+                            onChange={(val) => handleChange('preferred_date', val)}
+                        />
+                    </div>
 
-                    <GridInput
-                        label="Preferred Time"
-                        name="preferred_time"
-                        type="time"
-                        value={formData.preferred_time}
-                        onChange={(val) => handleChange('preferred_time', val)}
-                    />
+                    <div style={{ flex: '1 1 200px' }}>
+                        <GridInput
+                            label="Preferred Time"
+                            name="preferred_time"
+                            type="time"
+                            value={formData.preferred_time}
+                            onChange={(val) => handleChange('preferred_time', val)}
+                        />
+                    </div>
                 </div>
 
                 <h4 style={{ marginTop: '2rem', marginBottom: '1rem', fontSize: '1.1rem' }}>Vehicle Information</h4>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', gap: '1rem' }}>
-                    <GridInput
-                        label="Make"
-                        name="vehicle_make"
-                        placeholder="e.g., Honda"
-                        value={formData.vehicle_make}
-                        onChange={(val) => handleChange('vehicle_make', val)}
-                    />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ flex: '1 1 150px' }}>
+                        <GridInput
+                            label="Make"
+                            name="vehicle_make"
+                            placeholder="e.g., Honda"
+                            value={formData.vehicle_make}
+                            onChange={(val) => handleChange('vehicle_make', val)}
+                        />
+                    </div>
 
-                    <GridInput
-                        label="Model"
-                        name="vehicle_model"
-                        placeholder="e.g., Civic"
-                        value={formData.vehicle_model}
-                        onChange={(val) => handleChange('vehicle_model', val)}
-                    />
+                    <div style={{ flex: '1 1 150px' }}>
+                        <GridInput
+                            label="Model"
+                            name="vehicle_model"
+                            placeholder="e.g., Civic"
+                            value={formData.vehicle_model}
+                            onChange={(val) => handleChange('vehicle_model', val)}
+                        />
+                    </div>
 
-                    <GridInput
-                        label="Year"
-                        name="vehicle_year"
-                        placeholder="2020"
-                        value={formData.vehicle_year}
-                        onChange={(val) => handleChange('vehicle_year', val)}
-                    />
+                    <div style={{ flex: '1 1 100px' }}>
+                        <GridInput
+                            label="Year"
+                            name="vehicle_year"
+                            placeholder="2020"
+                            value={formData.vehicle_year}
+                            onChange={(val) => handleChange('vehicle_year', val)}
+                        />
+                    </div>
                 </div>
 
                 <div style={{ marginTop: '1rem' }}>

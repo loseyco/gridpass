@@ -16,9 +16,13 @@ export default function NewOrgPage() {
     const handleSubmit = (formData: FormData) => {
         startTransition(async () => {
             try {
-                await createOrganization(formData)
+                const result = await createOrganization(formData)
                 toast.success('Business added!')
-                router.push('/map')
+                if (result && result.orgId) {
+                    router.push(`/manage/${result.orgId}`)
+                } else {
+                    router.push('/map')
+                }
             } catch (error) {
                 toast.error('Failed to add business. Check logs.')
             }

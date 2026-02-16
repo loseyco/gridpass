@@ -3,7 +3,7 @@
 import React, { JSX } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Car, Briefcase, User, LogIn } from 'lucide-react'
+import { Home, Users, Car, Briefcase, User, LogIn, Newspaper, MessageSquare } from 'lucide-react'
 
 interface Tab {
   id: string
@@ -22,28 +22,23 @@ export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const tabs: Tab[] = [
     {
       id: 'home',
-      label: isLoggedIn ? 'DASHBOARD' : 'HOME',
+      label: 'DASHBOARD',
       href: '/',
       icon: <Home size={24} strokeWidth={2.5} />
     },
     {
-      id: 'members',
-      label: 'MEMBERS',
-      href: '/members',
-      icon: <Users size={24} strokeWidth={2.5} />
+      id: 'news',
+      label: 'NEWS',
+      href: '/news',
+      icon: <Newspaper size={24} strokeWidth={2.5} />
     },
     {
-      id: 'vehicles',
-      label: 'VEHICLES',
-      href: '/vehicles',
-      icon: <Car size={24} strokeWidth={2.5} />
+      id: 'messages',
+      label: 'MESSAGES',
+      href: '/messages',
+      icon: <MessageSquare size={24} strokeWidth={2.5} />
     },
-    {
-      id: 'businesses',
-      label: 'BUSINESSES',
-      href: '/businesses',
-      icon: <Briefcase size={24} strokeWidth={2.5} />
-    },
+
     {
       id: isLoggedIn ? 'profile' : 'login',
       label: isLoggedIn ? 'YOU' : 'LOGIN',
@@ -78,6 +73,12 @@ export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
           align-items: center;
           z-index: var(--v2-z-tab-bar);
           padding: 0;
+        }
+
+        @media (min-width: 768px) {
+            .bottom-tab-bar {
+                display: none; /* Hide on desktop */
+            }
         }
 
         .tab-item {

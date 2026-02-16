@@ -84,14 +84,17 @@ export async function createOrganization(formData: FormData) {
     const website = formData.get('website') as string
     const description = formData.get('description') as string
 
-    const { error } = await supabase.from('organizations').insert({
+    const { data: orgData, error } = await supabase.from('organizations').insert({
         name,
         type,
         location,
         website,
         description,
-        status: 'active' // Default to active for user suggestions? Or 'pending_claim'?
+        status: 'active',
+        claimed_by: user.id // Auto-claim for creator
     })
+        .select() // Return the created org
+        .single()
 
     if (error) {
         console.error('Error creating organization:', error)
@@ -99,7 +102,7 @@ export async function createOrganization(formData: FormData) {
     }
 
     revalidatePath('/map')
-    return { success: true }
+    return { success: true, orgId: orgData.id }
 }
 
 export async function claimOrganization(orgId: string) {

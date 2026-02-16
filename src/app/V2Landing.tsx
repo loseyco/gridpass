@@ -1,25 +1,54 @@
 'use client'
 
 import Link from 'next/link'
-import { Trophy, Wrench, Users, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { Trophy, Wrench, Users, ChevronRight, CheckCircle2, Flag, Briefcase, Car, Gamepad2, ShoppingBag } from 'lucide-react'
+import AppIcon from '@/components/os/AppIcon'
+import UserCard from '@/components/profile/UserCard'
+
+import { createClient } from '@/utils/supabase/client'
+import { useEffect, useState } from 'react'
 
 export default function V2Landing() {
+    const [founderProfile, setFounderProfile] = useState<any>(null)
+
+    useEffect(() => {
+        const fetchFounder = async () => {
+            const supabase = createClient()
+            const { data } = await supabase
+                .from('profiles')
+                .select('avatar_url')
+                .eq('username', 'pjlosey')
+                .single()
+
+            if (data) {
+                setFounderProfile(data)
+            }
+        }
+        fetchFounder()
+    }, [])
+
     return (
         <div className="landing-container">
             {/* Hero Section */}
             <section className="hero-section">
                 <div className="hero-content">
+
+                    {/* Brand Logo */}
+                    <div className="brand-logo mb-8">
+                        <span className="text-white text-4xl font-black italic tracking-tighter">GRID</span>
+                        <span className="text-accent text-4xl font-black italic tracking-tighter">PASS</span>
+                    </div>
+
                     <div className="hero-badge">
                         <span className="pulsing-dot"></span>
                         ALPHA: Season 2026
                     </div>
                     <h1 className="hero-title">
-                        THE MOTORSPORT<br />
-                        <span className="text-accent">CAREER NETWORK</span>
+                        YOUR MOTORSPORTS<br />
+                        <span className="text-accent">OPERATING SYSTEM</span>
                     </h1>
                     <p className="hero-subtitle">
-                        Build your resume, manage your Car Collection, and connect with others.
-                        The professional network for the motorsports world.
+                        GridPass OS is the all-in-one platform to build your racing career, manage your team & garage, and connect with the industry.
                     </p>
                     <div className="hero-actions">
                         <Link href="/register" className="v2-btn v2-btn-primary v2-btn-lg">
@@ -32,17 +61,159 @@ export default function V2Landing() {
                 </div>
             </section>
 
+            {/* OS Preview Section */}
+            <section className="os-preview-section">
+                <div className="os-preview-container">
+                    <h2 className="section-title">ONE APP. ENDLESS POSSIBILITIES.</h2>
+                    <p className="section-subtitle">Manage every aspect of your motorsports life from a single dashboard.</p>
+
+                    <div className="preview-grid">
+                        <div className="preview-item">
+                            <AppIcon label="Profile" icon={Users} color="#007AFF" status="disabled" />
+                            <span>Build Your Brand</span>
+                        </div>
+                        <div className="preview-item">
+                            <AppIcon label="Garage" icon={Car} color="#FF3B30" status="disabled" />
+                            <span>Track Assets</span>
+                        </div>
+                        <div className="preview-item">
+                            <AppIcon label="Career" icon={Trophy} color="#FF9500" status="disabled" />
+                            <span>Get Sponsorship</span>
+                        </div>
+                        <div className="preview-item">
+                            <AppIcon label="Logistics" icon={Flag} color="#34C759" status="disabled" />
+                            <span>Team Management</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Why GridPass Section */}
+            <section className="features-section">
+                <div className="section-header">
+                    <h2 className="section-title">BUILT FOR RACERS</h2>
+                    <p className="section-subtitle">Whether you're a driver, team owner, or shop manager, GridPass OS scales with your career.</p>
+                </div>
+
+                <div className="features-grid">
+                    <div className="feature-card">
+                        <div className="feature-icon bg-accent">
+                            <Trophy size={32} color="white" />
+                        </div>
+                        <h3>Driver Profiles</h3>
+                        <p>Create a professional racing resume that showcases your stats, history, and media to potential sponsors and teams.</p>
+                        <ul className="feature-list">
+                            <li><CheckCircle2 size={16} /> Verified Results</li>
+                            <li><CheckCircle2 size={16} /> Digital License</li>
+                            <li><CheckCircle2 size={16} /> Career History</li>
+                        </ul>
+                    </div>
+
+                    <div className="feature-card">
+                        <div className="feature-icon bg-dark">
+                            <Wrench size={32} color="white" />
+                        </div>
+                        <h3>Garage Management</h3>
+                        <p>Keep track of your chassis, engines, and parts. Log maintenance, setup sheets, and asset history.</p>
+                        <ul className="feature-list">
+                            <li><CheckCircle2 size={16} /> Asset Tracking</li>
+                            <li><CheckCircle2 size={16} /> Setup Database</li>
+                            <li><CheckCircle2 size={16} /> Maintenance Logs</li>
+                        </ul>
+                    </div>
+
+                    <div className="feature-card">
+                        <div className="feature-icon bg-dark">
+                            <Users size={32} color="white" />
+                        </div>
+                        <h3>Team & Shop Command</h3>
+                        <p>Manage your personnel, logistics, and operations. Streamline communication and planning.</p>
+                        <ul className="feature-list">
+                            <li><CheckCircle2 size={16} /> Staff Rosters</li>
+                            <li><CheckCircle2 size={16} /> Logistics Planning</li>
+                            <li><CheckCircle2 size={16} /> Partner Management</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            {/* Vision / Roadmap Section */}
+            <section className="roadmap-section">
+                <h2 className="section-title">COMING SOON TO OS</h2>
+                <div className="roadmap-grid">
+                    <div className="roadmap-item">
+                        <ShoppingBag size={24} className="mb-2" />
+                        <h4>Classifieds</h4>
+                        <p>Buy/Sell parts & cars</p>
+                    </div>
+                    <div className="roadmap-item">
+                        <Gamepad2 size={24} className="mb-2" />
+                        <h4>Sim Racing</h4>
+                        <p>Leagues & Setup Shops</p>
+                    </div>
+                    <div className="roadmap-item">
+                        <Briefcase size={24} className="mb-2" />
+                        <h4>Jobs</h4>
+                        <p>Find your next seat</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer className="landing-footer">
+                <div className="footer-content">
+                    <div className="brand-logo mb-4">
+                        <span className="text-white text-2xl font-black italic tracking-tighter">GRID</span>
+                        <span className="text-accent text-2xl font-black italic tracking-tighter">PASS</span>
+                    </div>
+                    <p className="mb-4 text-sm text-white/50">
+                        The Operating System for your Motorsports Life.
+                    </p>
+
+
+                    <div className="built-by mb-8 flex flex-col items-center">
+                        <span className="text-white/30 text-xs mb-3 uppercase tracking-widest font-bold">Built by</span>
+                        <UserCard
+                            username="pjlosey"
+                            displayName="PJ Losey"
+                            photoUrl={founderProfile?.avatar_url || "https://github.com/pjlosey.png"}
+                            role="Founder & Engineer"
+                        />
+                    </div>
+
+                    <div className="social-links flex justify-center gap-6 mb-8">
+                        <a href="https://instagram.com/pjlosey" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">
+                            Instagram
+                        </a>
+                        <a href="https://github.com/pjlosey" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">
+                            GitHub
+                        </a>
+                        <a href="https://linkedin.com/in/pjlosey" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors">
+                            LinkedIn
+                        </a>
+                    </div>
+
+                    <div className="footer-links text-xs border-t border-white/10 pt-8">
+                        <Link href="/terms">Terms</Link>
+                        <Link href="/privacy">Privacy</Link>
+                        <Link href="/contact">Contact</Link>
+                    </div>
+                    <p className="mt-8 text-xs text-white/20">&copy; 2026 GridPass. All rights reserved.</p>
+                </div>
+            </footer>
+
             <style jsx>{`
         .landing-container {
             padding-bottom: 80px; /* Space for bottom tab bar if visible */
             width: 100%;
+            overflow-x: hidden;
         }
 
         .hero-section {
-            padding: 6rem 1rem 4rem;
+            padding: 8rem 1rem 6rem;
             text-align: center;
-            background: radial-gradient(circle at top center, rgba(225, 6, 0, 0.15) 0%, transparent 70%);
+            background: radial-gradient(circle at top center, rgba(225, 6, 0, 0.2) 0%, transparent 60%);
             width: 100%;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .hero-content {
@@ -65,7 +236,7 @@ export default function V2Landing() {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             color: var(--v2-text-secondary);
         }
 
@@ -122,33 +293,68 @@ export default function V2Landing() {
             height: 54px;
         }
 
-        .features-section {
+        .os-preview-section {
             padding: 4rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        .preview-grid {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .preview-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            color: var(--v2-text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .features-section {
+            padding: 6rem 1rem;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
         }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
 
         .section-title {
             font-family: var(--v2-font-racing);
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-style: italic;
             text-transform: uppercase;
-            text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 1rem;
             color: white;
+            line-height: 0.9;
+        }
+
+        .section-subtitle {
+             color: var(--v2-text-secondary);
+             max-width: 600px;
+             margin: 0 auto;
         }
 
         .features-grid {
             display: grid;
-            gap: 1.5rem;
+            gap: 2rem;
         }
 
         .feature-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: var(--v2-radius-md);
-            padding: 2rem;
+            padding: 2.5rem;
             transition: transform 0.2s;
             display: flex;
             flex-direction: column;
@@ -209,16 +415,39 @@ export default function V2Landing() {
             font-weight: 500;
         }
 
+        .roadmap-section {
+            padding: 4rem 1rem;
+            text-align: center;
+            background: rgba(255,255,255,0.02);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .roadmap-grid {
+             display: flex;
+             justify-content: center;
+             gap: 2rem;
+             margin-top: 3rem;
+             flex-wrap: wrap;
+        }
+
+        .roadmap-item {
+             color: var(--v2-text-tertiary);
+        }
+        
+        .roadmap-item h4 {
+             color: white;
+             font-weight: bold;
+             margin-bottom: 4px;
+        }
+
         .landing-footer {
-            margin-top: 4rem;
+            margin-top: 0;
             border-top: 1px solid rgba(255,255,255,0.05);
             padding: 3rem 1rem;
             text-align: center;
             color: var(--v2-text-tertiary);
             font-size: 0.9rem;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
         }
 
         .footer-links {
@@ -233,15 +462,37 @@ export default function V2Landing() {
             text-decoration: none;
             transition: color 0.2s;
         }
-
-        .footer-links a:hover {
-            color: white;
         }
+        
+        .font-black { font-weight: 900; }
+        .italic { font-style: italic; }
+        .text-4xl { font-size: 2.5rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-white { color: white; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .mt-8 { margin-top: 2rem; }
+        .pt-8 { padding-top: 2rem; }
+        .border-t { border-top-width: 1px; }
+        .border-white\/10 { border-color: rgba(255,255,255,0.1); }
+        .text-white\/50 { color: rgba(255,255,255,0.5); }
+        .text-white\/40 { color: rgba(255,255,255,0.4); }
+        .text-white\/20 { color: rgba(255,255,255,0.2); }
+        .text-white\/60 { color: rgba(255,255,255,0.6); }
+        .hover\:text-white:hover { color: white; }
+        .transition-colors { transition: color 0.2s; }
+        .font-medium { font-weight: 500; }
+        .flex { display: flex; }
+        .justify-center { justify-content: center; }
+        .gap-6 { gap: 1.5rem; }
 
         @media (min-width: 768px) {
             .hero-title {
                 font-size: 5rem;
             }
+            .text-4xl { font-size: 4rem; }
             .hero-subtitle {
                 font-size: 1.25rem;
             }

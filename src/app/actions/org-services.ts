@@ -49,7 +49,7 @@ export async function createService(orgId: string, formData: FormData) {
 
     if (!name || isNaN(price)) throw new Error('Invalid input')
 
-    const { error } = await supabase.from('org_services').insert({
+    const { error } = await supabase.from('os_org_services').insert({
         org_id: orgId,
         name,
         price,
@@ -73,7 +73,7 @@ export async function deleteService(orgId: string, serviceId: string) {
     const { data: org } = await supabase.from('organizations').select('claimed_by').eq('id', orgId).single()
     if (!org || org.claimed_by !== user.id) throw new Error('Unauthorized')
 
-    const { error } = await supabase.from('org_services').delete().eq('id', serviceId)
+    const { error } = await supabase.from('os_org_services').delete().eq('id', serviceId)
 
     if (error) throw new Error('Failed to delete service')
 

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import BottomTabBar from './components/BottomTabBar'
+import DesktopNavbar from './components/DesktopNavbar'
 import InstallPrompt from './components/InstallPrompt'
 import V2LayoutClient from './V2LayoutClient'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
@@ -11,8 +12,8 @@ import { TimeTracker } from '@/components/analytics/TimeTracker'
 import { createClient } from '@/utils/supabase/server'
 
 export const metadata: Metadata = {
-    title: 'GridPass',
-    description: 'The Business Operating System for Racing',
+    title: 'GridPass: Your Motorsports OS',
+    description: 'The Operating System for your Motorsports Life',
     manifest: '/manifest.json',
     appleWebApp: {
         capable: true,
@@ -41,6 +42,7 @@ export default async function V2Layout({
                 <PageTracker />
                 <TimeTracker />
                 <V2LayoutClient isLoggedIn={!!user}>
+                    <DesktopNavbar isLoggedIn={!!user} />
                     {children}
                     <InstallPrompt />
                     <BottomTabBar isLoggedIn={!!user} />
