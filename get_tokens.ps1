@@ -1,7 +1,7 @@
 $appId = "1101567568207263"
 $appSecret = "5eb61e59a82d331b286daf7d712170bc"
 $shortToken = "EAAPp3qZBZAXZA8BQmpF3dNMphqO2OgogDxcdEX1ctubBH5AyAfijviPx89bKHuZCdYZBHjBaFrj2vJ9DyPAamMLtVrxgowq20VFXNnZAmbsN2xvx4BRUkgq5qLKzilzoaqIMiV8GZBtyXxpyvP79cRvRppZBsUaB9EE89tjGvFPyOh3Bw33Y90KGaHZA67nX7ETfz0TklZBAYTZBNr25xvxB4Hs2KHdDyeiT7XqdBRex9Jq5H5p4vZAPb1JCMAkbQ7tovoDfWbgY3R0XHid4L8ps2K2ZBVqs7tZBLUHKfmLTKmKIQZD"
-$pageId = "105650392500095"
+$pageId = "555016541038233"
 
 try {
     # Step 1: Exchange for Long-Lived User Token
@@ -25,8 +25,20 @@ try {
         exit 1
     }
 
-    $response2.data | ForEach-Object {
-        Write-Host "PAGE_FOUND: Name=$($_.name), ID=$($_.id), Token=$($_.access_token)"
+    $match = $response2.data | Where-Object { $_.id -eq $pageId }
+    
+    if ($match) {
+        Write-Host "MATCH FOUND:"
+        Write-Host "ID: $($match.id)"
+        Write-Host "TOKEN_START"
+        Write-Host "$($match.access_token)"
+        Write-Host "TOKEN_END"
+        $match.access_token | Out-File -FilePath "final_token.txt" -NoNewline -Encoding utf8
+    }
+    else {
+        Write-Error "Page with ID $pageId not found in user accounts."
+        Write-Host "Available Pages:"
+        $response2.data | ForEach-Object { Write-Host "$($_.name) ($($_.id))" }
     }
 }
 catch {
