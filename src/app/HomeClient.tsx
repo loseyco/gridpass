@@ -59,7 +59,7 @@ export default function HomeClient({
 
             {/* Live Apps */}
             <div className="section-header col-span-full">
-              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 mt-2">Live</h2>
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-0">Live</h2>
             </div>
 
             <AppIcon label="About" icon={Info} href="/about" color="#8E8E93" />
@@ -68,7 +68,7 @@ export default function HomeClient({
 
             {/* Beta Apps */}
             <div className="section-header col-span-full">
-              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 mt-4">Beta</h2>
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-2">Beta</h2>
             </div>
 
             <AppIcon label="Profile" icon={User} href={`/u/${userProfile?.username || 'pjlosey'}`} color="#007AFF" status="beta" />
@@ -78,7 +78,7 @@ export default function HomeClient({
 
             {/* Alpha Apps */}
             <div className="section-header col-span-full">
-              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 mt-4">Alpha</h2>
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-2">Alpha</h2>
             </div>
 
             <AppIcon label="News" icon={Newspaper} href="/news" color="#FF2D55" status="alpha" />
@@ -90,7 +90,7 @@ export default function HomeClient({
 
             {/* Coming Soon */}
             <div className="section-header col-span-full">
-              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 mt-4">Coming Soon</h2>
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-2">Coming Soon</h2>
             </div>
 
             <AppIcon label="My Garage" icon={Car} href="/garage" color="#FF3B30" status="soon" />
@@ -175,7 +175,7 @@ export default function HomeClient({
         .app-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 24px 12px;
+            gap: 12px 12px;
             width: 100%;
             max-width: 400px; /* Restrain width on larger screens for phone feel */
         }
