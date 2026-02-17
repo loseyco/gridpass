@@ -11,7 +11,7 @@ export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
 
     const navItems = [
         { label: 'Dashboard', href: '/', icon: <Home className="w-4 h-4" /> },
-        { label: 'News', href: '/news', icon: <Newspaper className="w-4 h-4" /> },
+        { label: 'News', href: '/news', icon: <Newspaper className="w-4 h-4" />, badge: 'ALPHA' },
         { label: 'About', href: '/about', icon: <Info className="w-4 h-4" /> },
         {
             label: isLoggedIn ? 'You' : 'Login',
@@ -41,6 +41,11 @@ export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                         >
                             {item.icon}
                             {item.label}
+                            {item.badge && (
+                                <span className="ml-1 px-1.5 py-0.5 text-[0.5rem] font-bold bg-purple-500/20 text-purple-400 rounded border border-purple-500/30">
+                                    {item.badge}
+                                </span>
+                            )}
                             {isActive && (
                                 <span className="absolute bottom-0 h-0.5 w-full bg-red-500"></span>
                             )}

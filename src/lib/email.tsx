@@ -246,7 +246,7 @@ export async function sendContactEmail(data: {
     try {
         await resend.emails.send({
             from: 'GridPass Contact <contact@resend.dev>',
-            to: 'pjlos@example.com', // Doing this hardcoded as requested for now
+            to: 'pjlosey@outlook.com', // Admin email as requested
             replyTo: data.email,
             subject: `New Contact Form Submission from ${data.firstName} ${data.lastName}`,
             html: `

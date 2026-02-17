@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell,
   Wrench, Calculator, Settings, Newspaper, User, Briefcase, QrCode,
-  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy
+  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle
 } from 'lucide-react'
 import AppIcon from '@/components/os/AppIcon'
 
@@ -93,7 +93,7 @@ export default function HomeClient({
               icon={Newspaper}
               href="/news"
               color="#FF2D55"
-              status="beta"
+              status="alpha"
             />
             <AppIcon
               label="Members"
@@ -114,7 +114,7 @@ export default function HomeClient({
               icon={Trophy}
               href="/league"
               color="#5856D6"
-              status="beta"
+              status="alpha"
             />
 
 
@@ -179,6 +179,13 @@ export default function HomeClient({
             />
 
             {/* Row 5: System */}
+            <AppIcon
+              label="Incidents"
+              icon={AlertTriangle}
+              href="/stewards"
+              color="#FF9500"
+              status="alpha"
+            />
             <AppIcon
               label="Scan"
               icon={QrCode}

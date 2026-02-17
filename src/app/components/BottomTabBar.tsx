@@ -10,6 +10,7 @@ interface Tab {
   label: string
   href: string
   icon: JSX.Element
+  badge?: string
 }
 
 export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
@@ -30,7 +31,8 @@ export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
       id: 'news',
       label: 'NEWS',
       href: '/news',
-      icon: <Newspaper size={24} strokeWidth={2.5} />
+      icon: <Newspaper size={24} strokeWidth={2.5} />,
+      badge: 'ALPHA'
     },
     {
       id: 'about',
@@ -166,7 +168,14 @@ export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
           href={tab.href}
           className={`tab-item ${isActive(tab.href) ? 'active' : ''}`}
         >
-          <span className="tab-icon">{tab.icon}</span>
+          <span className="tab-icon">
+            {tab.icon}
+            {tab.badge && (
+              <span className="absolute top-2 right-4 translate-x-1/2 -translate-y-1/2 px-1 text-[0.4rem] font-bold bg-purple-500 text-black rounded-sm leading-tight z-10">
+                {tab.badge}
+              </span>
+            )}
+          </span>
           <span className="tab-label">{tab.label}</span>
         </Link>
       ))}
