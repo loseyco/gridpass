@@ -5,12 +5,8 @@ import { Suspense } from 'react';
 import SceneController from './components/SceneController';
 
 function LiveStudioContent() {
-    const searchParams = useSearchParams();
-    const zoomParam = searchParams.get('zoom');
-    const zoom = zoomParam ? parseFloat(zoomParam) : 0.67; // Default to HD (720p)
-
     return (
-        <div className="relative w-[1920px] h-[1080px] bg-black shadow-2xl origin-center" style={{ zoom: zoom }}>
+        <div className="relative w-full h-full bg-black shadow-2xl">
             <SceneController />
         </div>
     );

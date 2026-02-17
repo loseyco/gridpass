@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ScrollText, Send, User, Bot, Terminal } from 'lucide-react';
-import { getFeatureLogs, addFeatureLog } from '@/app/admin/features/actions';
+import { getFeatureLogs, addFeatureLog } from '@/app/(main)/admin/features/actions';
 
 type Log = {
     id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { updateCollection, archiveCollection } from '@/app/collections/actions';
+import { updateCollection, archiveCollection } from '@/app/(main)/collections/actions';
 import { Collection } from '@/types/garage';
 import { X, Loader2, Lock, Globe, Users, Archive, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';

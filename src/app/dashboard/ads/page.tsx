@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import { Plus, Trash, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -12,7 +12,7 @@ export default function AdsDashboard() {
     const [imageUrl, setImageUrl] = useState('');
     const [tier, setTier] = useState('FREE');
     const [submitting, setSubmitting] = useState(false);
-    const supabase = createClientComponentClient();
+    const supabase = createClient();
     const router = useRouter();
 
     useEffect(() => {
@@ -21,7 +21,7 @@ export default function AdsDashboard() {
 
     const fetchAds = async () => {
         const { data, error } = await supabase
-            .from('ads')
+            .from('os_ads')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -37,7 +37,7 @@ export default function AdsDashboard() {
         if (!user) return;
 
         const { error } = await supabase
-            .from('ads')
+            .from('os_ads')
             .insert({
                 user_id: user.id,
                 headline,
@@ -58,7 +58,7 @@ export default function AdsDashboard() {
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure?')) return;
-        const { error } = await supabase.from('ads').delete().eq('id', id);
+        const { error } = await supabase.from('os_ads').delete().eq('id', id);
         if (!error) fetchAds();
     };
 

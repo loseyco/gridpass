@@ -82,8 +82,39 @@ export async function GET() {
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-    // Mock views for now, or fetch if available
+    // Mock views for now
     const pageViews = 12543 + Math.floor(Math.random() * 100);
+
+    // 5. Fetch ADS (Internal Monetization)
+    const { data: ads } = await supabase
+        .from('os_ads')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false });
+
+    // 6. Fetch Calendar (Real Schedule)
+    const { data: calendarEvents } = await supabase
+        .from('os_calendar_events')
+        .select('*')
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(5);
+
+    // Format calendar events for frontend
+    const formattedCalendar = calendarEvents?.map(evt => ({
+        ...evt,
+        // Frontend expects 'time', 'series', 'event', 'channel' logic or uses the raw fields
+        // We'll pass raw fields and let frontend handle date formatting, but ensure structure matches
+        title: evt.title,  // Frontend ScheduleScene uses 'title' or 'event'? Let's check. 
+        // Wait, ScheduleScene uses 'evt.title' and 'evt.series'.
+        // The hardcoded fallback uses 'event'. I should align them.
+    })) || [];
+
+    // Fallback if DB is empty
+    const finalCalendar = formattedCalendar.length > 0 ? formattedCalendar : [
+        { start_time: new Date().toISOString(), series: 'F1', title: 'Bahrain Grand Prix', channel: 'ESPN', is_fallback: true },
+        { start_time: new Date(Date.now() + 86400000).toISOString(), series: 'NASCAR', title: 'Daytona 500', channel: 'FOX', is_fallback: true }
+    ];
 
     return NextResponse.json({
         spotlight: shuffledUsers,
@@ -93,13 +124,8 @@ export async function GET() {
             total_members: memberCount || 0,
             page_views: pageViews
         },
-        calendar: [
-            { time: 'TODAY 14:00', series: 'F1', event: 'Bahrain Grand Prix', channel: 'ESPN' },
-            { time: 'TODAY 20:00', series: 'NASCAR', event: 'Daytona 500', channel: 'FOX' },
-            { time: 'TOMORROW 09:00', series: 'WEC', event: '6 Hours of Fuji', channel: 'MotorTrend' },
-            { time: 'WED 19:00', series: 'iRacing', event: 'GridPass Cup Round 4', channel: 'Twitch' },
-            { time: 'FRI 21:00', series: 'ACC', event: 'LFM Pro Series', channel: 'YouTube' }
-        ],
-        breaking_news: Math.random() > 0.9 // Random 10% chance of breaking news trigger for testing
+        ads: ads || [], // Return fetched ads
+        calendar: finalCalendar,
+        breaking_news: Math.random() > 0.9
     });
 }

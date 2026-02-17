@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createInvite, getInvites } from '@/app/admin/invites/actions';
+import { createInvite, getInvites } from '@/app/(main)/admin/invites/actions';
 import { UserRole } from '@/utils/rbac-shared';
 import { Copy, Loader2, Plus, Ticket } from 'lucide-react';
 

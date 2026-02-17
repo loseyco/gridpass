@@ -2,7 +2,7 @@
 
 import { Users, Activity, Server, Cpu, CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getAdminStats } from '@/app/admin/stats-actions';
+import { getAdminStats } from '@/app/(main)/admin/stats-actions';
 
 export default function LiveStats() {
     const [stats, setStats] = useState({

@@ -13,7 +13,7 @@ import {
     CheckCircle,
     Clock
 } from 'lucide-react';
-import { updateFeatureStatus, deleteFeature, assignExpert } from '@/app/admin/features/actions';
+import { updateFeatureStatus, deleteFeature, assignExpert } from '@/app/(main)/admin/features/actions';
 
 type Feature = {
     id: string;

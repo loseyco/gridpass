@@ -12,6 +12,8 @@ interface BroadcastOverlayProps {
     } | null;
 }
 
+// ... imports
+
 export default function BroadcastOverlay({ stats }: BroadcastOverlayProps) {
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -22,6 +24,20 @@ export default function BroadcastOverlay({ stats }: BroadcastOverlayProps) {
 
     return (
         <div className="absolute inset-0 z-[100] pointer-events-none">
+            {/* ALPHA BANNER - Construction Warning */}
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-yellow-500/90 text-black px-6 py-2 rounded-lg border-2 border-yellow-400 shadow-xl backdrop-blur-md flex items-center gap-3 animate-pulse">
+                <div className="w-3 h-3 bg-black rounded-full animate-bounce"></div>
+                <div className="text-center">
+                    <div className="font-black italic uppercase tracking-tighter text-lg leading-none">
+                        Alpha Build
+                    </div>
+                    <div className="font-bold text-[10px] uppercase tracking-widest opacity-80">
+                        Feed Under Construction
+                    </div>
+                </div>
+                <div className="w-3 h-3 bg-black rounded-full animate-bounce delay-75"></div>
+            </div>
+
             {/* Top Right: LIVE Indicator & Clock */}
             <div className="absolute top-8 right-8 flex flex-col items-end gap-2">
                 <div className="flex items-center gap-3 bg-black/80 backdrop-blur-md px-4 py-2 rounded border border-white/10 shadow-lg">

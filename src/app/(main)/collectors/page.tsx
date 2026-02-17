@@ -10,7 +10,7 @@ import {
     Infinity,
     Shield
 } from 'lucide-react';
-import { getPlatformStats } from '@/app/collections/actions';
+import { getPlatformStats } from '@/app/(main)/collections/actions';
 import { createClient } from '@/utils/supabase/server';
 
 export const metadata = {

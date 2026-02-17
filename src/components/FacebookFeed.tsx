@@ -1,4 +1,4 @@
-import { getFacebookPosts } from '@/app/admin/social/actions'
+import { getFacebookPosts } from '@/app/(main)/admin/social/actions'
 
 export async function FacebookFeed({ accountId }: { accountId: string }) {
     const posts = await getFacebookPosts(accountId)

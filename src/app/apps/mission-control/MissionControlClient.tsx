@@ -4,10 +4,9 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Activity, Rss, Facebook, Youtube, Play, Pause, RefreshCw, Radio } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function MissionControlClient() {
@@ -55,9 +54,6 @@ export default function MissionControlClient() {
     const isOnline = heartbeat && (new Date().getTime() - new Date(heartbeat.last_seen).getTime()) < 120000; // 2 mins
 
     const getIcon = (key: string) => {
-        if (key.includes('news')) return <Rss className="w-5 h-5 text-orange-500" />;
-        if (key.includes('facebook')) return <Facebook className="w-5 h-5 text-blue-500" />;
-        if (key.includes('youtube')) return <Youtube className="w-5 h-5 text-red-500" />;
         return <Activity className="w-5 h-5 text-zinc-500" />;
     };
 
@@ -90,13 +86,16 @@ export default function MissionControlClient() {
                             <div className="flex items-center gap-2">
                                 {getIcon(setting.key)}
                                 <CardTitle className="text-base font-medium">
-                                    {setting.key.split('.')[1].replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                                    {setting.key.split('.')[1].replace('_', ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                                 </CardTitle>
                             </div>
-                            <Switch
-                                checked={setting.value?.enabled}
-                                onCheckedChange={() => toggleSetting(setting.key, setting.value)}
-                            />
+                            <Button
+                                variant={setting.value?.enabled ? "default" : "secondary"}
+                                size="sm"
+                                onClick={() => toggleSetting(setting.key, setting.value)}
+                            >
+                                {setting.value?.enabled ? 'ON' : 'OFF'}
+                            </Button>
                         </CardHeader>
                         <CardContent>
                             <div className="text-sm text-zinc-400 mb-4 h-10">
@@ -117,7 +116,7 @@ export default function MissionControlClient() {
             <Card className="bg-zinc-950 border-zinc-800 mt-6">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Radio className="w-5 h-5 text-red-500" />
+                        <Activity className="w-5 h-5 text-red-500" />
                         Live Broadcast Override
                     </CardTitle>
                 </CardHeader>

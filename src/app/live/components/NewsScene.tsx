@@ -69,7 +69,7 @@ export default function NewsScene() {
                         >
                             {/* Background Image with Gradient Overlay */}
                             <img
-                                src={`https://images.unsplash.com/photo-1541348263347-37505d96251f?auto=format&fit=crop&q=80&sig=${featureIndex}`} // Mock image for now
+                                src={`https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&sig=${featureIndex}`} // Reliable car image
                                 className="w-full h-full object-cover opacity-60"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>

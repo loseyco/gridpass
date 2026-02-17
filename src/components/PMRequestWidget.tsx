@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Send, Bot, Loader2, CheckCircle2 } from 'lucide-react';
-import { createPMTask } from '@/app/admin/features/actions';
+import { createPMTask } from '@/app/(main)/admin/features/actions';
 
 export default function PMRequestWidget() {
     const [request, setRequest] = useState('');
