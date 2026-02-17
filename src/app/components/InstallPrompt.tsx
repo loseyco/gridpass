@@ -215,6 +215,12 @@ export default function InstallPrompt() {
             max-width: calc(var(--v2-max-width) - 2rem);
           }
         }
+
+        @media print {
+          .install-prompt {
+            display: none !important;
+          }
+        }
       `}</style>
     </div>
   )
