@@ -31,8 +31,7 @@ export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
       id: 'news',
       label: 'NEWS',
       href: '/news',
-      icon: <Newspaper size={24} strokeWidth={2.5} />,
-      badge: 'ALPHA'
+      icon: <Newspaper size={24} strokeWidth={2.5} />
     },
     {
       id: 'about',

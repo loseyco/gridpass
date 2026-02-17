@@ -8,6 +8,17 @@ import { notFound } from 'next/navigation'
 
 // ... imports unchanged
 
+import { Database } from '@/types/supabase'
+
+type Incident = Database['public']['Tables']['os_stewards_incidents']['Row']
+type Vote = Database['public']['Tables']['os_stewards_votes']['Row']
+type Comment = Database['public']['Tables']['os_stewards_comments']['Row'] & {
+    profiles: {
+        username: string | null
+        avatar_url: string | null
+    }
+}
+
 export default async function IncidentPage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient()
     const { id } = await params
@@ -30,27 +41,32 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
     }
 
     // Manual join for profiles
-    let commentsWithProfiles = incident.comments || []
-    if (commentsWithProfiles.length > 0) {
-        const userIds = Array.from(new Set(commentsWithProfiles.map((c: any) => c.user_id)))
-        const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url')
-            .in('id', userIds)
+    let commentsWithProfiles: Comment[] = []
+    if (incident.comments) {
+        // @ts-ignore - Supabase types for joined arrays can be tricky
+        const rawComments = incident.comments as any[]
 
-        const profileMap = new Map(profiles?.map((p: any) => [p.id, p]))
+        if (rawComments.length > 0) {
+            const userIds = Array.from(new Set(rawComments.map(c => c.user_id)))
+            const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, username, avatar_url')
+                .in('id', userIds)
 
-        commentsWithProfiles = commentsWithProfiles.map((c: any) => ({
-            ...c,
-            profiles: profileMap.get(c.user_id) || { username: 'Unknown Driver', avatar_url: null }
-        }))
+            const profileMap = new Map(profiles?.map(p => [p.id, p]))
+
+            commentsWithProfiles = rawComments.map(c => ({
+                ...c,
+                profiles: profileMap.get(c.user_id) || { username: 'Unknown Driver', avatar_url: null }
+            }))
+        }
     }
 
     // Process votes
-    const voteCounts = { driver_a: 0, driver_b: 0, racing_incident: 0 }
+    const voteCounts: Record<string, number> = { driver_a: 0, driver_b: 0, racing_incident: 0 }
+    // @ts-ignore
     incident.votes.forEach((v: any) => {
         if (v.vote_type in voteCounts) {
-            //@ts-ignore
             voteCounts[v.vote_type]++
         }
     })
@@ -58,7 +74,7 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
     const processedIncident = { ...incident, votes: voteCounts }
 
     // Sort comments newest first
-    const sortedComments = commentsWithProfiles.sort((a: any, b: any) =>
+    const sortedComments = commentsWithProfiles.sort((a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
 

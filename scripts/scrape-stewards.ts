@@ -1,3 +1,4 @@
+/* eslint-disable */
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import puppeteer from 'puppeteer-extra';

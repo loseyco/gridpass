@@ -9,9 +9,16 @@ export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
     const pathname = usePathname()
     if (pathname?.startsWith('/studio')) return null
 
-    const navItems = [
+    interface NavItem {
+        label: string
+        href: string
+        icon: React.ReactNode
+        badge?: string
+    }
+
+    const navItems: NavItem[] = [
         { label: 'Dashboard', href: '/', icon: <Home className="w-4 h-4" /> },
-        { label: 'News', href: '/news', icon: <Newspaper className="w-4 h-4" />, badge: 'ALPHA' },
+        { label: 'News', href: '/news', icon: <Newspaper className="w-4 h-4" /> },
         { label: 'About', href: '/about', icon: <Info className="w-4 h-4" /> },
         {
             label: isLoggedIn ? 'You' : 'Login',
