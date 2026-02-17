@@ -195,24 +195,27 @@ export default function PublicProfileClient({
             {/* Pit Wall Controls */}
 
             <div className="pit-wall-controls" style={{ flexDirection: 'column' }}>
-              {isOwner ? (
-                <Link href="/profile/edit" className="v2-btn v2-btn-primary v2-btn-full v2-justify-center">
-                  Edit Profile
-                </Link>
-              ) : (
-                <div className="v2-flex v2-flex-col v2-gap-2 v2-w-full">
-                  <button
-                    onClick={() => window.print()}
-                    className="v2-btn v2-btn-secondary v2-btn-full v2-justify-center"
-                  >
-                    <Printer size={18} className="v2-mr-2" />
-                    Save as PDF
-                  </button>
-                  <button className="v2-btn v2-btn-primary v2-btn-full v2-justify-center" disabled>
+              <div className="v2-flex v2-flex-col v2-gap-2 v2-w-full">
+                {isOwner && (
+                  <Link href="/profile/edit" className="v2-btn v2-btn-primary v2-btn-full v2-justify-center no-print">
+                    Edit Profile
+                  </Link>
+                )}
+
+                <button
+                  onClick={() => window.print()}
+                  className={`v2-btn v2-btn-full v2-justify-center ${isOwner ? 'v2-btn-secondary' : 'v2-btn-secondary'}`}
+                >
+                  <Printer size={18} className="v2-mr-2" />
+                  Save as PDF
+                </button>
+
+                {!isOwner && (
+                  <button className="v2-btn v2-btn-primary v2-btn-full v2-justify-center no-print" disabled>
                     Contact (Coming Soon)
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
           </div>
@@ -421,6 +424,27 @@ export default function PublicProfileClient({
         </div>
 
         <style jsx>{`
+        @media print {
+            .no-print, .v2-header, .v2-footer, .v2-nav, header, nav {
+                display: none !important;
+            }
+            .v2-profile-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .v2-heading-1, .v2-heading-2, .v2-heading-3 {
+                color: black !important;
+            }
+            .v2-text-secondary, .v2-text-tertiary {
+                color: #555 !important;
+            }
+        }
+
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(46, 164, 79, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(46, 164, 79, 0); }
