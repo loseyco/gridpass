@@ -8,15 +8,34 @@ import { notFound } from 'next/navigation'
 
 // ... imports unchanged
 
-import { Database } from '@/types/supabase'
+// ... imports unchanged
 
-type Incident = Database['public']['Tables']['os_stewards_incidents']['Row']
-type Vote = Database['public']['Tables']['os_stewards_votes']['Row']
-type Comment = Database['public']['Tables']['os_stewards_comments']['Row'] & {
+// Explicit interfaces to avoid dependency on outdated Database types
+interface Vote {
+    vote_type: string
+}
+
+interface Comment {
+    id: string
+    user_id: string
+    created_at: string
+    content: string
     profiles: {
         username: string | null
         avatar_url: string | null
     }
+}
+
+interface Incident {
+    id: string
+    created_at: string
+    title: string
+    description: string | null
+    video_url: string
+    sim_title: string | null
+    user_id: string | null
+    votes: any[]
+    comments: any[]
 }
 
 export default async function IncidentPage({ params }: { params: Promise<{ id: string }> }) {

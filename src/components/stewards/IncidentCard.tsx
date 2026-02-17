@@ -145,20 +145,48 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
             <CardContent>
                 {/* Video Embed */}
                 <div className="relative aspect-video bg-black rounded-md overflow-hidden mb-4">
-                    {/* Handling YouTube Embeds mostly */}
-                    {incident.video_url.includes('youtu') ? (
-                        <iframe
-                            src={`https://www.youtube.com/embed/${getYouTubeId(incident.video_url)}`}
-                            className="absolute inset-0 w-full h-full"
-                            allowFullScreen
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center h-full text-zinc-500">
-                            <a href={incident.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white">
-                                Video Link <Share2 className="w-4 h-4" />
-                            </a>
-                        </div>
-                    )}
+                    {(() => {
+                        const { type, src } = getEmbed(incident.video_url)
+
+                        switch (type) {
+                            case 'youtube':
+                            case 'streamable':
+                                return (
+                                    <iframe
+                                        src={src}
+                                        className="absolute inset-0 w-full h-full"
+                                        allowFullScreen
+                                        allow="autoplay; encrypted-media"
+                                    />
+                                )
+                            case 'reddit':
+                                return (
+                                    <iframe
+                                        src={src}
+                                        className="absolute inset-0 w-full h-full"
+                                        // Reddit embeds can be finicky with sandbox, usually need allow-scripts
+                                        sandbox="allow-scripts allow-same-origin allow-popups"
+                                        style={{ border: 0 }}
+                                    />
+                                )
+                            case 'video':
+                                return (
+                                    <video
+                                        src={src}
+                                        controls
+                                        className="absolute inset-0 w-full h-full"
+                                    />
+                                )
+                            default:
+                                return (
+                                    <div className="flex items-center justify-center h-full text-zinc-500">
+                                        <a href={incident.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white">
+                                            Video Link <Share2 className="w-4 h-4" />
+                                        </a>
+                                    </div>
+                                )
+                        }
+                    })()}
                 </div>
 
                 <p className="text-zinc-400 text-sm mb-6">{incident.description}</p>
@@ -229,6 +257,40 @@ function VoteButton({ label, color, count, percent, selected, onClick, icon }: a
             />
         </button>
     )
+}
+
+// Helper to determine embed type/url
+function getEmbed(url: string) {
+    if (!url) return { type: 'link', src: '' }
+
+    // YouTube
+    if (url.includes('youtu')) {
+        const id = getYouTubeId(url)
+        return id ? { type: 'youtube', src: `https://www.youtube.com/embed/${id}` } : { type: 'link', src: url }
+    }
+
+    // Streamable
+    if (url.includes('streamable.com')) {
+        // Extract code: streamable.com/abcd -> streamable.com/e/abcd
+        const code = url.split('/').pop()
+        return { type: 'streamable', src: `https://streamable.com/e/${code}` }
+    }
+
+    // Reddit (Post or Video)
+    if (url.includes('reddit.com')) {
+        // Determine if it's a post path. If so, append embed=true
+        // Remove trailing slash if present then append
+        const cleanUrl = url.replace(/\/$/, '')
+        return { type: 'reddit', src: `${cleanUrl}?embed=true&theme=dark` }
+    }
+
+    // Direct Video
+    if (url.match(/\.(mp4|webm|ogg)$/)) {
+        return { type: 'video', src: url }
+    }
+
+    // Fallback
+    return { type: 'link', src: url }
 }
 
 function getYouTubeId(url: string) {
