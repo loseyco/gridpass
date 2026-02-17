@@ -2,12 +2,16 @@
   "name": "gridpass",
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
+    "dev": "next dev",
+    "dev:stream": "next dev -p 3005",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "link": "node scripts/gridpass-link.js",
-    "broadcast": "node scripts/broadcast.mjs"
+    "broadcast": "npm run broadcast:hd",
+    "broadcast:hd": "node scripts/broadcast.mjs --mode=hd",
+    "broadcast:laptop": "node scripts/broadcast.mjs --mode=laptop",
+    "broadcast:potato": "node scripts/broadcast.mjs --mode=potato"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

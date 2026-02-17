@@ -8,32 +8,71 @@ dotenv.config({ path: '.env.local' });
 // CONFIGURATION
 const STREAM_KEY = process.env.YOUTUBE_STREAM_KEY || 'YOUR_STREAM_KEY_HERE';
 const RTMP_URL = 'rtmp://a.rtmp.youtube.com/live2';
-const VIEWPORT = { width: 1280, height: 720 }; // Downscaled to 720p for performance
+
+// Mode Definition
+const MODES = {
+    hd: {
+        name: '720p HD Mode',
+        width: 1280,
+        height: 720,
+        zoom: 0.67,
+        fps: 10,
+        bitrate: '2000k',
+        bufsize: '4000k',
+        gop: 20
+    },
+    laptop: {
+        name: 'qHD Laptop Mode',
+        width: 960,
+        height: 540,
+        zoom: 0.5,
+        fps: 10,
+        bitrate: '1500k',
+        bufsize: '3000k',
+        gop: 20
+    },
+    potato: {
+        name: '360p Potato Mode (Low CPU)',
+        width: 640,
+        height: 360,
+        zoom: 0.33,
+        fps: 10,
+        bitrate: '1000k',
+        bufsize: '2000k',
+        gop: 20
+    }
+};
+
+// Parse command line arguments for mode
+const args = process.argv.slice(2);
+const modeArg = args.find(arg => arg.startsWith('--mode='))?.split('=')[1] || 'hd';
+const CURRENT_MODE = MODES[modeArg] || MODES.hd;
 
 async function startBroadcast() {
     if (STREAM_KEY === 'YOUR_STREAM_KEY_HERE') {
-        console.error('❌ ERROR: You must set your YouTube Stream Key in the script or environment variable.');
-        console.log('Usage: set YOUTUBE_STREAM_KEY=xxxx-xxxx && npm run broadcast');
         process.exit(1);
     }
 
-    console.log('🚀 Starting GridPass Broadcast Engine (720p Performance Mode)...');
+    console.log(`🚀 Starting GridPass Broadcast Engine (${CURRENT_MODE.name})...`);
 
     const browser = await puppeteer.launch({
         headless: false, // Visible as requested
         args: [
-            '--window-size=1280,720',
+            `--window-size=${CURRENT_MODE.width},${CURRENT_MODE.height}`,
             '--autoplay-policy=no-user-gesture-required',
             '--hide-scrollbars',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
         ],
         defaultViewport: null,
     });
 
     const page = await browser.newPage();
-    await page.setViewport(VIEWPORT);
+    await page.setViewport({ width: CURRENT_MODE.width, height: CURRENT_MODE.height });
 
-    // Navigate to the visual engine
-    const studioUrl = 'http://localhost:3000/live-studio';
+    // Navigate to the visual engine with zoom param
+    const studioUrl = `http://localhost:3005/live-studio?zoom=${CURRENT_MODE.zoom}`;
     console.log(`🔗 navigating to ${studioUrl}...`);
     await page.goto(studioUrl, { waitUntil: 'networkidle2' });
 
@@ -45,18 +84,18 @@ async function startBroadcast() {
         '-i', '-',                // Video from stdin (0)
         '-f', 'lavfi',            // New input format: lavfi (filter)
         '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100', // Silent audio (1)
-        '-r', '10',               // Lower framerate to 10fps for maximum stability
+        '-r', `${CURRENT_MODE.fps}`,               // Lower framerate to 10fps for maximum stability
 
         // Video Settings
         '-map', '0:v',            // Map first input (video)
-        '-c:v', 'libx264',
-        '-preset', 'ultrafast',
-        '-tune', 'zerolatency',
-        '-b:v', '2000k',          // Lower bitrate to ensure consistent delivery
-        '-maxrate', '2000k',
-        '-bufsize', '4000k',
+        '-c:v', 'h264_nvenc',     // NVIDIA Hardware Encoder
+        '-preset', 'p1',          // Fastest (p1) to Slowest (p7)
+        '-tune', 'ull',           // Ultra Low Latency
+        '-b:v', CURRENT_MODE.bitrate,
+        '-maxrate', CURRENT_MODE.bitrate,
+        '-bufsize', CURRENT_MODE.bufsize,
         '-pix_fmt', 'yuv420p',
-        '-g', '20',               // Keyframe every 2 seconds (10fps * 2s) - Critical for YouTube
+        '-g', `${CURRENT_MODE.gop}`,               // Keyframe every 2 seconds (10fps * 2s)
 
         // Audio Settings
         '-map', '1:a',            // Map second input (audio)

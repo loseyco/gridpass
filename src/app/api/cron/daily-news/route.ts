@@ -35,6 +35,14 @@ export async function GET(req: NextRequest) {
         const summaryResults = await generateDailySummary();
         console.log('Summary results:', summaryResults);
 
+        // Fail the cron job if we had errors and processed nothing (so GitHub Action turns Red)
+        if (scrapeResults.errors > 0 && scrapeResults.inserted === 0 && scrapeResults.processed === 0) {
+            return NextResponse.json({
+                error: 'Scraping failed',
+                details: scrapeResults
+            }, { status: 500 });
+        }
+
         return NextResponse.json({
             success: true,
             scraped: scrapeResults,

@@ -1,7 +1,12 @@
 import Parser from 'rss-parser';
 import { createAdminClient } from '@/utils/supabase/admin';
 
-const parser = new Parser();
+const parser = new Parser({
+    headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/rss+xml, application/xml, text/xml; q=0.1',
+    }
+});
 
 export async function scrapeLatestNews() {
     const supabase = createAdminClient();
