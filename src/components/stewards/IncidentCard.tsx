@@ -16,6 +16,8 @@ interface Incident {
     video_url: string
     sim_title: string | null
     created_at: string
+    reddit_post_id?: string | null
+    thumbnail?: string | null // Added field
     votes?: {
         driver_a: number
         driver_b: number
@@ -25,6 +27,45 @@ interface Incident {
 }
 
 export default function IncidentCard({ incident }: { incident: Incident }) {
+    // ... code ...
+
+    // Helper to determine embed type/url
+    function getEmbed(url: string, redditPostId?: string | null) {
+        if (!url) return { type: 'link', src: '' }
+
+        // YouTube
+        if (url.includes('youtu')) {
+            const id = getYouTubeId(url)
+            return id ? { type: 'youtube', src: `https://www.youtube.com/embed/${id}` } : { type: 'link', src: url }
+        }
+
+        // Streamable
+        if (url.includes('streamable.com')) {
+            const code = url.split('/').pop()
+            return { type: 'streamable', src: `https://streamable.com/e/${code}` }
+        }
+
+        // Reddit (Post or Video)
+        if (url.includes('reddit.com')) {
+            const cleanUrl = url.replace(/\/$/, '')
+            return { type: 'reddit', src: `${cleanUrl}?embed=true&theme=dark` }
+        }
+
+        // Reddit Fallback (v.redd.it) -> Use Post ID if available
+        if (url.includes('v.redd.it') && redditPostId) {
+            return { type: 'reddit', src: `https://www.reddit.com/comments/${redditPostId}?embed=true&theme=dark` }
+        }
+
+        // Direct Video
+        if (url.match(/\.(mp4|webm|ogg)$/)) {
+            return { type: 'video', src: url }
+        }
+
+        // Fallback
+        return { type: 'link', src: url }
+    }
+
+    // ... rest of file
     const [votes, setVotes] = useState(incident.votes || { driver_a: 0, driver_b: 0, racing_incident: 0 })
     const [userVote, setUserVote] = useState<string | null>(incident.user_vote || null)
     const [loading, setLoading] = useState(false)
@@ -145,46 +186,61 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
             <CardContent>
                 {/* Video Embed */}
                 <div className="relative aspect-video bg-black rounded-md overflow-hidden mb-4">
-                    {(() => {
-                        const { type, src } = getEmbed(incident.video_url)
+                    const {type, src} = getEmbed(incident.video_url, incident.reddit_post_id)
 
-                        switch (type) {
+                    switch (type) {
                             case 'youtube':
-                            case 'streamable':
-                                return (
-                                    <iframe
-                                        src={src}
-                                        className="absolute inset-0 w-full h-full"
-                                        allowFullScreen
-                                        allow="autoplay; encrypted-media"
-                                    />
-                                )
-                            case 'reddit':
-                                return (
-                                    <iframe
-                                        src={src}
-                                        className="absolute inset-0 w-full h-full"
-                                        // Reddit embeds can be finicky with sandbox, usually need allow-scripts
-                                        sandbox="allow-scripts allow-same-origin allow-popups"
-                                        style={{ border: 0 }}
-                                    />
-                                )
-                            case 'video':
-                                return (
-                                    <video
-                                        src={src}
-                                        controls
-                                        className="absolute inset-0 w-full h-full"
-                                    />
-                                )
-                            default:
-                                return (
-                                    <div className="flex items-center justify-center h-full text-zinc-500">
-                                        <a href={incident.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white">
-                                            Video Link <Share2 className="w-4 h-4" />
-                                        </a>
-                                    </div>
-                                )
+                    case 'streamable':
+                    return (
+                    <iframe
+                        src={src}
+                        className="absolute inset-0 w-full h-full"
+                        allowFullScreen
+                        allow="autoplay; encrypted-media"
+                    />
+                    )
+                    case 'video':
+                    return (
+                    <video
+                        src={src}
+                        controls
+                        className="absolute inset-0 w-full h-full"
+                    />
+                    )
+                    default:
+                    // Fallback: Thumbnail or Generic Link
+                    if (incident.thumbnail) {
+                                    return (
+                    <div className="group relative w-full h-full">
+                        <img
+                            src={incident.thumbnail}
+                            alt="Incident Thumbnail"
+                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <a
+                                href={incident.video_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 transition-transform transform group-hover:scale-105"
+                            >
+                                <Share2 className="w-5 h-5" /> Watch on External Site
+                            </a>
+                            <p className="mt-2 text-sm text-zinc-300 font-medium bg-black/50 px-2 py-1 rounded">
+                                Video not embeddable
+                            </p>
+                        </div>
+                    </div>
+                    )
+                                }
+
+                    return (
+                    <div className="flex items-center justify-center h-full text-zinc-500 bg-zinc-900">
+                        <a href={incident.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white px-4 py-2 border border-zinc-700 rounded-md bg-black/50 hover:bg-zinc-800 transition-colors">
+                            Video Link <Share2 className="w-4 h-4" />
+                        </a>
+                    </div>
+                    )
                         }
                     })()}
                 </div>
@@ -260,7 +316,7 @@ function VoteButton({ label, color, count, percent, selected, onClick, icon }: a
 }
 
 // Helper to determine embed type/url
-function getEmbed(url: string) {
+function getEmbed(url: string, redditPostId?: string | null) {
     if (!url) return { type: 'link', src: '' }
 
     // YouTube
@@ -282,6 +338,11 @@ function getEmbed(url: string) {
         // Remove trailing slash if present then append
         const cleanUrl = url.replace(/\/$/, '')
         return { type: 'reddit', src: `${cleanUrl}?embed=true&theme=dark` }
+    }
+
+    // Reddit Fallback (v.redd.it) -> Use Post ID if available
+    if (url.includes('v.redd.it') && redditPostId) {
+        return { type: 'reddit', src: `https://www.reddit.com/comments/${redditPostId}?embed=true&theme=dark` }
     }
 
     // Direct Video
