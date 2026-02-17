@@ -182,7 +182,7 @@ export default function HomeClient({
             <AppIcon
               label="Incidents"
               icon={AlertTriangle}
-              href="/stewards"
+              href="/sim-racing/stewards"
               color="#FF9500"
               status="alpha"
             />
