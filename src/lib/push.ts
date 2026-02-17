@@ -5,12 +5,20 @@ import webpush from 'web-push';
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
 
+const cleanKey = (key: string) => {
+    return key.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+};
+
 if (publicVapidKey && privateVapidKey) {
-    webpush.setVapidDetails(
-        'mailto:support@gridpass.app', // TODO: Update with real support email
-        publicVapidKey,
-        privateVapidKey
-    );
+    try {
+        webpush.setVapidDetails(
+            'mailto:support@gridpass.app',
+            cleanKey(publicVapidKey),
+            cleanKey(privateVapidKey)
+        );
+    } catch (error) {
+        console.error('Failed to set VAPID details:', error);
+    }
 } else {
     console.warn('VAPID keys are missing. Web Push notifications will not work.');
 }
