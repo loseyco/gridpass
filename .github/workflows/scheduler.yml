@@ -16,17 +16,17 @@ jobs:
   run-cron:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Facebook Publisher (Hourly)
-        if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
-        run: |
-          curl -L -X GET "${{ secrets.APP_URL }}/api/cron/facebook-publisher" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-          --fail
-
       - name: Trigger News Scraper (Every 15 Mins)
         if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
         run: |
           curl -L -X GET "${{ secrets.APP_URL }}/api/cron/daily-news" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          --fail
+
+      - name: Trigger Facebook Publisher (Hourly)
+        if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -L -X GET "${{ secrets.APP_URL }}/api/cron/facebook-publisher" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
           --fail
 
