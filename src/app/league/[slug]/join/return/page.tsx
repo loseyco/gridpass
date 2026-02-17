@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -12,6 +12,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 export default function LeagueJoinReturnPage() {
     const searchParams = useSearchParams();
+    const params = useParams();
+    const slug = params.slug as string;
     const sessionId = searchParams.get('session_id');
     const [status, setStatus] = useState<'loading' | 'complete' | 'error'>('loading');
     const [customerEmail, setCustomerEmail] = useState('');
@@ -55,7 +57,7 @@ export default function LeagueJoinReturnPage() {
                 <XCircle className="h-16 w-16 text-red-500" />
                 <h1 className="text-2xl font-bold">Payment verification failed.</h1>
                 <p className="text-gray-400">Please contact support or try again.</p>
-                <Link href="/league/join"><Button>Try Again</Button></Link>
+                <Link href={`/league/${slug}/join`}><Button>Try Again</Button></Link>
             </div>
         );
     }

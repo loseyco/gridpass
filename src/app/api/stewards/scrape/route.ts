@@ -14,7 +14,14 @@ export async function GET(req: NextRequest) {
 
     const isAuthorized = (cronSecret && authHeader === `Bearer ${cronSecret}`) || user;
     if (!isAuthorized) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({
+            error: 'Unauthorized',
+            debug: {
+                received: authHeader,
+                expected: cronSecret ? `${cronSecret.substring(0, 3)}...` : 'undefined',
+                match: cronSecret && authHeader === `Bearer ${cronSecret}`
+            }
+        }, { status: 401 });
     }
 
     try {

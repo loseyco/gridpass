@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Newspaper, MessageSquare, User, LogIn, Flag } from 'lucide-react'
+import { Home, Newspaper, MessageSquare, User, LogIn, Flag, Trophy, Info, Mail } from 'lucide-react'
 
 export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
     const pathname = usePathname()
@@ -12,9 +12,9 @@ export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
     const navItems = [
         { label: 'Dashboard', href: '/', icon: <Home className="w-4 h-4" /> },
         { label: 'News', href: '/news', icon: <Newspaper className="w-4 h-4" /> },
-        { label: 'Messages', href: '/messages', icon: <MessageSquare className="w-4 h-4" /> },
+        { label: 'About', href: '/about', icon: <Info className="w-4 h-4" /> },
         {
-            label: isLoggedIn ? 'Profile' : 'Login',
+            label: isLoggedIn ? 'You' : 'Login',
             href: isLoggedIn ? '/profile' : '/login',
             icon: isLoggedIn ? <User className="w-4 h-4" /> : <LogIn className="w-4 h-4" />
         }

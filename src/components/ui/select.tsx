@@ -37,3 +37,7 @@ export const SelectItem = ({ value, children }: { value: string, children: React
 // I should just implement a proper native select wrapper and update `page.tsx` to use it.
 // OR implement a custom dropdown.
 // Let's implement a clean native select wrapper that EXPOSES the select element directly.
+
+export const SelectTrigger = ({ children, className }: any) => <>{children}</>
+export const SelectGroup = ({ children }: any) => <optgroup label="Group">{children}</optgroup>
+export const SelectLabel = ({ children }: any) => <option disabled>{children}</option>

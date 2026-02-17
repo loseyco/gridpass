@@ -4,6 +4,12 @@ import remarkGfm from 'remark-gfm';
 import { Calendar, Share2, Video, Trophy, ArrowRight, Rss, Zap, Flag, Timer, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import GithubSlugger from 'github-slugger';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'News',
+    description: 'Latest headlines and daily briefings from the world of motorsports.',
+}
 
 export const revalidate = 60; // Revalidate every minute
 

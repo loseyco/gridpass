@@ -12,6 +12,10 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 
+import { submitIncident } from "@/actions/stewards"
+
+// ... imports
+
 export default function SubmitIncidentPage() {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
@@ -22,39 +26,10 @@ export default function SubmitIncidentPage() {
         setLoading(true)
 
         const formData = new FormData(e.currentTarget)
-        const title = formData.get('title') as string
-        const video_url = formData.get('video_url') as string
-        const description = formData.get('description') as string
-        const sim_title = formData.get('sim_title') as string
+        const result = await submitIncident(formData)
 
-        // Validate YouTube URL basic check
-        if (!video_url.includes('youtu')) {
-            toast.error("Please provide a valid YouTube link for now.")
-            setLoading(false)
-            return
-        }
-
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (!user) {
-            toast.error("You must be logged in to submit an incident.")
-            setLoading(false)
-            return
-        }
-
-        const { error } = await supabase
-            .from('os_stewards_incidents')
-            .insert({
-                title,
-                video_url,
-                description,
-                sim_title,
-                user_id: user.id
-            })
-
-        if (error) {
-            console.error(error)
-            toast.error("Failed to submit incident.")
+        if (result?.error) {
+            toast.error(result.error)
         } else {
             toast.success("Incident submitted for review!")
             router.push('/sim-racing/stewards')

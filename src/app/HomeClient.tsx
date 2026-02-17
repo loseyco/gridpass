@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell,
   Wrench, Calculator, Settings, Newspaper, User, Briefcase, QrCode,
-  ShoppingBag, Gamepad2, Building2, Key, Flag
+  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy
 } from 'lucide-react'
 import AppIcon from '@/components/os/AppIcon'
 
@@ -44,7 +44,7 @@ export default function HomeClient({
         </button>
       </div>
 
-      <div className="v2-greeting-container">
+      <div className="greeting-container">
         <h1 className="greeting">
           <span className="greeting-sub">WELCOME BACK,</span>
           <span className="greeting-name">{userName}</span>
@@ -110,12 +110,13 @@ export default function HomeClient({
               status="soon"
             />
             <AppIcon
-              label="Sim Racing"
-              icon={Gamepad2}
-              href="/sim-racing"
+              label="Leagues"
+              icon={Trophy}
+              href="/league"
               color="#5856D6"
-              status="soon"
+              status="beta"
             />
+
 
             {/* Row 3: Commerce & Services */}
             <AppIcon
@@ -210,10 +211,6 @@ export default function HomeClient({
             align-items: center;
         }
 
-        .v2-greeting-container {
-             padding-bottom: var(--v2-space-4);
-        }
-
         .notification-btn {
             position: relative;
             margin-top: 4px;
@@ -230,14 +227,19 @@ export default function HomeClient({
             border: 2px solid #000;
         }
 
+        .greeting-container {
+            padding-bottom: var(--v2-space-2);
+        }
+
         .greeting {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            flex-direction: row;
+            align-items: baseline;
+            gap: 8px;
         }
 
         .greeting-sub {
-            font-size: 0.75rem;
+            font-size: 0.65rem;
             color: var(--v2-text-tertiary);
             font-weight: 700;
             letter-spacing: 0.1em;
@@ -245,10 +247,10 @@ export default function HomeClient({
 
         .greeting-name {
             font-family: var(--v2-font-racing);
-            font-size: 2rem;
+            font-size: 1.1rem;
             font-style: italic;
             text-transform: uppercase;
-            line-height: 0.9;
+            line-height: 1;
             color: white;
         }
 

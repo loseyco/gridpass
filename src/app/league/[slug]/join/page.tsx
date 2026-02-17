@@ -1,48 +1,53 @@
-'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, CreditCard, ShieldCheck, Zap } from 'lucide-react';
+import { Check, ShieldCheck, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/server';
+import { JoinButton } from '@/components/league/join-button';
+import { notFound } from 'next/navigation';
 
-export default function LeagueJoinPage() {
-    const [loading, setLoading] = useState(false);
+async function getJoinData(slug: string) {
+    const supabase = await createClient();
 
-    const handleJoin = async () => {
-        setLoading(true);
-        try {
-            // 1. Get Active Season
-            const seasonRes = await fetch('/api/league/test');
-            const seasonData = await seasonRes.json();
-            const activeSeason = seasonData.seasons?.find((s: any) => s.is_active);
+    const { data: league, error } = await supabase
+        .from('os_leagues')
+        .select(`
+            *,
+            seasons:os_league_seasons(
+                id, is_active, metadata
+            )
+        `)
+        .eq('slug', slug)
+        .single();
 
-            if (!activeSeason) {
-                alert('No active season found.');
-                setLoading(false);
-                return;
-            }
+    if (error || !league) return null;
 
-            // 2. Join League (Free)
-            const res = await fetch('/api/league/join', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ seasonId: activeSeason.id })
-            });
+    const activeSeason = league.seasons?.find((s: any) => s.is_active) || league.seasons?.[0]; // Fallback to *any* season if no active one? Ideally strict.
 
-            const data = await res.json();
-            if (data.success) {
-                window.location.href = '/league/driver';
-            } else {
-                alert(data.error || 'Failed to join');
-                setLoading(false);
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Error joining league');
-            setLoading(false);
-        }
-    };
+    return { league, activeSeason };
+}
+
+export default async function LeagueJoinPage(props: { params: Promise<{ slug: string }> }) {
+    const params = await props.params;
+    const data = await getJoinData(params.slug);
+
+    if (!data) notFound();
+
+    const { league, activeSeason } = data;
+
+    if (!activeSeason) {
+        return (
+            <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold mb-2">No Active Season</h1>
+                    <p className="text-gray-400 mb-4">This league currently has no active season to join.</p>
+                    <Link href={`/league/${league.slug}`} className="text-cyan-500 hover:underline">
+                        Return to League Home
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
@@ -51,23 +56,23 @@ export default function LeagueJoinPage() {
 
                 {/* Left: Value Prop */}
                 <div className="space-y-6">
-                    <Link href="/league" className="text-cyan-500 hover:text-cyan-400 font-medium mb-4 inline-block">&larr; Back to League</Link>
+                    <Link href={`/league/${league.slug}`} className="text-cyan-500 hover:text-cyan-400 font-medium mb-4 inline-block">&larr; Back to League</Link>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-500 text-xs font-bold uppercase tracking-wider mb-4 border border-yellow-500/20">
                         🚧 Alpha Release
                     </div>
                     <h1 className="text-5xl font-black tracking-tight">
-                        Race for glory.<br />
-                        <span className="text-cyan-500">Build the future.</span>
+                        Race for glory in<br />
+                        <span className="text-cyan-500">{league.name}.</span>
                     </h1>
                     <p className="text-xl text-gray-400 leading-relaxed">
-                        Join the GridPass Official League (Alpha). Help us test the platform and shape the future of sim racing.
+                        Join the {league.name} (Alpha). {league.description || 'Compete against the best drivers.'}
                         Free entry for all testers during this phase.
                     </p>
 
                     <ul className="space-y-4 pt-4">
-                        <BenefitItem text="12 Official Championship Rounds" />
+                        <BenefitItem text="Official Championship Rounds" />
                         <BenefitItem text="Community Setups & Tips" />
-                        <BenefitItem text="Live Broadcasts on YouTube" />
+                        <BenefitItem text="Live Broadcasts" />
                         <BenefitItem text="Stewarding & Incident Review" />
                         <BenefitItem text="Test Driver Status" />
                     </ul>
@@ -87,13 +92,7 @@ export default function LeagueJoinPage() {
                         <CardDescription className="text-gray-500">Limited time free access.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-6">
-                        <Button
-                            onClick={handleJoin}
-                            disabled={loading}
-                            className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold h-12 text-lg shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-shadow hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] disabled:opacity-50 disabled:cursor-not-allowed">
-                            <Zap className="mr-2 h-5 w-5" />
-                            {loading ? 'Joining...' : 'Join Now (Free)'}
-                        </Button>
+                        <JoinButton seasonId={activeSeason.id} />
                         <p className="text-xs text-center text-gray-500 mt-4">
                             No credit card required. Instant access.
                         </p>

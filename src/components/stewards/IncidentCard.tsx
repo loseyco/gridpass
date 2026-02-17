@@ -93,6 +93,34 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
     const totalVotes = votes.driver_a + votes.driver_b + votes.racing_incident
     const getPercent = (count: number) => totalVotes === 0 ? 0 : Math.round((count / totalVotes) * 100)
 
+    const handleShare = async () => {
+        const url = `${window.location.origin}/sim-racing/stewards/${incident.id}`
+
+        const shareData = {
+            title: incident.title,
+            text: `Who is at fault? Check out this incident on GridPass Stewards.`,
+            url: url
+        }
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData)
+            } catch (err: any) {
+                // Ignore AbortError (user cancelled share), show error for others
+                if (err.name !== 'AbortError') {
+                    console.error('Error sharing:', err)
+                    // Fallback to clipboard if share fails for non-cancellation reasons
+                    navigator.clipboard.writeText(url)
+                    toast.success("Link copied to clipboard!")
+                }
+            }
+        } else {
+            // Fallback for browsers without Web Share API
+            navigator.clipboard.writeText(url)
+            toast.success("Link copied to clipboard!")
+        }
+    }
+
     return (
         <Card className="w-full max-w-2xl mx-auto mb-8 bg-zinc-900 border-zinc-800">
             <CardHeader>
@@ -103,9 +131,13 @@ export default function IncidentCard({ incident }: { incident: Incident }) {
                                 {incident.sim_title}
                             </Badge>
                         )}
-                        <CardTitle className="text-xl text-white">{incident.title}</CardTitle>
+                        <CardTitle className="text-xl text-white">
+                            <Link href={`/sim-racing/stewards/${incident.id}`} className="hover:underline">
+                                {incident.title}
+                            </Link>
+                        </CardTitle>
                     </div>
-                    <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
+                    <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white" onClick={handleShare}>
                         <Share2 className="w-4 h-4" />
                     </Button>
                 </div>

@@ -6,25 +6,44 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
-export default async function IncidentPage({ params }: { params: { id: string } }) {
-    const supabase = await createClient()
+// ... imports unchanged
 
-    // Fetch incident with votes and comments
+export default async function IncidentPage({ params }: { params: Promise<{ id: string }> }) {
+    const supabase = await createClient()
+    const { id } = await params
+
+    // Fetch incident with votes and comments (raw)
     const { data: incident, error } = await supabase
         .from('os_stewards_incidents')
         .select(`
             *,
             votes:os_stewards_votes(vote_type),
             comments:os_stewards_comments(
-                *,
-                profiles(username, avatar_url)
+                *
             )
         `)
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
     if (error || !incident) {
         notFound()
+    }
+
+    // Manual join for profiles
+    let commentsWithProfiles = incident.comments || []
+    if (commentsWithProfiles.length > 0) {
+        const userIds = Array.from(new Set(commentsWithProfiles.map((c: any) => c.user_id)))
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIds)
+
+        const profileMap = new Map(profiles?.map((p: any) => [p.id, p]))
+
+        commentsWithProfiles = commentsWithProfiles.map((c: any) => ({
+            ...c,
+            profiles: profileMap.get(c.user_id) || { username: 'Unknown Driver', avatar_url: null }
+        }))
     }
 
     // Process votes
@@ -39,7 +58,7 @@ export default async function IncidentPage({ params }: { params: { id: string } 
     const processedIncident = { ...incident, votes: voteCounts }
 
     // Sort comments newest first
-    const sortedComments = incident.comments.sort((a: any, b: any) =>
+    const sortedComments = commentsWithProfiles.sort((a: any, b: any) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
 

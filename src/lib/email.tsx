@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { WelcomeEmail, DailyUpdateEmail, FinalVerdictEmail } from '@/components/emails/StewardsEmails';
 
 // Initialize Resend with API Key from environment variables
 // Note: You must add RESEND_API_KEY to your .env.local file
@@ -183,5 +184,83 @@ export async function sendPaymentLinkEmail(data: {
     } catch (error) {
         console.error('Failed to send payment link email:', error);
         throw error;
+    }
+}
+
+export async function sendStewardsWelcomeEmail(to: string, incidentTitle: string, incidentId: string) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Stewards <stewards@resend.dev>',
+            to,
+            subject: `Incident Submitted: ${incidentTitle}`,
+            react: <WelcomeEmail incidentTitle={incidentTitle} incidentId={incidentId} />
+        });
+        console.log(`Welcome email sent to ${to}`);
+    } catch (e) {
+        console.error('Failed to send welcome email', e);
+    }
+}
+
+export async function sendStewardsUpdateEmail(to: string, incidentTitle: string, incidentId: string, votes: any) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Stewards <stewards@resend.dev>',
+            to,
+            subject: `Daily Update: ${incidentTitle}`,
+            react: <DailyUpdateEmail incidentTitle={incidentTitle} incidentId={incidentId} votes={votes} />
+        });
+        console.log(`Update email sent to ${to}`);
+    } catch (e) {
+        console.error('Failed to send update email', e);
+    }
+}
+
+export async function sendStewardsVerdictEmail(to: string, incidentTitle: string, incidentId: string, verdict: string, votes: any) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Stewards <stewards@resend.dev>',
+            to,
+            subject: `Final Verdict: ${incidentTitle}`,
+            react: <FinalVerdictEmail incidentTitle={incidentTitle} incidentId={incidentId} verdict={verdict} votes={votes} />
+        });
+        console.log(`Verdict email sent to ${to}`);
+    } catch (e) {
+        console.error('Failed to send verdict email', e);
+    }
+}
+
+export async function sendContactEmail(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    message: string;
+}) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Contact <contact@resend.dev>',
+            to: 'pjlos@example.com', // Doing this hardcoded as requested for now
+            replyTo: data.email,
+            subject: `New Contact Form Submission from ${data.firstName} ${data.lastName}`,
+            html: `
+                <h1>New Contact Message</h1>
+                <p><strong>Name:</strong> ${data.firstName} ${data.lastName}</p>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Message:</strong></p>
+                <p>${data.message.replace(/\n/g, '<br/>')}</p>
+            `
+        });
+        console.log(`Contact email sent from ${data.email}`);
+        return { success: true };
+    } catch (e) {
+        console.error('Failed to send contact email', e);
+        return { success: false, error: e };
     }
 }

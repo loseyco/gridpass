@@ -1,8 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
 import IncidentCard from '@/components/stewards/IncidentCard'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { PlusCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+import StewardsHeader from '@/components/stewards/StewardsHeader'
 
 export default async function StewardsPage() {
     const supabase = await createClient()
@@ -40,19 +41,7 @@ export default async function StewardsPage() {
     return (
         <div className="min-h-screen bg-black pt-20 px-4">
             <div className="max-w-2xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-black italic tracking-tighter text-white">
-                            SIM <span className="text-red-500">STEWARDS</span>
-                        </h1>
-                        <p className="text-zinc-400">Who's at fault? You decide.</p>
-                    </div>
-                    <Link href="/sim-racing/stewards/submit">
-                        <Button className="bg-red-600 hover:bg-red-700 text-white">
-                            <PlusCircle className="w-4 h-4 mr-2" /> Submit Incident
-                        </Button>
-                    </Link>
-                </div>
+                <StewardsHeader />
 
                 {processedIncidents.length === 0 ? (
                     <div className="text-center py-20 border border-dashed border-zinc-800 rounded-lg">

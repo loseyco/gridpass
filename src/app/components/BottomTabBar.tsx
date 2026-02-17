@@ -3,7 +3,7 @@
 import React, { JSX } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Car, Briefcase, User, LogIn, Newspaper, MessageSquare } from 'lucide-react'
+import { Home, Users, Car, Briefcase, User, LogIn, Newspaper, MessageSquare, Trophy, Info } from 'lucide-react'
 
 interface Tab {
   id: string
@@ -33,12 +33,11 @@ export default function BottomTabBar({ isLoggedIn }: { isLoggedIn?: boolean }) {
       icon: <Newspaper size={24} strokeWidth={2.5} />
     },
     {
-      id: 'messages',
-      label: 'MESSAGES',
-      href: '/messages',
-      icon: <MessageSquare size={24} strokeWidth={2.5} />
+      id: 'about',
+      label: 'ABOUT',
+      href: '/about',
+      icon: <Info size={24} strokeWidth={2.5} />
     },
-
     {
       id: isLoggedIn ? 'profile' : 'login',
       label: isLoggedIn ? 'YOU' : 'LOGIN',
