@@ -3,6 +3,7 @@ title: Managing Your Profile
 description: How to set up your driver identity, cover photo, and bio.
 category: Profile
 status: Beta
+last_updated: 2026-02-17
 ---
 
 # Managing Your Profile

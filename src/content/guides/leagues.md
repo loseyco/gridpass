@@ -3,6 +3,7 @@ title: Joining & Managing Leagues
 description: Find competitive racing series and manage your entries.
 category: Leagues
 status: Alpha
+last_updated: 2026-02-17
 ---
 
 # Leagues

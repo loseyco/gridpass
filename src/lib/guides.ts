@@ -9,6 +9,7 @@ export type Guide = {
     description: string;
     category: string;
     status: 'Live' | 'Beta' | 'Alpha' | 'Coming Soon';
+    last_updated: string;
     content: string;
 };
 
@@ -41,6 +42,7 @@ export function getGuideBySlug(slug: string): Guide {
             description: '',
             category: 'Uncategorized',
             status: 'Coming Soon',
+            last_updated: new Date().toISOString().split('T')[0], // Default to today
             content: fileContents,
         };
     }
@@ -62,6 +64,7 @@ export function getGuideBySlug(slug: string): Guide {
         description: frontmatter.description || '',
         category: frontmatter.category || 'General',
         status: frontmatter.status || 'Coming Soon',
+        last_updated: frontmatter.last_updated || new Date().toISOString().split('T')[0],
         content,
     };
 }

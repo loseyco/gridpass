@@ -3,6 +3,7 @@ title: staying Updated with News
 description: Aggregated motorsports news from around the world.
 category: News
 status: Alpha
+last_updated: 2026-02-17
 ---
 
 # News App

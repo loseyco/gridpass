@@ -3,6 +3,7 @@ title: Welcome to GridPass
 description: The concept behind the Operating System for your Motorsports Life.
 category: General
 status: Live
+last_updated: 2026-02-17
 ---
 
 # Welcome to GridPass
