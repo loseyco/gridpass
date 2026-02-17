@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell,
   Wrench, Calculator, Settings, Newspaper, User, Briefcase, QrCode,
-  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle
+  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info
 } from 'lucide-react'
 import AppIcon from '@/components/os/AppIcon'
 
@@ -57,148 +57,52 @@ export default function HomeClient({
         <div className="app-grid-container">
           <div className="app-grid">
 
-            {/* Row 1: Core Personal */}
-            <AppIcon
-              label="Profile"
-              icon={User}
-              href={`/u/${userProfile?.username || 'pjlosey'}`}
-              color="#007AFF"
-              status="beta"
-            />
-            <AppIcon
-              label="My Garage"
-              icon={Car}
-              href="/garage"
-              color="#FF3B30"
-              status="soon"
-            />
-            <AppIcon
-              label="My Resume"
-              icon={ClipboardList}
-              href="/profile/edit"
-              color="#FF9500"
-              status="beta"
-            />
-            <AppIcon
-              label="Messages"
-              icon={MessageSquare}
-              href="/messages"
-              color="#34C759"
-              status="soon"
-            />
+            {/* Live Apps */}
+            <div className="section-header col-span-full">
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 mt-2">Live</h2>
+            </div>
 
-            {/* Row 2: Community & Content */}
-            <AppIcon
-              label="News"
-              icon={Newspaper}
-              href="/news"
-              color="#FF2D55"
-              status="alpha"
-            />
-            <AppIcon
-              label="Members"
-              icon={Users}
-              href="/members"
-              color="#5856D6"
-              status="beta"
-            />
-            <AppIcon
-              label="Classifieds"
-              icon={ShoppingBag}
-              href="/classifieds"
-              color="#FF9500"
-              status="soon"
-            />
-            <AppIcon
-              label="Leagues"
-              icon={Trophy}
-              href="/league"
-              color="#5856D6"
-              status="alpha"
-            />
+            <AppIcon label="News" icon={Newspaper} href="/news" color="#FF2D55" />
+            <AppIcon label="About" icon={Info} href="/about" color="#8E8E93" />
+            <AppIcon label="Settings" icon={Settings} href="/settings" color="#8E8E93" />
 
 
-            {/* Row 3: Commerce & Services */}
-            <AppIcon
-              label="Business"
-              icon={Building2}
-              href="/businesses"
-              color="#AF52DE"
-              status="alpha"
-            />
-            <AppIcon
-              label="Rentals"
-              icon={Key}
-              href="/rentals"
-              color="#FF2D55"
-              status="soon"
-            />
-            <AppIcon
-              label="Careers"
-              icon={Briefcase}
-              href="/jobs"
-              color="#007AFF"
-              status="soon"
-            />
-            <AppIcon
-              label="Logistics"
-              icon={Truck}
-              href="/logistics"
-              color="#FFCC00"
-              status="soon"
-            />
+            {/* Beta Apps */}
+            <div className="section-header col-span-full">
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 mt-8">Beta</h2>
+            </div>
 
-            {/* Row 4: Management & Tools */}
-            <AppIcon
-              label="Team Manager"
-              icon={Flag}
-              href="/team-manager"
-              color="#FF3B30"
-              status="soon"
-            />
-            <AppIcon
-              label="Shop Manager"
-              icon={Wrench}
-              href="/shop-manager"
-              color="#8E8E93"
-              status="soon"
-            />
-            <AppIcon
-              label="Tool Box"
-              icon={Calculator}
-              href="/tools"
-              color="#5AC8FA"
-              status="soon"
-            />
-            <AppIcon
-              label="Collections"
-              icon={Folder}
-              href="/collections"
-              color="#8E8E93"
-              status="soon"
-            />
+            <AppIcon label="Profile" icon={User} href={`/u/${userProfile?.username || 'pjlosey'}`} color="#007AFF" status="beta" />
+            <AppIcon label="My Resume" icon={ClipboardList} href="/profile/edit" color="#FF9500" status="beta" />
+            <AppIcon label="Members" icon={Users} href="/members" color="#5856D6" status="beta" />
 
-            {/* Row 5: System */}
-            <AppIcon
-              label="Incidents"
-              icon={AlertTriangle}
-              href="/sim-racing/stewards"
-              color="#FF9500"
-              status="alpha"
-            />
-            <AppIcon
-              label="Scan"
-              icon={QrCode}
-              href="/scan"
-              color="#30cfd0"
-              status="soon"
-            />
-            <AppIcon
-              label="Settings"
-              icon={Settings}
-              href="/settings"
-              color="#8E8E93"
-            />
+
+            {/* Alpha Apps */}
+            <div className="section-header col-span-full">
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 mt-8">Alpha</h2>
+            </div>
+
+            <AppIcon label="Leagues" icon={Trophy} href="/league" color="#5856D6" status="alpha" />
+            <AppIcon label="Business" icon={Building2} href="/businesses" color="#AF52DE" status="alpha" />
+            <AppIcon label="Incidents" icon={AlertTriangle} href="/sim-racing/stewards" color="#FF9500" status="alpha" />
+
+
+            {/* Coming Soon */}
+            <div className="section-header col-span-full">
+              <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 mt-8">Coming Soon</h2>
+            </div>
+
+            <AppIcon label="My Garage" icon={Car} href="/garage" color="#FF3B30" status="soon" />
+            <AppIcon label="Messages" icon={MessageSquare} href="/messages" color="#34C759" status="soon" />
+            <AppIcon label="Classifieds" icon={ShoppingBag} href="/classifieds" color="#FF9500" status="soon" />
+            <AppIcon label="Rentals" icon={Key} href="/rentals" color="#FF2D55" status="soon" />
+            <AppIcon label="Careers" icon={Briefcase} href="/jobs" color="#007AFF" status="soon" />
+            <AppIcon label="Logistics" icon={Truck} href="/logistics" color="#FFCC00" status="soon" />
+            <AppIcon label="Team Manager" icon={Flag} href="/team-manager" color="#FF3B30" status="soon" />
+            <AppIcon label="Shop Manager" icon={Wrench} href="/shop-manager" color="#8E8E93" status="soon" />
+            <AppIcon label="Tool Box" icon={Calculator} href="/tools" color="#5AC8FA" status="soon" />
+            <AppIcon label="Collections" icon={Folder} href="/collections" color="#8E8E93" status="soon" />
+            <AppIcon label="Scan" icon={QrCode} href="/scan" color="#30cfd0" status="soon" />
 
           </div>
         </div>

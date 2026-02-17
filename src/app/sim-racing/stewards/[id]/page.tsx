@@ -21,7 +21,7 @@ interface Comment {
     created_at: string
     content: string
     profiles: {
-        username: string | null
+        username: string
         avatar_url: string | null
     }
 }
@@ -34,6 +34,7 @@ interface Incident {
     video_url: string
     sim_title: string | null
     user_id: string | null
+    reddit_post_id?: string | null
     votes: any[]
     comments: any[]
 }
@@ -74,10 +75,19 @@ export default async function IncidentPage({ params }: { params: Promise<{ id: s
 
             const profileMap = new Map(profiles?.map(p => [p.id, p]))
 
-            commentsWithProfiles = rawComments.map(c => ({
-                ...c,
-                profiles: profileMap.get(c.user_id) || { username: 'Unknown Driver', avatar_url: null }
-            }))
+            commentsWithProfiles = rawComments.map(c => {
+                const profile = profileMap.get(c.user_id)
+                return {
+                    id: c.id,
+                    user_id: c.user_id,
+                    created_at: c.created_at,
+                    content: c.content,
+                    profiles: {
+                        username: profile?.username || 'Unknown Driver',
+                        avatar_url: profile?.avatar_url || null
+                    }
+                }
+            })
         }
     }
 

@@ -40,8 +40,6 @@
     "pdf-parse": "^2.4.5",
     "pg": "^8.18.0",
     "puppeteer": "^24.37.2",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

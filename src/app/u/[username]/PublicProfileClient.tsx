@@ -42,7 +42,7 @@ export default function PublicProfileClient({
         </div>
 
         <div className="v2-header profile-nav">
-          <Link href="/" className="v2-title-link">
+          <Link href="/" className="v2-title-link md:hidden">
             <h1 className="v2-title">
               <span className="v2-text-white">GRID</span>
               <span className="v2-text-accent">PASS</span>

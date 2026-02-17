@@ -37,9 +37,11 @@ export async function GET(req: NextRequest) {
         for (const post of posts) {
             const p = post.data;
 
-            // Filter for video content
-            const isVideo = p.is_video || p.url.includes('youtu') || p.url.includes('streamable');
-            if (!isVideo) continue;
+            // Filter for YouTube or Streamable ONLY (per user request to avoid blank Reddit videos)
+            const isYouTube = p.url.includes('youtu');
+            const isStreamable = p.url.includes('streamable.com');
+
+            if (!isYouTube && !isStreamable) continue;
 
             // Skip if already exists
             const { data: existing } = await supabase
@@ -49,6 +51,14 @@ export async function GET(req: NextRequest) {
                 .single();
 
             if (existing) continue;
+
+            // Extract Thumbnail (Try preview image first, then thumbnail field)
+            let thumbnail = null;
+            if (p.preview && p.preview.images && p.preview.images.length > 0) {
+                thumbnail = p.preview.images[0].source.url.replace(/&amp;/g, '&');
+            } else if (p.thumbnail && p.thumbnail.startsWith('http')) {
+                thumbnail = p.thumbnail;
+            }
 
             // Determine Sim Title mostly from flair or title text
             let simTitle = 'Unknown';
@@ -67,6 +77,7 @@ export async function GET(req: NextRequest) {
                 video_url: p.url,
                 sim_title: simTitle,
                 reddit_post_id: p.id,
+                thumbnail: thumbnail
                 // user_id is null for scraped content
             });
 

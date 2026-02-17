@@ -24,8 +24,8 @@ export async function submitIncident(formData: FormData) {
         return { error: 'Missing required fields.' }
     }
 
-    if (!video_url.includes('youtu')) {
-        return { error: 'Please provide a valid YouTube link.' }
+    if (!video_url.includes('youtu') && !video_url.includes('streamable.com')) {
+        return { error: 'Please provide a valid YouTube or Streamable link.' }
     }
 
     // 3. Database Insert
@@ -46,27 +46,31 @@ export async function submitIncident(formData: FormData) {
         return { error: 'Failed to submit incident. Please try again.' }
     }
 
-    // 4. Send Welcome Email (Non-blocking but awaited for simplicity in server action)
-    // 4. Send Welcome Email (Non-blocking but awaited for simplicity in server action)
+    // 4. Send Notifications (Non-blocking)
     if (user.email) {
-        // Send email in background ideally, but await here to ensure it tries
-        await sendStewardsWelcomeEmail(user.email, title, incident.id)
+        try {
+            // Send email in background ideally, but await here to ensure it tries
+            await sendStewardsWelcomeEmail(user.email, title, incident.id)
 
-        // Send Push Notification
-        const { data: subscription } = await supabase
-            .from('push_subscriptions')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+            // Send Push Notification
+            const { data: subscription } = await supabase
+                .from('push_subscriptions')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
 
-        if (subscription) {
-            await sendPushNotification(subscription, {
-                title: 'Incident Submitted',
-                body: `Your incident "${title}" has been submitted to the Stewards Room.`,
-                url: `/sim-racing/stewards/${incident.id}`
-            });
+            if (subscription) {
+                await sendPushNotification(subscription, {
+                    title: 'Incident Submitted',
+                    body: `Your incident "${title}" has been submitted to the Stewards Room.`,
+                    url: `/sim-racing/stewards/${incident.id}`
+                });
+            }
+        } catch (error) {
+            console.error('Failed to send notifications:', error)
+            // Do not block success return
         }
     }
 
