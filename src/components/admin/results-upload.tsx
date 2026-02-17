@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Upload, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'sonner';
-import { saveRaceResults } from '@/app/league/actions';
+import { saveRaceResults } from '@/app/(main)/league/actions';
 
 interface ResultsUploadProps {
     eventId: string;

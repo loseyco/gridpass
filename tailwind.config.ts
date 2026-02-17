@@ -23,11 +23,16 @@ const config: Config = {
                 'fade-in-up': {
                     '0%': { opacity: '0', transform: 'translateY(10px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                'vertical-scroll': {
+                    '0%': { transform: 'translateY(0)' },
+                    '100%': { transform: 'translateY(-50%)' },
                 }
             },
             animation: {
                 marquee: 'marquee 25s linear infinite',
                 'fade-in-up': 'fade-in-up 0.5s ease-out',
+                'vertical-scroll': 'vertical-scroll 60s linear infinite',
             },
         },
     },

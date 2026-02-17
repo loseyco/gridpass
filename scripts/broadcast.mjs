@@ -56,7 +56,7 @@ async function startBroadcast() {
     console.log(`🚀 Starting GridPass Broadcast Engine (${CURRENT_MODE.name})...`);
 
     const browser = await puppeteer.launch({
-        headless: false, // Visible as requested
+        headless: 'new', // Use new Headless mode for background stability
         args: [
             `--window-size=${CURRENT_MODE.width},${CURRENT_MODE.height}`,
             '--autoplay-policy=no-user-gesture-required',
@@ -71,8 +71,8 @@ async function startBroadcast() {
     const page = await browser.newPage();
     await page.setViewport({ width: CURRENT_MODE.width, height: CURRENT_MODE.height });
 
-    // Navigate to the visual engine with zoom param
-    const studioUrl = `http://localhost:3005/live-studio?zoom=${CURRENT_MODE.zoom}`;
+    // Navigate to local studio
+    const studioUrl = `http://localhost:3000/live-studio?zoom=${CURRENT_MODE.zoom}`;
     console.log(`🔗 navigating to ${studioUrl}...`);
     await page.goto(studioUrl, { waitUntil: 'networkidle2' });
 

@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
-    "dev:stream": "next dev -p 3005",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
