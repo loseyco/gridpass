@@ -28,7 +28,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const title = `${profile.full_name || profile.username} (@${profile.username}) | GridPass`;
     const description = profile.bio || `Check out ${profile.username}'s profile on GridPass.`;
-    const image = profile.avatar_url || '/hero-launch.png';
+
+    // Construct valid OG images
+    const images: string[] = [];
+
+    if (profile.avatar_url) {
+        // Try to transform Supabase storage images to JPEG
+        // This handles HEIC images which are not supported by most social crawlers
+        if (profile.avatar_url.includes('supabase.co/storage/v1/object/public')) {
+            const renderedUrl = profile.avatar_url.replace(
+                '/storage/v1/object/public',
+                '/storage/v1/render/image/public'
+            );
+            // Append transformation params
+            images.push(`${renderedUrl}?width=1200&height=630&resize=cover&format=jpeg`);
+        }
+
+        // Include original avatar URL as backup
+        images.push(profile.avatar_url);
+    }
+
+    // Always include the generic fallback
+    // Note: /hero-launch.png appears to be specific to the founder (pjlosey)
+    // using generic fallback for others
+    images.push('/hero-launch-generic.png');
 
     return {
         title,
@@ -36,13 +59,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         openGraph: {
             title,
             description,
-            images: [image],
+            images,
         },
         twitter: {
             card: 'summary_large_image',
             title,
             description,
-            images: [image],
+            images,
         }
     };
 }
