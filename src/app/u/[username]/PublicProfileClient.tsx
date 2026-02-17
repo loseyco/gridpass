@@ -91,13 +91,37 @@ export default function PublicProfileClient({
                 </div>
               )}
 
+              {/* Open To Work - Prominent & Fun */}
+              {profile.job_preferences?.is_open_to_work && (
+                <div className="v2-mt-3" style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div style={{
+                    background: 'rgba(46, 164, 79, 0.15)',
+                    border: '1px solid rgba(46, 164, 79, 0.4)',
+                    color: '#2ea44f',
+                    padding: '6px 16px',
+                    borderRadius: '20px',
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 0 15px rgba(46, 164, 79, 0.2)',
+                    animation: 'pulse-green 2s infinite'
+                  }}>
+                    <span style={{
+                      width: '8px',
+                      height: '8px',
+                      background: '#2ea44f',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 8px #2ea44f'
+                    }}></span>
+                    OPEN TO WORK
+                  </div>
+                </div>
+              )}
+
               {/* Roles / Badges */}
               <div className="v2-badges v2-mt-2 v2-flex v2-gap-2 v2-flex-wrap">
-                {profile.job_preferences?.is_open_to_work && (
-                  <span className="v2-badge" style={{ background: 'rgba(46, 164, 79, 0.2)', borderColor: '#2ea44f', color: '#2ea44f' }}>
-                    Open To Work
-                  </span>
-                )}
                 {profile.role === 'founder' && (
                   <span className="v2-badge v2-badge-gold">
                     Founder
@@ -397,6 +421,12 @@ export default function PublicProfileClient({
         </div>
 
         <style jsx>{`
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(46, 164, 79, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 164, 79, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 164, 79, 0); }
+        }
+
         .v2-header-container {
             position: relative;
         }
