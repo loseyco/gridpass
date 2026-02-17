@@ -22,6 +22,7 @@ export async function POST(request: Request) {
             career_history,
             skills,
             social_links,
+            job_preferences,
             avatar_url,
             cover_url
         } = body
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
                 career_history,
                 skills,
                 social_links,
+                job_preferences,
                 avatar_url,
                 cover_url,
                 updated_at: new Date().toISOString(),

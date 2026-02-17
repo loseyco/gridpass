@@ -1,6 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { GridToggle } from '@/os/components/GridToggle'
 
 interface ProfileEditHubProps {
     profile: any
@@ -8,6 +11,28 @@ interface ProfileEditHubProps {
 
 export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
     // Menu items config
+    const [openToWork, setOpenToWork] = useState(profile.job_preferences?.is_open_to_work || false)
+    const router = useRouter()
+
+    const handleOpenToWorkChange = async (val: boolean) => {
+        setOpenToWork(val)
+        try {
+            await fetch('/api/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    job_preferences: {
+                        ...(profile.job_preferences || {}),
+                        is_open_to_work: val
+                    }
+                })
+            })
+            router.refresh()
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     const menuItems = [
         {
             id: 'basic',
@@ -135,6 +160,19 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
                             View Public Profile →
                         </Link>
                     </div>
+                </div>
+
+                <div className="v2-card v2-mb-4" style={{ padding: '1rem' }}>
+                    <GridToggle
+                        label="Open To Work"
+                        name="open_to_work"
+                        value={openToWork}
+                        onChange={handleOpenToWorkChange}
+                        className="v2-mb-0"
+                    />
+                    <p className="v2-text-secondary v2-text-xs v2-mt-2">
+                        Enabling this adds a badge to your profile and lets recruiters know you're available.
+                    </p>
                 </div>
 
                 <div className="v2-card v2-mb-4" style={{ padding: 0, overflow: 'hidden' }}>

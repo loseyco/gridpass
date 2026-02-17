@@ -93,7 +93,7 @@ export default function PublicProfileClient({
 
               {/* Roles / Badges */}
               <div className="v2-badges v2-mt-2 v2-flex v2-gap-2 v2-flex-wrap">
-                {profile.username === 'pjlosey' && (
+                {profile.job_preferences?.is_open_to_work && (
                   <span className="v2-badge" style={{ background: 'rgba(46, 164, 79, 0.2)', borderColor: '#2ea44f', color: '#2ea44f' }}>
                     Open To Work
                   </span>
