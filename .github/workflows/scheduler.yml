@@ -20,26 +20,22 @@ jobs:
         if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
         run: |
           curl -L -X GET "${{ secrets.APP_URL }}/api/cron/daily-news" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-          --fail
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
       - name: Trigger Facebook Publisher (Hourly)
         if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
         run: |
           curl -L -X GET "${{ secrets.APP_URL }}/api/cron/facebook-publisher" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-          --fail
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
       - name: Trigger Stewards Updates (Daily 12:00 UTC)
         if: github.event.schedule == '0 12 * * *' || github.event_name == 'workflow_dispatch'
         run: |
           curl -L -X GET "${{ secrets.APP_URL }}/api/cron/stewards-updates" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-          --fail
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
       - name: Trigger Morning Recap (Daily 13:00 UTC)
         if: github.event.schedule == '0 13 * * *' || github.event_name == 'workflow_dispatch'
         run: |
           curl -L -X GET "${{ secrets.APP_URL }}/api/cron/morning-recap" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-          --fail
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
