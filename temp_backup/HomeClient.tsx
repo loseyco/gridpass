@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell,
   Wrench, Calculator, Settings, Newspaper, User, Briefcase, QrCode,
-  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info, BookOpen
+  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info
 } from 'lucide-react'
 import AppIcon from '@/components/os/AppIcon'
 
@@ -64,7 +64,6 @@ export default function HomeClient({
 
             <AppIcon label="About" icon={Info} href="/about" color="#8E8E93" />
             <AppIcon label="Settings" icon={Settings} href="/settings" color="#8E8E93" />
-            <AppIcon label="Guides" icon={BookOpen} href="/guides" color="#30D158" />
 
 
             {/* Beta Apps */}

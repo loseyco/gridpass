@@ -1,0 +1,45 @@
+name: Scheduler
+
+on:
+  schedule:
+    # Run every hour at minute 0 (for Facebook Publisher)
+    - cron: '0 * * * *'
+    # Run every 15 minutes (for News Scraper)
+    - cron: '*/15 * * * *'
+    # Run daily at 12:00 UTC (for Stewards Updates)
+    - cron: '0 12 * * *'
+    # Run daily at 13:00 UTC (7am CST) for Morning Recap
+    - cron: '0 13 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  run-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Facebook Publisher (Hourly)
+        if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/facebook-publisher" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          --fail
+
+      - name: Trigger News Scraper (Every 15 Mins)
+        if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/daily-news" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          --fail
+
+      - name: Trigger Stewards Updates (Daily 12:00 UTC)
+        if: github.event.schedule == '0 12 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/stewards-updates" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          --fail
+
+      - name: Trigger Morning Recap (Daily 13:00 UTC)
+        if: github.event.schedule == '0 13 * * *' || github.event_name == 'workflow_dispatch'
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/morning-recap" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          --fail
