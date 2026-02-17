@@ -6,6 +6,9 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'About Us',
     description: 'GridPass is dedicated to unifying the fragmented world of motorsports. Built by racers, for racers.',
+    openGraph: {
+        images: ['/hero-launch.png'],
+    },
 }
 
 export default function AboutPage() {

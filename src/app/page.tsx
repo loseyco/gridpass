@@ -6,6 +6,10 @@ import V2Landing from './V2Landing'
 export const metadata: Metadata = {
   title: 'Dashboard',
   description: 'Manage your racing career, leagues, and news all in one place.',
+  openGraph: {
+    title: 'Dashboard | GridPass',
+    description: 'Manage your racing career, leagues, and news all in one place.',
+  },
 }
 
 export default async function V2Home() {

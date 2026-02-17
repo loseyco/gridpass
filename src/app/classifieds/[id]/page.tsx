@@ -35,7 +35,7 @@ export async function generateMetadata(
         title: item.title,
         description: item.description,
         openGraph: {
-            images: item.images && item.images.length > 0 ? [item.images[0]] : [],
+            images: item.images && item.images.length > 0 ? [item.images[0]] : ['/hero-launch.png'],
         },
     }
 }
@@ -138,6 +138,25 @@ export default async function ClassifiedDetailPage({ params }: Props) {
                             <p className="text-4xl font-bold text-emerald-400 mb-6 flex items-center">
                                 <DollarSign className="w-6 h-6" /> {item.price?.toLocaleString()}
                             </p>
+
+                            <script
+                                type="application/ld+json"
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify({
+                                        "@context": "https://schema.org",
+                                        "@type": "Product",
+                                        "name": item.title,
+                                        "description": item.description,
+                                        "image": item.images?.[0] || "",
+                                        "offers": {
+                                            "@type": "Offer",
+                                            "price": item.price,
+                                            "priceCurrency": "USD",
+                                            "availability": item.status === 'active' ? "https://schema.org/InStock" : "https://schema.org/SoldOut"
+                                        }
+                                    })
+                                }}
+                            />
 
                             <div className="border-t border-white/10 py-6 mb-6">
                                 <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-3">Description</h3>

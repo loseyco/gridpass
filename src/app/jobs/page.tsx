@@ -10,6 +10,9 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
     title: "Sim Racing Jobs",
     description: "Find your next team, drive, or pit crew role in sim racing.",
+    openGraph: {
+        images: ['/hero-launch.png'],
+    },
 };
 
 export default async function JobsPage() {

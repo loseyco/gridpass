@@ -2,11 +2,49 @@ import { createClient } from '@/utils/supabase/server'
 import { createAdminClient } from '@/utils/supabase/admin'
 import { notFound } from 'next/navigation'
 import PublicProfileClient from './PublicProfileClient'
+import { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
     params: Promise<{ username: string }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { username } = await params;
+    const supabase = await createClient();
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, full_name, bio, avatar_url')
+        .ilike('username', username)
+        .single();
+
+    if (!profile) {
+        return {
+            title: 'Profile Not Found | GridPass'
+        };
+    }
+
+    const title = `${profile.full_name || profile.username} (@${profile.username}) | GridPass`;
+    const description = profile.bio || `Check out ${profile.username}'s profile on GridPass.`;
+    const image = profile.avatar_url || '/hero-launch.png';
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            images: [image],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [image],
+        }
+    };
 }
 
 export default async function PublicProfilePage({ params }: PageProps) {

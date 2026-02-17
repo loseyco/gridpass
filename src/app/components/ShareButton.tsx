@@ -12,6 +12,7 @@ interface ShareButtonProps {
   url?: string;
   className?: string;
   variant?: "icon" | "button";
+  referralUser?: string;
 }
 
 export default function ShareButton({
@@ -19,15 +20,36 @@ export default function ShareButton({
   text = "Check out this profile on GridPass!",
   url,
   className = "",
-  variant = "icon"
+  variant = "icon",
+  referralUser
 }: ShareButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Determines the URL to share (prop or current location)
-  const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "");
+  const [shareUrl, setShareUrl] = useState(url || "");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      let currentUrl = url || window.location.href;
+
+      if (referralUser) {
+        try {
+          const urlObj = new URL(currentUrl);
+          urlObj.searchParams.set("ref", referralUser);
+          currentUrl = urlObj.toString();
+        } catch (e) {
+          // Fallback for relative URLs or errors
+          if (currentUrl.startsWith("/")) {
+            currentUrl = `${window.location.origin}${currentUrl}${currentUrl.includes('?') ? '&' : '?'}ref=${referralUser}`;
+          }
+        }
+      }
+
+      setShareUrl(currentUrl);
+    }
+  }, [url, referralUser]);
 
   // Close on click outside
   useEffect(() => {

@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             title: summary.title || 'GridPass Daily News',
             description: description,
             type: 'article',
-            // images: ['/og-image-url'] // TODO: Add dynamic OG image later
+            images: ['/hero-launch.png']
         },
         alternates: {
             canonical: `/news/${id}`

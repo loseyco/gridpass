@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers } from 'lucide-react'
 import VehicleCard from '@/components/profile/VehicleCard'
-import ShareButton from '@/app/components/ShareButton'
 import { Vehicle } from '@/types/garage'
 
 interface PublicProfileClientProps {
@@ -39,22 +38,6 @@ export default function PublicProfileClient({
           <div className="hero-gradient"></div>
           <div className="hero-pattern"></div>
           {profile.cover_url && <img src={profile.cover_url} className="hero-image" alt="Cover" />}
-        </div>
-
-        <div className="v2-header profile-nav">
-          <Link href="/" className="v2-title-link md:hidden">
-            <h1 className="v2-title">
-              <span className="v2-text-white">GRID</span>
-              <span className="v2-text-accent">PASS</span>
-            </h1>
-          </Link>
-
-          <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 50 }}>
-            <ShareButton
-              title={`${profile.full_name || profile.username} on GridPass`}
-              text={`Check out ${profile.full_name || profile.username}'s racing profile.`}
-            />
-          </div>
         </div>
 
         <div className="v2-content profile-content">

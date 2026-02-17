@@ -4,8 +4,9 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Newspaper, MessageSquare, User, LogIn, Flag, Trophy, Info, Mail } from 'lucide-react'
+import ShareButton from './ShareButton'
 
-export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
+export default function DesktopNavbar({ isLoggedIn, referralUser }: { isLoggedIn: boolean, referralUser?: string }) {
     const pathname = usePathname()
     if (pathname?.startsWith('/studio')) return null
 
@@ -61,8 +62,8 @@ export default function DesktopNavbar({ isLoggedIn }: { isLoggedIn: boolean }) {
                 })}
             </div>
 
-            <div className="w-32">
-                {/* Spacer or user menu */}
+            <div className="w-32 flex justify-end">
+                <ShareButton referralUser={referralUser} variant="icon" />
             </div>
         </nav>
     )

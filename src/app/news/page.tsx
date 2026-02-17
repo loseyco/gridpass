@@ -9,6 +9,9 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'News',
     description: 'Latest headlines and daily briefings from the world of motorsports.',
+    openGraph: {
+        images: ['/hero-launch.png'],
+    },
 }
 
 export const revalidate = 60; // Revalidate every minute

@@ -10,6 +10,9 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
     title: "Classifieds | GridPass",
     description: "Buy and sell racing gear, cars, and electronics directly on GridPass.",
+    openGraph: {
+        images: ['/hero-launch.png'],
+    },
 };
 
 export default async function ClassifiedsPage({

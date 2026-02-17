@@ -2,12 +2,14 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import BottomTabBar from './components/BottomTabBar'
 import DesktopNavbar from './components/DesktopNavbar'
+import MobileTopBar from './components/MobileTopBar'
 import InstallPrompt from './components/InstallPrompt'
 import V2LayoutClient from './V2LayoutClient'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
 import MicrosoftClarity from '@/components/analytics/MicrosoftClarity'
 import PageTracker from '@/components/analytics/PageTracker'
 import { TimeTracker } from '@/components/analytics/TimeTracker'
+import JsonLd from "@/components/JsonLd";
 
 import { createClient } from '@/utils/supabase/server'
 
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
         siteName: 'GridPass',
         images: [
             {
-                url: '/og-image.jpg', // We need to ensure this image exists or use a default
+                url: '/hero-launch.png', // We need to ensure this image exists or use a default
                 width: 1200,
                 height: 630,
                 alt: 'GridPass Preview',
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'GridPass: Your Motorsports OS',
         description: 'The Operating System for your Motorsports Life.',
-        images: ['/og-image.jpg'],
+        images: ['/hero-launch.png'],
         creator: '@gridpassapp',
     },
     manifest: '/manifest.json',
@@ -64,6 +66,16 @@ export default async function V2Layout({
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    let userProfile = null
+    if (user) {
+        const { data } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .single()
+        userProfile = data
+    }
+
     return (
         <html lang="en">
             <body>
@@ -71,8 +83,10 @@ export default async function V2Layout({
                 <MicrosoftClarity />
                 <PageTracker />
                 <TimeTracker />
+                <JsonLd />
                 <V2LayoutClient isLoggedIn={!!user}>
-                    <DesktopNavbar isLoggedIn={!!user} />
+                    <MobileTopBar referralUser={userProfile?.username} />
+                    <DesktopNavbar isLoggedIn={!!user} referralUser={userProfile?.username} />
                     {children}
                     <InstallPrompt />
                     <BottomTabBar isLoggedIn={!!user} />
