@@ -51,6 +51,20 @@ export default async function JoinPage(props: Props) {
     const { id, token, team, code, email } = searchParams as any;
 
     const supabase = await createClient();
+
+    // Check for QR Code Redirects
+    if (id) {
+        const { data: redirectData } = await supabase
+            .from('sys_qr_redirects')
+            .select('target_url')
+            .eq('id', id)
+            .single();
+
+        if (redirectData?.target_url) {
+            redirect(redirectData.target_url);
+        }
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
 
     // Invite Logic

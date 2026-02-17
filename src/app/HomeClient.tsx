@@ -72,6 +72,7 @@ export default function HomeClient({
               <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-2">Beta</h2>
             </div>
 
+            <AppIcon label="QR Manager" icon={QrCode} href="/apps/qr-manager" color="#30cfd0" status="beta" />
             <AppIcon label="Profile" icon={User} href={`/u/${userProfile?.username || 'pjlosey'}`} color="#007AFF" status="beta" />
             <AppIcon label="My Resume" icon={ClipboardList} href="/profile/edit" color="#FF9500" status="beta" />
             <AppIcon label="Members" icon={Users} href="/members" color="#5856D6" status="beta" />
@@ -104,7 +105,6 @@ export default function HomeClient({
             <AppIcon label="Shop Manager" icon={Wrench} href="/shop-manager" color="#8E8E93" status="soon" />
             <AppIcon label="Tool Box" icon={Calculator} href="/tools" color="#5AC8FA" status="soon" />
             <AppIcon label="Collections" icon={Folder} href="/collections" color="#8E8E93" status="soon" />
-            <AppIcon label="Scan" icon={QrCode} href="/scan" color="#30cfd0" status="soon" />
 
           </div>
         </div>

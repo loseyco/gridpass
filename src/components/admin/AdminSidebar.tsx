@@ -20,7 +20,8 @@ import {
     LineChart,
     MessageSquarePlus,
     Bell,
-    Megaphone
+    Megaphone,
+    QrCode
 } from 'lucide-react';
 
 const MENU_ITEMS = [

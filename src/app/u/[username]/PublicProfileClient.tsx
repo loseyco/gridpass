@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers, Printer } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import VehicleCard from '@/components/profile/VehicleCard'
 import { Vehicle } from '@/types/garage'
 
@@ -88,6 +89,16 @@ export default function PublicProfileClient({
                       {profile.logistics_info.home_airport}
                     </span>
                   )}
+                  {/* Print Contact Info */}
+                  <span className="location-item printable-contact" style={{ display: 'none' }}>
+                    <span className="separator"> • </span>
+                    gridpass.app/u/{profile.username}
+                  </span>
+
+                  {/* Print QR Code */}
+                  <div className="printable-qr" style={{ display: 'none', position: 'absolute', top: 0, right: 0 }}>
+                    <QRCodeSVG value={`https://gridpass.app/u/${profile.username}`} size={80} />
+                  </div>
                 </div>
               )}
 
@@ -225,7 +236,7 @@ export default function PublicProfileClient({
           {profile.bio && (
             <section className="v2-section">
               <div className="v2-section-header">
-                <h2 className="v2-heading-2">Bio</h2>
+                <h2 className="v2-heading-2">Professional Summary</h2>
               </div>
               <p className="driver-bio-large">{profile.bio}</p>
             </section>
@@ -285,7 +296,7 @@ export default function PublicProfileClient({
 
           {/* Media Gallery */}
           {mediaItems && mediaItems.length > 0 && (
-            <section className="v2-section">
+            <section className="v2-section gallery-section">
               <div className="v2-section-header">
                 <h2 className="v2-heading-2">Gallery</h2>
               </div>
@@ -307,7 +318,7 @@ export default function PublicProfileClient({
           {career && career.length > 0 && (
             <section className="v2-section">
               <div className="v2-section-header">
-                <h2 className="v2-heading-2">Career</h2>
+                <h2 className="v2-heading-2">Experience</h2>
               </div>
               <div className="v2-list">
                 {career.map((entry: any, idx: number) => (
@@ -425,23 +436,167 @@ export default function PublicProfileClient({
 
         <style jsx>{`
         @media print {
-            .no-print, .v2-header, .v2-footer, .v2-nav, header, nav {
+            /* General Reset */
+            @page {
+                size: letter;
+                margin: 0.5in;
+            }
+            
+            body {
+                background: white !important;
+                color: #222 !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+                font-size: 11pt !important;
+                line-height: 1.4 !important;
+            }
+
+            /* Hide Web Elements */
+            .no-print, .v2-header, .v2-footer, .v2-nav, header, nav, 
+            .pit-wall-controls, .profile-hero, .media-scroll-container,
+            .vehicle-grid, .section-count, .driver-badge, .social-grid, 
+            .driver-avatar-container, .gallery-section, .install-prompt,
+            #install-prompt, [class*="InstallPrompt"] {
                 display: none !important;
             }
+
             .v2-profile-container {
                 padding: 0 !important;
                 margin: 0 !important;
                 max-width: none !important;
+                width: 100% !important;
             }
-            body {
+
+            /* Layout Overrides */
+            .v2-section {
+                padding: 0 !important;
+                margin-bottom: 20px !important;
+                break-inside: avoid;
+            }
+
+            .v2-card {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                margin-bottom: 12px !important;
+                box-shadow: none !important;
+            }
+
+            /* Header Re-styling for Print */
+            .driver-card {
+                margin-bottom: 20px !important;
+                border-bottom: 1px solid #000 !important;
+                padding-bottom: 10px !important;
+            }
+
+            .driver-header {
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            .driver-info {
+                padding: 0 !important;
+                text-align: left !important;
+            }
+
+            .driver-name {
+                color: black !important;
+                font-size: 24pt !important;
+                margin-bottom: 5px !important;
+                text-shadow: none !important;
+                font-family: inherit !important;
+                letter-spacing: -0.5px !important;
+            }
+
+            .driver-handle, .driver-bio-large {
+                color: #444 !important;
+                text-shadow: none !important;
+                font-family: inherit !important;
+            }
+            
+            .driver-bio-large {
+                font-size: 10pt !important;
+                margin: 10px 0 !important;
+                text-align: left !important;
+                max-width: 100% !important;
+            }
+
+            .driver-location {
+                justify-content: flex-start !important;
+                margin-top: 5px !important;
+                color: #666 !important;
+            }
+            
+            .location-item {
+                color: #666 !important;
+            }
+
+            /* Section Headers */
+            .v2-heading-2 {
+                color: black !important;
+                font-size: 14pt !important;
+                text-transform: uppercase !important;
+                border-bottom: 1px solid #ccc !important;
+                padding-bottom: 4px !important;
+                margin-bottom: 12px !important;
+                font-family: inherit !important;
+                letter-spacing: 1px !important;
+            }
+
+            /* Career History */
+            .career-header {
+                margin-bottom: 2px !important;
+            }
+
+            .v2-heading-3 {
+                color: black !important;
+                font-size: 11pt !important;
+                font-weight: bold !important;
+                margin: 0 !important;
+            }
+
+            .career-period {
+                color: #666 !important;
+                font-size: 10pt !important;
+            }
+
+            .v2-text-tertiary {
+                color: #444 !important;
+                font-weight: 500 !important;
+            }
+
+            .v2-text-secondary {
+                color: #333 !important;
+            }
+
+            /* Skills */
+            .skills-grid {
+                gap: 8px !important;
+            }
+
+            .skill-tag {
                 background: white !important;
                 color: black !important;
+                border: 1px solid #ccc !important;
+                padding: 2px 8px !important;
+                border-radius: 4px !important;
+                font-size: 9pt !important;
             }
-            .v2-heading-1, .v2-heading-2, .v2-heading-3 {
-                color: black !important;
+
+            /* Open To Work - Hide or Simplify */
+            .driver-info .v2-mt-3 {
+                 display: none !important;
             }
-            .v2-text-secondary, .v2-text-tertiary {
-                color: #555 !important;
+
+            .printable-contact {
+                display: inline-flex !important;
+            }
+
+            .printable-qr {
+                display: block !important;
+                position: absolute !important;
+                top: 0 !important;
+                right: 0 !important;
             }
         }
 
