@@ -9,20 +9,6 @@ const cleanKey = (key: string) => {
     return key.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 };
 
-if (publicVapidKey && privateVapidKey) {
-    try {
-        webpush.setVapidDetails(
-            'mailto:support@gridpass.app',
-            cleanKey(publicVapidKey),
-            cleanKey(privateVapidKey)
-        );
-    } catch (error) {
-        console.error('Failed to set VAPID details:', error);
-    }
-} else {
-    console.warn('VAPID keys are missing. Web Push notifications will not work.');
-}
-
 type PushSubscription = {
     endpoint: string;
     keys: {
@@ -37,6 +23,13 @@ export async function sendPushNotification(subscription: PushSubscription, paylo
     }
 
     try {
+        // Set VAPID details immediately before sending to ensure runtime availability and avoid build-time errors
+        webpush.setVapidDetails(
+            'mailto:support@gridpass.app',
+            cleanKey(publicVapidKey),
+            cleanKey(privateVapidKey)
+        );
+
         const stringPayload = typeof payload === 'string' ? payload : JSON.stringify(payload);
         await webpush.sendNotification(subscription, stringPayload);
         return { success: true };
