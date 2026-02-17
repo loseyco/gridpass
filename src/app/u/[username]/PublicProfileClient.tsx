@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers } from 'lucide-react'
+import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers, Printer } from 'lucide-react'
 import VehicleCard from '@/components/profile/VehicleCard'
 import { Vehicle } from '@/types/garage'
 
@@ -93,6 +93,11 @@ export default function PublicProfileClient({
 
               {/* Roles / Badges */}
               <div className="v2-badges v2-mt-2 v2-flex v2-gap-2 v2-flex-wrap">
+                {profile.username === 'pjlosey' && (
+                  <span className="v2-badge" style={{ background: 'rgba(46, 164, 79, 0.2)', borderColor: '#2ea44f', color: '#2ea44f' }}>
+                    Open To Work
+                  </span>
+                )}
                 {profile.role === 'founder' && (
                   <span className="v2-badge v2-badge-gold">
                     Founder
@@ -164,15 +169,25 @@ export default function PublicProfileClient({
 
 
             {/* Pit Wall Controls */}
+
             <div className="pit-wall-controls" style={{ flexDirection: 'column' }}>
               {isOwner ? (
                 <Link href="/profile/edit" className="v2-btn v2-btn-primary v2-btn-full v2-justify-center">
                   Edit Profile
                 </Link>
               ) : (
-                <button className="v2-btn v2-btn-primary v2-btn-full v2-justify-center" disabled>
-                  Contact (Coming Soon)
-                </button>
+                <div className="v2-flex v2-flex-col v2-gap-2 v2-w-full">
+                  <button
+                    onClick={() => window.print()}
+                    className="v2-btn v2-btn-secondary v2-btn-full v2-justify-center"
+                  >
+                    <Printer size={18} className="v2-mr-2" />
+                    Save as PDF
+                  </button>
+                  <button className="v2-btn v2-btn-primary v2-btn-full v2-justify-center" disabled>
+                    Contact (Coming Soon)
+                  </button>
+                </div>
               )}
             </div>
 
