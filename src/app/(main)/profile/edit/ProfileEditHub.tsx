@@ -162,64 +162,74 @@ export default function ProfileEditHub({ profile }: ProfileEditHubProps) {
                     </div>
                 </div>
 
-                <div className="v2-card v2-mb-4" style={{ padding: '1rem' }}>
-                    <GridToggle
-                        label="Open To Work"
-                        name="open_to_work"
-                        value={openToWork}
-                        onChange={handleOpenToWorkChange}
-                        className="v2-mb-0"
-                    />
-                    <p className="v2-text-secondary v2-text-xs v2-mt-2">
-                        Enabling this adds a badge to your profile and lets recruiters know you're available.
-                    </p>
-                </div>
+                {/* Open To Work moved to Preferences page, or we can keep a summary here */}
+                {profile.job_preferences?.is_open_to_work && (
+                    <div className="v2-card v2-mb-4 v2-bg-success-subtle v2-border-success">
+                        <div className="v2-flex v2-items-center v2-gap-2">
+                            <div className="v2-w-3 v2-h-3 v2-rounded-full v2-bg-success animate-pulse"></div>
+                            <Link href="/profile/edit/preferences" className="v2-card v2-mb-4 v2-list-item" style={{ textDecoration: 'none' }}>
+                                <div className="v2-list-item-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                                        <path d="M12 6v6l4 2" />
+                                    </svg>
+                                </div>
+                                <div className="v2-list-item-content">
+                                    <span className="v2-list-item-label">Preferences</span>
+                                    <span className="v2-list-item-desc">Open to work, notifications, privacy</span>
+                                </div>
+                                <div className="v2-list-item-chevron">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="9 18 15 12 9 6" />
+                                    </svg>
+                                </div>
+                            </Link>
 
-                <div className="v2-card v2-mb-4" style={{ padding: 0, overflow: 'hidden' }}>
-                    {menuItems.map((item, index) => (
-                        <Link
-                            key={item.id}
-                            href={item.href}
-                            className="v2-list-item"
-                        >
-                            <div className="v2-list-item-icon">
-                                {item.icon}
+                            <div className="v2-card v2-mb-4" style={{ padding: 0, overflow: 'hidden' }}>
+                                {menuItems.map((item, index) => (
+                                    <Link
+                                        key={item.id}
+                                        href={item.href}
+                                        className="v2-list-item"
+                                    >
+                                        <div className="v2-list-item-icon">
+                                            {item.icon}
+                                        </div>
+                                        <div className="v2-list-item-content">
+                                            <span className="v2-list-item-label">{item.label}</span>
+                                            <span className="v2-list-item-desc">{item.description}</span>
+                                        </div>
+                                        <div className="v2-list-item-chevron">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="9 18 15 12 9 6" />
+                                            </svg>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                            <div className="v2-list-item-content">
-                                <span className="v2-list-item-label">{item.label}</span>
-                                <span className="v2-list-item-desc">{item.description}</span>
+
+                            {/* Upsell Section */}
+                            <div className="v2-card" style={{
+                                background: 'linear-gradient(135deg, #000 0%, #1a1a1a 100%)',
+                                border: '1px solid rgba(227, 30, 36, 0.2)',
+                                textAlign: 'center'
+                            }}>
+                                <h3 className="v2-heading-3" style={{ marginBottom: '0.5rem', color: 'white' }}>Get Verified</h3>
+                                <p className="v2-text-secondary v2-text-sm v2-mb-4">
+                                    Stand out with a verified badge and professional profile formatting.
+                                </p>
+                                <Link href="/pro" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
+                                    <button className="v2-btn v2-btn-primary" style={{ width: '100%' }}>
+                                        Upgrade to Pro ($20)
+                                    </button>
+                                </Link>
                             </div>
-                            <div className="v2-list-item-chevron">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="9 18 15 12 9 6" />
-                                </svg>
+
+                            <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.75rem', color: 'var(--v2-text-tertiary)' }}>
+                                GridPass V2.0 (Beta)
                             </div>
-                        </Link>
-                    ))}
-                </div>
+                        </div>
 
-                {/* Upsell Section */}
-                <div className="v2-card" style={{
-                    background: 'linear-gradient(135deg, #000 0%, #1a1a1a 100%)',
-                    border: '1px solid rgba(227, 30, 36, 0.2)',
-                    textAlign: 'center'
-                }}>
-                    <h3 className="v2-heading-3" style={{ marginBottom: '0.5rem', color: 'white' }}>Get Verified</h3>
-                    <p className="v2-text-secondary v2-text-sm v2-mb-4">
-                        Stand out with a verified badge and professional profile formatting.
-                    </p>
-                    <Link href="/pro" style={{ textDecoration: 'none', width: '100%', display: 'block' }}>
-                        <button className="v2-btn v2-btn-primary" style={{ width: '100%' }}>
-                            Upgrade to Pro ($20)
-                        </button>
-                    </Link>
-                </div>
-
-                <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.75rem', color: 'var(--v2-text-tertiary)' }}>
-                    GridPass V2.0 (Beta)
-                </div>
-            </div>
-
-        </>
-    )
-}
+                    </>
+                )
+                }

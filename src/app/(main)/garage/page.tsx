@@ -1,6 +1,15 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import GarageClient from './GarageClient'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'My Garage | GridPass',
+  description: 'Manage your racing vehicles and setup.',
+  openGraph: {
+    images: ['/hero-launch.png'],
+  },
+}
 
 export default async function GaragePage() {
   const supabase = await createClient()

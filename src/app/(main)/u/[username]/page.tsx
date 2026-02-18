@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const supabase = await createClient();
 
     const { data: profile } = await supabase
-        .from('profiles')
-        .select('username, full_name, bio, avatar_url')
+        .from('os_user_profiles')
+        .select('id, username, first_name, last_name, bio, avatar_url')
         .ilike('username', username)
         .single();
 
@@ -26,8 +26,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
-    const title = `${profile.full_name || profile.username} (@${profile.username}) | GridPass`;
-    const description = profile.bio || `Check out ${profile.username}'s profile on GridPass.`;
+    // Construct display name
+    const fullName = profile.first_name && profile.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : (profile.first_name || profile.username);
+
+    const { data: services } = await supabase
+        .from('user_services')
+        .select('title')
+        .eq('user_id', profile.id)
+        .eq('is_active', true);
+
+    const serviceTitles = services?.map(s => s.title).join(', ');
+    const serviceText = serviceTitles ? ` | Services: ${serviceTitles}` : '';
+
+    const title = `${fullName} (@${profile.username}) | GridPass${serviceText}`;
+    const description = (profile.bio || `Check out ${profile.username}'s profile on GridPass.`) + serviceText;
 
     // Construct valid OG images
     const images: string[] = [];
@@ -79,9 +93,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
     const { data: { user } } = await supabase.auth.getUser()
 
     // Fetch profile
-    // Use regular client for profile as it should be public via RLS or isOwner check
     const { data: profile } = await supabase
-        .from('profiles')
+        .from('os_user_profiles')
         .select('*')
         .ilike('username', username)
         .single()
@@ -93,16 +106,47 @@ export default async function PublicProfilePage({ params }: PageProps) {
     // Check if viewing own profile
     const isOwner = user?.id === profile.id
 
-    // Extract data from profile JSON fields
-    const career = (profile.career_history || []) as any[]
-    const skills = (profile.skills || []) as string[]
+    // Fetch Work History (replacing career_history JSON)
+    const { data: workHistory } = await supabase
+        .from('os_user_work_history')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('start_date', { ascending: false })
 
-    // Fetch media from dedicated table
+    // Fetch Skills (replacing skills array)
+    const { data: userSkills } = await supabase
+        .from('os_user_skills')
+        .select('skill')
+        .eq('user_id', profile.id)
+
+    const skills = userSkills?.map(s => s.skill) || []
+
+    // Construct full name for display where needed
+    const fullName = profile.first_name && profile.last_name
+        ? `${profile.first_name} ${profile.last_name}`
+        : (profile.first_name || profile.username);
+
+    // Merge legacy fields for UI compatibility
+    const uiProfile = {
+        ...profile,
+        full_name: fullName,
+        role: profile.target_role, // Map target_role to role
+        career_history: workHistory // Map workHistory to career_history (if Client expects it, or pass separately)
+    }
+
     const { data: mediaItems } = await supabase
         .from('profile_media')
         .select('*')
         .eq('user_id', profile.id)
         .order('sort_order', { ascending: true })
+
+    // Fetch services
+    const { data: services } = await supabase
+        .from('user_services')
+        .select('*')
+        .eq('user_id', profile.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
 
     // Fetch recommendations 
     // Use admin client to ensure we get them even if RLS is strict for non-owners
@@ -124,7 +168,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
         .order('created_at', { ascending: false })
 
     // Check verification status
-    const isVerified = profile.role === 'verified' || profile.role === 'founder' || profile.role === 'superadmin'
+    const isVerified = profile.target_role === 'verified' || profile.target_role === 'founder' || profile.target_role === 'superadmin'
 
     // Fetch public vehicles and collections using ADMIN client to bypass RLS
     // TEMPORARILY DISABLED per user request: "drop the cars and collections from the u/pjlosey page"
@@ -202,16 +246,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     return (
         <PublicProfileClient
-            profile={profile}
+            profile={uiProfile}
             isVerified={isVerified}
             isOwner={isOwner}
-            career={career || []}
+            career={workHistory || []}
             skills={skills}
             mediaItems={mediaItems || []}
             recommendations={recommendations || []}
             vehicles={visibleVehicles}
             collections={displayCollections}
             ownedOrgs={ownedOrgs}
+            services={services || []}
         />
     )
 }

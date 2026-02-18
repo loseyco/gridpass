@@ -12,14 +12,16 @@ if (!SECRET) {
     process.exit(1);
 }
 
-// Initialize Supabase (Public Client is fine for reading settings if RLS allows, 
-// using Anon key. Admin key would be better but we only have Anon in .env.local usually?
-// Actually we need to Write 'heartbeat'. If RLS allows auth users, we might need to sign in?
-// For now, let's assume Anon key has access or we use Service key if available.)
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+// Initialize Supabase
+// Use Service Role Key if available to bypass RLS for writing heartbeat
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('⚠️  SUPABASE_SERVICE_ROLE_KEY not found. Using Anon key. Heartbeat write might fail if RLS is strict.');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // State tracking
 let lastRun = {
@@ -33,11 +35,18 @@ async function log(msg) {
     console.log(`[${ts}] ${msg}`);
 }
 
-async function trigger(endpoint) {
+async function trigger(endpoint, method = 'GET', body = null) {
     try {
-        const res = await fetch(`${SITE_URL}/api/cron/${endpoint}`, {
-            headers: { 'Authorization': `Bearer ${SECRET}` }
-        });
+        const options = {
+            method,
+            headers: {
+                'Authorization': `Bearer ${SECRET}`,
+                'Content-Type': 'application/json'
+            }
+        };
+        if (body) options.body = JSON.stringify(body);
+
+        const res = await fetch(`${SITE_URL}/api/cron/${endpoint}`, { ...options });
         const json = await res.json();
         return { success: res.ok, data: json };
     } catch (e) {
@@ -47,21 +56,31 @@ async function trigger(endpoint) {
 
 async function loop() {
     // 1. Heartbeat
-    await supabase.from('os_system_settings').upsert({
-        key: 'system.heartbeat',
-        value: {
-            status: 'online',
-            last_seen: new Date().toISOString(),
+    // Use API to bypass RLS
+    try {
+        await trigger('heartbeat', 'POST', {
             hostname: require('os').hostname()
-        }
-    });
+        });
+    } catch (e) {
+        console.error('Heartbeat failed:', e.message);
+    }
 
     // 2. Fetch Settings
-    const { data: settings } = await supabase.from('os_system_settings').select('*');
+    const { data: settings, error } = await supabase.from('os_system_settings').select('*');
+    if (error) {
+        log(`❌ Settings Fetch Error: ${error.message} (Key: ${supabaseKey ? 'Present' : 'Missing'})`);
+        return;
+    }
     if (!settings) return;
 
     const config = {};
     settings.forEach(s => config[s.key] = s.value);
+
+    // DEBUG: Log keys on first run
+    if (lastRun.news === 0) {
+        log(`Loaded settings keys: ${Object.keys(config).join(', ')}`);
+        log(`News Scraper Config: ${JSON.stringify(config['cron.news_scraper.enabled'])}`);
+    }
 
     const now = Date.now();
 
@@ -71,7 +90,17 @@ async function loop() {
         if (now - lastRun.news > freq) {
             log('📰 Running News Scraper...');
             const res = await trigger('daily-news');
-            log(`   Result: ${res.success ? '✅' : '❌'} ${res.success ? (res.data.scraped?.inserted + ' new') : res.error}`);
+            if (res.success) {
+                log(`   Result: ✅ ${res.data.scraped?.inserted} new articles`);
+                if (res.data.summary) {
+                    log(`   Summary: Generated=${res.data.summary.summariesGenerated}, Errors=${res.data.summary.errors?.length}`);
+                    if (res.data.summary.errors?.length > 0) {
+                        log(`   ⚠️ Summary Errors: ${JSON.stringify(res.data.summary.errors)}`);
+                    }
+                }
+            } else {
+                log(`   ❌ Error: ${res.error}`);
+            }
             lastRun.news = now;
         }
     }

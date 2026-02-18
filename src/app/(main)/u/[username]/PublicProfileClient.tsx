@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { Globe, Instagram, Twitter, Youtube, Linkedin, Video, Facebook, Briefcase, Car, Layers, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import VehicleCard from '@/components/profile/VehicleCard'
+import ServiceCard from '@/components/profile/ServiceCard'
 import { Vehicle } from '@/types/garage'
+import { Service } from '@/types/services'
 
 interface PublicProfileClientProps {
   profile: any
@@ -17,6 +19,7 @@ interface PublicProfileClientProps {
   vehicles: Vehicle[]
   collections: any[]
   ownedOrgs?: any[]
+  services?: any[]
 }
 
 export default function PublicProfileClient({
@@ -29,7 +32,8 @@ export default function PublicProfileClient({
   recommendations,
   vehicles,
   collections,
-  ownedOrgs = []
+  ownedOrgs = [],
+  services = []
 }: PublicProfileClientProps) {
   return (
     <>
@@ -242,6 +246,26 @@ export default function PublicProfileClient({
             </section>
           )}
 
+          {/* Services Section */}
+          {services && services.length > 0 && (
+            <section className="v2-section">
+              <div className="v2-section-header">
+                <h2 className="v2-heading-2">Services</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {services.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onEdit={() => { }}
+                    onDelete={() => { }}
+                    isOwner={false} // Always false in public view
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Skills */}
           {skills && skills.length > 0 && (
             <section className="v2-section">
@@ -324,11 +348,11 @@ export default function PublicProfileClient({
                 {career.map((entry: any, idx: number) => (
                   <div key={idx} className="v2-card v2-mb-4">
                     <div className="career-header">
-                      <h3 className="v2-heading-3 v2-text-white">{entry.title || entry.position}</h3>
+                      <h3 className="v2-heading-3 v2-text-white">{entry.title || entry.position || entry.role}</h3>
                       <span className="career-period">{entry.period || `${entry.start_date} - ${entry.end_date || 'Present'}`}</span>
                     </div>
-                    {entry.company && (
-                      <p className="v2-text-tertiary v2-font-bold v2-mb-2">{entry.company}</p>
+                    {(entry.company || entry.team_name) && (
+                      <p className="v2-text-tertiary v2-font-bold v2-mb-2">{entry.company || entry.team_name}</p>
                     )}
                     {entry.description && (
                       <p className="v2-text-secondary v2-text-sm v2-leading-normal">{entry.description}</p>

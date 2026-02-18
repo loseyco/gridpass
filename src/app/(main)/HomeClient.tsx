@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell,
   Wrench, Calculator, Settings, Newspaper, User, Briefcase, QrCode,
-  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info, BookOpen
+  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info, BookOpen, Megaphone, Activity
 } from 'lucide-react'
 import AppIcon from '@/components/os/AppIcon'
 
@@ -16,11 +16,13 @@ interface HomeClientProps {
     full_name: string
     avatar_url: string | null
   } | null
+  userRole: string | null
 }
 
 export default function HomeClient({
   hasUser,
   userProfile,
+  userRole,
 }: HomeClientProps) {
 
   const userName = userProfile?.full_name?.split(' ')[0] || userProfile?.full_name || 'Racer'
@@ -62,6 +64,17 @@ export default function HomeClient({
               <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-0">Live</h2>
             </div>
 
+
+            {userRole === 'superadmin' && (
+              <>
+                <div className="section-header col-span-full">
+                  <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-0">Admin</h2>
+                </div>
+                <AppIcon label="Mission Control" icon={Activity} href="/apps/mission-control" color="#ff3b30" status="admin" />
+                <AppIcon label="Tasks" icon={ClipboardList} href="/apps/task" color="#007AFF" status="admin" />
+              </>
+            )}
+
             <AppIcon label="About" icon={Info} href="/about" color="#8E8E93" />
             <AppIcon label="Settings" icon={Settings} href="/settings" color="#8E8E93" />
             <AppIcon label="Guides" icon={BookOpen} href="/guides" color="#30D158" />
@@ -83,10 +96,11 @@ export default function HomeClient({
               <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-2">Alpha</h2>
             </div>
 
-            <AppIcon label="News" icon={Newspaper} href="/news" color="#FF2D55" status="alpha" />
+
 
             <AppIcon label="Leagues" icon={Trophy} href="/league" color="#5856D6" status="alpha" />
             <AppIcon label="Business" icon={Building2} href="/businesses" color="#AF52DE" status="alpha" />
+            <AppIcon label="Ad Manager" icon={Megaphone} href="/dashboard/ads" color="#30D158" status="alpha" />
             <AppIcon label="Incidents" icon={AlertTriangle} href="/sim-racing/stewards" color="#FF9500" status="alpha" />
 
 
@@ -112,10 +126,11 @@ export default function HomeClient({
       </div>
 
       <style jsx>{`
+
         .v2-header {
             height: auto;
-            padding-top: var(--v2-space-4);
-            padding-bottom: var(--v2-space-2);
+            padding-top: var(--v2-space-2);
+            padding-bottom: 0;
             background: transparent;
             backdrop-filter: none;
             border-bottom: none;

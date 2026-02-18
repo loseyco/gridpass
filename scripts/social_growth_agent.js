@@ -275,7 +275,7 @@ async function runScraper() {
         for (const post of posts) {
             // Check existence
             const { data: existing } = await supabase
-                .from('scraped_posts')
+                .from('os_scraped_posts')
                 .select('id')
                 .eq('external_id', post.external_id)
                 .single();
@@ -287,7 +287,7 @@ async function runScraper() {
 
             // Insert Raw
             const { data: insertedPost, error: insertError } = await supabase
-                .from('scraped_posts')
+                .from('os_scraped_posts')
                 .insert({
                     source: 'facebook',
                     external_id: post.external_id,
@@ -325,7 +325,7 @@ async function runScraper() {
                 const isHighConfidence = analysis.confidence > 0.85;
                 const status = isHighConfidence ? 'approved' : 'new';
 
-                const { data: lead } = await supabase.from('leads').insert({
+                const { data: lead } = await supabase.from('os_leads').insert({
                     source_post_id: insertedPost.id,
                     name: analysis.name || 'Unknown Candidate',
                     role: analysis.role,
@@ -349,7 +349,7 @@ async function runScraper() {
                 if (lead) {
                     // Auto-Generate Claim Token (for demo)
                     const tokenString = 'claim_' + Math.random().toString(36).substring(7);
-                    await supabase.from('claim_tokens').insert({
+                    await supabase.from('os_claim_tokens').insert({
                         entity_type: 'lead',
                         entity_id: lead.id,
                         token: tokenString
@@ -383,7 +383,7 @@ async function runScraper() {
                     .replace('{name}', analysis.name || 'there')
                     .replace('{topic}', analysis.topic || 'your project');
 
-                const { data: lead } = await supabase.from('leads').insert({
+                const { data: lead } = await supabase.from('os_leads').insert({
                     source_post_id: insertedPost.id,
                     name: analysis.name || 'Unknown User',
                     role: analysis.type,
@@ -404,10 +404,11 @@ async function runScraper() {
                 }
 
             } else if (analysis.type === 'job' && analysis.confidence > 0.7) {
-                await supabase.from('jobs').insert({
+                await supabase.from('os_jobs').insert({
                     source_post_id: insertedPost.id,
-                    team_name: analysis.name || 'Unknown Team',
+                    company_name: analysis.name || 'Unknown Team', // mapped to company_name
                     role: analysis.role,
+                    title: analysis.role || 'Racing Job', // Added default title
                     description: analysis.summary,
                     requirements: analysis.skills,
                     status: 'open'
@@ -436,7 +437,7 @@ async function processApprovedLeads(browser) {
 
     // 1. Get Approved Leads
     const { data: leads } = await supabase
-        .from('leads')
+        .from('os_leads')
         .select('*')
         .eq('status', 'approved')
         .limit(5);
@@ -478,12 +479,12 @@ async function processApprovedLeads(browser) {
                 // await new Promise(r => setTimeout(r, 3000)); // Wait for post
 
                 // Mark as Sent
-                await supabase.from('leads').update({ status: 'sent' }).eq('id', lead.id);
+                await supabase.from('os_leads').update({ status: 'sent' }).eq('id', lead.id);
                 console.log(`      ✅ Message sent!`);
             } else {
                 console.log('      ❌ Could not find comment box.');
                 // Mark as failed so we don't retry forever
-                await supabase.from('leads').update({ status: 'failed_no_box' }).eq('id', lead.id);
+                await supabase.from('os_leads').update({ status: 'failed_no_box' }).eq('id', lead.id);
             }
 
         } catch (e) {

@@ -130,14 +130,39 @@ async function scanGroupsForLeads(page) {
                         // Start with leads table if we want to invite them directly
                         // Or scanned_listings for review?
                         // Let's use LEADS table for people we want to invite.
-                        const { error } = await supabase.from('leads').insert({
+                        const { data: lead, error } = await supabase.from('os_lead').insert({
                             name: authorName,
                             role: 'Driver (Candidate)',
                             source_link: authorUrl,
                             status: 'new',
                             contact_info: { summary: insight.reason }
-                        });
-                        if (!error) console.log(`        💾 Saved to Leads`);
+                        }).select().single();
+
+                        if (!error && lead) {
+                            console.log(`        💾 Saved to Leads: ${lead.name}`);
+
+                            // Generate Claim Token
+                            const tokenString = 'claim_' + Math.random().toString(36).substring(7);
+                            await supabase.from('os_claim_token').insert({
+                                entity_type: 'lead',
+                                entity_id: lead.id,
+                                token: tokenString
+                            });
+
+                            const claimLink = `https://gridpass.app/claim/${tokenString}`;
+                            const outreachMsg = `Hey ${authorName.split(' ')[0] || 'there'}, saw your post in the sim racing group. I set up a driver profile for you on GridPass to help you find a team: ${claimLink}`;
+
+                            // Update Lead with Outreach Info
+                            await supabase.from('os_lead').update({
+                                contact_info: {
+                                    ...lead.contact_info,
+                                    suggested_outreach: outreachMsg,
+                                    claim_link: claimLink
+                                }
+                            }).eq('id', lead.id);
+
+                            console.log(`        ✨ Generated Claim Link: ${claimLink}`);
+                        }
 
                         // Also try to friend request
                         if (userLink) {
@@ -203,7 +228,7 @@ async function searchBusinesses(page) {
                 console.log(`     📍 Proposed Business: ${name}`);
 
                 // Save to Organizations (Prospects)
-                const { error } = await supabase.from('organizations').insert({
+                const { error } = await supabase.from('os_organization').insert({
                     name: name,
                     type: 'service', // guess
                     website: link,

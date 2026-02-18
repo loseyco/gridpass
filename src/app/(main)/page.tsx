@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { getUserRole } from '@/utils/rbac'
 import { Metadata } from 'next'
 import HomeClient from './HomeClient'
 import V2Landing from './V2Landing'
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function V2Home() {
   const supabase = await createClient()
+  const role = await getUserRole();
 
   // Get current user (optional - home works without login)
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,6 +41,7 @@ export default async function V2Home() {
     <HomeClient
       hasUser={!!user}
       userProfile={userProfile}
+      userRole={role}
     />
   )
 }

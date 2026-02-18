@@ -10,7 +10,7 @@ interface AppIconProps {
   color?: string
   onClick?: () => void
   badge?: number | string
-  status?: 'active' | 'soon' | 'new' | 'disabled' | 'alpha' | 'beta'
+  status?: 'active' | 'soon' | 'new' | 'disabled' | 'alpha' | 'beta' | 'admin'
   className?: string
 }
 
@@ -29,8 +29,8 @@ export default function AppIcon({
   const isAlpha = status === 'alpha';
   const isBeta = status === 'beta';
 
-  const badgeText = status === 'soon' ? 'SOON' : (status === 'alpha' ? 'ALPHA' : (status === 'beta' ? 'BETA' : null));
-  const badgeColor = status === 'alpha' ? 'var(--v2-accent-primary)' : (status === 'beta' ? '#FF9500' : 'rgba(255, 255, 255, 0.2)');
+  const badgeText = status === 'soon' ? 'SOON' : (status === 'alpha' ? 'ALPHA' : (status === 'beta' ? 'BETA' : (status === 'admin' ? 'ADMIN' : (status === 'new' ? 'NEW' : null))));
+  const badgeColor = status === 'alpha' ? 'var(--v2-accent-primary)' : (status === 'beta' ? '#FF9500' : (status === 'admin' ? '#FF3B30' : (status === 'new' ? '#30D158' : 'rgba(255, 255, 255, 0.2)')));
 
   const content = (
     <>

@@ -18,7 +18,7 @@ async function check(token) {
 
     // 1. Check with Admin (Service Role)
     const { data: adminData, error: adminError } = await supabaseAdmin
-        .from('claim_tokens')
+        .from('os_claim_token')
         .select('*')
         .eq('token', token)
         .single();
@@ -31,8 +31,8 @@ async function check(token) {
 
     // 2. Check with Anon (Simulating Public Access)
     const { data: anonData, error: anonError } = await supabaseAnon
-        .from('claim_tokens')
-        .select('*')
+        .from('os_claim_token')
+        .select('*, lead:os_lead(*)')
         .eq('token', token)
         .single();
 
@@ -43,5 +43,5 @@ async function check(token) {
     }
 }
 
-const token = 'test_vle1h';
+const token = 'test_goq5e';
 check(token);

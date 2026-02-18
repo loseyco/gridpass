@@ -1,18 +1,26 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function V2RegisterPage() {
+function RegisterForm() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [username, setUsername] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
+    const searchParams = useSearchParams()
     const supabase = createClient()
+
+    const token = searchParams.get('token')
+    const emailParam = searchParams.get('email')
+
+    useEffect(() => {
+        if (emailParam) setEmail(emailParam)
+    }, [emailParam])
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -38,8 +46,23 @@ export default function V2RegisterPage() {
             return
         }
 
-        // 2. Create Profile entry (handled by trigger usually, but if not, we wait)
-        // For now, assume trigger or handle on next page load.
+        // 2. Claim Profile if token exists
+        if (token && authData.user) {
+            try {
+                // Call API to migrate lead data to profile
+                await fetch('/api/claim/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token,
+                        user_id: authData.user.id
+                    })
+                })
+            } catch (err) {
+                console.error("Failed to claim profile:", err)
+                // Don't block registration success, but maybe warn?
+            }
+        }
 
         // 3. Redirect or Show Success
         if (authData.session) {
@@ -70,7 +93,9 @@ export default function V2RegisterPage() {
                 {/* Register Card */}
                 <div className="v2-card v2-auth-card">
 
-                    <h2 className="v2-text-white v2-italic" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', textTransform: 'uppercase' }}>Register</h2>
+                    <h2 className="v2-text-white v2-italic" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', textTransform: 'uppercase' }}>
+                        {token ? 'Claim Your Profile' : 'Register'}
+                    </h2>
 
                     {error && (
                         <div className={error.includes('check your email') ? 'v2-success-banner' : 'v2-error-banner'}>
@@ -121,7 +146,7 @@ export default function V2RegisterPage() {
                             disabled={loading}
                             style={{ padding: '1rem', fontSize: '1.1rem' }}
                         >
-                            {loading ? 'Registering...' : 'JOIN THE GRID'}
+                            {loading ? 'Registering...' : (token ? 'Complete Claim' : 'JOIN THE GRID')}
                         </button>
                     </form>
 
@@ -139,5 +164,13 @@ export default function V2RegisterPage() {
 
             </div>
         </div>
+    )
+}
+
+export default function V2RegisterPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>}>
+            <RegisterForm />
+        </Suspense>
     )
 }

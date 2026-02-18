@@ -1,28 +1,37 @@
 
-require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase credentials in .env.local');
+    process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function seed() {
-    console.log('🌱 Seeding os_system_settings...');
+    console.log('Seeding os_system_settings...');
 
-    const settings = [
-        { key: 'cron.news_scraper.enabled', value: { enabled: true, frequency_mins: 15 }, description: 'Auto-scrape RSS feeds' },
-        { key: 'cron.facebook_publisher.enabled', value: { enabled: true, frequency_mins: 60 }, description: 'Auto-post to Facebook' },
-        { key: 'cron.youtube_monitor.enabled', value: { enabled: true, frequency_mins: 5 }, description: 'Check for live streams' },
-        { key: 'site.live_stream', value: { is_live: false, video_id: null }, description: 'Current Live Stream Status' },
-        { key: 'system.heartbeat', value: { last_seen: null, status: 'offline' }, description: 'Local Script Heartbeat' }
+    const defaults = [
+        { key: 'cron.news_scraper.enabled', value: { enabled: true, frequency_mins: 15 } },
+        { key: 'cron.facebook_publisher.enabled', value: { enabled: true, frequency_mins: 60 } },
+        { key: 'cron.youtube_monitor.enabled', value: { enabled: true, frequency_mins: 5 } },
+        { key: 'system.heartbeat', value: { status: 'offline' } } // Initial state
     ];
 
-    const { error } = await supabase
-        .from('os_system_settings')
-        .upsert(settings, { onConflict: 'key' });
+    for (const item of defaults) {
+        const { error } = await supabase
+            .from('os_system_settings')
+            .upsert(item, { onConflict: 'key' });
 
-    if (error) {
-        console.error('❌ Error seeding settings:', error.message);
-    } else {
-        console.log('✅ Settings seeded successfully.');
+        if (error) {
+            console.error(`Error upserting ${item.key}:`, error.message);
+        } else {
+            console.log(`✅ Set ${item.key}`);
+        }
     }
 }
 

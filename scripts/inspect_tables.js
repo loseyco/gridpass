@@ -1,36 +1,28 @@
-
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-async function inspectSchema() {
-    console.log('Inspecting resume_leads...');
-    const { data: resumeLeads, error: rlError } = await supabase
-        .from('resume_leads')
-        .select('*')
-        .limit(1);
+async function inspectTables() {
+    console.log('🔍 Inspecting Schemas...\n');
 
-    if (resumeLeads && resumeLeads.length > 0) {
-        console.log('resume_leads columns:', Object.keys(resumeLeads[0]));
-    } else {
-        console.log('resume_leads empty or error:', rlError);
-    }
+    const tables = ['leads', 'os_lead', 'claim_tokens', 'os_claim_tokens', 'tasks', 'os_task'];
 
-    console.log('Inspecting leads...');
-    const { data: leads, error: lError } = await supabase
-        .from('leads')
-        .select('*')
-        .limit(1);
-
-    if (leads && leads.length > 0) {
-        console.log('leads columns:', Object.keys(leads[0]));
-    } else {
-        console.log('leads empty or error:', lError);
+    for (const table of tables) {
+        const { data, error } = await supabase.from(table).select('*').limit(1);
+        if (error) {
+            console.log(`❌ ${table}: ${error.message}`);
+        } else {
+            console.log(`✅ ${table}: Found.`);
+            if (data.length > 0) {
+                console.log(`   Keys: ${Object.keys(data[0]).join(', ')}`);
+            } else {
+                console.log(`   (Empty table)`);
+            }
+        }
     }
 }
 
-inspectSchema();
+inspectTables();

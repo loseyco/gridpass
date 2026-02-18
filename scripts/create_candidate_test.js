@@ -12,7 +12,7 @@ async function run() {
 
     console.log('👤 Creating Candidate Lead (Seeker)...');
     const { data: lead, error } = await supabase
-        .from('leads')
+        .from('os_leads')
         .insert({
             name: 'Alex Racer',
             role: 'Driver',
@@ -34,7 +34,7 @@ async function run() {
     // Create Claim Token
     const tokenString = 'resume_help_' + Math.random().toString(36).substring(7);
 
-    await supabase.from('claim_tokens').insert({
+    await supabase.from('os_claim_tokens').insert({
         entity_type: 'lead',
         entity_id: lead.id,
         token: tokenString

@@ -4,6 +4,14 @@ import { createClient } from '@/utils/supabase/server';
 export async function GET(request: NextRequest) {
     const supabase = await createClient();
 
+    // 0. Security Check
+    const { getUserRole } = await import('@/utils/rbac');
+    const role = await getUserRole();
+
+    if (role !== 'superadmin') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     // Get members created in last 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 

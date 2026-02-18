@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
                 '/',
                 '/founder',
                 '/features',
+                '/u/*',
                 '/classifieds/*',
                 '/jobs/*'
             ],

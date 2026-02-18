@@ -13,6 +13,14 @@ export async function GET() {
         return NextResponse.json({ error: 'Not authenticated', details: userError }, { status: 401 });
     }
 
+    // 1.5 Security Check
+    const { getUserRole } = await import('@/utils/rbac');
+    const role = await getUserRole();
+
+    if (role !== 'superadmin') {
+        return NextResponse.json({ error: 'Unauthorized: Superadmin only' }, { status: 403 });
+    }
+
     // 2. Check is_admin() function directly
     const { data: isAdmin, error: rpcError } = await supabase.rpc('is_admin');
 

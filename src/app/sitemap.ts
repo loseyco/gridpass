@@ -33,9 +33,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
     }));
 
+    // Dynamic Routes: Profiles
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('username, updated_at')
+        .not('username', 'is', null);
+
+    const profileRoutes = (profiles || []).map((profile) => ({
+        url: `${baseUrl}/u/${profile.username}`,
+        lastModified: new Date(profile.updated_at || new Date()),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+    }));
+
     // Dynamic Routes: Jobs
     // const { data: jobs } = await supabase.from('jobs').select('id, updated_at').eq('status', 'open');
     // const jobRoutes = ...
 
-    return [...routes, ...classifiedRoutes];
+    return [...routes, ...classifiedRoutes, ...profileRoutes];
 }
