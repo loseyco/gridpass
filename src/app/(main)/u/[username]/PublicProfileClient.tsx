@@ -645,6 +645,12 @@ export default function PublicProfileClient({
                 font-family: inherit !important;
             }
             
+            /* Ensure social pills (if used in body) are visible */
+            .social-pill {
+                 color: black !important;
+                 border: 1px solid #ccc !important;
+            }
+            
             .driver-bio-large {
                 font-size: 10pt !important;
                 margin: 10px 0 !important;
@@ -667,11 +673,12 @@ export default function PublicProfileClient({
                 color: black !important;
                 font-size: 14pt !important;
                 text-transform: uppercase !important;
-                border-bottom: 1px solid #ccc !important;
+                border-bottom: 2px solid #000 !important;
                 padding-bottom: 4px !important;
                 margin-bottom: 12px !important;
                 font-family: inherit !important;
                 letter-spacing: 1px !important;
+                display: block !important;
             }
 
             /* Career History */
@@ -728,6 +735,32 @@ export default function PublicProfileClient({
                 position: absolute !important;
                 top: 0 !important;
                 right: 0 !important;
+            }
+
+            /* Force Black Text for details that are usually white */
+            .gear-value, 
+            .rec-author-name,
+            .v2-text-white,
+            .v2-heading-3, 
+            .driver-name {
+                color: black !important;
+            }
+
+            /* Styling for icons/shapes that might be light */
+            .gear-icon {
+                border-color: #ccc !important;
+                background: transparent !important;
+                color: #000 !important;
+            }
+            
+            .rec-avatar, .rec-avatar-placeholder {
+                border-color: #000 !important;
+                color: #000 !important;
+            }
+            
+            /* Ensure section headers are visible */
+            .v2-section-header {
+                break-after: avoid;
             }
         }
 
