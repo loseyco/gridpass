@@ -548,9 +548,9 @@ export default function PublicProfileClient({
 
             /* Hide Web Elements */
             .no-print, .v2-header, .v2-footer, .v2-nav, header, nav, 
-            .pit-wall-controls, .profile-hero, .media-scroll-container,
-            .vehicle-grid, .section-count, .driver-badge, .social-grid, 
-            .driver-avatar-container, .gallery-section, .install-prompt,
+            .pit-wall-controls, .profile-hero, 
+            .section-count, .driver-badge, .social-grid, 
+            .driver-avatar-container, .install-prompt,
             .driver-card, /* HIDE ORIGINAL DRIVER CARD */
             #install-prompt, [class*="InstallPrompt"] {
                 display: none !important;
@@ -577,10 +577,39 @@ export default function PublicProfileClient({
 
             .v2-card {
                 background: transparent !important;
-                border: none !important;
-                padding: 0 !important;
+                border: 1px solid #eee !important;
+                padding: 10px !important;
                 margin-bottom: 12px !important;
                 box-shadow: none !important;
+            }
+
+            /* Enable Lists/Grids for Print */
+            .vehicle-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+            
+            .media-scroll-container {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr 1fr !important;
+                gap: 10px !important;
+                overflow: visible !important;
+            }
+            
+            .media-item {
+                break-inside: avoid;
+                border: 1px solid #ddd !important;
+            }
+            
+            .media-content {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+
+            /* Gallery Section Visibility */
+            .gallery-section {
+                display: block !important;
             }
 
             /* Header Re-styling for Print */
