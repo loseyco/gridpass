@@ -742,7 +742,11 @@ export default function PublicProfileClient({
             .rec-author-name,
             .v2-text-white,
             .v2-heading-3, 
-            .driver-name {
+            .driver-name,
+            .font-bold.text-white, /* Vehicle Title */
+            .text-neutral-300, 
+            .text-neutral-400,
+            .text-neutral-500 {
                 color: black !important;
             }
 
@@ -757,7 +761,23 @@ export default function PublicProfileClient({
                 border-color: #000 !important;
                 color: #000 !important;
             }
-            
+
+            /* Vehicle Card Overrides */
+            .bg-neutral-900 {
+                background: white !important;
+                border: 1px solid #000 !important;
+                color: black !important;
+            }
+
+            .border-white\/5 {
+                border-color: #ccc !important;
+            }
+
+            .bg-neutral-800 {
+                background: #f0f0f0 !important; /* Slight grey for image placeholder */
+                color: black !important;
+            }
+
             /* Ensure section headers are visible */
             .v2-section-header {
                 break-after: avoid;
