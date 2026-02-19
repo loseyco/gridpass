@@ -264,3 +264,57 @@ export async function sendContactEmail(data: {
         return { success: false, error: e };
     }
 }
+
+export async function sendApplicationEmail(data: {
+    to: string;
+    jobTitle: string;
+    applicantName: string;
+    applicantId: string;
+    isInvite: boolean;
+    jobId?: string;
+}) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    const subject = data.isInvite
+        ? `Invitation to Apply: ${data.jobTitle}`
+        : `New Application: ${data.jobTitle}`;
+
+    const title = data.isInvite
+        ? `You've been invited to apply!`
+        : `New Applicant for ${data.jobTitle}`;
+
+    const message = data.isInvite
+        ? `<p><strong>${data.applicantName}</strong> has invited you to apply for the position of <strong>${data.jobTitle}</strong>.</p>`
+        : `<p><strong>${data.applicantName}</strong> has applied for <strong>${data.jobTitle}</strong>.</p>`;
+
+    const actionText = data.isInvite ? 'View Job & Apply' : 'View Application';
+    const actionLink = data.isInvite
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/jobs?jobId=${data.jobId}` // Deep link to job would be better
+        : `${process.env.NEXT_PUBLIC_SITE_URL}/u/${data.applicantId}`; // Link to applicant profile
+
+    try {
+        await resend.emails.send({
+            from: 'GridPass Notifications <notifications@resend.dev>',
+            to: data.to,
+            subject: subject,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1>${title}</h1>
+                    ${message}
+                    <br/>
+                    <p>
+                        <a href="${actionLink}" 
+                           style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            ${actionText}
+                        </a>
+                    </p>
+                </div>
+            `
+        });
+        console.log(`Application email sent to ${data.to}`);
+        return { success: true };
+    } catch (e) {
+        console.error('Failed to send application email', e);
+        return { success: false, error: e };
+    }
+}

@@ -5,11 +5,16 @@ import { User, MapPin, Link as LinkIcon, FileText } from "lucide-react";
 interface CandidateCardProps {
     candidate: AgencyCandidate;
     onManage?: (candidate: AgencyCandidate) => void;
+    onView?: () => void;
+    onAddPlacement?: (candidate: AgencyCandidate) => void;
 }
 
-export function CandidateCard({ candidate, onManage }: CandidateCardProps) {
+export function CandidateCard({ candidate, onManage, onView, onAddPlacement }: CandidateCardProps) {
     return (
-        <div className="group relative flex flex-col rounded-xl bg-white/5 p-4 border border-white/10 hover:border-blue-500/50 transition-all">
+        <div
+            onClick={onView}
+            className="group relative flex flex-col rounded-xl bg-white/5 p-4 border border-white/10 hover:border-blue-500/50 transition-all cursor-pointer"
+        >
             <div className="mb-3 flex items-center gap-3">
                 <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
                     {candidate.contact_info?.avatar_url ? (
@@ -63,10 +68,18 @@ export function CandidateCard({ candidate, onManage }: CandidateCardProps) {
                     </a>
                 )}
 
+                {onAddPlacement && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onAddPlacement(candidate); }}
+                        className="ml-auto mr-2 text-xs text-green-400 hover:text-green-300"
+                    >
+                        + Add to Job
+                    </button>
+                )}
                 {onManage && (
                     <button
-                        onClick={() => onManage(candidate)}
-                        className="ml-auto text-xs text-white hover:text-blue-400"
+                        onClick={(e) => { e.stopPropagation(); onManage(candidate); }}
+                        className="text-xs text-white hover:text-blue-400"
                     >
                         Manage
                     </button>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {
   Car, Users, MessageSquare, ClipboardList, Truck, Folder, Bell,
   Wrench, Calculator, Settings, Newspaper, User, Briefcase, QrCode,
-  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info, BookOpen, Megaphone, Activity
+  ShoppingBag, Gamepad2, Building2, Key, Flag, Trophy, AlertTriangle, Info, BookOpen, Megaphone, Activity, Calendar, Heart
 } from 'lucide-react'
 import AppIcon from '@/components/os/AppIcon'
 
@@ -87,7 +87,9 @@ export default function HomeClient({
 
             <AppIcon label="QR Manager" icon={QrCode} href="/apps/qr-manager" color="#30cfd0" status="beta" />
             <AppIcon label="Profile" icon={User} href={`/u/${userProfile?.username || 'pjlosey'}`} color="#007AFF" status="beta" />
+            <AppIcon label="My Schedule" icon={Calendar} href="/profile/edit?tab=schedule" color="#FF3B30" status="beta" />
             <AppIcon label="My Resume" icon={ClipboardList} href="/profile/edit" color="#FF9500" status="beta" />
+            <AppIcon label="Find Work" icon={Briefcase} href="/jobs" color="#007AFF" status="beta" />
             <AppIcon label="Members" icon={Users} href="/members" color="#5856D6" status="beta" />
 
 
@@ -109,11 +111,11 @@ export default function HomeClient({
               <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1 mt-2">Coming Soon</h2>
             </div>
 
+            <AppIcon label="Pit Lane Love" icon={Heart} href="#" color="#E0245E" status="alpha" />
             <AppIcon label="My Garage" icon={Car} href="/garage" color="#FF3B30" status="soon" />
             <AppIcon label="Messages" icon={MessageSquare} href="/messages" color="#34C759" status="soon" />
             <AppIcon label="Classifieds" icon={ShoppingBag} href="/classifieds" color="#FF9500" status="soon" />
             <AppIcon label="Rentals" icon={Key} href="/rentals" color="#FF2D55" status="soon" />
-            <AppIcon label="Careers" icon={Briefcase} href="/jobs" color="#007AFF" status="soon" />
             <AppIcon label="Logistics" icon={Truck} href="/logistics" color="#FFCC00" status="soon" />
             <AppIcon label="Team Manager" icon={Flag} href="/team-manager" color="#FF3B30" status="soon" />
             <AppIcon label="Shop Manager" icon={Wrench} href="/shop-manager" color="#8E8E93" status="soon" />

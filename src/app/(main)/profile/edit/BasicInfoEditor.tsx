@@ -21,7 +21,11 @@ export default function ProfileEditor({ profile }: ProfileEditorProps) {
     bio: profile.bio || '',
     location: profile.location || '',
     avatar_url: profile.avatar_url || '',
-    cover_url: profile.cover_url || ''
+    cover_url: profile.cover_url || '',
+    public_phone: profile.public_phone || '',
+    public_email: profile.public_email || '',
+    show_public_phone: profile.show_public_phone || false,
+    show_public_email: profile.show_public_email || false
   })
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'avatar_url' | 'cover_url') => {
@@ -65,7 +69,8 @@ export default function ProfileEditor({ profile }: ProfileEditorProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save profile')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save profile')
       }
 
       router.push('/profile/edit')
@@ -240,6 +245,50 @@ export default function ProfileEditor({ profile }: ProfileEditorProps) {
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="City, State"
+              />
+            </div>
+
+            <div className="v2-form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label className="v2-label" style={{ marginBottom: 0 }}>Public Phone</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.show_public_phone}
+                    onChange={(e) => setFormData({ ...formData, show_public_phone: e.target.checked })}
+                    style={{ accentColor: 'var(--v2-accent-primary)' }}
+                  />
+                  Show on Profile
+                </label>
+              </div>
+              <input
+                type="tel"
+                className="v2-input"
+                value={formData.public_phone}
+                onChange={(e) => setFormData({ ...formData, public_phone: e.target.value })}
+                placeholder="+1 (555) 000-0000"
+              />
+            </div>
+
+            <div className="v2-form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label className="v2-label" style={{ marginBottom: 0 }}>Public Email</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.show_public_email}
+                    onChange={(e) => setFormData({ ...formData, show_public_email: e.target.checked })}
+                    style={{ accentColor: 'var(--v2-accent-primary)' }}
+                  />
+                  Show on Profile
+                </label>
+              </div>
+              <input
+                type="email"
+                className="v2-input"
+                value={formData.public_email}
+                onChange={(e) => setFormData({ ...formData, public_email: e.target.value })}
+                placeholder="contact@example.com"
               />
             </div>
           </div>

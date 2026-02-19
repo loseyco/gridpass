@@ -41,21 +41,21 @@ export default function V2Landing() {
 
                     <div className="hero-badge">
                         <span className="pulsing-dot"></span>
-                        ALPHA: Season 2026
+                        SEASON 2026: LIVE
                     </div>
                     <h1 className="hero-title">
-                        YOUR MOTORSPORTS<br />
-                        <span className="text-accent">OPERATING SYSTEM</span>
+                        OPTIMIZE YOUR<br />
+                        <span className="text-accent">RACING LIFE</span>
                     </h1>
                     <p className="hero-subtitle">
-                        GridPass OS is the all-in-one platform to build your racing career, manage your team & garage, and connect with the industry.
+                        The operating system for your career, garage, and team. Earn money between races, or hire the best in the paddock.
                     </p>
                     <div className="hero-actions">
                         <Link href="/register" className="v2-btn v2-btn-primary v2-btn-lg">
-                            Join The Grid <ChevronRight size={20} />
+                            Launch App <ChevronRight size={20} />
                         </Link>
-                        <Link href="/login" className="v2-btn v2-btn-secondary v2-btn-lg">
-                            Login
+                        <Link href="/services" className="v2-btn v2-btn-secondary v2-btn-lg">
+                            Find Talent / Services
                         </Link>
                     </div>
                 </div>
@@ -81,8 +81,8 @@ export default function V2Landing() {
                             <span>Get Sponsorship</span>
                         </div>
                         <div className="preview-item">
-                            <AppIcon label="Logistics" icon={Flag} color="#34C759" status="disabled" />
-                            <span>Team Management</span>
+                            <AppIcon label="Services" icon={Briefcase} color="#34C759" status="disabled" />
+                            <span>Find Work</span>
                         </div>
                     </div>
                 </div>
@@ -98,14 +98,14 @@ export default function V2Landing() {
                 <div className="features-grid">
                     <div className="feature-card">
                         <div className="feature-icon bg-accent">
-                            <Trophy size={32} color="white" />
+                            <Briefcase size={32} color="white" />
                         </div>
-                        <h3>Driver Profiles</h3>
-                        <p>Create a professional racing resume that showcases your stats, history, and media to potential sponsors and teams.</p>
+                        <h3>Gig Economy</h3>
+                        <p>Fund your season by offering your skills—fabrication, coaching, transport, and more. Or find the help you need.</p>
                         <ul className="feature-list">
-                            <li><CheckCircle2 size={16} /> Verified Results</li>
-                            <li><CheckCircle2 size={16} /> Digital License</li>
-                            <li><CheckCircle2 size={16} /> Career History</li>
+                            <li><CheckCircle2 size={16} /> Verified Talent</li>
+                            <li><CheckCircle2 size={16} /> Instant Booking</li>
+                            <li><CheckCircle2 size={16} /> Secure Payments</li>
                         </ul>
                     </div>
 
@@ -126,7 +126,7 @@ export default function V2Landing() {
                         <div className="feature-icon bg-dark">
                             <Users size={32} color="white" />
                         </div>
-                        <h3>Team & Shop Command</h3>
+                        <h3>Team Command</h3>
                         <p>Manage your personnel, logistics, and operations. Streamline communication and planning.</p>
                         <ul className="feature-list">
                             <li><CheckCircle2 size={16} /> Staff Rosters</li>
@@ -152,9 +152,9 @@ export default function V2Landing() {
                         <p>Leagues & Setup Shops</p>
                     </div>
                     <div className="roadmap-item">
-                        <Briefcase size={24} className="mb-2" />
-                        <h4>Jobs</h4>
-                        <p>Find your next seat</p>
+                        <Trophy size={24} className="mb-2" />
+                        <h4>Driver Profiles</h4>
+                        <p>Rich Media & Stats</p>
                     </div>
                 </div>
             </section>

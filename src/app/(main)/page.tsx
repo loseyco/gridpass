@@ -1,6 +1,10 @@
+import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server'
 import { getUserRole } from '@/utils/rbac'
 import { Metadata } from 'next'
+import { Activity, Bell, Calendar, ChevronRight, ExternalLink, MessageSquare, Plus, Settings, TrendingUp, Trophy, User, Search } from 'lucide-react';
+import ScheduleManager from '@/components/dashboard/ScheduleManager';
 import HomeClient from './HomeClient'
 import V2Landing from './V2Landing'
 

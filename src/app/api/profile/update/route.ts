@@ -24,11 +24,15 @@ export async function POST(request: Request) {
             social_links,
             job_preferences,
             avatar_url,
-            cover_url
+            cover_url,
+            public_phone,
+            public_email,
+            show_public_phone,
+            show_public_email
         } = body
 
         // Update profile
-        const { error } = await supabase
+        const { error: errorProfiles } = await supabase
             .from('profiles')
             .update({
                 full_name,
@@ -41,13 +45,44 @@ export async function POST(request: Request) {
                 job_preferences,
                 avatar_url,
                 cover_url,
+                public_phone,
+                public_email,
+                show_public_phone,
+                show_public_email,
                 updated_at: new Date().toISOString(),
             })
             .eq('id', user.id)
 
-        if (error) {
-            console.error('Profile update error:', error)
-            return NextResponse.json({ error: error.message }, { status: 500 })
+        if (errorProfiles) {
+            console.error('Profile update error (profiles):', errorProfiles)
+            return NextResponse.json({ error: errorProfiles.message }, { status: 500 })
+        }
+
+        // Also update os_user_profiles
+        // Note: Some fields might need mapping or are distinct.
+        // For now, mapping what we have.
+        const { error: errorOS } = await supabase
+            .from('os_user_profiles')
+            .update({
+                first_name: full_name?.split(' ')[0] || '',
+                last_name: full_name?.split(' ').slice(1).join(' ') || '',
+                bio,
+                current_location: location, // Mapping location -> current_location
+                avatar_url,
+                cover_photo_url: cover_url, // Mapping cover_url -> cover_photo_url
+                public_phone,
+                public_email,
+                show_public_phone,
+                show_public_email,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id)
+
+        if (errorOS) {
+            console.error('Profile update error (os_user_profiles):', errorOS)
+            // Not failing the whole request if OS update fails but logging it?
+            // Or should we fail? Better to fail so user knows.
+            return NextResponse.json({ error: errorOS.message }, { status: 500 })
         }
 
         return NextResponse.json({ success: true })

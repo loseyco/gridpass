@@ -11,13 +11,23 @@ export default async function MembersPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Fetch profiles
-  // Limiting to 100 for now to prevent massive load
+  // Fetch profiles from os_user_profiles
   const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, username, full_name, avatar_url, role, bio')
-    .order('full_name', { ascending: true })
+    .from('os_user_profiles')
+    .select('id, username, first_name, last_name, avatar_url, target_role, bio, is_open_to_work')
+    .order('created_at', { ascending: false })
     .limit(100)
 
-  return <MembersClient initialProfiles={profiles || []} user={user} />
+  // Map to client interface
+  const mappedProfiles = (profiles || []).map(p => ({
+    id: p.id,
+    username: p.username,
+    full_name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.username,
+    avatar_url: p.avatar_url,
+    role: p.target_role,
+    bio: p.bio,
+    is_open_to_work: p.is_open_to_work
+  }))
+
+  return <MembersClient initialProfiles={mappedProfiles} user={user} />
 }
