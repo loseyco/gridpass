@@ -19,7 +19,7 @@ jobs:
       - name: Trigger News Scraper (Every 15 Mins)
         if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
         run: |
-          curl -v --fail -L -X GET "${{ secrets.APP_URL }}/api/cron/daily-news" \
+          curl -L -X GET "${{ secrets.APP_URL }}/api/cron/daily-news" \
           -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
       - name: Trigger Facebook Publisher (Hourly)
