@@ -287,13 +287,14 @@ export default function PublicProfileClient({
                   </Link>
                 )}
 
-                <button
-                  onClick={() => window.print()}
+                <Link
+                  href={`/print/u/${profile.username}`}
+                  target="_blank"
                   className={`v2-btn v2-btn-full v2-justify-center ${isOwner ? 'v2-btn-secondary' : 'v2-btn-secondary'}`}
                 >
                   <Printer size={18} className="v2-mr-2" />
-                  Save as PDF
-                </button>
+                  View/Print Resume
+                </Link>
 
                 {!isOwner && (
                   <button className="v2-btn v2-btn-primary v2-btn-full v2-justify-center no-print" disabled>
@@ -530,7 +531,7 @@ export default function PublicProfileClient({
           </section>
         </div>
 
-        <style jsx>{`
+        <style jsx global>{`
         @media print {
             /* General Reset */
             @page {
@@ -552,7 +553,10 @@ export default function PublicProfileClient({
             .section-count, .driver-badge, .social-grid, 
             .driver-avatar-container, .install-prompt,
             .driver-card, /* HIDE ORIGINAL DRIVER CARD */
-            #install-prompt, [class*="InstallPrompt"] {
+            #install-prompt, [class*="InstallPrompt"],
+            .gallery-section,
+            .media-scroll-container,
+            .media-item {
                 display: none !important;
             }
             
