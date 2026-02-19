@@ -63,6 +63,23 @@ export default function PublicProfileClient({
                     ✉️ {profile.public_email}
                   </span>
                 )}
+
+                {/* Social Links Text */}
+                {profile.website && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    🌐 {profile.website.replace(/^https?:\/\//, '')}
+                  </span>
+                )}
+                {profile.social_links?.instagram && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📸 {profile.social_links.instagram.split('/').pop()}
+                  </span>
+                )}
+                {profile.social_links?.linkedin && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    💼 {profile.social_links.linkedin.split('/').pop()}
+                  </span>
+                )}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
