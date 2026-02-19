@@ -307,7 +307,7 @@ export default function PublicProfileClient({
 
           {/* Bio and Skills (New Layout) */}
           {/* Bio */}
-          {profile.bio && (
+          {profile.bio && profile.bio !== 'Old Profile Table Data - LEGACY' && (
             <section className="v2-section">
               <div className="v2-section-header">
                 <h2 className="v2-heading-2">Professional Summary</h2>
