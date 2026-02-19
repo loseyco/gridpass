@@ -38,6 +38,42 @@ export default function PublicProfileClient({
   return (
     <>
       <div className="v2-header-container">
+        {/* Print Only Header - Clean Layout */}
+        <div className="print-only-header" style={{ display: 'none' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', paddingBottom: '20px', borderBottom: '2px solid #000' }}>
+            <div>
+              <h1 style={{ fontSize: '24pt', fontWeight: '800', margin: '0 0 5px 0', lineHeight: '1.2' }}>
+                {profile.full_name || profile.username}
+              </h1>
+              <p style={{ fontSize: '12pt', color: '#555', margin: '0 0 10px 0' }}>@{profile.username}</p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', fontSize: '10pt', color: '#333' }}>
+                {(profile.logistics_info?.hometown) && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📍 {profile.logistics_info.hometown}
+                  </span>
+                )}
+                {(profile.show_public_phone && profile.public_phone) && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    📞 {profile.public_phone}
+                  </span>
+                )}
+                {(profile.show_public_email && profile.public_email) && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    ✉️ {profile.public_email}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ width: '80px', height: '80px', marginLeft: 'auto' }}>
+                <QRCodeSVG value={`https://gridpass.app/u/${profile.username}`} size={80} />
+              </div>
+              <div style={{ fontSize: '9pt', color: '#666', marginTop: '5px' }}>gridpass.app/u/{profile.username}</div>
+            </div>
+          </div>
+        </div>
+
         {/* Immersive Header Background */}
         <div className="profile-hero">
           <div className="hero-gradient"></div>
@@ -498,8 +534,14 @@ export default function PublicProfileClient({
             .pit-wall-controls, .profile-hero, .media-scroll-container,
             .vehicle-grid, .section-count, .driver-badge, .social-grid, 
             .driver-avatar-container, .gallery-section, .install-prompt,
+            .driver-card, /* HIDE ORIGINAL DRIVER CARD */
             #install-prompt, [class*="InstallPrompt"] {
                 display: none !important;
+            }
+            
+            /* Show Print Header */
+            .print-only-header {
+                display: block !important;
             }
 
             .v2-profile-container {
