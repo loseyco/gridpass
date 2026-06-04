@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -10,7 +11,7 @@ import {
   collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp 
 } from 'firebase/firestore';
 import { 
-  Car, Plus, Wrench, Heart, ShieldCheck, Loader2, User, MapPin, Power 
+  Car, Plus, Wrench, Heart, ShieldCheck, Loader2, User, MapPin, Power, Printer 
 } from 'lucide-react';
 
 interface DashboardVehicle {
@@ -300,10 +301,16 @@ export default function Dashboard() {
                       <span>Power: {v.specs?.hp ? `${v.specs.hp} HP` : 'N/A'}</span>
                     </div>
 
-                    <div className="pt-2 flex gap-2">
+                    <div className="pt-2 flex justify-between items-center gap-2">
                       <span className="text-[9px] font-mono uppercase bg-neutral-900 border border-neutral-800 text-neutral-450 px-2 py-0.5 rounded font-bold">
                         FREE PASSPORT
                       </span>
+                      <Link
+                        href={`/dash/print?vehicleId=${v.id}`}
+                        className="text-[10px] font-bold bg-[#bd2925] hover:bg-[#bd2925]/90 text-white px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 uppercase tracking-wider cursor-pointer shadow-md shadow-[#bd2925]/10"
+                      >
+                        <Printer className="w-3.5 h-3.5" /> Print QR & Poster
+                      </Link>
                     </div>
                   </div>
                 ))}

@@ -23,6 +23,20 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
 *   **`marketer`**: Manages landing page copy, SEO meta configurations, sitemap optimization, and GTM strategy files.
 *   **`developer`**: Responsible for building dynamic NextJS page routes, Tailwind layouts, and Firestore rules.
 *   **`tester`**: Writes automated Playwright tests, configures mock profiles (Marcus, Sarah, Dave, John, Steve, Mike), and audits local dev server builds.
+*   **`user_panel`**: Represents core personas (Marcus, Sarah, Ranger Dave, Steve, Billy, Rich, and Chloe) in user-testing feedback walkthroughs.
+
+## 6. Mandatory Pre-Push & Phase-Completion Auditing Process
+Before completing any roadmap phase or pushing code updates live, the following agent workflow MUST be executed:
+1. **Copy & Copywriting Audit**: Invoke the `ted` and `marketer` agents to ensure value propositions are layperson-friendly and free of jargon.
+2. **Persona User Panel Interview**: Invoke the `user_panel` agent representing all key personas (Enthusiasts, Spectators, Track Owners, B2B Dealerships, Tech-illiterate Billy, Cynical CFO Rich, and Growth Marketer Chloe). Ensure they review the feature and report:
+   - If they like the feature.
+   - If they understand how it works in their role.
+   - If they experience any friction or confusion.
+   - (For Rich): How does this make us money? If it doesn't, why do we have it?
+   - (For Chloe): Is the friction minimal enough to maximize growth, even if it's free? Can we monetize them later when they arrive?
+3. **Resolve & Consolidate**: Adjust design/copy to solve persona issues, code it up using `developer`, and verify locally.
+4. **E2E Test Execution**: Invoke `tester` to run the full Playwright E2E suite (`node run-tests.js`) and check for 100% pass rate.
+
 
 
 

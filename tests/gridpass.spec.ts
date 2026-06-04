@@ -107,18 +107,18 @@ test.describe('GridPass Milestone 2 E2E Suite', () => {
     await page.screenshot({ path: path.join(screenshotDir, `page-5-voyage-hub-${projName}.png`) });
   });
 
-  test('Page 6: Driver profile & vehicle service telemetry show waitlist in Phase 1', async ({ page }, testInfo) => {
+  test('Page 6: Driver profile & vehicle service telemetry show active profiles in Phase 3', async ({ page }, testInfo) => {
     const screenshotDir = path.join(process.cwd(), 'tests', 'screenshots');
     const projName = testInfo.project.name.toLowerCase().replace(/\s+/g, '_');
 
     // Open dynamic driver profile
     await page.goto('/u/pjlosey-mock');
-    await expect(page.locator('h1')).toContainText(/Driver Passport/i);
+    await expect(page.locator('text=Marcus Mustang')).toBeVisible();
     await page.screenshot({ path: path.join(screenshotDir, `page-6-driver-profile-${projName}.png`) });
 
     // Open dynamic vehicle log profile
     await page.goto('/v/gridpass-demo-vehicle');
-    await expect(page.locator('h1')).toContainText(/Vehicle Passport/i);
+    await expect(page.locator('text=Mustang GT')).toBeVisible();
     await page.screenshot({ path: path.join(screenshotDir, `page-6-vehicle-telemetry-${projName}.png`) });
   });
 

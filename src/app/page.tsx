@@ -191,22 +191,20 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Right Column: Copy explaining the physical invite card mechanism */}
           <div className="lg:col-span-5 space-y-6 text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] font-mono font-black uppercase tracking-widest text-[#bd2925]">
-              <QrCode className="w-3.5 h-3.5" /> Viral Physical Loop
+              <QrCode className="w-3.5 h-3.5" /> Open Ecosystem
             </div>
             
             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight">
-              Spread the word. <br />
+              Register yourself.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-500 to-[#bd2925]">
-                Spot & Invite.
+                Print your own.
               </span>
             </h2>
 
-            <p className="text-sm text-neutral-450 leading-relaxed font-medium">
-              We have printed **2,000+ physical hangtags and door-mirror cards** to distribute at car meets, parking structures, and track pits. 
+            <p className="text-sm text-neutral-455 leading-relaxed font-medium">
+              Gridpass is a self-serve vehicle registry. Sign up to register your vehicle, driver profile, or business for free. Then, generate and print your own custom QR decals at home using standard Avery templates. 
             </p>
 
             <div className="space-y-4 pt-2">
@@ -215,9 +213,9 @@ export default function Home() {
                   1
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-white uppercase">Spot in the Wild</h4>
+                  <h4 className="text-sm font-black text-white uppercase">Create Your Passport</h4>
                   <p className="text-xs text-neutral-400 leading-relaxed mt-0.5">
-                    Find a clean build, rare spec, or track weapon. Snap a photo to submit to the sightings feed, then slip an invitation tag under their wiper blade or mirror.
+                    Register your vehicle or business completely free. Build your modifications logs, specifications lists, and add linked social media handles.
                   </p>
                 </div>
               </div>
@@ -227,9 +225,9 @@ export default function Home() {
                   2
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-white uppercase">Scan to Claim</h4>
+                  <h4 className="text-sm font-black text-white uppercase">Download & Print Decals</h4>
                   <p className="text-xs text-neutral-400 leading-relaxed mt-0.5">
-                    The owner returns to their vehicle, scans the unique invitation QR code, and lands directly on their unclaimed passport page showing the photo you logged.
+                    Generate standard Avery round or square sticker formats to print at home for free, or order shipped weather-proof vinyl kits.
                   </p>
                 </div>
               </div>
@@ -239,9 +237,9 @@ export default function Home() {
                   3
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-white uppercase">Setup for Free</h4>
+                  <h4 className="text-sm font-black text-white uppercase">Already Got an Invite Card?</h4>
                   <p className="text-xs text-neutral-400 leading-relaxed mt-0.5">
-                    They claim the vehicle instantly for free, link social handles, list their modifications, and tell their build's story, turning their car into a rolling portal.
+                    We&apos;ve printed **2,000+ custom physical hangtags** for spotters to seed builds in the wild. If you found a card on your car, just scan it to claim your profile!
                   </p>
                 </div>
               </div>

@@ -19,13 +19,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) {
             console.log("[AuthProvider] Playwright mock active.");
-            setUser({
-                uid: 'pjlosey',
-                email: 'driver@gridpass.app',
-                displayName: 'PJ LOSEY',
-                emailVerified: true,
-                getIdToken: async () => 'mock-id-token-12345'
-            } as any);
+            const mockUser = (window as any).__MOCK_USER__;
+            if (mockUser === null) {
+                // Explicitly logged out
+                setUser(null);
+            } else {
+                const u = mockUser || {
+                    uid: 'pjlosey',
+                    email: 'driver@gridpass.app',
+                    displayName: 'PJ LOSEY'
+                };
+                setUser({
+                    uid: u.uid || u.id || 'pjlosey',
+                    email: u.email || 'driver@gridpass.app',
+                    displayName: u.display_name || u.displayName || 'PJ LOSEY',
+                    emailVerified: true,
+                    getIdToken: async () => 'mock-id-token-12345'
+                } as any);
+            }
             setLoading(false);
             return;
         }
