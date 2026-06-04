@@ -1,0 +1,81 @@
+diff --git a/find_leads.py b/find_leads.py
+--- a/find_leads.py
++++ b/find_leads.py
+@@ -38,19 +38,31 @@
+ 
++def is_shared_portal(domain):
++    """Determine if a domain is a shared portal containing multiple distinct venues."""
++    if domain.endswith(".gov") or ".gov." in domain:
++        return True
++    shared_domains = [
++        "parks.ca.gov",
++        "ohv.parks.ca.gov",
++        "stateparks.utah.gov",
++        "dnr.state.mn.us",
++        "cityofbridgeport.net",
++        "state.co.us",
++        "state.tx.us",
++        "usda.gov",
++        "fs.usda.gov"
++    ]
++    return any(domain.endswith(d) for d in shared_domains)
++
+ def norm_domain(url):
+-    """Normalize a website URL to its base domain for deduplication."""
++    """Normalize a website URL for de-duplication, preserving paths/queries for shared portals."""
+     if not url:
+         return ""
+     url_lower = url.lower()
+     # Strip protocol
+     if url_lower.startswith("https://"):
+         domain = url_lower[8:]
+     elif url_lower.startswith("http://"):
+         domain = url_lower[7:]
+     else:
+         domain = url_lower
+     # Strip www.
+     if domain.startswith("www."):
+         domain = domain[4:]
+-    # Strip paths, parameters, and trailing slashes
+-    domain = domain.split('/')[0].split('?')[0].split('#')[0].strip()
+-    return domain
++    # Strip anchors/hashes
++    domain = domain.split('#')[0].strip()
++    # Extract host to identify if it is a shared portal
++    host = domain.split('/')[0].split('?')[0].strip()
++    if is_shared_portal(host):
++        return domain.rstrip('/')
++    return host
+ 
+ def norm_name(name):
+diff --git a/test_leads.py b/test_leads.py
+--- a/test_leads.py
++++ b/test_leads.py
+@@ -62,5 +62,20 @@
+     def test_deduplication(self):
+         """Assert that no duplicate names or website domains exist in leads.csv."""
++        def is_shared_portal(domain):
++            if domain.endswith(".gov") or ".gov." in domain:
++                return True
++            shared_domains = [
++                "parks.ca.gov",
++                "ohv.parks.ca.gov",
++                "stateparks.utah.gov",
++                "dnr.state.mn.us",
++                "cityofbridgeport.net",
++                "state.co.us",
++                "state.tx.us",
++                "usda.gov",
++                "fs.usda.gov"
++            ]
++            return any(domain.endswith(d) for d in shared_domains)
++
+         def norm_domain(url):
+             if not url: return ""
+             domain = url.lower().replace("https://", "").replace("http://", "").replace("www.", "")
+-            return domain.split('/')[0].strip()
++            domain = domain.split('#')[0].strip()
++            host = domain.split('/')[0].split('?')[0].strip()
++            if is_shared_portal(host):
++                return domain.rstrip('/')
++            return host

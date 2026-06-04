@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Centralized Logging Rules: Public write/anonymous creation, strictly restricted reading
+    match /system_logs/{logId} {
+      allow create: if true; // Public telemetry pipeline
+      allow read, update, delete: if request.auth != null && request.auth.token.email == 'loseyp@gmail.com'; // Strict super-admin gate
+    }
+    
+    // Issue and Feedback Dispatch Queue Rules: Public write, strictly restricted reading
+    match /feedback_queue/{ticketId} {
+      allow create: if true; // Allow anyone to submit feedback and bugs
+      allow read, update, delete: if request.auth != null && request.auth.token.email == 'loseyp@gmail.com'; // Super-admin queue only
+    }
+
+    // Swarm Interlock / Active Questions: Public read, strictly gated write to loseyp@gmail.com
+    match /swarm_interlock/{questionId} {
+      allow read: if true; // Public reading for swarms and users
+      allow write: if request.auth != null && request.auth.token.email == 'loseyp@gmail.com'; // Strictly gated to owner
+    }
+
+    // Geolocation Scans analytics rules: Public creation, restrict read to super-admin
+    match /tag_scans/{scanId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null && request.auth.token.email == 'loseyp@gmail.com';
+    }
+
+    // Vehicles collection
+    match /vehicles/{vehicleId} {
+      allow read: if true; // Public profiles are resolvable by QR scans
+      allow create: if request.auth != null && (request.resource.data.owner_id == request.auth.uid || request.resource.data.owner_id == "" || request.resource.data.owner_id == null);
+      allow update: if request.auth != null && (
+        resource.data.owner_id == request.auth.uid || 
+        resource.data.owner_id == "" || 
+        resource.data.owner_id == null ||
+        request.auth.token.email == 'loseyp@gmail.com'
+      );
+      allow delete: if request.auth != null && (
+        resource.data.owner_id == request.auth.uid || 
+        request.auth.token.email == 'loseyp@gmail.com'
+      );
+    }
+
+    // Businesses collection
+    match /businesses/{businessId} {
+      allow read: if true; // Public listings & entities
+      allow create: if request.auth != null && request.resource.data.owner_id == request.auth.uid; // Assert creator matches owner_id
+      allow update, delete: if request.auth != null && (
+        resource.data.owner_id == request.auth.uid || 
+        request.auth.token.email == 'loseyp@gmail.com'
+      );
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if true; // Public profiles
+      allow create, update: if request.auth != null && (
+        userId == request.auth.uid || 
+        request.auth.token.email == 'loseyp@gmail.com'
+      );
+      allow delete: if request.auth != null && request.auth.token.email == 'loseyp@gmail.com';
+    }
+
+    // Voyage AI Adventure Cockpit Rules
+    match /voyage_trips/{id} { allow read, write: if request.auth != null; }
+    match /voyage_manifests/{id} { allow read, write: if request.auth != null; }
+    match /voyage_pets/{id} { allow read, write: if request.auth != null; }
+    match /voyage_gates/{id} { allow read, write: if request.auth != null; }
+    match /voyage_riders/{id} { allow read, write: if request.auth != null; }
+    match /voyage_pitches/{id} { allow read, write: if request.auth != null; }
+    match /voyage_claims/{id} { allow read, write: if request.auth != null; }
+    match /voyage_tickets/{id} { allow read, write: if request.auth != null; }
+    match /voyage_checkins/{id} { allow read, write: if request.auth != null; }
+    match /voyage_tags/{id} { allow read, write: if request.auth != null; }
+
+    // Service Logs Rules
+    match /service_logs/{id} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.recorded_by == request.auth.token.email ||
+        request.auth.token.email == 'loseyp@gmail.com'
+      );
+    }
+
+    // Public Sightings / Wild Spots Rules
+    match /sightings/{id} {
+      allow read: if true;
+      allow create: if true; // Public/anonymous spotters can log sightings
+      allow update, delete: if request.auth != null && (
+        resource.data.reported_by == request.auth.token.email ||
+        request.auth.token.email == 'loseyp@gmail.com'
+      );
+    }
+
+    // Dynamic views count increment exception for analytics
+    match /{collection}/{document} {
+      allow update: if 
+        (collection == 'users' || collection == 'vehicles' || collection == 'businesses') &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
+        request.resource.data.views == resource.data.get('views', 0) + 1;
+    }
+  }
+}

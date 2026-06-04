@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gridpass QR Passport Ecosystem
 
-## Getting Started
+Gridpass is a physical-to-digital automotive connection platform. By mapping permanent, re-routable QR codes to vehicles, drivers, and businesses, it builds a verified registry of vehicle specs, maintenance history, and geographic adventures.
 
-First, run the development server:
+---
 
+## 1. Getting Started
+
+### Local Development
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the local Next.js dev server:
+   ```bash
+   npm run dev
+   ```
+3. Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+### E2E Testing
+Run the automated Playwright E2E test runner:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+node run-tests.js
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 2. Platform Blueprints
+*   **Ultimate Business Plan**: [ultimate_gridpass_business_plan.md](file:///C:/Users/pjlos/.gemini/antigravity/brain/51b04601-df68-4e2d-9d22-c950ccc129af/ultimate_gridpass_business_plan.md)
+*   **GTM & Profitability Strategy**: [gridpass_go_to_market_and_profitability.md](file:///C:/Users/pjlos/.gemini/antigravity/brain/51b04601-df68-4e2d-9d22-c950ccc129af/gridpass_go_to_market_and_profitability.md)
+*   **Workflows & SEO Plans**: [gridpass_marketing_and_workflows.md](file:///C:/Users/pjlos/.gemini/antigravity/brain/51b04601-df68-4e2d-9d22-c950ccc129af/gridpass_marketing_and_workflows.md)
+*   **Phased Roadmap**: [gridpass_phased_roadmap.md](file:///C:/Users/pjlos/.gemini/antigravity/brain/51b04601-df68-4e2d-9d22-c950ccc129af/gridpass_phased_roadmap.md)
+*   **Developer Guide**: [PROJECT.md](file:///c:/_Projects/Gridpass-v4/PROJECT.md)
+*   **Agent Guidelines**: [AGENTS.md](file:///c:/_Projects/Gridpass-v4/AGENTS.md)
