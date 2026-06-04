@@ -16,7 +16,7 @@ export default function Home() {
       status: 'Active',
       icon: Heart,
       color: 'border-yellow-500/20 text-yellow-500 bg-yellow-500/5',
-      desc: 'Build the core garage registry, optimize Reddit/SMS link-sharing meta cards, open waitlists, and launch the Original Supporter Gold HSL border ring profiles.'
+      desc: 'Build the core garage registry, optimize Reddit/SMS link-sharing meta cards, open waitlists, and launch the Original Supporter glowing gold avatar border profiles.'
     },
     {
       phase: 'Phase 2',
@@ -24,7 +24,7 @@ export default function Home() {
       status: 'Up Next',
       icon: Printer,
       color: 'border-red-500/20 text-red-500 bg-red-500/5',
-      desc: 'Claim unclaimed tags and export 300-DPI printable Avery sheets (round labels, square grids, keytags, or 8.5"x11" Cars & Coffee spec-sheet window posters).'
+      desc: 'Claim unclaimed tags and export high-resolution, print-at-home sticker sheets (round labels, square grids, keytags, or 8.5"x11" Cars & Coffee spec-sheet window posters).'
     },
     {
       phase: 'Phase 3',
@@ -32,7 +32,7 @@ export default function Home() {
       status: 'Scheduled',
       icon: Building2,
       color: 'border-neutral-800 text-neutral-400 bg-neutral-900/20',
-      desc: 'Deploy dynamic context-aware profiles: Spectator Spec Sheets, Owner Telemetry coordinate logs, and Dealership Sponsored Inventory feeds.'
+      desc: 'Deploy dynamic context-aware profiles: Spectator Spec Sheets, Visitor scan maps showing where your car was scanned, and Dealership Sponsored Inventory feeds.'
     },
     {
       phase: 'Phase 4',
@@ -40,7 +40,7 @@ export default function Home() {
       status: 'Scheduled',
       icon: Flag,
       color: 'border-neutral-800 text-neutral-400 bg-neutral-900/20',
-      desc: 'Deploy barcode safety waivers, tech-inspection compliance stamps, and the Grid Marshall pit lane release terminal to bypass registration trailer queues.'
+      desc: 'Deploy barcode safety waivers, tech-inspection compliance stamps, and express lane check-ins to bypass registration trailer lines at events.'
     },
     {
       phase: 'Phase 5',
@@ -48,7 +48,7 @@ export default function Home() {
       status: 'Scheduled',
       icon: Eye,
       color: 'border-neutral-800 text-neutral-400 bg-neutral-900/20',
-      desc: 'Query location-aware "Spotted Near You" camera feeds, map pins, and community points leaderboards to gamify car spotting.'
+      desc: 'See photos of your car taken by spotters nearby, view map pins, and climb community points leaderboards to gamify car spotting.'
     }
   ];
 
@@ -69,19 +69,19 @@ export default function Home() {
         <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-[1.05] uppercase">
           One Tag.<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#bd2925] via-rose-500 to-[#bd2925]">
-            Your Rig&apos;s Passport.
+            Your Vehicle&apos;s Passport.
           </span>
         </h1>
 
-        <p className="text-lg sm:text-xl text-neutral-450 max-w-2xl mx-auto leading-relaxed font-medium">
-          Ditch paper spec sheets at car meets. Gridpass lets you map a permanent QR decal to your windshield or helmet so spectators can instantly scan and view your mods, specs, and build journey. As your rig travels, local service centers log verified records and track marshals scan check-ins—building a bulletproof digital provenance ledger that transfers to the next owner in one click.
+        <p className="text-lg sm:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed font-medium">
+          Ditch the paper spec sheets at car meets. Create a dynamic digital passport for your vehicle completely free. Build your modifications catalog, link your socials, and tell your build's story. Place a custom QR decal on your windshield or helmet so spectators scan and view your specs instantly, while supporting racetracks and local detail shops log verified history directly onto your ledger.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md">
-          <Link href="/pricing" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#bd2925] hover:bg-[#bd2925]/90 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md shadow-[#bd2925]/20 text-lg btn-glow">
-            Get Gridpass Tag <ArrowRight className="w-5 h-5" />
+          <Link href="/login?redirect=/dash" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#bd2925] hover:bg-[#bd2925]/90 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md shadow-[#bd2925]/20 text-lg btn-glow">
+            Claim Free Passport <ArrowRight className="w-5 h-5" />
           </Link>
-          <Link href="/scan" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-white px-8 py-4 rounded-xl font-bold transition-all text-lg">
+          <Link href="/scan" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-neutral-900 border border-neutral-800 hover:bg-neutral-850 text-white px-8 py-4 rounded-xl font-bold transition-all text-lg">
             <QrCode className="w-5 h-5 text-rose-500" /> Scan Tag
           </Link>
         </div>
@@ -132,7 +132,7 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-black text-white uppercase">Become an Original Supporter</h3>
               <p className="text-xs text-neutral-405 leading-relaxed">
-                Gridpass is crowdfunded by the automotive community. Back us today to secure a lifetime **Original Supporter badge** and a **glowing HSL gold avatar border** for your digital garage passport.
+                Gridpass is crowdfunded by the automotive community. Back us today to secure a lifetime **Original Supporter badge** and a **glowing gold avatar border** for your digital garage passport.
               </p>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-neutral-900/60">
@@ -153,14 +153,14 @@ export default function Home() {
           </div>
           <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">Built for Vehicles, Supported by the Community</h2>
           <p className="text-sm text-neutral-400 max-w-xl mx-auto leading-relaxed">
-            The vehicle is the hero. Our entire network of independent service centers, dealerships, and racetracks exists to enrich and verify your rig&apos;s digital passport.
+            The vehicle is the hero. Our entire network of independent service centers, dealerships, and racetracks exists to enrich and verify your vehicle&apos;s digital passport.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="glass-card p-8 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
             <span className="text-[10px] font-mono font-bold text-[#bd2925] tracking-widest uppercase">The Core Passport</span>
-            <h3 className="text-lg font-black text-white uppercase">Your Rig&apos;s Digital Spec Sheet</h3>
+            <h3 className="text-lg font-black text-white uppercase">Your Vehicle&apos;s Digital Spec Sheet</h3>
             <p className="text-xs text-neutral-400 leading-relaxed">
               Log detailed specifications, custom wrap colors, engine modifications, parts brands, and linked social media profiles. Spectators scan the physical QR decal in the wild to view your setup instantly.
             </p>
@@ -168,9 +168,9 @@ export default function Home() {
           
           <div className="glass-card p-8 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
             <span className="text-[10px] font-mono font-bold text-neutral-500 tracking-widest uppercase">Supporting Shops</span>
-            <h3 className="text-lg font-black text-white uppercase">Verified Service Provenance</h3>
+            <h3 className="text-lg font-black text-white uppercase">Verified Service History</h3>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Mechanics and service centers update your passport with verified receipts and diagnostic stamps. A bulletproof provenance ledger boosts vehicle resale value and transfers with ownership.
+              Mechanics and service centers update your passport with verified receipts and digital stamps. A verified service logbook boosts vehicle resale value and transfers with ownership.
             </p>
           </div>
 
@@ -247,7 +247,7 @@ export default function Home() {
         <div className="text-center space-y-4">
           <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">Passport Tiers & Pricing</h2>
           <p className="text-sm text-neutral-400 max-w-xl mx-auto leading-relaxed">
-            Start free or secure premium upgrades tailored to your rig&apos;s journey. High-tier features are accessible via modular, a la carte unlocks.
+            Start free or secure premium upgrades tailored to your vehicle&apos;s journey. High-tier features are accessible via modular, a la carte unlocks.
           </p>
         </div>
 
@@ -258,58 +258,58 @@ export default function Home() {
               <span className="text-[10px] font-mono font-bold text-[#bd2925] uppercase tracking-widest">Base Identity</span>
               <h3 className="text-2xl font-black text-white uppercase">Free Passport</h3>
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Perfect for casual owners. Create a permanent QR-mapped profile to log basic specifications, active mod sheets, and contact links.
+                100% free forever. Create your vehicle profile, document specifications, build modification catalogs, and get your digital QR specs page.
               </p>
               <ul className="space-y-2 text-xs font-mono text-neutral-500 font-bold pt-2">
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> 1 Registered Vehicle</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Public Modifications Spec Sheet</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Basic Ownership Registry</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Free Profile Hosting</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Detailed Specifications Registry</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Ownership Build Milestones</li>
               </ul>
             </div>
-            <Link href="/login" className="w-full py-3 border border-neutral-800 hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all text-center">
-              Claim Free Tag
+            <Link href="/login?redirect=/dash" className="w-full py-3 border border-neutral-800 hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all text-center">
+              Claim Free Passport
             </Link>
           </div>
 
-          {/* Early Backer / Supporter */}
+          {/* Printable Avery sticker customize / vector export pack */}
           <div className="glass-card p-8 rounded-3xl border border-yellow-500/20 bg-yellow-500/[0.01] flex flex-col justify-between space-y-6 relative overflow-hidden">
             <div className="absolute right-0 top-0 bg-yellow-500 text-black text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl">
               POPULAR
             </div>
             
             <div className="space-y-4">
-              <span className="text-[10px] font-mono font-bold text-yellow-500 uppercase tracking-widest">Crowdfunded Backer</span>
-              <h3 className="text-2xl font-black text-white uppercase">Original Supporter</h3>
+              <span className="text-[10px] font-mono font-bold text-yellow-500 uppercase tracking-widest">Sticker Studio</span>
+              <h3 className="text-2xl font-black text-white uppercase">Print & Customize</h3>
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Back Gridpass development. Secure a permanent supporter badge and the animated glowing gold avatar ring on your profile garage.
+                Design your physical connection. Download high-res vector formats matching standard Avery sheets completely free to print at home, or order shipped weather-proof vinyl decals.
               </p>
-              <ul className="space-y-2 text-xs font-mono text-neutral-500 font-bold pt-2">
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> Glowing Gold HSL Avatar Ring</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> &quot;Original Supporter&quot; Profile Banner</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> Future Beta Feature Testing Access</li>
+              <ul className="space-y-2 text-xs font-mono text-yellow-500 font-bold pt-2">
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> Free Avery PDF & SVG Exports</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> Ad-Free Premium Profile Layout</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> Shipped Premium Vinyl Sticker Options</li>
               </ul>
             </div>
-            <Link href="/login?redirect=/dash" className="w-full btn-glow py-3 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all text-center">
-              Pledge Support (From $5)
+            <Link href="/pricing" className="w-full btn-glow py-3 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all text-center">
+              Configure Decals
             </Link>
           </div>
 
-          {/* A La Carte Upgrades */}
+          {/* B2B / Merchant Supporting Infrastructure */}
           <div className="glass-card p-8 rounded-3xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <span className="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest">Modular Options</span>
-              <h3 className="text-2xl font-black text-white uppercase">A La Carte Unlocks</h3>
+              <span className="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest">Supporting Hubs</span>
+              <h3 className="text-2xl font-black text-white uppercase">Merchant Portal</h3>
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Only pay for what you actually use. Add advanced features to your rigs as needed with low one-time or monthly unlocks.
+                For detail shops, racetracks, and dealerships. Write verified logs to customer builds, list inventory, or set up track day waiver check-ins.
               </p>
               <ul className="space-y-2 text-xs font-mono text-neutral-500 font-bold pt-2">
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Geolocation Scan Maps ($0.99/mo)</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Provenance Ledger Receipts ($9.99)</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Vector Sticker Customizer ($4.99)</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Verified Service Logs Writer ($49/mo)</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Dealer Inventory Lead CRM ($29/mo)</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Track waiver gate check-in splitting</li>
               </ul>
             </div>
             <Link href="/pricing" className="w-full py-3 border border-neutral-800 hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all text-center">
-              Configure Upgrades
+              View B2B Features
             </Link>
           </div>
         </div>

@@ -38,17 +38,12 @@ test.describe('GridPass Milestone 2 E2E Suite', () => {
 
     // Navigate to Pricing
     await page.goto('/pricing');
-    await expect(page.locator('h1')).toContainText(/plan/i);
+    await expect(page.locator('h1')).toContainText(/Registry/i);
     
-    // Verify both plans are displayed correctly
-    await expect(page.locator('text=Active Identity Passport')).toBeVisible();
+    // Verify plans are displayed correctly
+    await expect(page.locator('text=Free Vehicle Passport')).toBeVisible();
+    await expect(page.locator('text=Custom QR Decals & Avery Pack')).toBeVisible();
     await expect(page.locator('text=Dealership & Track Gate Portal')).toBeVisible();
-    
-    // Toggle interval billing switch
-    const toggle = page.locator('button[role="switch"], input[type="checkbox"], .pricing-toggle');
-    if (await toggle.count() > 0) {
-      await toggle.first().click();
-    }
     
     await page.screenshot({ path: path.join(screenshotDir, `page-2-pricing-${projName}.png`) });
   });

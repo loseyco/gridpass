@@ -335,7 +335,7 @@ export default function Dashboard() {
                 </div>
                 <h3 className="text-lg font-black text-white uppercase">Original Supporter</h3>
                 <p className="text-xs text-neutral-405 leading-relaxed">
-                  Back Gridpass starting from $5 to unlock a lifetime **Original Supporter badge** and the **glowing HSL gold avatar border** for your digital garage passport.
+                  Back Gridpass starting from $5 to unlock a lifetime **Original Supporter badge** and the **glowing gold avatar border** for your digital garage passport.
                 </p>
                 <button 
                   onClick={handleBecomeSupporter}
@@ -354,7 +354,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
           <div className="glass-card w-full max-w-md p-8 rounded-3xl border border-neutral-800 bg-neutral-950/95 relative space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-xl font-black text-white uppercase tracking-tight">Register Rig</h3>
+              <h3 className="text-xl font-black text-white uppercase tracking-tight">Register Vehicle</h3>
               <button 
                 onClick={() => setShowRegModal(false)}
                 className="text-neutral-500 hover:text-white transition-colors cursor-pointer text-sm font-bold"
@@ -432,7 +432,7 @@ export default function Dashboard() {
                 {submitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <>Register Rig <Plus className="w-4 h-4" /></>
+                  <>Register Vehicle <Plus className="w-4 h-4" /></>
                 )}
               </button>
             </form>
