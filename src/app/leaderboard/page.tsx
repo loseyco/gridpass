@@ -38,7 +38,7 @@ interface PartnerLeaderboardItem {
 }
 
 export default function LeaderboardPage() {
-  const { authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   
   // Tabs
   const [activeTab, setActiveTab] = useState<'builds' | 'spotters' | 'partners'>('builds');
