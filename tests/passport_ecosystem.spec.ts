@@ -10,7 +10,7 @@ test.describe('Gridpass Phase 1: Core Foundation & Support Portal Tests', () => 
 
   test('Homepage Loads & Displays Back the Cause', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('h1')).toContainText(/No Gridpass/i);
+    await expect(page.locator('h1')).toContainText(/One Tag/i);
     await expect(page.locator('h3:has-text("Become an Original Supporter")').first()).toBeVisible();
     await expect(page.locator('a:has-text("Back Gridpass")').first()).toBeVisible();
   });

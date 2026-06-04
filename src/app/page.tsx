@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { 
   ArrowRight, QrCode, ShieldCheck, Activity, Heart, 
-  Milestone, Printer, Building2, Flag, Eye, Check, Sparkles, HelpCircle 
+  Milestone, Printer, Building2, Flag, Eye, Check, Sparkles, Car 
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,11 +12,11 @@ export default function Home() {
   const roadmapPhases = [
     {
       phase: 'Phase 1',
-      title: 'Support Portal & Gold Rings',
+      title: 'Digital Garage & Supporter Portal',
       status: 'Active',
       icon: Heart,
       color: 'border-yellow-500/20 text-yellow-500 bg-yellow-500/5',
-      desc: 'Deploy core routing sitemaps, optimize social/Reddit metatag cards, open waitlists, and launch the Original Supporter Gold HSL border ring profiles.'
+      desc: 'Build the core garage registry, optimize Reddit/SMS link-sharing meta cards, open waitlists, and launch the Original Supporter Gold HSL border ring profiles.'
     },
     {
       phase: 'Phase 2',
@@ -28,19 +28,19 @@ export default function Home() {
     },
     {
       phase: 'Phase 3',
-      title: 'Passports & B2B CRM',
+      title: 'Vehicle Passports & CRM Integration',
       status: 'Scheduled',
       icon: Building2,
       color: 'border-neutral-800 text-neutral-400 bg-neutral-900/20',
-      desc: 'Launch dynamic context-aware profiles: Spectator Spec Sheets, Owner Telemetry coordinate logs, and Dealership Sponsored Inventory CRMs.'
+      desc: 'Deploy dynamic context-aware profiles: Spectator Spec Sheets, Owner Telemetry coordinate logs, and Dealership Sponsored Inventory feeds.'
     },
     {
       phase: 'Phase 4',
-      title: 'Gatekeeper Release & Track Ops',
+      title: 'Pit Lane Release & Tech Inspection',
       status: 'Scheduled',
       icon: Flag,
       color: 'border-neutral-800 text-neutral-400 bg-neutral-900/20',
-      desc: 'Deploy barcode safety waivers, tech-inspection compliance stamps, and the Grid Marshall पिट lane release terminal to bypass registration trailer cues.'
+      desc: 'Deploy barcode safety waivers, tech-inspection compliance stamps, and the Grid Marshall pit lane release terminal to bypass registration trailer queues.'
     },
     {
       phase: 'Phase 5',
@@ -67,14 +67,14 @@ export default function Home() {
         </div>
 
         <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white leading-[1.05] uppercase">
-          No Gridpass.<br />
+          One Tag.<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#bd2925] via-rose-500 to-[#bd2925]">
-            No Track.
+            Your Rig&apos;s Passport.
           </span>
         </h1>
 
         <p className="text-lg sm:text-xl text-neutral-450 max-w-2xl mx-auto leading-relaxed font-medium">
-          Your vehicle&apos;s dynamic passport is now your entrance ticket. Ditch the paper waivers and long registration lines. A single QR decal on your window or helmet unlocks cashless waiver signing, digital tech inspection stamps, and instant pit lane release. Spectators scan your tag to view your specs, mods, and build journey, turning your rig into a self-propagating digital profile.
+          Ditch paper spec sheets at car meets. Gridpass lets you map a permanent QR decal to your windshield or helmet so spectators can instantly scan and view your mods, specs, and build journey. As your rig travels, local service centers log verified records and track marshals scan check-ins—building a bulletproof digital provenance ledger that transfers to the next owner in one click.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md">
@@ -145,32 +145,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Moving Billboard Features Section */}
+      {/* Centered Vehicle & Supporting Infrastructure Section */}
       <section className="relative py-20 px-6 max-w-5xl mx-auto z-10 w-full space-y-12 border-t border-neutral-900/60">
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] font-mono font-black uppercase tracking-widest text-[#bd2925]">
-            <Sparkles className="w-3.5 h-3.5 text-[#bd2925]" /> Viral Ecosystem Mechanics
+            <Car className="w-3.5 h-3.5 text-[#bd2925]" /> Ecosystem Architecture
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">The Moving Billboard Loop</h2>
+          <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">Built for Vehicles, Supported by the Community</h2>
           <p className="text-sm text-neutral-400 max-w-xl mx-auto leading-relaxed">
-            Every physical Gridpass tag functions as an offline referral link, bridging real-world rigs with high-value digital operations.
+            The vehicle is the hero. Our entire network of independent service centers, dealerships, and racetracks exists to enrich and verify your rig&apos;s digital passport.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="glass-card p-8 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-            <span className="text-[10px] font-mono font-bold text-[#bd2925] tracking-widest uppercase">For Rig Owners</span>
-            <h3 className="text-xl font-black text-white uppercase">Passive Engagement & Specs</h3>
+            <span className="text-[10px] font-mono font-bold text-[#bd2925] tracking-widest uppercase">The Core Passport</span>
+            <h3 className="text-lg font-black text-white uppercase">Your Rig&apos;s Digital Spec Sheet</h3>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Showcase mod lists, sponsorships, dyno ratings, and social handles cleanly at car meets. Bypass standing around all day explaining your build—spectators scan your window or helmet decal to check out the rig and earn points on your spotted feed.
+              Log detailed specifications, custom wrap colors, engine modifications, parts brands, and linked social media profiles. Spectators scan the physical QR decal in the wild to view your setup instantly.
             </p>
           </div>
           
           <div className="glass-card p-8 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-            <span className="text-[10px] font-mono font-bold text-[#bd2925] tracking-widest uppercase">For Automotive Shops & Dealers</span>
-            <h3 className="text-xl font-black text-white uppercase">Sponsored Inventory & Lead Ingress</h3>
+            <span className="text-[10px] font-mono font-bold text-neutral-500 tracking-widest uppercase">Supporting Shops</span>
+            <h3 className="text-lg font-black text-white uppercase">Verified Service Provenance</h3>
             <p className="text-xs text-neutral-400 leading-relaxed">
-              Deploy custom logo QRs on sold vehicles or serviced rigs. When scanned in the wild by local enthusiasts, the top profile header acts as a promotional banner: *"Sold & Serviced by [Shop Name] - View Similar Stock."* Direct leads pipe instantly into your CRM.
+              Mechanics and service centers update your passport with verified receipts and diagnostic stamps. A bulletproof provenance ledger boosts vehicle resale value and transfers with ownership.
+            </p>
+          </div>
+
+          <div className="glass-card p-8 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+            <span className="text-[10px] font-mono font-bold text-neutral-500 tracking-widest uppercase">Supporting Tracks</span>
+            <h3 className="text-lg font-black text-white uppercase">Cashless Waivers & Releases</h3>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Event venues scan your vehicle tag at entrance gates and grid lanes. Instantly sign liability disclaimers, stamp safety tech inspections, and verify run groups to release you onto pit lane in seconds.
             </p>
           </div>
         </div>
