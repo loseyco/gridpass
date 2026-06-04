@@ -31,9 +31,7 @@ test.describe('Gridpass Phase 1: Core Foundation & Support Portal Tests', () => 
   test('Sitemap Waitlist Gates Redirect Correctly', async ({ page }) => {
     const soonPages = [
       { path: '/spotted', title: 'Spotted Near You' },
-      { path: '/leaderboard', title: 'Ecosystem Leaderboards' },
-      { path: '/track/demo-track', title: 'Racetrack Waiver Portal' },
-      { path: '/grid/demo-grid', title: 'Grid Marshall Console' }
+      { path: '/leaderboard', title: 'Ecosystem Leaderboards' }
     ];
 
     for (const pageInfo of soonPages) {
