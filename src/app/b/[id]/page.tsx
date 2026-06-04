@@ -9,7 +9,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { 
-  Building2, MapPin, Compass, ShieldCheck, Mail, Globus, Link2, 
+  Building2, MapPin, Compass, ShieldCheck, Mail, Link2, 
   CarFront, Loader2, ArrowLeft, Users, Table, Phone, ClipboardCheck 
 } from 'lucide-react';
 

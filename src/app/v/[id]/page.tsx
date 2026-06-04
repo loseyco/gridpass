@@ -302,7 +302,7 @@ export default function VehicleProfilePage() {
       setVibeChecks(prev => prev + 1);
       setHasVoted(true);
 
-      await logEvent('info', 'spot', `Vehicle [${vehicleId}] Vibe-Checked by ${user?.email || 'Anonymous'}`);
+      await logEvent('info', 'scan', `Vehicle [${vehicleId}] Vibe-Checked by ${user?.email || 'Anonymous'}`);
     } catch (err) {
       console.error("Failed to submit vibe check:", err);
     } finally {
@@ -369,7 +369,7 @@ export default function VehicleProfilePage() {
       setLogNotes('');
       setLogCost('');
 
-      await logEvent('success', 'service_log', `Service log added for vehicle [${vehicleId}]: ${payload.title} (Verified: ${payload.is_verified})`);
+      await logEvent('success', 'system', `Service log added for vehicle [${vehicleId}]: ${payload.title} (Verified: ${payload.is_verified})`);
     } catch (error) {
       console.error("Failed to save service log:", error);
       alert("Failed to save service record.");
