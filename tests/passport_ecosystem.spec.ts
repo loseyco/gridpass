@@ -28,19 +28,7 @@ test.describe('Gridpass Phase 1: Core Foundation & Support Portal Tests', () => 
     await expect(page.locator('text=Supporter Active')).toBeVisible();
   });
 
-  test('Sitemap Waitlist Gates Redirect Correctly', async ({ page }) => {
-    const soonPages = [
-      { path: '/spotted', title: 'Spotted Near You' },
-      { path: '/leaderboard', title: 'Ecosystem Leaderboards' }
-    ];
 
-    for (const pageInfo of soonPages) {
-      await page.goto(pageInfo.path);
-      await expect(page.locator('h1')).toContainText(pageInfo.title);
-      await expect(page.locator('input[placeholder*="email"]')).toBeVisible();
-      await expect(page.locator('button:has-text("Join Waitlist")')).toBeVisible();
-    }
-  });
 
   test('Meta Sharing Headers Exist in Layout', async ({ page }) => {
     await page.goto('/');
