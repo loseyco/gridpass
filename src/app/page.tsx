@@ -145,6 +145,111 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Visual Invite Card & Viral Loop Explainer */}
+      <section className="relative py-20 px-6 max-w-5xl mx-auto z-10 w-full space-y-12 border-t border-neutral-900/60 animate-in fade-in duration-700">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column: Visual Explainer Graphics */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="relative rounded-3xl overflow-hidden border border-neutral-850 bg-neutral-950/40 p-2 shadow-2xl">
+              <img 
+                src="/gridpass_explainer.png" 
+                alt="Scanning a vehicle QR code passport" 
+                className="w-full h-auto rounded-2xl object-cover"
+              />
+              <div className="absolute bottom-4 left-4 right-4 glass-card p-4 rounded-xl border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase">Physical-to-Digital Loop</h4>
+                  <p className="text-[10px] text-neutral-400 mt-0.5 font-medium">Scan decal ➔ View specs, modifications & photos</p>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-[#bd2925] uppercase tracking-wider bg-[#bd2925]/10 border border-[#bd2925]/30 px-2.5 py-1 rounded">
+                  Every Scan Works
+                </span>
+              </div>
+            </div>
+
+            {/* In-hand printed tags gallery */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass-card p-2 rounded-2xl border border-neutral-900 bg-neutral-950/20 overflow-hidden flex flex-col justify-between">
+                <img 
+                  src="/gridpass_card_design.png" 
+                  alt="Gridpass printed card door hanger design" 
+                  className="w-full h-44 object-contain bg-neutral-900 rounded-xl"
+                />
+                <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest block text-center mt-2">
+                  Invited Hanger Design
+                </span>
+              </div>
+              <div className="glass-card p-2 rounded-2xl border border-neutral-900 bg-neutral-950/20 overflow-hidden flex flex-col justify-between">
+                <img 
+                  src="/gridpass_printed_box.jpg" 
+                  alt="Box of 2000 printed physical cards ready for seeding" 
+                  className="w-full h-44 object-cover rounded-xl"
+                />
+                <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest block text-center mt-2">
+                  2,000+ Printed Hangtags
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Copy explaining the physical invite card mechanism */}
+          <div className="lg:col-span-5 space-y-6 text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] font-mono font-black uppercase tracking-widest text-[#bd2925]">
+              <QrCode className="w-3.5 h-3.5" /> Viral Physical Loop
+            </div>
+            
+            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight">
+              Spread the word. <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-rose-500 to-[#bd2925]">
+                Spot & Invite.
+              </span>
+            </h2>
+
+            <p className="text-sm text-neutral-450 leading-relaxed font-medium">
+              We have printed **2,000+ physical hangtags and door-mirror cards** to distribute at car meets, parking structures, and track pits. 
+            </p>
+
+            <div className="space-y-4 pt-2">
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-rose-500 font-mono font-black text-xs shrink-0">
+                  1
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase">Spot in the Wild</h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed mt-0.5">
+                    Find a clean build, rare spec, or track weapon. Snap a photo to submit to the sightings feed, then slip an invitation tag under their wiper blade or mirror.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-rose-500 font-mono font-black text-xs shrink-0">
+                  2
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase">Scan to Claim</h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed mt-0.5">
+                    The owner returns to their vehicle, scans the unique invitation QR code, and lands directly on their unclaimed passport page showing the photo you logged.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-rose-500 font-mono font-black text-xs shrink-0">
+                  3
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase">Setup for Free</h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed mt-0.5">
+                    They claim the vehicle instantly for free, link social handles, list their modifications, and tell their build's story, turning their car into a rolling portal.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Centered Vehicle & Supporting Infrastructure Section */}
       <section className="relative py-20 px-6 max-w-5xl mx-auto z-10 w-full space-y-12 border-t border-neutral-900/60">
         <div className="text-center space-y-4">
