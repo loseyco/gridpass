@@ -17,7 +17,7 @@ test.describe('Gridpass Phase 1: Core Foundation & Support Portal Tests', () => 
 
   test('Dashboard Mock Profile & Supporter Gold Ring', async ({ page }) => {
     await page.goto('/dash');
-    await expect(page.locator('text=Digital Garage')).toBeVisible();
+    await expect(page.locator('h2:has-text("Digital Garage")')).toBeVisible();
     
     // Default mock is supporter in playwright mode, check gold ring gradient class
     const avatarContainer = page.locator('#user-avatar-container');

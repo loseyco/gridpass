@@ -4,17 +4,17 @@
   --background: #060608;
   --foreground: #f4f4f7;
   
-  /* Core brand HSL tailors */
-  --brand-primary: 217 91% 60%;
-  --brand-accent: 160 84% 45%;
-  --brand-neon: 195 100% 50%;
+  /* Carbon/Crimson Brand HSL color system */
+  --brand-primary: 359 66% 44%; /* #bd2925 Crimson */
+  --brand-accent: 45 100% 50%;   /* #ffb700 Supporter Gold */
+  --brand-neon: 359 85% 60%;    /* Rose/Neon Red */
   
   /* Premium dark color tokens */
   --neutral-pitch: #040406;
   --neutral-dark: #09090d;
-  --neutral-card: rgba(13, 13, 20, 0.4);
-  --neutral-border: rgba(255, 255, 255, 0.05);
-  --neutral-border-hover: rgba(255, 255, 255, 0.15);
+  --neutral-card: rgba(13, 13, 20, 0.45);
+  --neutral-border: rgba(255, 255, 255, 0.04);
+  --neutral-border-hover: rgba(189, 41, 37, 0.2);
 }
 
 @theme inline {
@@ -43,14 +43,14 @@ html, body {
   background: var(--neutral-pitch);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(189, 41, 37, 0.3);
 }
 
-/* Ambient glow mesh background */
+/* Ambient glow mesh background (Crimson & Gold theme) */
 .mesh-glow {
   position: absolute;
   top: -10%;
@@ -59,9 +59,9 @@ html, body {
   width: 100%;
   height: 600px;
   background: 
-    radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.1) 0%, transparent 45%),
-    radial-gradient(circle at 50% 40%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+    radial-gradient(circle at 30% 20%, rgba(189, 41, 37, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(255, 183, 0, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 50% 40%, rgba(244, 63, 94, 0.08) 0%, transparent 50%);
   filter: blur(80px);
   pointer-events: none;
   z-index: 0;
@@ -74,31 +74,31 @@ html, body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--neutral-border);
   box-shadow: 
-    0 4px 30px rgba(0, 0, 0, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.03);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
   border-color: var(--neutral-border-hover);
   box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.6),
-    0 0 20px rgba(59, 130, 246, 0.05),
-    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+    0 10px 40px rgba(0, 0, 0, 0.7),
+    0 0 25px rgba(189, 41, 37, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.05);
   transform: translateY(-2px);
 }
 
 .glass-input {
-  background: rgba(13, 13, 20, 0.6);
+  background: rgba(10, 10, 15, 0.6);
   border: 1px solid var(--neutral-border);
   color: var(--foreground);
   transition: all 0.3s ease;
 }
 
 .glass-input:focus {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
-  background: rgba(13, 13, 20, 0.8);
+  border-color: rgba(189, 41, 37, 0.4);
+  box-shadow: 0 0 15px rgba(189, 41, 37, 0.15);
+  background: rgba(10, 10, 15, 0.85);
   outline: none;
 }
 
@@ -131,13 +131,27 @@ html, body {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #60a5fa 0%, #34d399 100%);
+  background: linear-gradient(135deg, #f43f5e 0%, #ffb700 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-neon {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #bd2925 0%, #f43f5e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Gold Supporter glowing avatar ring accent */
+@keyframes supporter-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 224, 102, 0.4), inset 0 0 4px rgba(255, 224, 102, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(255, 224, 102, 0.8), inset 0 0 8px rgba(255, 224, 102, 0.4);
+  }
+}
+
+.gold-glow-ring {
+  animation: supporter-glow 3s infinite ease-in-out;
 }
