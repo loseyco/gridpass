@@ -12,7 +12,8 @@ import {
 } from 'firebase/firestore';
 import { 
   CarFront, MapPin, Wrench, ShieldCheck, Heart, User, Calendar, 
-  Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun
+  Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun,
+  Settings, Award
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
 
@@ -46,6 +47,9 @@ interface VehicleData {
   is_ad_free?: boolean;
   has_telemetry?: boolean;
   is_verified_provenance?: boolean;
+  photo_url?: string;
+  awards?: string[];
+  history?: string[];
 }
 
 interface ServiceLog {
@@ -82,7 +86,88 @@ export default function VehicleProfilePage() {
   const [serviceLogs, setServiceLogs] = useState<ServiceLog[]>([]);
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'specs' | 'telemetry' | 'service'>('specs');
+  const [activeTab, setActiveTab] = useState<'specs' | 'telemetry' | 'service' | 'settings'>('specs');
+
+  // Edit Build states
+  const [editPhotoUrl, setEditPhotoUrl] = useState('');
+  const [editYear, setEditYear] = useState('');
+  const [editMake, setEditMake] = useState('');
+  const [editModel, setEditModel] = useState('');
+  const [editTrim, setEditTrim] = useState('');
+  const [editEngine, setEditEngine] = useState('');
+  const [editTransmission, setEditTransmission] = useState('');
+  const [editHp, setEditHp] = useState('');
+  const [editTorque, setEditTorque] = useState('');
+  const [editAwards, setEditAwards] = useState('');
+  const [editHistory, setEditHistory] = useState('');
+  const [savingSpecs, setSavingSpecs] = useState(false);
+
+  useEffect(() => {
+    if (vehicle) {
+      setEditPhotoUrl(vehicle.photo_url || '');
+      setEditYear(String(vehicle.year));
+      setEditMake(vehicle.make || '');
+      setEditModel(vehicle.model || '');
+      setEditTrim(vehicle.trim || '');
+      setEditEngine(vehicle.specs?.engine || '');
+      setEditTransmission(vehicle.specs?.transmission || '');
+      setEditHp(String(vehicle.specs?.hp || ''));
+      setEditTorque(String(vehicle.specs?.torque || ''));
+      setEditAwards(Array.isArray(vehicle.awards) ? vehicle.awards.join('\n') : '');
+      setEditHistory(Array.isArray(vehicle.history) ? vehicle.history.join('\n') : '');
+    }
+  }, [vehicle]);
+
+  const handleSaveSpecs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSpecs(true);
+
+    const parsedAwards = editAwards.split('\n').map(x => x.trim()).filter(Boolean);
+    const parsedHistory = editHistory.split('\n').map(x => x.trim()).filter(Boolean);
+
+    const updatedData = {
+      photo_url: editPhotoUrl.trim(),
+      year: parseInt(editYear) || vehicle?.year || 2024,
+      make: editMake.trim(),
+      model: editModel.trim(),
+      trim: editTrim.trim(),
+      specs: {
+        engine: editEngine.trim(),
+        transmission: editTransmission.trim(),
+        hp: editHp.trim() ? parseInt(editHp) || editHp : '',
+        torque: editTorque.trim() ? parseInt(editTorque) || editTorque : ''
+      },
+      awards: parsedAwards,
+      history: parsedHistory
+    };
+
+    if (isMock) {
+      await new Promise(r => setTimeout(r, 200));
+      setVehicle(prev => prev ? {
+        ...prev,
+        ...updatedData
+      } : null);
+      setSavingSpecs(false);
+      setActiveTab('specs');
+      await logEvent('success', 'system', `Updated vehicle specs in mock for tag [${vehicle?.tag_id}]`);
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'vehicles', vehicleId), updatedData);
+      setVehicle(prev => prev ? {
+        ...prev,
+        ...updatedData
+      } : null);
+      setActiveTab('specs');
+      await logEvent('success', 'system', `Updated vehicle specs for document [${vehicleId}]`);
+    } catch (err) {
+      console.error("Failed to update vehicle specs:", err);
+      alert("Error saving vehicle specification changes.");
+    } finally {
+      setSavingSpecs(false);
+    }
+  };
 
   // Interactive States
   const [vibeChecks, setVibeChecks] = useState(12);
@@ -143,7 +228,17 @@ export default function VehicleProfilePage() {
           ],
           partner_dealer: 'Monmouth Marine Ford',
           has_telemetry: true,
-          is_verified_provenance: true
+          is_verified_provenance: true,
+          photo_url: 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=800&q=80',
+          awards: [
+            'Best Mustang Build - Wall Stadium 2025',
+            'People Choice Award - Cars & Coffee 2026'
+          ],
+          history: [
+            'Purchased new from Monmouth Marine Ford in 2024.',
+            'Roush Exhaust installed at 1,500 miles.',
+            'Lowering springs installed at 3,000 miles.'
+          ]
         };
 
         const mockLogs: ServiceLog[] = [
@@ -222,7 +317,10 @@ export default function VehicleProfilePage() {
             partner_dealer: vData.partner_dealer,
             is_ad_free: vData.is_ad_free,
             has_telemetry: vData.has_telemetry,
-            is_verified_provenance: vData.is_verified_provenance
+            is_verified_provenance: vData.is_verified_provenance,
+            photo_url: vData.photo_url,
+            awards: vData.awards,
+            history: vData.history
           };
 
           if (isMounted) setVehicle(loadedVehicle);
@@ -417,6 +515,18 @@ export default function VehicleProfilePage() {
             </span>
           )}
         </div>
+
+        {/* Dynamic Photo Banner */}
+        {vehicle.photo_url && (
+          <div className="relative w-full h-64 md:h-96 rounded-[2.5rem] overflow-hidden border border-neutral-900 shadow-2xl animate-in fade-in duration-300">
+            <img 
+              src={vehicle.photo_url} 
+              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-transparent" />
+          </div>
+        )}
 
         {/* Hero Specs Title Card */}
         <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
