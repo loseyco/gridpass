@@ -13,7 +13,7 @@ import {
 import { 
   CarFront, MapPin, Wrench, ShieldCheck, Heart, User, Calendar, 
   Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun,
-  Settings, Award
+  Settings, Award, Printer
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
 
@@ -30,6 +30,26 @@ interface ModItem {
   name: string;
   date?: string;
   cost?: number | string;
+}
+
+interface CoOwner {
+  name: string;
+  member_id?: string;
+  split?: string;
+}
+
+interface DocItem {
+  name: string;
+  status: string;
+  file_url?: string;
+}
+
+interface DueMaintenanceItem {
+  title: string;
+  due_date: string;
+  status: string;
+  parts_needed?: string;
+  affiliate_link?: string;
 }
 
 interface VehicleData {
@@ -50,6 +70,17 @@ interface VehicleData {
   photo_url?: string;
   awards?: string[];
   history?: string[];
+  co_owners?: CoOwner[] | string[] | string;
+  purchase_date?: string;
+  purchase_price?: number | string;
+  ownership_split?: string;
+  title_status?: string;
+  sticker_status?: string;
+  engine_hours?: number | string;
+  story?: string;
+  documents?: DocItem[] | { name: string; status: string }[] | string;
+  additional_photos?: string[] | string;
+  due_maintenance?: DueMaintenanceItem[] | { title: string; due_date: string }[] | string;
 }
 
 interface ServiceLog {
@@ -87,6 +118,7 @@ export default function VehicleProfilePage() {
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'specs' | 'telemetry' | 'service' | 'settings'>('specs');
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   // Edit Build states
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
@@ -100,7 +132,49 @@ export default function VehicleProfilePage() {
   const [editTorque, setEditTorque] = useState('');
   const [editAwards, setEditAwards] = useState('');
   const [editHistory, setEditHistory] = useState('');
+  const [editCoOwnersList, setEditCoOwnersList] = useState<CoOwner[]>([]);
+  const [editPurchaseDate, setEditPurchaseDate] = useState('');
+  const [editPurchasePrice, setEditPurchasePrice] = useState('');
+  const [editOwnershipSplit, setEditOwnershipSplit] = useState('');
+  const [editTitleStatus, setEditTitleStatus] = useState('');
+  const [editStickerStatus, setEditStickerStatus] = useState('');
+  const [editEngineHours, setEditEngineHours] = useState('');
+  const [editStory, setEditStory] = useState('');
+  const [editDocsList, setEditDocsList] = useState<DocItem[]>([]);
+  const [editPhotosList, setEditPhotosList] = useState<string[]>([]);
+  const [editDueList, setEditDueList] = useState<DueMaintenanceItem[]>([]);
   const [savingSpecs, setSavingSpecs] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        callback(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getInviteLink = (ownerName: string) => {
+    if (typeof window === 'undefined') return;
+    const url = `${window.location.origin}/join?inviteVehicleId=${vehicleId}&coOwnerName=${encodeURIComponent(ownerName)}`;
+    navigator.clipboard.writeText(url);
+    alert(`Invite link copied to clipboard!\nShare this with the co-owner: ${url}`);
+  };
+
+  const getAffiliateLink = (m: any) => {
+    if (!vehicle) return '';
+    if (m.affiliate_link && m.affiliate_link.trim() !== '') {
+      return m.affiliate_link.trim();
+    }
+    if (m.parts_needed && m.parts_needed.trim() !== '') {
+      const query = `${vehicle.year} ${vehicle.make} ${vehicle.model} ${m.parts_needed}`;
+      return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=gridpass-20`;
+    }
+    return '';
+  };
 
   useEffect(() => {
     if (vehicle) {
@@ -115,6 +189,60 @@ export default function VehicleProfilePage() {
       setEditTorque(String(vehicle.specs?.torque || ''));
       setEditAwards(Array.isArray(vehicle.awards) ? vehicle.awards.join('\n') : '');
       setEditHistory(Array.isArray(vehicle.history) ? vehicle.history.join('\n') : '');
+
+      setEditPurchaseDate(vehicle.purchase_date || '');
+      setEditPurchasePrice(String(vehicle.purchase_price || ''));
+      setEditOwnershipSplit(vehicle.ownership_split || '');
+      setEditTitleStatus(vehicle.title_status || '');
+      setEditStickerStatus(vehicle.sticker_status || '');
+      setEditEngineHours(String(vehicle.engine_hours || ''));
+      setEditStory(vehicle.story || '');
+
+      // Co-Owners List
+      if (Array.isArray(vehicle.co_owners)) {
+        setEditCoOwnersList((vehicle.co_owners as any[]).map(co => {
+          if (typeof co === 'string') return { name: co, split: '50%' };
+          return { name: co.name || '', member_id: co.member_id || '', split: co.split || '50%' };
+        }));
+      } else if (typeof vehicle.co_owners === 'string' && vehicle.co_owners) {
+        const names = vehicle.co_owners.split('&').map(n => n.trim());
+        setEditCoOwnersList(names.map(name => ({ name, split: '50%' })));
+      } else {
+        setEditCoOwnersList([]);
+      }
+
+      // Documents List
+      if (Array.isArray(vehicle.documents)) {
+        setEditDocsList((vehicle.documents as any[]).map(doc => {
+          if (typeof doc === 'string') return { name: doc, status: 'Valid' };
+          return { name: doc.name || '', status: doc.status || 'Valid', file_url: doc.file_url || '' };
+        }));
+      } else {
+        setEditDocsList([]);
+      }
+
+      // Photos List
+      if (Array.isArray(vehicle.additional_photos)) {
+        setEditPhotosList(vehicle.additional_photos);
+      } else {
+        setEditPhotosList([]);
+      }
+
+      // Due Maintenance List
+      if (Array.isArray(vehicle.due_maintenance)) {
+        setEditDueList((vehicle.due_maintenance as any[]).map(item => {
+          if (typeof item === 'string') return { title: item, due_date: '', status: 'Pending' };
+          return {
+            title: item.title || item.name || '',
+            due_date: item.due_date || '',
+            status: item.status || 'Pending',
+            parts_needed: item.parts_needed || '',
+            affiliate_link: item.affiliate_link || ''
+          };
+        }));
+      } else {
+        setEditDueList([]);
+      }
     }
   }, [vehicle]);
 
@@ -138,7 +266,18 @@ export default function VehicleProfilePage() {
         torque: editTorque.trim() ? parseInt(editTorque) || editTorque : ''
       },
       awards: parsedAwards,
-      history: parsedHistory
+      history: parsedHistory,
+      co_owners: editCoOwnersList,
+      purchase_date: editPurchaseDate.trim(),
+      purchase_price: editPurchasePrice.trim() ? parseFloat(editPurchasePrice) || editPurchasePrice : '',
+      ownership_split: editOwnershipSplit.trim(),
+      title_status: editTitleStatus.trim(),
+      sticker_status: editStickerStatus.trim(),
+      engine_hours: editEngineHours.trim() ? parseFloat(editEngineHours) || editEngineHours : '',
+      story: editStory.trim(),
+      documents: editDocsList,
+      additional_photos: editPhotosList,
+      due_maintenance: editDueList
     };
 
     if (isMock) {
@@ -167,6 +306,93 @@ export default function VehicleProfilePage() {
     } finally {
       setSavingSpecs(false);
     }
+  };
+
+  const handlePrint = () => {
+    if (!vehicle) return;
+    const printWindow = window.open('', '_blank', 'width=600,height=600');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print QR Badge - Gridpass</title>
+            <style>
+              body {
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                background: white;
+              }
+              svg {
+                width: 80%;
+                max-width: 400px;
+                height: auto;
+              }
+            </style>
+          </head>
+          <body>
+            ${getBadgeSVGMarkup()}
+            <script>
+              window.onload = function() {
+                window.print();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  const getBadgeSVGMarkup = () => {
+    if (!vehicle) return '';
+    const tagId = vehicle.tag_id || `GP-VEH-${vehicle.id.slice(0, 6).toUpperCase()}`;
+    const qrRedirectUrl = `${window.location.origin}/qr/${tagId}`;
+    const qrCodeImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrRedirectUrl)}`;
+    const escapedQrCodeImgSrc = qrCodeImgSrc.replace(/&/g, '&amp;');
+    const badgeTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+        <defs>
+          <linearGradient id="mGrad" x1="60" y1="22" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#bd2925" />
+            <stop offset="1" stop-color="#1c1c1f" />
+          </linearGradient>
+        </defs>
+        <rect x="5" y="5" width="290" height="290" rx="20" fill="none" stroke="#bd2925" stroke-width="8"/>
+        <rect x="20" y="20" width="260" height="260" rx="12" fill="none" stroke="#262626" stroke-width="2" stroke-dasharray="8,4"/>
+        <image href="${escapedQrCodeImgSrc}" x="85" y="75" width="130" height="130"/>
+        
+        <!-- Center logo peaks overlay -->
+        <rect x="134" y="124" width="32" height="32" rx="4" fill="#ffffff" />
+        <g transform="translate(136, 126) scale(${28/120}, ${28/100})">
+          <path d="M10 70 L42 22 L65 52 L88 28 L110 70 Z" fill="url(#mGrad)" stroke="#1c1c1f" stroke-width="6" stroke-linejoin="round" />
+          <path d="M42 22 L52 42 M88 28 L98 48" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+          <path d="M18 86 C 48 86, 56 59, 96 59" stroke="#bd2925" stroke-width="12" stroke-linecap="round" />
+        </g>
+
+        <text x="150" y="52" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="4" text-anchor="middle">GRIDPASS</text>
+        <text x="150" y="230" fill="#1c1c1f" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${badgeTitle}</text>
+        <text x="150" y="255" fill="#bd2925" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
+      </svg>
+    `;
+  };
+
+  const handleDownloadSVG = () => {
+    if (!vehicle) return;
+    const tagId = vehicle.tag_id || `GP-VEH-${vehicle.id.slice(0, 6).toUpperCase()}`;
+    const svgContent = getBadgeSVGMarkup();
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gridpass-${tagId}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Interactive States
@@ -238,6 +464,27 @@ export default function VehicleProfilePage() {
             'Purchased new from Monmouth Marine Ford in 2024.',
             'Roush Exhaust installed at 1,500 miles.',
             'Lowering springs installed at 3,000 miles.'
+          ],
+          co_owners: '',
+          purchase_date: '2026-06-01',
+          purchase_price: 4500,
+          ownership_split: '50/50',
+          title_status: 'Clean (Held by Kristina)',
+          sticker_status: 'Active (Expires 2028)',
+          engine_hours: 120,
+          story: 'Me and Kristina bought this 2007 Sea-Doo GTI SE to share our weekend adventures. It has been incredibly reliable on the bay!',
+          documents: [
+            { name: 'Registration (WI-9384-AB)', status: 'Valid' },
+            { name: 'USCG Safety Equipment', status: 'Compliant' },
+            { name: 'Hull Insurance Policy', status: 'Active' }
+          ],
+          additional_photos: [
+            'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=800&q=80'
+          ],
+          due_maintenance: [
+            { title: 'Jet Pump Wear Ring Inspection', due_date: '2026-08-01', status: 'Pending', parts_needed: 'Wear Ring', affiliate_link: '' },
+            { title: 'Winterization & Stable Fluid', due_date: '2026-10-15', status: 'Pending', parts_needed: 'Stable fluid', affiliate_link: '' }
           ]
         };
 
@@ -320,7 +567,18 @@ export default function VehicleProfilePage() {
             is_verified_provenance: vData.is_verified_provenance,
             photo_url: vData.photo_url,
             awards: vData.awards,
-            history: vData.history
+            history: vData.history,
+            co_owners: vData.co_owners || '',
+            purchase_date: vData.purchase_date || '',
+            purchase_price: vData.purchase_price || '',
+            ownership_split: vData.ownership_split || '',
+            title_status: vData.title_status || '',
+            sticker_status: vData.sticker_status || '',
+            engine_hours: vData.engine_hours || '',
+            story: vData.story || '',
+            documents: vData.documents || [],
+            additional_photos: vData.additional_photos || [],
+            due_maintenance: vData.due_maintenance || []
           };
 
           if (isMounted) setVehicle(loadedVehicle);
@@ -598,6 +856,17 @@ export default function VehicleProfilePage() {
           >
             <History className="w-4 h-4" /> Service Logbook
           </button>
+
+          {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
+            <button 
+              onClick={() => setActiveTab('settings')}
+              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'settings' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              }`}
+            >
+              <Settings className="w-4 h-4" /> Settings
+            </button>
+          )}
         </div>
 
         {/* Content Area */}
@@ -605,50 +874,138 @@ export default function VehicleProfilePage() {
 
           {/* TAB 1: Specs & Modifications */}
           {activeTab === 'specs' && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-in fade-in duration-200">
               
-              {/* Left Column: Specifications card */}
+              {/* Left Column: Specifications & Ownership */}
               <div className="md:col-span-5 space-y-6">
-                <div className="glass-card p-6 rounded-3xl border-neutral-900 bg-neutral-950/20 space-y-4">
+                
+                {/* Factory Specifications */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
                   <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Info className="w-4 h-4 text-blue-500" /> Factory Specifications
                   </h3>
                   
                   <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs font-bold pt-2">
-                    <span className="text-neutral-550 uppercase">Engine</span>
+                    <span className="text-neutral-555 uppercase">Engine</span>
                     <span className="text-white text-right truncate">{vehicle.specs?.engine || 'N/A'}</span>
 
-                    <span className="text-neutral-550 uppercase">Transmission</span>
+                    <span className="text-neutral-555 uppercase">Transmission</span>
                     <span className="text-white text-right truncate">{vehicle.specs?.transmission || 'N/A'}</span>
 
-                    <span className="text-neutral-550 uppercase">Output Power</span>
+                    <span className="text-neutral-555 uppercase">Output Power</span>
                     <span className="text-white text-right">{vehicle.specs?.hp ? `${vehicle.specs.hp} HP` : 'N/A'}</span>
 
-                    <span className="text-neutral-550 uppercase">Peak Torque</span>
+                    <span className="text-neutral-555 uppercase">Peak Torque</span>
                     <span className="text-white text-right">{vehicle.specs?.torque ? `${vehicle.specs.torque} lb-ft` : 'N/A'}</span>
                   </div>
                 </div>
 
-                {/* Shipped Stickers Callout (Chloe's Growth Hook) */}
-                <div className="glass-card p-6 rounded-3xl border border-red-500/10 bg-red-950/5 space-y-4 text-center">
+                {/* Joint-Ownership & Registry */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-red-500" /> Ownership & Registry
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs font-bold pt-2 border-b border-neutral-900 pb-4">
+                    <span className="text-neutral-555 uppercase">Owners</span>
+                    <span className="text-white text-right font-bold">
+                      {Array.isArray(vehicle.co_owners) 
+                        ? (vehicle.co_owners as any[]).map(c => typeof c === 'string' ? c : c.name).join(' & ') 
+                        : (typeof vehicle.co_owners === 'string' ? vehicle.co_owners : 'N/A')}
+                    </span>
+
+                    <span className="text-neutral-555 uppercase">Ownership Split</span>
+                    <span className="text-white text-right">{vehicle.ownership_split || 'N/A'}</span>
+
+                    <span className="text-neutral-555 uppercase">Engine Hours</span>
+                    <span className="text-white text-right">{vehicle.engine_hours ? `${vehicle.engine_hours} Hrs` : 'N/A'}</span>
+
+                    <span className="text-neutral-555 uppercase">Purchase Date</span>
+                    <span className="text-white text-right">{vehicle.purchase_date || 'N/A'}</span>
+
+                    <span className="text-neutral-555 uppercase">Purchase Price</span>
+                    <span className="text-white text-right">{vehicle.purchase_price ? `$${vehicle.purchase_price}` : 'N/A'}</span>
+
+                    <span className="text-neutral-555 uppercase">Title Status</span>
+                    <span className="text-white text-right">{vehicle.title_status || 'N/A'}</span>
+
+                    <span className="text-neutral-555 uppercase">Sticker Status</span>
+                    <span className="text-white text-right">{vehicle.sticker_status || 'N/A'}</span>
+                  </div>
+
+                  {/* Co-Owners registry split list */}
+                  <div className="space-y-2 pt-2">
+                    <h4 className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Joint Owners Registry</h4>
+                    {Array.isArray(vehicle.co_owners) && vehicle.co_owners.length > 0 ? (
+                      <div className="space-y-2">
+                        {(vehicle.co_owners as any[]).map((co, idx) => {
+                          const name = typeof co === 'string' ? co : co.name;
+                          const split = typeof co === 'string' ? '50%' : co.split;
+                          const memberId = typeof co === 'string' ? '' : co.member_id;
+
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-2.5 bg-neutral-900/30 border border-neutral-900 rounded-xl text-xs">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-red-500" />
+                                {memberId ? (
+                                  <Link href={`/u/${memberId}`} className="font-bold text-blue-400 hover:underline">
+                                    {name}
+                                  </Link>
+                                ) : (
+                                  <span className="font-bold text-white">{name}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono font-bold text-neutral-400 bg-neutral-850 px-2 py-0.5 rounded border border-neutral-800">{split}</span>
+                                {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
+                                  <button
+                                    onClick={() => getInviteLink(name)}
+                                    className="text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:underline cursor-pointer"
+                                  >
+                                    Invite
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-neutral-500 italic">No joint owners registered.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Shipped Stickers Callout */}
+                <div className="glass-card p-6 rounded-3xl border border-red-500/10 bg-[#07070a] space-y-4 text-center shadow-lg">
                   <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-center gap-1">
-                    <Sparkles className="w-4 h-4 text-yellow-500" /> Want physical stickers?
+                    <Sparkles className="w-4 h-4 text-yellow-500" /> WANT PHYSICAL STICKERS?
                   </h4>
                   <p className="text-[11px] text-neutral-400 leading-normal">
-                    Order a custom pack of high-res outdoor weatherproof vinyl decals and poster sheets printed directly with your vehicle's registry passport QR code.
+                    Generate and download a free high-res QR Badge to print your own weatherproof stickers, keyring tags, or display sheets.
                   </p>
-                  <Link 
-                    href="/build-tag" 
-                    className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 flex items-center justify-center gap-1 min-h-[44px]"
-                  >
-                    Order Decal Kit ($14.99)
-                  </Link>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => setShowPrintModal(true)}
+                      className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
+                    >
+                      <Printer className="w-4 h-4 text-white" /> PRINT FREE QR BADGE
+                    </button>
+                    <Link 
+                      href={`/build-tag?vehicleId=${vehicle.id}`}
+                      className="w-full py-3 bg-transparent hover:bg-white/5 border border-white text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[44px]"
+                    >
+                      CUSTOMIZE QR BADGE DESIGN
+                    </Link>
+                  </div>
                 </div>
               </div>
 
-              {/* Right Column: Modifications List */}
+              {/* Right Column: Modifications, Story, Docs, Gallery */}
               <div className="md:col-span-7 space-y-6">
-                <div className="glass-card p-6 rounded-3xl border-neutral-900 bg-neutral-950/20 space-y-6">
+                
+                {/* Modification List */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-6">
                   <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
                     <ClipboardList className="w-4 h-4 text-red-500" /> Modification List
                   </h3>
@@ -678,6 +1035,93 @@ export default function VehicleProfilePage() {
                     </div>
                   )}
                 </div>
+
+                {/* Owner's Story */}
+                {vehicle.story && (
+                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-3">
+                    <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-yellow-500" /> Owner's Story
+                    </h3>
+                    <p className="text-sm text-neutral-300 leading-relaxed font-medium whitespace-pre-wrap italic">
+                      "{vehicle.story}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Compliance & Safety Documents */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-blue-500" /> Safety & Compliance Documents
+                  </h3>
+                  
+                  {Array.isArray(vehicle.documents) && vehicle.documents.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {(vehicle.documents as any[]).map((doc, idx) => {
+                        const docName = typeof doc === 'string' ? doc : doc.name;
+                        const docStatus = typeof doc === 'string' ? 'Valid' : doc.status;
+                        const docUrl = typeof doc === 'string' ? '' : doc.file_url;
+
+                        return (
+                          <div key={idx} className="p-4 bg-neutral-900/30 border border-neutral-900 rounded-2xl flex flex-col justify-between gap-3 text-xs">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="font-bold text-white break-words">{docName}</span>
+                              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                                docStatus === 'Valid' || docStatus === 'Compliant' || docStatus === 'Active'
+                                  ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400'
+                                  : 'bg-amber-500/10 border border-amber-500/25 text-amber-400'
+                              }`}>
+                                {docStatus}
+                              </span>
+                            </div>
+                            {docUrl && (
+                              <button
+                                onClick={() => {
+                                  const w = window.open();
+                                  if (w) {
+                                    w.document.write(`
+                                      <html>
+                                        <head><title>View Document - ${docName}</title></head>
+                                        <body style="margin:0; background:#060608;">
+                                          <iframe src="${docUrl}" style="border:none; width:100%; height:100vh;"></iframe>
+                                        </body>
+                                      </html>
+                                    `);
+                                    w.document.close();
+                                  }
+                                }}
+                                className="self-start text-[10px] font-mono font-bold text-blue-450 hover:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                📎 View Attachment
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-neutral-555 italic">No compliance documents uploaded.</p>
+                  )}
+                </div>
+
+                {/* Adventure Photo Gallery */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <CarFront className="w-4 h-4 text-emerald-500" /> Adventure Photo Gallery
+                  </h3>
+                  
+                  {Array.isArray(vehicle.additional_photos) && vehicle.additional_photos.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {(vehicle.additional_photos as string[]).map((photo, idx) => (
+                        <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-neutral-900 group">
+                          <img src={photo} alt={`Adventure ${idx + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-neutral-555 italic">No gallery photos added yet.</p>
+                  )}
+                </div>
+
               </div>
 
             </div>
@@ -689,7 +1133,7 @@ export default function VehicleProfilePage() {
               
               {/* Left Column: Visual Mock Map coordinates */}
               <div className="md:col-span-6 space-y-4">
-                <div className="glass-card p-6 rounded-3xl border-neutral-900 bg-neutral-950/20 space-y-4">
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
                   <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Map className="w-4 h-4 text-blue-500" /> Geographic Scan Telemetry
                   </h3>
@@ -722,7 +1166,7 @@ export default function VehicleProfilePage() {
 
               {/* Right Column: Scan History timeline logs */}
               <div className="md:col-span-6 space-y-4">
-                <div className="glass-card p-6 rounded-3xl border-neutral-900 bg-neutral-950/20 space-y-4">
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
                   <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
                     <History className="w-4 h-4 text-red-500" /> Recent Scan Events
                   </h3>
@@ -732,13 +1176,13 @@ export default function VehicleProfilePage() {
                       <div key={sight.id} className="p-4 bg-neutral-900/30 border border-neutral-900 rounded-2xl space-y-1.5 text-xs">
                         <div className="flex items-center justify-between font-bold">
                           <span className="text-white uppercase">{sight.location_name}</span>
-                          <span className="text-[10px] font-mono text-neutral-500">
+                          <span className="text-[10px] font-mono text-neutral-550">
                             {new Date(sight.timestamp).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-neutral-400">{sight.description}</p>
+                        <p className="text-neutral-450">{sight.description}</p>
                         {sight.latitude && sight.longitude && (
-                          <div className="text-[9px] font-mono text-neutral-500">
+                          <div className="text-[9px] font-mono text-neutral-555">
                             Coords: {sight.latitude.toFixed(4)}° N, {sight.longitude.toFixed(4)}° W
                           </div>
                         )}
@@ -758,7 +1202,7 @@ export default function VehicleProfilePage() {
               {/* Left Column: Form to log new maintenance (Available to Owner and Shop) */}
               <div className="md:col-span-5 space-y-4">
                 {(isOwner || isShop || (isMock && (user?.email === 'marcus@enthusiast.com' || user?.email === 'mike@performancetuning.com'))) ? (
-                  <div className="glass-card p-6 rounded-3xl border-neutral-900 bg-neutral-950/20 space-y-4">
+                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
                     <div className="space-y-1">
                       <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
                         <Wrench className="w-4 h-4 text-emerald-500" /> Log Maintenance Event
@@ -772,7 +1216,7 @@ export default function VehicleProfilePage() {
 
                     <form onSubmit={handleAddServiceLog} className="space-y-3.5">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Event Title</label>
+                        <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Event Title</label>
                         <input 
                           type="text" 
                           required
@@ -784,7 +1228,7 @@ export default function VehicleProfilePage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Service Details / Notes</label>
+                        <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Service Details / Notes</label>
                         <textarea 
                           rows={3}
                           value={logNotes}
@@ -796,7 +1240,7 @@ export default function VehicleProfilePage() {
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Cost ($ USD)</label>
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Cost ($ USD)</label>
                           <input 
                             type="number" 
                             value={logCost}
@@ -806,7 +1250,7 @@ export default function VehicleProfilePage() {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Service Date</label>
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Service Date</label>
                           <input 
                             type="date" 
                             required
@@ -838,9 +1282,116 @@ export default function VehicleProfilePage() {
                 )}
               </div>
 
-              {/* Right Column: Historical logs list */}
-              <div className="md:col-span-7 space-y-4">
-                <div className="glass-card p-6 rounded-3xl border-neutral-900 bg-neutral-950/20 space-y-4">
+              {/* Right Column: Historical logs & checklist */}
+              <div className="md:col-span-7 space-y-6">
+                
+                {/* Maintenance & Parts Checklist */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ClipboardList className="w-4 h-4 text-red-500" /> Maintenance & Parts Checklist
+                  </h3>
+                  
+                  {Array.isArray(vehicle.due_maintenance) && vehicle.due_maintenance.length > 0 ? (
+                    <div className="space-y-3">
+                      {(vehicle.due_maintenance as any[]).map((item, idx) => {
+                        const title = item.title || item.name || '';
+                        const dueDate = item.due_date || '';
+                        const status = item.status || 'Pending';
+                        const partsNeeded = item.parts_needed || '';
+                        const affLink = getAffiliateLink(item);
+                        const isDone = status.toLowerCase() === 'done' || status.toLowerCase() === 'completed';
+
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`p-4 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
+                              isDone 
+                                ? 'bg-emerald-950/10 border-emerald-500/10 opacity-70' 
+                                : 'bg-neutral-900/30 border-neutral-900'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) ? (
+                                <input 
+                                  type="checkbox"
+                                  checked={isDone}
+                                  onChange={async () => {
+                                    const newStatus = isDone ? 'Pending' : 'Done';
+                                    let updatedDue = [];
+                                    if (Array.isArray(vehicle.due_maintenance)) {
+                                      updatedDue = (vehicle.due_maintenance as any[]).map((itm, i) => 
+                                        i === idx ? { ...itm, status: newStatus } : itm
+                                      );
+                                    }
+                                    
+                                    if (isMock) {
+                                      setVehicle(prev => prev ? { ...prev, due_maintenance: updatedDue } : null);
+                                    } else {
+                                      try {
+                                        await updateDoc(doc(db, 'vehicles', vehicleId), {
+                                          due_maintenance: updatedDue
+                                        });
+                                        setVehicle(prev => prev ? { ...prev, due_maintenance: updatedDue } : null);
+                                      } catch (err) {
+                                        console.error("Failed to update checklist item status:", err);
+                                      }
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded border-neutral-700 bg-neutral-950 text-red-500 focus:ring-red-500 focus:ring-offset-neutral-900 mt-0.5 cursor-pointer"
+                                />
+                              ) : (
+                                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${isDone ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                              )}
+                              <div className="space-y-1">
+                                <h4 className={`font-bold uppercase ${isDone ? 'text-neutral-450 line-through' : 'text-white'}`}>
+                                  {title}
+                                </h4>
+                                {dueDate && (
+                                  <p className="text-[10px] font-mono text-neutral-500 font-bold uppercase">
+                                    Due: {dueDate}
+                                  </p>
+                                )}
+                                {partsNeeded && (
+                                  <p className="text-[10px] text-neutral-450">
+                                    🔧 Parts Needed: <span className="font-bold text-neutral-350">{partsNeeded}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 self-end sm:self-center">
+                              {partsNeeded && affLink && (
+                                <a 
+                                  href={affLink} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-blue-400 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all"
+                                >
+                                  🛒 Buy Parts
+                                </a>
+                              )}
+                              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                                isDone 
+                                  ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400' 
+                                  : 'bg-amber-500/10 border border-amber-500/25 text-amber-400'
+                              }`}>
+                                {status}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-neutral-550 space-y-1">
+                      <ClipboardList className="w-8 h-8 mx-auto opacity-40" />
+                      <p className="text-[11px] uppercase font-mono font-bold">No due maintenance listed.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Service Timeline History */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
                   <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
                     <History className="w-4 h-4 text-emerald-500" /> Service Timeline History
                   </h3>
@@ -878,7 +1429,7 @@ export default function VehicleProfilePage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12 text-neutral-550 space-y-2">
+                    <div className="text-center py-12 text-neutral-555 space-y-2">
                       <Wrench className="w-8 h-8 mx-auto opacity-40" />
                       <p className="text-xs uppercase font-mono font-bold">No timeline history recorded.</p>
                     </div>
@@ -889,9 +1440,578 @@ export default function VehicleProfilePage() {
             </div>
           )}
 
+          {/* TAB 4: Settings (Owner Gated Edit Form) */}
+          {activeTab === 'settings' && (isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
+            <form onSubmit={handleSaveSpecs} className="space-y-8 animate-in fade-in duration-200">
+              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
+                <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900 pb-3">
+                  <Settings className="w-5 h-5 text-red-500" /> Vehicle Settings & Passport Registry
+                </h3>
+                
+                {/* Photo banner edit */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Main Vehicle Photo (Base64 / URL)</label>
+                    <input 
+                      type="text" 
+                      value={editPhotoUrl}
+                      onChange={(e) => setEditPhotoUrl(e.target.value)}
+                      placeholder="Paste photo URL or upload below..." 
+                      className="glass-input w-full p-3 rounded-xl text-xs"
+                    />
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-neutral-500">Or upload:</span>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, setEditPhotoUrl)}
+                        className="text-xs text-neutral-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-neutral-900 file:text-white hover:file:bg-neutral-850 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Basic specifications grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Year</label>
+                      <input 
+                        type="number" 
+                        value={editYear}
+                        onChange={(e) => setEditYear(e.target.value)}
+                        placeholder="2007" 
+                        className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Make</label>
+                      <input 
+                        type="text" 
+                        value={editMake}
+                        onChange={(e) => setEditMake(e.target.value)}
+                        placeholder="Sea-Doo" 
+                        className="glass-input w-full p-2.5 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Model</label>
+                      <input 
+                        type="text" 
+                        value={editModel}
+                        onChange={(e) => setEditModel(e.target.value)}
+                        placeholder="GTI SE" 
+                        className="glass-input w-full p-2.5 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Trim</label>
+                      <input 
+                        type="text" 
+                        value={editTrim}
+                        onChange={(e) => setEditTrim(e.target.value)}
+                        placeholder="130" 
+                        className="glass-input w-full p-2.5 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Engine</label>
+                    <input 
+                      type="text" 
+                      value={editEngine}
+                      onChange={(e) => setEditEngine(e.target.value)}
+                      placeholder="Rotax 1503" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Transmission</label>
+                    <input 
+                      type="text" 
+                      value={editTransmission}
+                      onChange={(e) => setEditTransmission(e.target.value)}
+                      placeholder="Direct Drive" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">HP</label>
+                    <input 
+                      type="text" 
+                      value={editHp}
+                      onChange={(e) => setEditHp(e.target.value)}
+                      placeholder="130" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Torque</label>
+                    <input 
+                      type="text" 
+                      value={editTorque}
+                      onChange={(e) => setEditTorque(e.target.value)}
+                      placeholder="N/A" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial & Registry parameters */}
+              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
+                <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900 pb-3">
+                  <ClipboardList className="w-5 h-5 text-blue-500" /> Registry & Purchase Parameters
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Purchase Date</label>
+                    <input 
+                      type="date" 
+                      value={editPurchaseDate}
+                      onChange={(e) => setEditPurchaseDate(e.target.value)}
+                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Purchase Price ($ USD)</label>
+                    <input 
+                      type="number" 
+                      value={editPurchasePrice}
+                      onChange={(e) => setEditPurchasePrice(e.target.value)}
+                      placeholder="4500" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Ownership Split</label>
+                    <input 
+                      type="text" 
+                      value={editOwnershipSplit}
+                      onChange={(e) => setEditOwnershipSplit(e.target.value)}
+                      placeholder="50/50" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Title Status</label>
+                    <input 
+                      type="text" 
+                      value={editTitleStatus}
+                      onChange={(e) => setEditTitleStatus(e.target.value)}
+                      placeholder="Clean" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Sticker Status</label>
+                    <input 
+                      type="text" 
+                      value={editStickerStatus}
+                      onChange={(e) => setEditStickerStatus(e.target.value)}
+                      placeholder="Wisconsin Registration" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Engine Hours</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      value={editEngineHours}
+                      onChange={(e) => setEditEngineHours(e.target.value)}
+                      placeholder="120" 
+                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Owner's Story</label>
+                  <textarea 
+                    rows={3}
+                    value={editStory}
+                    onChange={(e) => setEditStory(e.target.value)}
+                    placeholder="Tell the story" 
+                    className="glass-input w-full p-3 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Joint-Ownership list */}
+              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="w-5 h-5 text-red-500" /> Joint Owners
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setEditCoOwnersList(prev => [...prev, { name: '', split: '50%', member_id: '' }])}
+                    className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                  >
+                    + Add Co-Owner
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {editCoOwnersList.map((co, idx) => (
+                    <div key={idx} className="p-4 bg-neutral-900/20 border border-neutral-900 rounded-2xl flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Co-Owner Name</label>
+                          <input 
+                            type="text" 
+                            required
+                            value={co.name}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditCoOwnersList(prev => prev.map((item, i) => i === idx ? { ...item, name: val } : item));
+                            }}
+                            placeholder="Kristina" 
+                            className="glass-input w-full p-2 rounded-xl text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Split %</label>
+                          <input 
+                            type="text" 
+                            value={co.split || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditCoOwnersList(prev => prev.map((item, i) => i === idx ? { ...item, split: val } : item));
+                            }}
+                            placeholder="50%" 
+                            className="glass-input w-full p-2 rounded-xl text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Driver ID (Optional)</label>
+                          <input 
+                            type="text" 
+                            value={co.member_id || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditCoOwnersList(prev => prev.map((item, i) => i === idx ? { ...item, member_id: val } : item));
+                            }}
+                            placeholder="pjlosey-mock" 
+                            className="glass-input w-full p-2 rounded-xl text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setEditCoOwnersList(prev => prev.filter((_, i) => i !== idx))}
+                        className="px-2.5 py-2 text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg border border-red-500/10 cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  {editCoOwnersList.length === 0 && (
+                    <p className="text-xs text-neutral-500 italic text-center py-4">No joint owners defined. Add one using the button above.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Compliance Documents list */}
+              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ShieldCheck className="w-5 h-5 text-blue-500" /> Compliance Documents
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setEditDocsList(prev => [...prev, { name: '', status: 'Valid', file_url: '' }])}
+                    className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                  >
+                    + Add Document
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {editDocsList.map((docItem, idx) => (
+                    <div key={idx} className="p-4 bg-neutral-900/20 border border-neutral-900 rounded-2xl flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-550 uppercase font-bold">Document Name</label>
+                          <input 
+                            type="text" 
+                            required
+                            value={docItem.name}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDocsList(prev => prev.map((item, i) => i === idx ? { ...item, name: val } : item));
+                            }}
+                            placeholder="Wisconsin Registration" 
+                            className="glass-input w-full p-2 rounded-xl text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Status Badge</label>
+                          <select
+                            value={docItem.status}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDocsList(prev => prev.map((item, i) => i === idx ? { ...item, status: val } : item));
+                            }}
+                            className="glass-input w-full p-2 rounded-xl text-xs bg-[#0b0b0f] text-white"
+                          >
+                            <option value="Valid">Valid</option>
+                            <option value="Compliant">Compliant</option>
+                            <option value="Active">Active</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Expired">Expired</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1 flex flex-col justify-end">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">File Upload (PDF / Image)</label>
+                          <input 
+                            type="file" 
+                            accept="application/pdf,image/*"
+                            onChange={(e) => handleFileUpload(e, (base64) => {
+                              setEditDocsList(prev => prev.map((item, i) => i === idx ? { ...item, file_url: base64 } : item));
+                            })}
+                            className="text-xs text-neutral-400 file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-neutral-900 file:text-white hover:file:bg-neutral-850 cursor-pointer w-full mt-1.5"
+                          />
+                          {docItem.file_url && (
+                            <span className="text-[9px] font-mono text-emerald-400 font-bold mt-1">✓ File Attached</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setEditDocsList(prev => prev.filter((_, i) => i !== idx))}
+                        className="px-2.5 py-2 text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg border border-red-500/10 cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  {editDocsList.length === 0 && (
+                    <p className="text-xs text-neutral-550 italic text-center py-4">No documents uploaded. Add one using the button above.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Due Maintenance Checklist list */}
+              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Wrench className="w-5 h-5 text-emerald-500" /> Maintenance & Parts Checklist Settings
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setEditDueList(prev => [...prev, { title: '', due_date: '', status: 'Pending', parts_needed: '', affiliate_link: '' }])}
+                    className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                  >
+                    + Add Task
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {editDueList.map((m, idx) => (
+                    <div key={idx} className="p-4 bg-neutral-900/20 border border-neutral-900 rounded-2xl flex flex-col gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Task Title</label>
+                          <input 
+                            type="text" 
+                            required
+                            value={m.title}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, title: val } : item));
+                            }}
+                            placeholder="Jet Pump Inspection" 
+                            className="glass-input w-full p-2 rounded-xl text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Due Date</label>
+                          <input 
+                            type="date" 
+                            value={m.due_date}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, due_date: val } : item));
+                            }}
+                            className="glass-input w-full p-2 rounded-xl text-xs font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Status</label>
+                          <select
+                            value={m.status}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, status: val } : item));
+                            }}
+                            className="glass-input w-full p-2 rounded-xl text-xs bg-[#0b0b0f] text-white"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Done">Done</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Parts Needed (Optional)</label>
+                          <input 
+                            type="text" 
+                            value={m.parts_needed || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, parts_needed: val } : item));
+                            }}
+                            placeholder="Spark Plugs" 
+                            className="glass-input w-full p-2 rounded-xl text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Custom Shopping Affiliate Link (Optional)</label>
+                          <input 
+                            type="text" 
+                            value={m.affiliate_link || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, affiliate_link: val } : item));
+                            }}
+                            placeholder="amazon.com" 
+                            className="glass-input w-full p-2 rounded-xl text-xs"
+                          />
+                        </div>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setEditDueList(prev => prev.filter((_, i) => i !== idx))}
+                        className="self-end px-2.5 py-1.5 text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg border border-red-500/10 cursor-pointer"
+                      >
+                        Remove Task
+                      </button>
+                    </div>
+                  ))}
+
+                  {editDueList.length === 0 && (
+                    <p className="text-xs text-neutral-550 italic text-center py-4">No due tasks set. Add one using the button above.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Adventure Photos list */}
+              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <CarFront className="w-5 h-5 text-emerald-500" /> Adventure Photo Gallery
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-neutral-400 font-bold">Upload Photo:</span>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, (base64) => {
+                        setEditPhotosList(prev => [...prev, base64]);
+                      })}
+                      className="text-xs text-neutral-400 file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-neutral-900 file:text-white hover:file:bg-neutral-850 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {editPhotosList.map((photo, idx) => (
+                    <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-neutral-900 group bg-neutral-950">
+                      <img src={photo} alt={`Edit Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setEditPhotosList(prev => prev.filter((_, i) => i !== idx))}
+                        className="absolute top-2 right-2 bg-red-600/90 text-white rounded-full p-1.5 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {editPhotosList.length === 0 && (
+                  <p className="text-xs text-neutral-550 italic text-center py-4">No gallery photos added yet. Upload one above.</p>
+                )}
+              </div>
+
+              {/* Form Submit Button */}
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('specs');
+                  }}
+                  className="px-6 py-3.5 bg-neutral-900 hover:bg-neutral-850 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer min-h-[48px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-red-600/20 flex items-center gap-1.5 min-h-[48px] cursor-pointer"
+                >
+                  {savingSpecs ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  Save Passport Settings
+                </button>
+              </div>
+            </form>
+          )}
+
         </div>
 
       </div>
+
+      {showPrintModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="glass-card max-w-md w-full p-6 md:p-8 rounded-[2rem] border border-neutral-850 bg-neutral-950/95 space-y-6 text-center relative shadow-2xl">
+            <h3 className="text-lg font-black text-white uppercase tracking-wider">Your QR Badge</h3>
+            <p className="text-xs text-neutral-400">
+              Print this badge or download the high-resolution vector (SVG) to use on windshields, service books, or test rigs.
+            </p>
+            
+            {/* Live badge SVG preview */}
+            <div className="flex justify-center bg-[#060608] p-4 rounded-2xl border border-neutral-900 mx-auto w-fit">
+              <div 
+                className="w-64 h-64 [&>svg]:w-full [&>svg]:h-full"
+                dangerouslySetInnerHTML={{ __html: getBadgeSVGMarkup() }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={handlePrint}
+                className="py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 cursor-pointer"
+              >
+                Print Badge
+              </button>
+              <button
+                onClick={handleDownloadSVG}
+                className="py-3 bg-transparent hover:bg-white/5 border border-white text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Download SVG
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowPrintModal(false)}
+              className="absolute top-4 right-4 text-neutral-500 hover:text-white text-sm font-bold p-1 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>

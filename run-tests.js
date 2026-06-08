@@ -104,8 +104,8 @@ async function run() {
   }
 
   // 2. Spawn Next.js Dev Server
-  console.log(`[Orchestrator] Spawning dev server: npm run dev`);
-  devServerProcess = spawn('npm', ['run', 'dev'], {
+  console.log(`[Orchestrator] Spawning dev server: npm run start`);
+  devServerProcess = spawn('npm', ['run', 'start'], {
     cwd: path.resolve(process.cwd()),
     shell: true,
     detached: process.platform !== 'win32', // Spawn in separate process group on POSIX

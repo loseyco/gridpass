@@ -10,7 +10,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { 
   UserCircle2, Instagram, Youtube, Compass, MapPin, 
-  CarFront, Loader2, ArrowLeft, Heart, ShieldCheck, Link2
+  CarFront, Loader2, ArrowLeft, Heart, ShieldCheck, Link2, Printer, Sparkles
 } from 'lucide-react';
 
 interface DriverProfile {
@@ -25,6 +25,7 @@ interface DriverProfile {
     youtube?: string;
     tiktok?: string;
   };
+  tagId?: string;
 }
 
 interface Vehicle {
@@ -45,8 +46,100 @@ export default function DriverProfilePage() {
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+
+  const handlePrint = () => {
+    if (!profile) return;
+    const printWindow = window.open('', '_blank', 'width=600,height=600');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print QR Badge - Gridpass</title>
+            <style>
+              body {
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                background: white;
+              }
+              svg {
+                width: 80%;
+                max-width: 400px;
+                height: auto;
+              }
+            </style>
+          </head>
+          <body>
+            ${getBadgeSVGMarkup()}
+            <script>
+              window.onload = function() {
+                window.print();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  const getBadgeSVGMarkup = () => {
+    if (!profile) return '';
+    const tagId = profile.tagId || `GP-DRV-${profile.uid.slice(0, 6).toUpperCase()}`;
+    const qrRedirectUrl = `${window.location.origin}/qr/${tagId}`;
+    const qrCodeImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrRedirectUrl)}`;
+    const escapedQrCodeImgSrc = qrCodeImgSrc.replace(/&/g, '&amp;');
+    const badgeTitle = profile.display_name;
+    return `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+        <defs>
+          <linearGradient id="mGrad" x1="60" y1="22" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#bd2925" />
+            <stop offset="1" stop-color="#1c1c1f" />
+          </linearGradient>
+        </defs>
+        <rect x="5" y="5" width="290" height="290" rx="20" fill="none" stroke="#bd2925" stroke-width="8"/>
+        <rect x="20" y="20" width="260" height="260" rx="12" fill="none" stroke="#262626" stroke-width="2" stroke-dasharray="8,4"/>
+        <image href="${escapedQrCodeImgSrc}" x="85" y="75" width="130" height="130"/>
+        
+        <!-- Center logo peaks overlay -->
+        <rect x="134" y="124" width="32" height="32" rx="4" fill="#ffffff" />
+        <g transform="translate(136, 126) scale(${28/120}, ${28/100})">
+          <path d="M10 70 L42 22 L65 52 L88 28 L110 70 Z" fill="url(#mGrad)" stroke="#1c1c1f" stroke-width="6" stroke-linejoin="round" />
+          <path d="M42 22 L52 42 M88 28 L98 48" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+          <path d="M18 86 C 48 86, 56 59, 96 59" stroke="#bd2925" stroke-width="12" stroke-linecap="round" />
+        </g>
+
+        <text x="150" y="52" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="4" text-anchor="middle">GRIDPASS</text>
+        <text x="150" y="230" fill="#1c1c1f" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${badgeTitle}</text>
+        <text x="150" y="255" fill="#bd2925" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
+      </svg>
+    `;
+  };
+
+  const handleDownloadSVG = () => {
+    if (!profile) return;
+    const tagId = profile.tagId || `GP-DRV-${profile.uid.slice(0, 6).toUpperCase()}`;
+    const svgContent = getBadgeSVGMarkup();
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gridpass-${tagId}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
+  const isProfileOwner = user && profile && (
+    user.uid === profile.uid ||
+    (isMock && user.email === 'marcus@enthusiast.com')
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -68,7 +161,8 @@ export default function DriverProfilePage() {
             instagram: 'marcus_stang_gt',
             youtube: 'MarcusTrackDays',
             tiktok: 'marcus_gt'
-          }
+          },
+          tagId: 'GP-MARCUS-ID'
         };
 
         const mockVehicles: Vehicle[] = [
@@ -106,7 +200,8 @@ export default function DriverProfilePage() {
             bio: uData.bio,
             avatar_url: uData.avatar_url,
             is_supporter: uData.is_supporter === true,
-            socials: uData.socials
+            socials: uData.socials,
+            tagId: uData.tagId || uData.tag_id || `GP-DRV-${uDoc.id.slice(0, 6).toUpperCase()}`
           };
 
           if (isMounted) setProfile(loadedProfile);
@@ -238,6 +333,30 @@ export default function DriverProfilePage() {
 
             </div>
 
+            {/* Shipped Stickers Callout (Chloe's Growth Hook) */}
+            <div className="p-6 rounded-3xl border border-red-500/10 bg-[#07070a] space-y-4 text-center shadow-lg">
+              <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-center gap-1">
+                <Sparkles className="w-4 h-4 text-yellow-500" /> WANT PHYSICAL STICKERS?
+              </h4>
+              <p className="text-[11px] text-neutral-400 leading-normal">
+                Generate and download a free high-res QR Badge to print your own weatherproof stickers, keyring tags, or display sheets.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setShowPrintModal(true)}
+                  className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
+                >
+                  <Printer className="w-4 h-4 text-white" /> PRINT FREE QR BADGE
+                </button>
+                <Link 
+                  href={`/build-tag?profileId=${profile.uid}&type=person`}
+                  className="w-full py-3 bg-transparent hover:bg-white/5 border border-white text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[44px]"
+                >
+                  CUSTOMIZE QR BADGE DESIGN
+                </Link>
+              </div>
+            </div>
+
           </div>
 
           {/* Right Column: Owned Vehicles grid */}
@@ -292,6 +411,47 @@ export default function DriverProfilePage() {
         </div>
 
       </div>
+
+      {showPrintModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="glass-card max-w-md w-full p-6 md:p-8 rounded-[2rem] border border-neutral-850 bg-neutral-950/95 space-y-6 text-center relative shadow-2xl">
+            <h3 className="text-lg font-black text-white uppercase tracking-wider">Your QR Badge</h3>
+            <p className="text-xs text-neutral-400">
+              Print this badge or download the high-resolution vector (SVG) to use on windshields, service books, or test rigs.
+            </p>
+            
+            {/* Live badge SVG preview */}
+            <div className="flex justify-center bg-[#060608] p-4 rounded-2xl border border-neutral-900 mx-auto w-fit">
+              <div 
+                className="w-64 h-64 [&>svg]:w-full [&>svg]:h-full"
+                dangerouslySetInnerHTML={{ __html: getBadgeSVGMarkup() }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={handlePrint}
+                className="py-3 bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 cursor-pointer"
+              >
+                Print Badge
+              </button>
+              <button
+                onClick={handleDownloadSVG}
+                className="py-3 bg-transparent hover:bg-white/5 border border-white text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              >
+                Download SVG
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowPrintModal(false)}
+              className="absolute top-4 right-4 text-neutral-500 hover:text-white text-sm font-bold p-1 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>

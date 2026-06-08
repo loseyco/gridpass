@@ -45,6 +45,10 @@ export default function Navbar() {
           <Logo className="w-7 h-7" textClassName="text-lg" />
         </Link>
         <div className="flex items-center gap-4 md:gap-6 text-sm font-medium">
+          <Link href="/explore" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
+            <Compass className="w-3.5 h-3.5 text-rose-500" />
+            <span>Explore</span>
+          </Link>
           <Link href="/guides" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5 text-rose-500" />
             <span>Guides</span>

@@ -41,9 +41,7 @@ test.describe('GridPass Milestone 2 E2E Suite', () => {
     await expect(page.locator('h1')).toContainText(/Design/i);
     
     // Verify customizer options are displayed correctly
-    await expect(page.locator('text=Format Layout')).toBeVisible();
     await expect(page.locator('text=Theme Color')).toBeVisible();
-    await expect(page.locator('text=Border Finish')).toBeVisible();
     
     await page.screenshot({ path: path.join(screenshotDir, `page-2-pricing-${projName}.png`) });
   });

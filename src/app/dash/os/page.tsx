@@ -342,6 +342,94 @@ function DashboardOSContent() {
     setCruiseActive(false);
   }, [preset]);
 
+  // Hardware Sensors State and Handlers
+  const [sensorsBound, setSensorsBound] = useState(false);
+  const geoWatchRef = useRef<number | null>(null);
+
+  const handleMotion = (event: DeviceMotionEvent) => {
+    const accel = event.acceleration;
+    if (!accel) return;
+
+    // Convert m/s^2 acceleration to G-Force
+    const gX = (accel.x || 0) / 9.80665;
+    const gY = (accel.y || 0) / 9.80665;
+
+    setState(prev => {
+      const currentGForce = Math.sqrt(gX * gX + gY * gY);
+      const maxG = Math.max(prev.maxGForce || 0, currentGForce);
+      return {
+        ...prev,
+        gForceX: parseFloat(gX.toFixed(2)),
+        gForceY: parseFloat(gY.toFixed(2)),
+        maxGForce: parseFloat(maxG.toFixed(2))
+      };
+    });
+  };
+
+  const toggleHardwareSensors = async () => {
+    triggerHaptic();
+    if (sensorsBound) {
+      if (geoWatchRef.current !== null) {
+        navigator.geolocation.clearWatch(geoWatchRef.current);
+        geoWatchRef.current = null;
+      }
+      window.removeEventListener('devicemotion', handleMotion);
+      setSensorsBound(false);
+      return;
+    }
+
+    try {
+      if ('geolocation' in navigator) {
+        geoWatchRef.current = navigator.geolocation.watchPosition(
+          (pos) => {
+            const speedMph = pos.coords.speed ? pos.coords.speed * 2.23694 : 0;
+            setState(prev => ({
+              ...prev,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              speed: speedMph,
+              heading: pos.coords.heading || prev.heading,
+              altitude: pos.coords.altitude || prev.altitude,
+              satellites: 12
+            }));
+          },
+          (err) => console.error("GPS error:", err),
+          { enableHighAccuracy: true }
+        );
+      }
+
+      if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+        const dme = DeviceMotionEvent as any;
+        if (typeof dme.requestPermission === 'function') {
+          const res = await dme.requestPermission();
+          if (res === 'granted') {
+            window.addEventListener('devicemotion', handleMotion);
+            setSensorsBound(true);
+          } else {
+            alert("Motion sensor permission denied.");
+          }
+        } else {
+          window.addEventListener('devicemotion', handleMotion);
+          setSensorsBound(true);
+        }
+      } else {
+        alert("Motion sensors not supported on this device/browser.");
+      }
+    } catch (e) {
+      console.error("Sensor binding failed:", e);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (geoWatchRef.current !== null) {
+        navigator.geolocation.clearWatch(geoWatchRef.current);
+      }
+      window.removeEventListener('devicemotion', handleMotion);
+    };
+  }, []);
+
   // Handle tactile feedback click
   const triggerHaptic = () => {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
@@ -417,6 +505,7 @@ function DashboardOSContent() {
     lastTimeRef.current = Date.now();
 
     cruiseIntervalRef.current = setInterval(() => {
+      if (sensorsBound) return;
       simTimeRef.current += 0.1;
       const now = Date.now();
       const deltaTime = (now - lastTimeRef.current) / 1000;
@@ -921,6 +1010,23 @@ function DashboardOSContent() {
                       ) : (
                         <><Moon className="w-3.5 h-3.5 text-blue-500" /> Dark</>
                       )}
+                    </button>
+                  </div>
+
+                  <div className="border-t border-neutral-900 pt-3 flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest">Device Sensors</span>
+                    <button
+                      onClick={() => {
+                        toggleHardwareSensors();
+                        setDropdownOpen(false);
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        sensorsBound 
+                          ? 'bg-[#00e676]/10 border-[#00e676] text-[#00e676]' 
+                          : 'bg-neutral-900 border-neutral-800 text-neutral-350 hover:text-white hover:border-neutral-700'
+                      }`}
+                    >
+                      {sensorsBound ? '📳 BOUND' : '🔌 CONNECT'}
                     </button>
                   </div>
 

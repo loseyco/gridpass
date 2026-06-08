@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 interface BuildLeaderboardItem {
+  id?: string;
   rank: number;
   tag_id: string;
   vehicle_info: string;
@@ -22,6 +23,7 @@ interface BuildLeaderboardItem {
 }
 
 interface SpotterLeaderboardItem {
+  id?: string;
   rank: number;
   display_name: string;
   email: string;
@@ -30,6 +32,7 @@ interface SpotterLeaderboardItem {
 }
 
 interface PartnerLeaderboardItem {
+  id?: string;
   rank: number;
   name: string;
   type: string;
@@ -62,24 +65,24 @@ export default function LeaderboardPage() {
         await new Promise(r => setTimeout(r, 100));
         
         const mockBuilds: BuildLeaderboardItem[] = [
-          { rank: 1, tag_id: 'GP-MARCUS-GT', vehicle_info: '2024 Ford Mustang GT', owner_name: 'Marcus Mustang', score: 48, is_supporter: true },
-          { rank: 2, tag_id: 'GP-FERRARI', vehicle_info: '2020 Ferrari 488 Pista', owner_name: 'Mike Mechanic', score: 36, is_supporter: false },
-          { rank: 3, tag_id: 'GP-BILLY-RIG', vehicle_info: '2020 Chevrolet Silverado', owner_name: 'Billy BigRig', score: 24, is_supporter: false },
-          { rank: 4, tag_id: 'GP-SARAH-CAR', vehicle_info: '2022 Subaru BRZ', owner_name: 'Sarah Spotter', score: 12, is_supporter: false }
+          { id: 'mock-v1', rank: 1, tag_id: 'GP-MARCUS-GT', vehicle_info: '2024 Ford Mustang GT', owner_name: 'Marcus Mustang', score: 48, is_supporter: true },
+          { id: 'mock-v2', rank: 2, tag_id: 'GP-FERRARI', vehicle_info: '2020 Ferrari 488 Pista', owner_name: 'Mike Mechanic', score: 36, is_supporter: false },
+          { id: 'mock-v3', rank: 3, tag_id: 'GP-BILLY-RIG', vehicle_info: '2020 Chevrolet Silverado', owner_name: 'Billy BigRig', score: 24, is_supporter: false },
+          { id: 'mock-v4', rank: 4, tag_id: 'GP-SARAH-CAR', vehicle_info: '2022 Subaru BRZ', owner_name: 'Sarah Spotter', score: 12, is_supporter: false }
         ];
 
         const mockSpotters: SpotterLeaderboardItem[] = [
-          { rank: 1, display_name: 'Sarah Spotter', email: 'sarah@spotter.com', score: 96, is_supporter: false },
-          { rank: 2, display_name: 'Ranger Dave', email: 'dave@badlandspark.com', score: 64, is_supporter: true },
-          { rank: 3, display_name: 'Mike Mechanic', email: 'mike@performancetuning.com', score: 32, is_supporter: false },
-          { rank: 4, display_name: 'Marcus Mustang', email: 'marcus@enthusiast.com', score: 16, is_supporter: true }
-        ];
+          { id: 'user-marcus-123', rank: 1, display_name: 'Sarah Spotter', email: 'sarah@spotter.com', score: 96, is_supporter: false },
+          { id: 'user-marcus-123', rank: 2, display_name: 'Ranger Dave', email: 'dave@badlandspark.com', score: 64, is_supporter: true },
+          { id: 'user-mike-789', rank: 3, display_name: 'Mike Mechanic', email: 'mike@performancetuning.com', score: 32, is_supporter: false },
+          { id: 'user-marcus-123', rank: 4, display_name: 'Marcus Mustang', email: 'marcus@enthusiast.com', score: 16, is_supporter: true }
+        ].map((item, idx) => ({ ...item, rank: idx + 1 }));
 
         const mockPartners: PartnerLeaderboardItem[] = [
-          { rank: 1, name: 'Monmouth Marine Ford & Boats', type: 'Dealership', score: 150, is_pro: true },
-          { rank: 2, name: 'Performance Tuning Shop', type: 'Service Center', score: 95, is_pro: true },
-          { rank: 3, name: 'Badlands Offroad Park', type: 'Racetrack', score: 80, is_pro: true },
-          { rank: 4, name: 'Englishtown Raceway', type: 'Racetrack', score: 45, is_pro: false }
+          { id: 'monmouth-marine-demo', rank: 1, name: 'Monmouth Marine Ford & Boats', type: 'Dealership', score: 150, is_pro: true },
+          { id: 'performance-tuning-demo', rank: 2, name: 'Performance Tuning Shop', type: 'Service Center', score: 95, is_pro: true },
+          { id: 'badlands-offroad-demo', rank: 3, name: 'Badlands Offroad Park', type: 'Racetrack', score: 80, is_pro: true },
+          { id: 'englishtown-raceway-demo', rank: 4, name: 'Englishtown Raceway', type: 'Racetrack', score: 45, is_pro: false }
         ];
 
         if (isMounted) {
@@ -98,6 +101,7 @@ export default function LeaderboardPage() {
         const buildList = vSnap.docs.map((docSnap, index) => {
           const d = docSnap.data();
           return {
+            id: docSnap.id,
             rank: index + 1,
             tag_id: d.tag_id || 'GP-TAG',
             vehicle_info: `${d.year || 2024} ${d.make || ''} ${d.model || ''}`,
@@ -112,6 +116,7 @@ export default function LeaderboardPage() {
         const spotterList = uSnap.docs.map((docSnap, index) => {
           const d = docSnap.data();
           return {
+            id: docSnap.id,
             rank: index + 1,
             display_name: d.display_name || d.name || 'Spotter',
             email: d.email || '',
@@ -125,6 +130,7 @@ export default function LeaderboardPage() {
         const partnerList = bSnap.docs.map((docSnap, index) => {
           const d = docSnap.data();
           return {
+            id: docSnap.id,
             rank: index + 1,
             name: d.name || 'Partner',
             type: d.type || 'dealership',
@@ -245,8 +251,10 @@ export default function LeaderboardPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest">{item.tag_id}</span>
-                    <h3 className="text-base font-black text-white uppercase tracking-tight">{item.vehicle_info}</h3>
+                    <Link href={`/v/${item.id || 'mock-v1'}`} className="hover:text-red-500 transition-colors">
+                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest block">{item.tag_id}</span>
+                      <h3 className="text-base font-black text-white uppercase tracking-tight">{item.vehicle_info}</h3>
+                    </Link>
                     <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Owner: {item.owner_name}</p>
                   </div>
 
@@ -275,8 +283,12 @@ export default function LeaderboardPage() {
                       {builds.slice(3).map((item) => (
                         <tr key={item.tag_id} className="hover:bg-neutral-900/10 transition-colors">
                           <td className="py-4 pr-4 font-mono font-black text-neutral-550">#{item.rank}</td>
-                          <td className="py-4 px-4 font-mono font-bold text-red-400">{item.tag_id}</td>
-                          <td className="py-4 px-4 font-bold text-white uppercase">{item.vehicle_info}</td>
+                          <td className="py-4 px-4 font-mono font-bold text-red-400">
+                            <Link href={`/v/${item.id || 'mock-v1'}`} className="hover:underline">{item.tag_id}</Link>
+                          </td>
+                          <td className="py-4 px-4 font-bold text-white uppercase">
+                            <Link href={`/v/${item.id || 'mock-v1'}`} className="hover:underline">{item.vehicle_info}</Link>
+                          </td>
                           <td className="py-4 px-4 uppercase text-neutral-400 font-semibold">{item.owner_name}</td>
                           <td className="py-4 pl-4 text-right font-mono font-black text-white">{item.score} spots</td>
                         </tr>
@@ -315,7 +327,9 @@ export default function LeaderboardPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="text-base font-black text-white uppercase tracking-tight">{item.display_name}</h3>
+                    <Link href={`/u/${item.id || 'user-marcus-123'}`} className="hover:text-red-500 transition-colors">
+                      <h3 className="text-base font-black text-white uppercase tracking-tight">{item.display_name}</h3>
+                    </Link>
                     <p className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">{item.email}</p>
                   </div>
 
@@ -342,7 +356,9 @@ export default function LeaderboardPage() {
                       {spotters.slice(3).map((item) => (
                         <tr key={item.email} className="hover:bg-neutral-900/10 transition-colors">
                           <td className="py-4 pr-4 font-mono font-black text-neutral-550">#{item.rank}</td>
-                          <td className="py-4 px-4 font-bold text-white uppercase">{item.display_name}</td>
+                          <td className="py-4 px-4 font-bold text-white uppercase">
+                            <Link href={`/u/${item.id || 'user-marcus-123'}`} className="hover:underline">{item.display_name}</Link>
+                          </td>
                           <td className="py-4 px-4 font-mono text-neutral-500 font-semibold">{item.email}</td>
                           <td className="py-4 pl-4 text-right font-mono font-black text-white">{item.score} spots</td>
                         </tr>
@@ -381,7 +397,9 @@ export default function LeaderboardPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="text-base font-black text-white uppercase tracking-tight leading-tight">{item.name}</h3>
+                    <Link href={`/b/${item.id || 'performance-tuning-demo'}`} className="hover:text-red-500 transition-colors">
+                      <h3 className="text-base font-black text-white uppercase tracking-tight leading-tight">{item.name}</h3>
+                    </Link>
                     <p className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">{item.type}</p>
                   </div>
 
@@ -408,7 +426,9 @@ export default function LeaderboardPage() {
                       {partners.slice(3).map((item) => (
                         <tr key={item.name} className="hover:bg-neutral-900/10 transition-colors">
                           <td className="py-4 pr-4 font-mono font-black text-neutral-550">#{item.rank}</td>
-                          <td className="py-4 px-4 font-bold text-white uppercase">{item.name}</td>
+                          <td className="py-4 px-4 font-bold text-white uppercase">
+                            <Link href={`/b/${item.id || 'performance-tuning-demo'}`} className="hover:underline">{item.name}</Link>
+                          </td>
                           <td className="py-4 px-4 font-mono text-neutral-500 font-semibold">{item.type}</td>
                           <td className="py-4 pl-4 text-right font-mono font-black text-white">{item.score} units</td>
                         </tr>

@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import BuildTagClient from './BuildTagClient';
 
 export const metadata: Metadata = {
@@ -27,5 +28,13 @@ export const metadata: Metadata = {
 };
 
 export default function BuildTagPage() {
-  return <BuildTagClient />;
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#060608] text-[#f4f4f7] flex items-center justify-center font-sans">
+        <div className="text-xs uppercase font-mono tracking-widest text-neutral-500 animate-pulse">Loading Tag Studio...</div>
+      </div>
+    }>
+      <BuildTagClient />
+    </Suspense>
+  );
 }

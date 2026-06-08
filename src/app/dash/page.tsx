@@ -240,6 +240,13 @@ export default function Dashboard() {
                   Original Supporter
                 </span>
               )}
+              <Link 
+                href={`/u/${user?.uid || ''}`}
+                className="inline-flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 hover:text-white text-neutral-400 text-[10px] font-bold uppercase px-3 py-1.5 rounded-xl tracking-wider transition-all"
+              >
+                <User className="w-3 h-3 text-rose-500" />
+                View Driver Passport
+              </Link>
             </div>
             <p className="text-sm text-neutral-400 max-w-xl font-medium leading-relaxed">
               {profile?.bio || 'No bio configured yet.'}
@@ -305,7 +312,13 @@ export default function Dashboard() {
                       <span className="text-[9px] font-mono uppercase bg-neutral-900 border border-neutral-800 text-neutral-400 px-2 py-0.5 rounded font-bold">
                         FREE PASSPORT
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap justify-end">
+                        <Link
+                          href={`/v/${v.id}`}
+                          className="text-[10px] font-bold bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 text-neutral-350 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 uppercase tracking-wider cursor-pointer"
+                        >
+                          <User className="w-3.5 h-3.5" /> Passport
+                        </Link>
                         <Link
                           href={`/dash/print?vehicleId=${v.id}`}
                           className="text-[10px] font-bold bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 text-neutral-350 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 uppercase tracking-wider cursor-pointer"

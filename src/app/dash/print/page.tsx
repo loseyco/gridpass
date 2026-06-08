@@ -188,59 +188,59 @@ function PrintPageContent() {
 
     if (layout === 'round') {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
-        <circle cx="150" cy="150" r="145" fill="#060608" stroke="${bColor}" stroke-width="8"/>
+        <circle cx="150" cy="150" r="145" fill="none" stroke="${bColor}" stroke-width="8"/>
         <circle cx="150" cy="150" r="130" fill="none" stroke="${accentColor}" stroke-width="2" stroke-dasharray="6,4"/>
         <image href="${qrCodeImgSrc}" x="85" y="75" width="130" height="130"/>
-        <text x="150" y="52" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="900" letter-spacing="3" text-anchor="middle">GRIDPASS</text>
-        <text x="150" y="235" fill="#ffffff" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
+        <text x="150" y="52" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="900" letter-spacing="3" text-anchor="middle">GRIDPASS</text>
+        <text x="150" y="235" fill="#1c1c1f" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
         <text x="150" y="260" fill="${accentColor}" font-family="sans-serif" font-size="9" font-weight="bold" letter-spacing="1" text-anchor="middle">SCAN FOR SPECS</text>
       </svg>`;
     } else if (layout === 'square') {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
-        <rect x="5" y="5" width="290" height="290" rx="20" fill="#060608" stroke="${bColor}" stroke-width="8"/>
+        <rect x="5" y="5" width="290" height="290" rx="20" fill="none" stroke="${bColor}" stroke-width="8"/>
         <rect x="20" y="20" width="260" height="260" rx="12" fill="none" stroke="${accentColor}" stroke-width="2" stroke-dasharray="8,4"/>
         <image href="${qrCodeImgSrc}" x="85" y="75" width="130" height="130"/>
-        <text x="150" y="52" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="4" text-anchor="middle">GRIDPASS</text>
-        <text x="150" y="230" fill="#ffffff" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${vYear} ${vMake} ${vModel}</text>
+        <text x="150" y="52" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="4" text-anchor="middle">GRIDPASS</text>
+        <text x="150" y="230" fill="#1c1c1f" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${vYear} ${vMake} ${vModel}</text>
         <text x="150" y="255" fill="${accentColor}" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
       </svg>`;
     } else if (layout === 'keytag') {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150" width="300" height="150">
-        <rect x="5" y="5" width="290" height="140" rx="10" fill="#060608" stroke="${bColor}" stroke-width="6"/>
+        <rect x="5" y="5" width="290" height="140" rx="10" fill="none" stroke="${bColor}" stroke-width="6"/>
         <image href="${qrCodeImgSrc}" x="20" y="25" width="100" height="100"/>
-        <text x="135" y="50" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="2">GRIDPASS</text>
-        <text x="135" y="80" fill="#ffffff" font-family="monospace" font-size="12" font-weight="bold">${tagId}</text>
+        <text x="135" y="50" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="2">GRIDPASS</text>
+        <text x="135" y="80" fill="#1c1c1f" font-family="monospace" font-size="12" font-weight="bold">${tagId}</text>
         <text x="135" y="110" fill="${accentColor}" font-family="sans-serif" font-size="10" font-weight="bold">${vYear} ${vMake} ${vModel}</text>
       </svg>`;
     } else if (layout === 'windshield') {
       const modsLines = includeMods ? customMods.split(',').slice(0, 4).map((m, idx) => {
-        return `<text x="80" y="${460 + idx * 30}" fill="#cccccc" font-family="sans-serif" font-size="14">• ${m.trim()}</text>`;
+        return `<text x="80" y="${460 + idx * 30}" fill="#1c1c1f" font-family="sans-serif" font-size="14">• ${m.trim()}</text>`;
       }).join('') : '';
 
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 792" width="612" height="792">
-        <rect x="15" y="15" width="582" height="762" rx="30" fill="#060608" stroke="${bColor}" stroke-width="12"/>
+        <rect x="15" y="15" width="582" height="762" rx="30" fill="none" stroke="${bColor}" stroke-width="12"/>
         <rect x="35" y="35" width="542" height="722" rx="20" fill="none" stroke="${accentColor}" stroke-width="3" stroke-dasharray="10,5"/>
         
-        <text x="306" y="90" fill="#ffffff" font-family="sans-serif" font-size="28" font-weight="900" letter-spacing="6" text-anchor="middle">GRIDPASS PASSPORT</text>
+        <text x="306" y="90" fill="#1c1c1f" font-family="sans-serif" font-size="28" font-weight="900" letter-spacing="6" text-anchor="middle">GRIDPASS PASSPORT</text>
         
-        <text x="306" y="160" fill="#ffffff" font-family="sans-serif" font-size="34" font-weight="900" text-anchor="middle">${vYear} ${vMake}</text>
+        <text x="306" y="160" fill="#1c1c1f" font-family="sans-serif" font-size="34" font-weight="900" text-anchor="middle">${vYear} ${vMake}</text>
         <text x="306" y="210" fill="${accentColor}" font-family="sans-serif" font-size="40" font-weight="900" text-anchor="middle">${vModel}</text>
         
-        <text x="80" y="280" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="bold">SPECIFICATIONS</text>
-        <line x1="80" y1="290" x2="532" y2="290" stroke="#333333" stroke-width="2"/>
+        <text x="80" y="280" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="bold">SPECIFICATIONS</text>
+        <line x1="80" y1="290" x2="532" y2="290" stroke="#cccccc" stroke-width="2"/>
         
-        <text x="80" y="320" fill="#888888" font-family="sans-serif" font-size="14">Engine / Motor:</text>
-        <text x="240" y="320" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${vEngine}</text>
+        <text x="80" y="320" fill="#737373" font-family="sans-serif" font-size="14">Engine / Motor:</text>
+        <text x="240" y="320" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${vEngine}</text>
         
-        <text x="80" y="355" fill="#888888" font-family="sans-serif" font-size="14">Output Power:</text>
-        <text x="240" y="355" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${vHp} HP</text>
+        <text x="80" y="355" fill="#737373" font-family="sans-serif" font-size="14">Output Power:</text>
+        <text x="240" y="355" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${vHp} HP</text>
         
-        <text x="80" y="390" fill="#888888" font-family="sans-serif" font-size="14">Registry Tag:</text>
+        <text x="80" y="390" fill="#737373" font-family="sans-serif" font-size="14">Registry Tag:</text>
         <text x="240" y="390" fill="${accentColor}" font-family="monospace" font-size="14" font-weight="bold">${tagId}</text>
 
         ${includeMods ? `
-        <text x="80" y="440" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="bold">MODIFICATIONS</text>
-        <line x1="80" y1="450" x2="532" y2="450" stroke="#333333" stroke-width="2"/>
+        <text x="80" y="440" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="bold">MODIFICATIONS</text>
+        <line x1="80" y1="450" x2="532" y2="450" stroke="#cccccc" stroke-width="2"/>
         ${modsLines}
         ` : ''}
 
@@ -293,7 +293,7 @@ function PrintPageContent() {
         @media print {
           body, html, main {
             background: white !important;
-            color: black !important;
+            color: #1c1c1f !important;
           }
           .no-print {
             display: none !important;
@@ -304,8 +304,8 @@ function PrintPageContent() {
             top: 0;
             width: 100% !important;
             height: 100% !important;
-            background: white !important;
-            color: black !important;
+            background: transparent !important;
+            color: #1c1c1f !important;
             padding: 0 !important;
             margin: 0 !important;
             display: flex !important;
@@ -314,13 +314,40 @@ function PrintPageContent() {
             z-index: 9999;
           }
           .print-sheet-card {
-            background: white !important;
-            color: black !important;
-            border: 4px solid black !important;
+            background: transparent !important;
+            color: #1c1c1f !important;
+            border: 4px solid #1c1c1f !important;
             box-shadow: none !important;
             width: 100% !important;
             max-width: none !important;
             height: auto !important;
+          }
+          .print-sheet-card text,
+          .print-sheet-card span,
+          .print-sheet-card h1,
+          .print-sheet-card h2,
+          .print-sheet-card h3,
+          .print-sheet-card h4,
+          .print-sheet-card li,
+          .print-sheet-card p,
+          .print-sheet-card div {
+            color: #1c1c1f !important;
+          }
+          .print-sheet-card .text-white {
+            color: #1c1c1f !important;
+          }
+          .print-sheet-card .text-neutral-300,
+          .print-sheet-card .text-neutral-400,
+          .print-sheet-card .text-neutral-500 {
+            color: #525252 !important;
+          }
+          .print-sheet-card .bg-neutral-950,
+          .print-sheet-card .bg-neutral-900 {
+            background: transparent !important;
+          }
+          .print-sheet-card .border-neutral-800,
+          .print-sheet-card .border-neutral-900 {
+            border-color: #cccccc !important;
           }
         }
       `}} />

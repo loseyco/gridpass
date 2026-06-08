@@ -39,4 +39,19 @@ test.describe('Gridpass Guides & Slalom Map E2E Suite', () => {
     // Verify the warning box and impeller warning details are displayed
     await expect(page.locator('text=PWC IMPELLER DESTRUCTION RISK')).toBeVisible();
   });
+
+  test('Life jacket and PFD guide loads correctly and shows child/pet details', async ({ page }) => {
+    // Navigate directly to the life jacket guide
+    await page.goto('/guides/watercraft-life-jacket-pfd-guide');
+
+    // Verify the title
+    await expect(page.locator('h1')).toContainText(/Life Jacket & PFD Guide/i);
+
+    // Verify gear section title is correct
+    await expect(page.locator('text=Top Rated Personal Flotation Devices')).toBeVisible();
+
+    // Verify specific rules list child and dog safety details
+    await expect(page.locator('text=Infant (under 30 lbs), Child (30-50 lbs), and Youth (50-90 lbs)')).toBeVisible();
+    await expect(page.locator('text=Dog & Pet Flotation Safety')).toBeVisible();
+  });
 });

@@ -734,5 +734,96 @@ Let me know if there are any UTV-friendly cabins or trails in Wisconsin I should
         desc: "Motorized travel on Cheese Country and county trails is strictly prohibited between the hours of 1:00 AM and 5:00 AM daily. Fines for curfew violations are steep."
       }
     ]
+  },
+  {
+    slug: 'watercraft-life-jacket-pfd-guide',
+    title: "Life Jacket & PFD Guide: Types, Sizing, Lifespan, & Pet Safety",
+    description: "Which PFD do you need for boating or jet skiing? Compare USCG types, neoprene vs nylon, life expectancy, infant/child weight sizing, and dog life jackets.",
+    category: 'watercraft',
+    readTime: '5 min read',
+    publishDate: 'June 8, 2026',
+    tags: ['Life Jackets', 'Safety Gear', 'PWC Rules', 'Pet Safety', 'Sizing'],
+    contributors: ['PJ Losey', 'Ranger Dave', 'CoastGuardSteve', 'PawsOnBoard'],
+    introduction: [
+      "Selecting the correct Personal Flotation Device (PFD)—more commonly known as a life jacket—is one of the most critical safety decisions you make before heading out on the water. U.S. Coast Guard (USCG) rules require at least one properly fitted, approved PFD for every person on board, and state laws (including Illinois and Wisconsin) make wearing them mandatory for all personal watercraft (PWC) riders, water skiers, and children.",
+      "But PFDs aren't one-size-fits-all. A high-speed jet ski crash requires a tough, snug neoprene vest, while calm kayak paddling calls for a flexible nylon design. Furthermore, our furry co-pilots need their own protection too—while dogs are often natural swimmers, current wakes, fatigue, and cold water can easily overwhelm them, making a dedicated dog life jacket with a strong rescue handle a lifesaver.",
+      "Below is the complete 2026 handbook for life jacket types, costs, lifespans, child vs. adult weight sizing, and pet safety rules to ensure your entire crew—including four-legged riders—stays legal and safe on the water."
+    ],
+    gearSectionTitle: "Top Rated Personal Flotation Devices",
+    gearSectionDesc: "Recommended life jackets for adults, children, and pets with standard USCG approvals.",
+    facebookTemplate: `Hey riders! Trying to figure out which life jacket you actually need for jet skiing vs. basic boating this summer? Or how to properly size a vest for your kids or dogs? I compiled a complete guide to PFD types, neoprene vs. nylon, life expectancy, and pet safety rules, dated for 2026.
+
+Read the Life Jacket & PFD Guide here: [LINK]
+
+Let me know what type of vest you prefer and if you have a favorite dog life jacket brand!`,
+    gear: [
+      {
+        name: "O'Neill Men's Superlite USCG Approved Life Vest",
+        asin: 'B003OTXTE2',
+        price: '$54.99',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Lightweight polyethylene foam vest with durable coated nylon shell. Highly adjustable and fully USCG approved Type III PFD.',
+        pros: ['Very light and comfortable', 'Highly adjustable straps', 'Quick-release buckles'],
+        cons: ['Nylon fabric can chafe bare skin on long rides'],
+        url: getAmazonSearchUrl("ONeill Mens Superlite USCG Approved Life Vest")
+      },
+      {
+        name: 'Stearns Child Classic Series Life Vest',
+        asin: 'B00364APOO',
+        price: '$24.99',
+        rating: 4.7,
+        badge: 'Best Value',
+        desc: 'USCG-approved life jacket designed for children weighing 30 to 50 lbs. Features durable nylon construction and adjustable straps.',
+        pros: ['Crotch strap prevents riding up', 'Affordable and durable', 'Bright, high-visibility colors'],
+        cons: ['No head-support collar grab handle on youth sizes'],
+        url: getAmazonSearchUrl("Stearns Child Classic Series Life Vest")
+      },
+      {
+        name: 'Outward Hound Granby Splash Dog Life Jacket',
+        asin: 'B013T5XDFO',
+        price: '$29.99',
+        rating: 4.8,
+        badge: 'Premium Choice',
+        desc: 'High-visibility dog life vest with dual rescue grab handles, belly support, and chest flotation pad to keep pet heads above water.',
+        pros: ['Dual top rescue handles for easy lifting', 'Neoprene chest support', 'Reflective piping'],
+        cons: ['Not Coast Guard approved (pets do not have USCG ratings)'],
+        url: getAmazonSearchUrl("Outward Hound Granby Splash Dog Life Jacket")
+      }
+    ],
+    rules: [
+      {
+        title: "Type III PFD: Flotation Aid (PWC Choice)",
+        desc: "The standard choice for active water sports. Extremely comfortable, designed for high impact, but will not turn an unconscious wearer face-up. MANDATORY style for PWC riders, waterskiers, and wakeboarders. Cost: $40 - $120."
+      },
+      {
+        title: "Type I & II PFDs: Offshore & Near-Shore",
+        desc: "Type I PFDs offer maximum buoyancy for rough ocean waters and are designed to turn an unconscious wearer face-up ($80 - $150). Type II PFDs are basic near-shore flotation aids for calm inland lakes ($20 - $50)."
+      },
+      {
+        title: "Type V PFD: Special Use Devices (Inflatables)",
+        desc: "Inflatables use CO2 cylinders to inflate upon immersion or manual pull. While highly comfortable and light, they are STRICTLY ILLEGAL on personal watercraft (PWCs) or for towed sports (skiing/tubing) in almost all states. Cost: $70 - $200."
+      },
+      {
+        title: "Neoprene vs. Nylon Materials",
+        desc: "Neoprene provides high flexibility, impact protection, and windbreaking warmth ($60 - $150). Nylon is budget-friendly ($20 - $45), fast-drying, lightweight, and highly adjustable across wider weight ranges."
+      },
+      {
+        title: "Kids & Youth Weight-Based Sizing",
+        desc: "Unlike adult PFDs (sized by chest measurements), children's PFDs are sized strictly by weight: Infant (under 30 lbs), Child (30-50 lbs), and Youth (50-90 lbs). Vests for children under 50 lbs must feature a crotch strap and a head support collar with a rescue grab handle."
+      },
+      {
+        title: "Life Expectancy & Maintenance",
+        desc: "Foam life jackets typically last 5 to 8 years depending on sun exposure and care. Replace immediately if you notice ripped fabric, broken buckles, or if the inner foam feels hardened or crushed. Never use a PFD as a seat cushion."
+      },
+      {
+        title: "Dog & Pet Flotation Safety",
+        desc: "U.S. Coast Guard certifications do not apply to pets, but life jackets are highly recommended. Always select a dog PFD in high-visibility colors with reflective piping and a sturdy, double-stitched grab handle on the back so you can easily pull your pet back on board."
+      },
+      {
+        title: "The Snug Fit Test",
+        desc: "To test fit, buckle the vest and have someone lift it by the shoulders. If the vest slides up past your nose or ears, it is too large and will float over your head in the water, rendering it useless."
+      }
+    ]
   }
 ];

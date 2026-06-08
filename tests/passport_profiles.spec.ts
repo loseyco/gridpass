@@ -1,10 +1,17 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
+  // Capture console messages
+  page.on('console', msg => console.log(`[BROWSER-CONSOLE] ${msg.type()}: ${msg.text()}`));
+  page.on('pageerror', err => console.error(`[BROWSER-ERROR] ${err.stack || err.message}`));
+
   // Inject mock environment variable
   await page.addInitScript(() => {
     (window as any).__PLAYWRIGHT_MOCK__ = true;
   });
+
+  page.on('console', msg => console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`));
+  page.on('pageerror', err => console.log(`[BROWSER ERROR] ${err.message}\n${err.stack}`));
 });
 
 test.describe('Passport Profiles Context-Aware E2E Suite', () => {
@@ -131,4 +138,82 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await expect(page.locator('text=marcus@enthusiast.com')).toBeVisible();
   });
 
+  test('Owner can modify passport settings, manage joint owners, compliance documents, and maintenance tasks', async ({ page }) => {
+    // Mock Marcus (Owner) login
+    await page.addInitScript(() => {
+      (window as any).__MOCK_USER__ = {
+        uid: "user-marcus-123",
+        email: "marcus@enthusiast.com",
+        is_supporter: true,
+        display_name: "Marcus Mustang"
+      };
+    });
+
+    await page.goto('/v/mock-v1');
+
+    // Click Settings tab
+    const settingsTab = page.locator('button:has-text("Settings")');
+    await expect(settingsTab).toBeVisible();
+    await settingsTab.click();
+
+    // Fill settings inputs
+    await page.fill('input[placeholder="2007"]', '2007');
+    await page.fill('input[placeholder="Sea-Doo"]', 'Sea-Doo');
+    await page.fill('input[placeholder="GTI SE"]', 'GTI SE');
+    await page.fill('input[placeholder="130"]', '130');
+    await page.fill('textarea[placeholder="Tell the story"]', 'We bought this 2007 Sea-Doo GTI SE to share our weekend adventures.');
+
+    // Add Co-owner
+    await page.click('button:has-text("+ Add Co-Owner")');
+    await page.locator('input[placeholder="Kristina"]').last().fill('Kristina');
+    await page.locator('input[placeholder="50%"]').last().fill('50/50');
+    await page.locator('input[placeholder="pjlosey-mock"]').last().fill('pjlosey-mock');
+
+    // Add Compliance Document
+    await page.click('button:has-text("+ Add Document")');
+    await page.locator('input[placeholder="Wisconsin Registration"]').last().fill('Wisconsin Registration');
+    
+    // Add Due Maintenance Item
+    await page.click('button:has-text("+ Add Task")');
+    await page.locator('input[placeholder="Jet Pump Inspection"]').last().fill('Jet Pump Inspection');
+    await page.locator('input[placeholder="Spark Plugs"]').last().fill('Spark Plugs');
+    await page.locator('input[placeholder="amazon.com"]').last().fill('https://www.amazon.com/s?k=Spark+Plugs');
+
+    // Save passport settings
+    await page.click('button:has-text("Save Passport Settings")');
+
+    // Verify redirects back to Specs & Mod List tab and shows the updated title/story
+    await expect(page.locator('text=2007 Sea-Doo')).toBeVisible();
+    await expect(page.locator('text=GTI SE')).toBeVisible();
+    await expect(page.locator('text=We bought this 2007 Sea-Doo GTI SE')).toBeVisible();
+
+    // Verify co-owner Kristina is visible
+    await expect(page.locator('a', { hasText: 'Kristina' })).toBeVisible();
+
+    // Verify Wisconsin Registration is visible
+    await expect(page.locator('text=Wisconsin Registration')).toBeVisible();
+
+    // Navigate to Service tab
+    const serviceTab = page.locator('button:has-text("Service Logbook")');
+    await expect(serviceTab).toBeVisible();
+    await serviceTab.click();
+
+    // Verify the new maintenance task is visible in the checklist
+    await expect(page.locator('text=Jet Pump Inspection')).toBeVisible();
+    await expect(page.locator('text=Spark Plugs')).toBeVisible();
+    await expect(page.locator('a:has-text("Buy Parts")').first()).toBeVisible();
+
+    // Toggle the checkbox for the Jet Pump Inspection task
+    const checkbox = page.locator('input[type="checkbox"]').first();
+    await expect(checkbox).toBeVisible();
+    
+    // Expect initially unchecked
+    await expect(checkbox).not.toBeChecked();
+    await checkbox.click();
+    
+    // Expect checked after toggling
+    await expect(checkbox).toBeChecked();
+  });
+
 });
+

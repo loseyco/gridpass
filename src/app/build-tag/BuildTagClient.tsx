@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Check, Shield, Sparkles, Cpu, Wrench, 
   ArrowRight, Landmark, CreditCard, ChevronDown, CheckCircle2, Car, Printer,
@@ -25,13 +25,15 @@ interface ProfileOption {
 export default function BuildTagClient() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryVehicleId = searchParams.get('vehicleId') || searchParams.get('id') || '';
 
   // Step state: 1 = Design, 2 = Destination/Target, 3 = Fulfillment (Print/Order), 4 = Success
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // --- Step 1: Design States ---
-  const [layout, setLayout] = useState<'round' | 'square' | 'keytag' | 'windshield'>('round');
+  const [layout, setLayout] = useState<'round' | 'square' | 'keytag' | 'windshield'>('square');
   const [accentColor, setAccentColor] = useState<string>('#bd2925');
   const [borderTheme, setBorderTheme] = useState<'carbon' | 'crimson' | 'gold'>('carbon');
   const [includeMods, setIncludeMods] = useState<boolean>(true);
@@ -48,6 +50,62 @@ export default function BuildTagClient() {
     }
     setTagId(`GP-DIY-${randomPart}`);
   }, []);
+
+  // Pre-load vehicle/profile specs from query param
+  useEffect(() => {
+    if (!queryVehicleId) return;
+
+    const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
+
+    const prefillData = async () => {
+      try {
+        if (isMock) {
+          setDestType('vehicle');
+          setVehicleYear('2007');
+          setVehicleMake('SEA DOO');
+          setVehicleModel('GTI SE 155');
+          setVehicleEngine('1.5L Rotax');
+          setVehicleHp('155');
+          setCustomMods('Solas Impeller, RIVA intake');
+          setTagId('GP-DIY-MOCKV1');
+          return;
+        }
+
+        const docRef = doc(db, 'vehicles', queryVehicleId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setDestType('vehicle');
+          setVehicleYear(String(data.year || '2024'));
+          setVehicleMake(data.make || '');
+          setVehicleModel(data.model || '');
+          setVehicleEngine(data.specs?.engine || data.engine || '');
+          setVehicleHp(String(data.specs?.hp || data.hp || ''));
+          
+          if (Array.isArray(data.mods)) {
+            setCustomMods(data.mods.join(', '));
+          } else if (data.mods) {
+            setCustomMods(data.mods);
+          }
+
+          if (data.tag_id) {
+            setTagId(data.tag_id);
+          }
+
+          if (user && user.uid === data.owner_id) {
+            setDestMode('pick');
+            setSelectedProfileId(queryVehicleId);
+          } else {
+            setDestMode('create');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to prefill builder data from URL:", err);
+      }
+    };
+
+    prefillData();
+  }, [queryVehicleId, user]);
 
   // --- Step 2: Destination States ---
   const [destType, setDestType] = useState<'vehicle' | 'person' | 'business'>('vehicle');
@@ -379,70 +437,70 @@ export default function BuildTagClient() {
     if (layout === 'round') {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
         ${logoDefs}
-        <circle cx="150" cy="150" r="145" fill="#060608" stroke="${bColor}" stroke-width="8"/>
+        <circle cx="150" cy="150" r="145" fill="none" stroke="${bColor}" stroke-width="8"/>
         <circle cx="150" cy="150" r="130" fill="none" stroke="${accentColor}" stroke-width="2" stroke-dasharray="6,4"/>
         <image href="${escapedQrCodeImgSrc}" x="85" y="75" width="130" height="130"/>
         ${miniLogoSvg(136, 126, 28, 28)}
-        <text x="150" y="52" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="900" letter-spacing="3" text-anchor="middle">GRIDPASS</text>
-        <text x="150" y="235" fill="#ffffff" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
+        <text x="150" y="52" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="900" letter-spacing="3" text-anchor="middle">GRIDPASS</text>
+        <text x="150" y="235" fill="#1c1c1f" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
         <text x="150" y="260" fill="${accentColor}" font-family="sans-serif" font-size="9" font-weight="bold" letter-spacing="1" text-anchor="middle">SCAN FOR SPECS</text>
       </svg>`;
     } else if (layout === 'square') {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
         ${logoDefs}
-        <rect x="5" y="5" width="290" height="290" rx="20" fill="#060608" stroke="${bColor}" stroke-width="8"/>
+        <rect x="5" y="5" width="290" height="290" rx="20" fill="none" stroke="${bColor}" stroke-width="8"/>
         <rect x="20" y="20" width="260" height="260" rx="12" fill="none" stroke="${accentColor}" stroke-width="2" stroke-dasharray="8,4"/>
         <image href="${escapedQrCodeImgSrc}" x="85" y="75" width="130" height="130"/>
         ${miniLogoSvg(136, 126, 28, 28)}
-        <text x="150" y="52" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="4" text-anchor="middle">GRIDPASS</text>
-        <text x="150" y="230" fill="#ffffff" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${titleVal} ${subtitleVal}</text>
+        <text x="150" y="52" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="4" text-anchor="middle">GRIDPASS</text>
+        <text x="150" y="230" fill="#1c1c1f" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${titleVal} ${subtitleVal}</text>
         <text x="150" y="255" fill="${accentColor}" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">${tagId}</text>
       </svg>`;
     } else if (layout === 'keytag') {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150" width="300" height="150">
         ${logoDefs}
-        <rect x="5" y="5" width="290" height="140" rx="10" fill="#060608" stroke="${bColor}" stroke-width="6"/>
+        <rect x="5" y="5" width="290" height="140" rx="10" fill="none" stroke="${bColor}" stroke-width="6"/>
         <image href="${escapedQrCodeImgSrc}" x="20" y="25" width="100" height="100"/>
         ${miniLogoSvg(59, 64, 22, 22)}
-        <text x="135" y="50" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="2">GRIDPASS</text>
-        <text x="135" y="80" fill="#monospace" font-size="12" font-weight="bold">${tagId}</text>
+        <text x="135" y="50" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="900" letter-spacing="2">GRIDPASS</text>
+        <text x="135" y="80" fill="#1c1c1f" font-family="monospace" font-size="12" font-weight="bold">${tagId}</text>
         <text x="135" y="110" fill="${accentColor}" font-family="sans-serif" font-size="10" font-weight="bold">${titleVal} ${subtitleVal}</text>
       </svg>`;
     } else if (layout === 'windshield') {
       const specLines = destType === 'vehicle' 
-        ? `<text x="80" y="320" fill="#888888" font-family="sans-serif" font-size="14">Engine / Motor:</text>
-           <text x="240" y="320" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedVehicleEngine}</text>
-           <text x="80" y="355" fill="#888888" font-family="sans-serif" font-size="14">Output Power:</text>
-           <text x="240" y="355" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedVehicleHp ? `${resolvedVehicleHp} HP` : 'N/A'}</text>`
+        ? `<text x="80" y="320" fill="#737373" font-family="sans-serif" font-size="14">Engine / Motor:</text>
+           <text x="240" y="320" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedVehicleEngine}</text>
+           <text x="80" y="355" fill="#737373" font-family="sans-serif" font-size="14">Output Power:</text>
+           <text x="240" y="355" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedVehicleHp ? `${resolvedVehicleHp} HP` : 'N/A'}</text>`
         : destType === 'person'
-        ? `<text x="80" y="320" fill="#888888" font-family="sans-serif" font-size="14">Driver Bio:</text>
-           <text x="240" y="320" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedPersonBio}</text>
-           <text x="80" y="355" fill="#888888" font-family="sans-serif" font-size="14">Instagram:</text>
-           <text x="240" y="355" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedPersonInstagram}</text>`
-        : `<text x="80" y="320" fill="#888888" font-family="sans-serif" font-size="14">Specialty:</text>
-           <text x="240" y="320" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedBusinessServices}</text>
-           <text x="80" y="355" fill="#888888" font-family="sans-serif" font-size="14">Location:</text>
-           <text x="240" y="355" fill="#ffffff" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedBusinessLocation}</text>`;
-
+        ? `<text x="80" y="320" fill="#737373" font-family="sans-serif" font-size="14">Driver Bio:</text>
+           <text x="240" y="320" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedPersonBio}</text>
+           <text x="80" y="355" fill="#737373" font-family="sans-serif" font-size="14">Instagram:</text>
+           <text x="240" y="355" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedPersonInstagram}</text>`
+        : `<text x="80" y="320" fill="#737373" font-family="sans-serif" font-size="14">Specialty:</text>
+           <text x="240" y="320" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedBusinessServices}</text>
+           <text x="80" y="355" fill="#737373" font-family="sans-serif" font-size="14">Location:</text>
+           <text x="240" y="355" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedBusinessLocation}</text>`;
+ 
       const modsLines = includeMods ? resolvedModsString.split(',').slice(0, 4).map((m: string, idx: number) => {
-        return `<text x="80" y="${460 + idx * 30}" fill="#cccccc" font-family="sans-serif" font-size="14">• ${m.trim()}</text>`;
+        return `<text x="80" y="${460 + idx * 30}" fill="#1c1c1f" font-family="sans-serif" font-size="14">• ${m.trim()}</text>`;
       }).join('') : '';
-
+ 
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 612 792" width="612" height="792">
         ${logoDefs}
-        <rect x="15" y="15" width="582" height="762" rx="30" fill="#060608" stroke="${bColor}" stroke-width="12"/>
+        <rect x="15" y="15" width="582" height="762" rx="30" fill="none" stroke="${bColor}" stroke-width="12"/>
         <rect x="35" y="35" width="542" height="722" rx="20" fill="none" stroke="${accentColor}" stroke-width="3" stroke-dasharray="10,5"/>
-        <text x="306" y="90" fill="#ffffff" font-family="sans-serif" font-size="28" font-weight="900" letter-spacing="6" text-anchor="middle">GRIDPASS PASSPORT</text>
-        <text x="306" y="160" fill="#ffffff" font-family="sans-serif" font-size="34" font-weight="900" text-anchor="middle">${titleVal}</text>
+        <text x="306" y="90" fill="#1c1c1f" font-family="sans-serif" font-size="28" font-weight="900" letter-spacing="6" text-anchor="middle">GRIDPASS PASSPORT</text>
+        <text x="306" y="160" fill="#1c1c1f" font-family="sans-serif" font-size="34" font-weight="900" text-anchor="middle">${titleVal}</text>
         <text x="306" y="210" fill="${accentColor}" font-family="sans-serif" font-size="40" font-weight="900" text-anchor="middle">${subtitleVal}</text>
-        <text x="80" y="280" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="bold">DETAILS</text>
-        <line x1="80" y1="290" x2="532" y2="290" stroke="#333333" stroke-width="2"/>
+        <text x="80" y="280" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="bold">DETAILS</text>
+        <line x1="80" y1="290" x2="532" y2="290" stroke="#cccccc" stroke-width="2"/>
         ${specLines}
-        <text x="80" y="390" fill="#888888" font-family="sans-serif" font-size="14">Registry Tag:</text>
+        <text x="80" y="390" fill="#737373" font-family="sans-serif" font-size="14">Registry Tag:</text>
         <text x="240" y="390" fill="${accentColor}" font-family="monospace" font-size="14" font-weight="bold">${tagId}</text>
         ${includeMods ? `
-        <text x="80" y="440" fill="#ffffff" font-family="sans-serif" font-size="16" font-weight="bold">MODIFICATIONS / BIO NOTES</text>
-        <line x1="80" y1="450" x2="532" y2="450" stroke="#333333" stroke-width="2"/>
+        <text x="80" y="440" fill="#1c1c1f" font-family="sans-serif" font-size="16" font-weight="bold">MODIFICATIONS / BIO NOTES</text>
+        <line x1="80" y1="450" x2="532" y2="450" stroke="#cccccc" stroke-width="2"/>
         ${modsLines}
         ` : ''}
         <rect x="80" y="660" width="280" height="50" rx="10" fill="${accentColor}"/>
@@ -601,7 +659,7 @@ export default function BuildTagClient() {
         @media print {
           body, html, main {
             background: white !important;
-            color: black !important;
+            color: #1c1c1f !important;
           }
           .no-print {
             display: none !important;
@@ -612,8 +670,8 @@ export default function BuildTagClient() {
             top: 0;
             width: 100% !important;
             height: 100% !important;
-            background: white !important;
-            color: black !important;
+            background: transparent !important;
+            color: #1c1c1f !important;
             padding: 0 !important;
             margin: 0 !important;
             display: flex !important;
@@ -622,13 +680,40 @@ export default function BuildTagClient() {
             z-index: 9999;
           }
           .print-sheet-card {
-            background: white !important;
-            color: black !important;
-            border: 4px solid black !important;
+            background: transparent !important;
+            color: #1c1c1f !important;
+            border: 4px solid #1c1c1f !important;
             box-shadow: none !important;
             width: 100% !important;
             max-width: none !important;
             height: auto !important;
+          }
+          .print-sheet-card text,
+          .print-sheet-card span,
+          .print-sheet-card h1,
+          .print-sheet-card h2,
+          .print-sheet-card h3,
+          .print-sheet-card h4,
+          .print-sheet-card li,
+          .print-sheet-card p,
+          .print-sheet-card div {
+            color: #1c1c1f !important;
+          }
+          .print-sheet-card .text-white {
+            color: #1c1c1f !important;
+          }
+          .print-sheet-card .text-neutral-300,
+          .print-sheet-card .text-neutral-400,
+          .print-sheet-card .text-neutral-500 {
+            color: #525252 !important;
+          }
+          .print-sheet-card .bg-neutral-950,
+          .print-sheet-card .bg-neutral-900 {
+            background: transparent !important;
+          }
+          .print-sheet-card .border-neutral-800,
+          .print-sheet-card .border-neutral-900 {
+            border-color: #cccccc !important;
           }
         }
       `}} />
@@ -686,38 +771,12 @@ export default function BuildTagClient() {
                   <span className="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest block">Step 01 / Decal Studio</span>
                   <h1 className="text-3xl font-black text-white uppercase tracking-tight">Design Your Tag</h1>
                   <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                    Customize the physical layout and coloring of your QR badge. Print it instantly on adhesive sticker paper or have professional weatherproof kits shipped to you.
+                    Select your accent color for the physical QR badge. Print it instantly or download the high-resolution vector file.
                   </p>
                 </div>
 
                 <div className="glass-card p-6 rounded-3xl space-y-6">
                   
-                  {/* Medium Selector */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Format Layout</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'round', label: '2.5" Round Label', desc: 'Avery 94500' },
-                        { id: 'square', label: '3"x3" Square Sheet', desc: 'Avery 22806' },
-                        { id: 'keytag', label: '1"x2" Keyring Badge', desc: 'Chassis Ring' },
-                        { id: 'windshield', label: 'Windshield Poster', desc: '8.5"x11" Show Sheet' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => setLayout(item.id as any)}
-                          className={`p-3 rounded-xl border text-left space-y-1 transition-all cursor-pointer ${
-                            layout === item.id 
-                              ? 'border-[#bd2925] bg-[#bd2925]/5 text-white' 
-                              : 'border-neutral-850 hover:border-neutral-700 bg-neutral-900/10 text-neutral-400'
-                          }`}
-                        >
-                          <span className="text-xs font-bold block uppercase">{item.label}</span>
-                          <span className="text-[9px] font-mono block opacity-60">{item.desc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Accent Color Picker */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -743,30 +802,6 @@ export default function BuildTagClient() {
                           </button>
                         ))}
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Border Theme */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Border Finish</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: 'carbon', label: 'Carbon' },
-                        { id: 'crimson', label: 'Crimson' },
-                        { id: 'gold', label: 'Gold Accent' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => handleBorderSelect(item.id as any)}
-                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                            borderTheme === item.id 
-                              ? 'border-neutral-100 bg-neutral-900 text-white' 
-                              : 'border-neutral-850 hover:border-neutral-700 bg-neutral-900/10 text-neutral-400'
-                          }`}
-                        >
-                          <span className="text-xs font-bold block uppercase">{item.label}</span>
-                        </button>
-                      ))}
                     </div>
                   </div>
 
@@ -1089,184 +1124,60 @@ export default function BuildTagClient() {
 
             {/* STEP 3: Fulfill */}
             {step === 3 && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+              <div className="space-y-6">
                 <div className="space-y-2">
-                  <span className="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest block">Step 03 / Print Options</span>
-                  <h1 className="text-3xl font-black text-white uppercase tracking-tight">Print & Fulfill</h1>
-                  <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                    Download print templates completely free to construct at home, or request professional weather-proof vinyl kits shipped to your door (no charge during beta).
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">Fulfillment Method</h3>
+                  <p className="text-xs text-neutral-450 leading-relaxed font-medium">
+                    Download print templates completely free to print on your own home printer, or generate high-res SVG vectors to display or order decals from any local/online printing service.
                   </p>
                 </div>
 
                 <div className="glass-card p-6 rounded-3xl space-y-6">
-                  
-                  {/* Fulfillment Tabs */}
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-950/80 border border-neutral-900 rounded-xl">
-                    <button
-                      onClick={() => setFulfillmentType('print')}
-                      className={`py-2.5 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                        fulfillmentType === 'print' 
-                          ? 'bg-neutral-900 text-white font-bold' 
-                          : 'text-neutral-500 hover:text-neutral-300'
-                      }`}
-                    >
-                      <Printer className="w-4 h-4" />
-                      <span className="text-[10px] uppercase font-mono tracking-wider">Free Print DIY</span>
-                    </button>
-                    <button
-                      onClick={() => setFulfillmentType('ship')}
-                      className={`py-2.5 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                        fulfillmentType === 'ship' 
-                          ? 'bg-neutral-900 text-white font-bold' 
-                          : 'text-neutral-500 hover:text-neutral-300'
-                      }`}
-                    >
-                      <Package className="w-4 h-4" />
-                      <span className="text-[10px] uppercase font-mono tracking-wider">Order Shipped Pack</span>
-                    </button>
-                  </div>
-
                   {/* Print Free Panel */}
-                  {fulfillmentType === 'print' && (
-                    <div className="space-y-4">
-                      <div className="bg-[#bd2925]/5 border border-[#bd2925]/15 p-4 rounded-2xl text-[11.5px] leading-relaxed text-neutral-300 space-y-2">
-                        <p className="font-bold text-white uppercase flex items-center gap-1 text-xs">
-                          <Sparkles className="w-4 h-4 text-yellow-500" /> Free Self-Print Studio
-                        </p>
-                        <p>
-                          You can download high-resolution vectors in SVG format matching standard Avery sticker paper or print the layout directly using your home color printer.
-                        </p>
-                        <ul className="list-disc pl-4 space-y-1 text-neutral-400 text-[11px]">
-                          <li>Fits standard Avery {layout === 'round' ? '94500 round label' : layout === 'square' ? '22806 square label' : 'paper'} sheets.</li>
-                          <li>Ideal for wind-shields, service books, or test rigs.</li>
-                          {user ? (
-                            <li>Your active profile will be instantly linked to this tag upon completion.</li>
-                          ) : (
-                            <li>Register a free account at the next step to activate and link your digital passport.</li>
-                          )}
-                        </ul>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handlePrint}
-                          className="flex-1 py-3 bg-white text-black hover:bg-neutral-200 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[50px]"
-                        >
-                          <Printer className="w-4 h-4" /> Print At Home
-                        </button>
-                        <button
-                          onClick={handleDownloadSVG}
-                          className="flex-1 py-3 bg-neutral-900 border border-neutral-800 hover:bg-neutral-850 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[50px]"
-                        >
-                          <Download className="w-4 h-4" /> Download SVG
-                        </button>
-                      </div>
-
-                      <div className="pt-2">
-                        <button
-                          onClick={handleFulfillSubmit}
-                          disabled={isSubmitting}
-                          className="btn-glow w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                        >
-                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Complete DIY Tag Setup <CheckCircle2 className="w-4 h-4" /></>}
-                        </button>
-                      </div>
+                  <div className="space-y-4">
+                    <div className="bg-[#bd2925]/5 border border-[#bd2925]/15 p-4 rounded-2xl text-[11.5px] leading-relaxed text-neutral-300 space-y-2">
+                      <p className="font-bold text-white uppercase flex items-center gap-1 text-xs">
+                        <Sparkles className="w-4 h-4 text-yellow-500" /> Free Self-Print Studio
+                      </p>
+                      <p>
+                        You can download high-resolution vectors in SVG format matching standard Avery sticker paper or print the layout directly using your home color printer.
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1 text-neutral-400 text-[11px]">
+                        <li>Fits standard 3"x3" square sticker sheets or Avery 22806 templates.</li>
+                        <li>Ideal for windshields, toolboxes, or keyrings.</li>
+                        {user ? (
+                          <li>Your active profile will be instantly linked to this tag upon completion.</li>
+                        ) : (
+                          <li>Register a free account at the next step to activate and link your digital passport.</li>
+                        )}
+                      </ul>
                     </div>
-                  )}
 
-                  {/* Print & Ship Panel */}
-                  {fulfillmentType === 'ship' && (
-                    <form onSubmit={handleFulfillSubmit} className="space-y-4">
-                      <div className="bg-emerald-500/5 border border-emerald-500/15 p-4 rounded-2xl text-[11.5px] leading-relaxed text-neutral-300">
-                        <p className="font-bold text-white uppercase text-xs">🚀 Beta Promo: 100% Free Shipping</p>
-                        <p className="mt-1">
-                          We will print and ship your custom vehicle QR kit (weatherproof adhesive vinyl badges + custom keyring tag) absolutely free during early platform rollout.
-                        </p>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Recipient Name</label>
-                          <input 
-                            type="text" 
-                            value={shippingName} 
-                            onChange={(e) => setShippingName(e.target.value)}
-                            className="w-full p-2.5 rounded-xl glass-input text-xs font-bold bg-neutral-900 border border-neutral-800 text-white" 
-                            placeholder="Marcus Rossi"
-                            required
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Fulfillment Notification Email</label>
-                          <input 
-                            type="email" 
-                            value={shippingEmail} 
-                            onChange={(e) => setShippingEmail(e.target.value)}
-                            className="w-full p-2.5 rounded-xl glass-input text-xs font-bold bg-neutral-900 border border-neutral-800 text-white" 
-                            placeholder="marcus@trackcrew.com"
-                            required
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Street Address</label>
-                          <input 
-                            type="text" 
-                            value={shippingAddress} 
-                            onChange={(e) => setShippingAddress(e.target.value)}
-                            className="w-full p-2.5 rounded-xl glass-input text-xs font-bold bg-neutral-900 border border-neutral-800 text-white" 
-                            placeholder="124 Pit Lane Way, Apt B"
-                            required
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">City</label>
-                            <input 
-                              type="text" 
-                              value={shippingCity} 
-                              onChange={(e) => setShippingCity(e.target.value)}
-                              className="w-full p-2.5 rounded-xl glass-input text-xs font-bold bg-neutral-900 border border-neutral-800 text-white" 
-                              placeholder="Seattle"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">State</label>
-                            <input 
-                              type="text" 
-                              value={shippingState} 
-                              onChange={(e) => setShippingState(e.target.value)}
-                              className="w-full p-2.5 rounded-xl glass-input text-xs font-bold bg-neutral-900 border border-neutral-800 text-white" 
-                              placeholder="WA"
-                              required
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">ZIP Code</label>
-                            <input 
-                              type="text" 
-                              value={shippingZip} 
-                              onChange={(e) => setShippingZip(e.target.value)}
-                              className="w-full p-2.5 rounded-xl glass-input text-xs font-bold bg-neutral-900 border border-neutral-800 text-white" 
-                              placeholder="98101"
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-
+                    <div className="flex gap-2">
                       <button
-                        type="submit"
+                        onClick={handlePrint}
+                        className="flex-1 py-3 bg-white text-black hover:bg-neutral-200 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[50px]"
+                      >
+                        <Printer className="w-4 h-4" /> Print At Home
+                      </button>
+                      <button
+                        onClick={handleDownloadSVG}
+                        className="flex-1 py-3 bg-neutral-900 border border-neutral-800 hover:bg-neutral-850 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[50px]"
+                      >
+                        <Download className="w-4 h-4" /> Download SVG
+                      </button>
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        onClick={handleFulfillSubmit}
                         disabled={isSubmitting}
                         className="btn-glow w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
                       >
-                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Fulfill & Ship Decal Pack <Package className="w-4 h-4" /></>}
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Complete DIY Tag Setup <CheckCircle2 className="w-4 h-4" /></>}
                       </button>
-                    </form>
-                  )}
+                    </div>
+                  </div>
 
                   <div className="flex gap-2 pt-2 border-t border-neutral-900/60">
                     <button
