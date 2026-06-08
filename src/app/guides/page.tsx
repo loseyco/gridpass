@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/api/og?title=Local%20Action%2520Guides&desc=Ultimate%20resource%20for%20boating%2C%2520off-roading%2C%20and%20trail%20regulations%20and%20launches.',
+        url: '/api/og?title=Local%20Action%20Guides&desc=Ultimate%20resource%20for%20boating%2C%20off-roading%2C%20and%20trail%20regulations%20and%20launches.',
         width: 1200,
         height: 630,
         alt: 'Local Action Guides & Handbooks | Gridpass',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Local Action Guides & Handbooks | Gridpass',
     description: 'Your ultimate resource for local boating, off-roading, and trail regulations, launches, and recommended gear.',
-    images: ['/api/og?title=Local%20Action%2520Guides&desc=Ultimate%20resource%20for%20boating%2C%2520off-roading%2C%20and%20trail%20regulations%20and%20launches.'],
+    images: ['/api/og?title=Local%20Action%20Guides&desc=Ultimate%20resource%20for%20boating%2C%20off-roading%2C%20and%20trail%20regulations%20and%20launches.'],
   }
 };
 

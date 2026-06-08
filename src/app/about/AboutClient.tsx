@@ -29,7 +29,7 @@ export default function AboutClient() {
         </h1>
 
         <p className="text-lg text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-          GridPass wasn&apos;t conceived in a vacuum. It was forged in the heat of IndyCar paddocks, engineered through high-voltage proton therapy networks, and designed in dealership service bays. Meet the founder.
+          Gridpass wasn&apos;t conceived in a vacuum. It was forged in the heat of professional IndyCar paddocks, engineered through high-precision medical networks, and designed in dealership service bays. Meet the founder.
         </p>
 
         <div className="flex justify-center pt-2">
@@ -50,14 +50,14 @@ export default function AboutClient() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
             <div className="md:col-span-4">
               <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest">The Mission</h3>
-              <h2 className="text-2xl font-black text-white tracking-tight mt-2">Why GridPass?</h2>
+              <h2 className="text-2xl font-black text-white tracking-tight mt-2">Why Gridpass?</h2>
             </div>
             <div className="md:col-span-8 text-neutral-400 text-base leading-relaxed space-y-4">
               <p>
                 In professional racing, every component has an immutable lifespan, a telemetry trail, and a verified setup map. Yet, outside the professional paddock, the grassroots motorsport and automotive ecosystems remain fragmented by paper records, manual entry forms, and legacy billing systems.
               </p>
               <p>
-                GridPass is built to close this loop. By transforming any physical vehicle—car, bike, boat, or plane—into a connected digital asset with a single, permanent windshield or roll-bar QR tag, we give grassroots tracks and local service centers access to the same calibre of digital architecture that professional race teams rely on.
+                Gridpass is built to close this loop. By transforming any physical vehicle—car, bike, boat, or plane—into a connected digital asset with a single, permanent windshield or roll-bar QR tag, we give grassroots tracks and local service centers access to the same calibre of digital architecture that professional race teams rely on.
               </p>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function AboutClient() {
                 </div>
                 <h3 className="text-lg font-bold text-white">IndyCar Telemetry</h3>
                 <p className="text-neutral-400 text-xs leading-relaxed">
-                  Calibrating and optimizing high-performance powerplants at **Honda Racing Corporation** and diagnosing chassis data in **Pi Toolbox** and **MoTeC** gives GridPass its telemetry-first structural DNA.
+                  Calibrating and optimizing high-performance engines at **Honda Racing Corporation** and diagnosing chassis data in professional telemetry software like **Pi Toolbox** and **MoTeC** gives Gridpass its telemetry-first structural DNA.
                 </p>
               </div>
 
@@ -88,7 +88,7 @@ export default function AboutClient() {
                 </div>
                 <h3 className="text-lg font-bold text-white">Mil-Spec Harnessing</h3>
                 <p className="text-neutral-400 text-xs leading-relaxed">
-                  Designing Mil-Spec wiring harnesses and programming ECUs/PDMs teaches absolute reliability. GridPass applies this bulletproof engineering to its digital security layers.
+                  Designing mil-spec wiring harnesses and programming engine controllers (ECUs & PDMs) teaches absolute reliability. Gridpass applies this bulletproof engineering to its digital security layers.
                 </p>
               </div>
 
@@ -98,7 +98,7 @@ export default function AboutClient() {
                 </div>
                 <h3 className="text-lg font-bold text-white">Service Operations</h3>
                 <p className="text-neutral-400 text-xs leading-relaxed">
-                  Managing dealership service bays and MECP custom systems informs our grassroots booking architecture. We know the day-to-day workflow friction local auto mechanics face.
+                  Managing dealership service bays and certified mobile electronics (MECP) systems informs our grassroots booking architecture. We know the day-to-day workflow friction local auto mechanics face.
                 </p>
               </div>
             </div>

@@ -135,7 +135,7 @@ test.describe('Sticker Customizer & Claims Onboarding E2E Suite', () => {
     await page.goto('/join?id=GP-MOCK-UNCLAIMED');
 
     // Verify pre-registered badge is active
-    await expect(page.locator('text=Pre-Registered Asset Detected')).toBeVisible();
+    await expect(page.locator('text=Pre-Registered Vehicle Detected')).toBeVisible();
     await expect(page.locator('text=Porsche 911 GT3 RS')).toBeVisible();
 
     // Claim ownership (mock user is signed in)

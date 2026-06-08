@@ -57,7 +57,7 @@ function JoinPageContent() {
                         await logEvent(
                             'info',
                             'scan',
-                            `GridPass QR tag [${tagId}] scanned. Resolved to ${targetType} (${targetId}). Location: ${lat ? 'Attributed' : 'Declined'}`,
+                            `Gridpass QR tag [${tagId}] scanned. Resolved to ${targetType} (${targetId}). Location: ${lat ? 'Attributed' : 'Declined'}`,
                             payload
                         );
                     } catch (err) {
@@ -218,7 +218,7 @@ function JoinPageContent() {
                     await logEvent(
                         'warn',
                         'scan',
-                        `Unclaimed physical GridPass QR tag hit: "${tagId}"`,
+                        `Unclaimed physical Gridpass QR tag hit: "${tagId}"`,
                         { tagId }
                     );
                 }
@@ -418,7 +418,7 @@ function JoinPageContent() {
                             <span className="font-mono text-xs text-neutral-500 uppercase tracking-widest">RESOLVE PORTAL</span>
                         </div>
                         <p className="text-neutral-400 text-sm max-w-xs mx-auto">
-                            Enter the code printed directly underneath your physical GridPass QR tag.
+                            Enter the code printed directly underneath your physical Gridpass QR tag.
                         </p>
                     </div>
 
@@ -470,7 +470,7 @@ function JoinPageContent() {
                 <div className="text-center space-y-4">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900/80 border border-neutral-800 text-xs font-semibold text-neutral-300">
                         <span className="flex h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
-                        {unclaimedVehicle && !showAlternativeClaim ? 'Pre-Registered Asset Detected' : 'Unassigned Tag Detected'}
+                        {unclaimedVehicle && !showAlternativeClaim ? 'Pre-Registered Vehicle Detected' : 'Unassigned Tag Detected'}
                     </div>
 
                     {/* Wi-Fi helper warning banner */}
@@ -502,7 +502,7 @@ function JoinPageContent() {
                                 <CarFront className="w-8 h-8" />
                             </div>
                             <div className="space-y-2">
-                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest bg-red-500/5 px-2.5 py-1 rounded-full border border-red-500/10">Active Wild Asset</span>
+                                <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest bg-red-500/5 px-2.5 py-1 rounded-full border border-red-500/10">Awaiting Owner</span>
                                 <h3 className="text-2xl font-black text-white uppercase tracking-tight pt-1">
                                     {unclaimedVehicle.year} {unclaimedVehicle.make} {unclaimedVehicle.model}
                                 </h3>
@@ -522,7 +522,7 @@ function JoinPageContent() {
                                         <LogIn className="w-4 h-4" /> Sign In to Claim Vehicle
                                     </Link>
                                     <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-                                        Requires a GridPass pilot membership
+                                        Requires a free Gridpass account
                                     </p>
                                 </div>
                             ) : (
@@ -569,7 +569,7 @@ function JoinPageContent() {
                                             <LogIn className="w-4 h-4" /> Sign In / Register to Claim
                                         </Link>
                                         <p className="text-[10px] text-neutral-505 font-bold uppercase tracking-wider">
-                                            Requires a free GridPass pilot membership
+                                            Requires a free Gridpass account
                                         </p>
                                     </div>
                                 </div>

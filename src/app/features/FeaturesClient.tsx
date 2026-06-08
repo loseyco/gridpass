@@ -61,11 +61,11 @@ export default function FeaturesClient() {
             <div className="space-y-2">
               <h3 className="text-lg font-black text-white group-hover:text-blue-405 transition-colors">Physical QR Window Stickers</h3>
               <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                High-durability holographic window decals that act as direct portal keys. Dynamic redirect parameters bridge physical cars to digital wallets, access portals, and maintenance logs in one scan.
+                High-durability holographic window decals that act as direct portal keys. Our smart QR stickers instantly connect physical cars to digital passports and maintenance logs in a single scan.
               </p>
             </div>
             <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider bg-neutral-950 border border-neutral-900 px-3 py-1 rounded-full w-fit">
-              Holographic Tag Bridging
+              Smart Decal Technology
             </div>
           </div>
 
@@ -94,15 +94,15 @@ export default function FeaturesClient() {
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-black text-white group-hover:text-purple-405 transition-colors flex items-center gap-2">
-                Stripe Connected split Payouts
+                Stripe Gate Ticket Payouts
                 <span className="text-[8px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded uppercase font-bold">Coming Soon</span>
               </h3>
               <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                Autonomous ticketing splits. Racetracks and trail networks deploy Stripe Express onboarding to sell Day Passes at the gate. Admissions automatically divide, sending 90% direct to the venue.
+                Instant ticket payouts. Racetracks and trail networks use simple Stripe onboarding to sell passes at the gate. Admissions payments are automatically sent directly to the venue's account.
               </p>
             </div>
             <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider bg-neutral-950 border border-neutral-900 px-3 py-1 rounded-full w-fit">
-              FinOps Automation
+              Automated Gate Payouts
             </div>
           </div>
 
@@ -113,13 +113,13 @@ export default function FeaturesClient() {
               <Cpu className="w-6 h-6" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-white group-hover:text-cyan-405 transition-colors">Automated Operations Engine</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-cyan-405 transition-colors">Automated Event Operations</h3>
               <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                Integrated operational automations working under your governance. Manages leads, logs system activity, checks checkout routers, audits databases, and publishes logs seamlessly.
+                Streamline your event coordination. The system automatically manages leads, handles attendee check-ins, verifies waiver statuses, and sends notifications.
               </p>
             </div>
             <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider bg-neutral-950 border border-neutral-900 px-3 py-1 rounded-full w-fit">
-              SaaS Automation
+              Event Operations
             </div>
           </div>
 
@@ -130,13 +130,13 @@ export default function FeaturesClient() {
               <MapPin className="w-6 h-6" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-white group-hover:text-indigo-405 transition-colors">Universal Scan Claim Onboarding</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-indigo-405 transition-colors">Simple Scan-to-Claim Setup</h3>
               <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                Highly responsive gate routes (/join). Detects geolocation telemetry, parses scanning browser agents, logs entries to central databases, and claim-links physical stickers inline with zero friction.
+                Link tags in seconds. Scan a tag to instantly connect it to your vehicle profile right from your mobile browser—no app downloads or complex registrations required.
               </p>
             </div>
             <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider bg-neutral-950 border border-neutral-900 px-3 py-1 rounded-full w-fit">
-              Dynamic UX Resolver
+              Instant Onboarding
             </div>
           </div>
 
@@ -147,13 +147,13 @@ export default function FeaturesClient() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-white group-hover:text-yellow-450 transition-colors">Continuous Feedback Dispatch</h3>
+              <h3 className="text-lg font-black text-white group-hover:text-yellow-450 transition-colors">Direct Feedback Portal</h3>
               <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                Integrated customer hotfix portal (/feedback). Direct writing to Firestore&apos;s task queue. The system platform automatically queues feedback, flags visual issues, and helps process updates quickly.
+                Direct line to the team. Submit feedback, request features, or report bugs right from your dashboard. Our system alerts developers instantly so issues get resolved quickly.
               </p>
             </div>
             <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider bg-neutral-950 border border-neutral-900 px-3 py-1 rounded-full w-fit">
-              Self-Healing Integration
+              Quick Updates
             </div>
           </div>
         </div>
@@ -315,21 +315,21 @@ export default function FeaturesClient() {
 
                   {/* Simulated terminal lines */}
                   <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-4 font-mono text-[9px] text-neutral-450 space-y-1.5 h-36 overflow-hidden flex flex-col justify-end">
-                    <div>[10:32:00] [SCHEDULER-CRON] ACTIVE System Iteration 6 heartbeats...</div>
-                    <div className="text-blue-400">[10:32:02] [LEAD-ENGINE] indexing leads.csv directory: verified 52 leads.</div>
-                    <div className="text-purple-400">[10:32:45] [DATASYNC] hard_check_rules: Auth cookie encryption rules verified secure.</div>
-                    <div className="text-cyan-400">[10:32:53] [COMPILER] compiling static paths for /features page...</div>
-                    <div className="text-emerald-400">[10:32:54] [SYS-MONITOR] Telemetry clean: 100% liveness check nominal.</div>
+                    <div>[10:32:00] [SCAN-ENGINE] Checking tag GP-TAG-911-GT3...</div>
+                    <div className="text-blue-400">[10:32:02] [RESOLVER] Tag linked to owner: PJ Losey (Jeep Wrangler)</div>
+                    <div className="text-purple-400">[10:32:45] [WAIVER-CHECK] Checked safety waiver: Approved & Signed.</div>
+                    <div className="text-cyan-400">[10:32:53] [GATEWAY-PASS] LAGUNA SECA: Gate pass scanned and validated.</div>
+                    <div className="text-emerald-400">[10:32:54] [SYSTEM-MONITOR] Network status: 100% uptime, active marshals: 4.</div>
                   </div>
 
                   {/* Active metric display */}
                   <div className="grid grid-cols-2 gap-3 text-center text-xs">
                     <div className="bg-neutral-900/50 p-2.5 border border-neutral-900 rounded-xl space-y-0.5">
-                      <span className="text-[8px] text-neutral-500 font-bold block uppercase tracking-wider">Active Services</span>
+                      <span className="text-[8px] text-neutral-500 font-bold block uppercase tracking-wider">Active Scans</span>
                       <span className="text-white font-black">4 Online</span>
                     </div>
                     <div className="bg-neutral-900/50 p-2.5 border border-neutral-900 rounded-xl space-y-0.5">
-                      <span className="text-[8px] text-neutral-500 font-bold block uppercase tracking-wider">Firestore dispatch</span>
+                      <span className="text-[8px] text-neutral-500 font-bold block uppercase tracking-wider">Errors Detected</span>
                       <span className="text-emerald-405 font-black">0 Errors</span>
                     </div>
                   </div>
@@ -428,7 +428,7 @@ export default function FeaturesClient() {
                 <div className="space-y-5">
                   <h4 className="text-2xl font-black text-white">Self-sustaining automated services</h4>
                   <p className="text-sm text-neutral-400 leading-relaxed font-medium">
-                    Gridpass is operated under your governance by specialized, cooperative automated processes, maintaining lead generation and system hotfixes on autopilot.
+                    Gridpass runs automated background sweeps to manage track entries, register drivers, and dispatch updates on autopilot.
                   </p>
                   
                   <div className="space-y-3.5">

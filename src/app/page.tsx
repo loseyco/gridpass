@@ -1,6 +1,31 @@
-'use client';
-
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Gridpass | One Tag. Your Vehicle's Passport.",
+  description: "Ditch the paper spec sheets at car meets. Create a dynamic digital passport for your vehicle for free. Build your modifications catalog, link your socials, and share your specs with a custom QR windshield decal.",
+  openGraph: {
+    title: "Gridpass | One Tag. Your Vehicle's Passport.",
+    description: "Create a dynamic digital passport for your vehicle for free. Build your modification logs, link socials, and share your specs with a custom QR window decal.",
+    url: "https://gridpass.app",
+    type: "website",
+    images: [
+      {
+        url: "/api/og?title=Gridpass&desc=One%20Tag.%20Your%20Vehicle%27s%20Passport.",
+        width: 1200,
+        height: 630,
+        alt: "Gridpass | One Tag. Your Vehicle's Passport.",
+      }
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Gridpass | One Tag. Your Vehicle's Passport.",
+    description: "Create a dynamic digital passport for your vehicle for free. Build your modification logs, link socials, and share your specs.",
+    images: ["/api/og?title=Gridpass&desc=One%20Tag.%20Your%20Vehicle%27s%20Passport."],
+  }
+};
+
 import { 
   ArrowRight, QrCode, ShieldCheck, Activity, Heart, 
   Milestone, Printer, Building2, Flag, Eye, Check, Sparkles, Car 
@@ -28,11 +53,11 @@ export default function Home() {
     },
     {
       phase: 'Phase 3',
-      title: 'Vehicle Passports & CRM Integration',
+      title: 'Vehicle Passports & Dealer Integration',
       status: 'Scheduled',
       icon: Building2,
       color: 'border-neutral-800 text-neutral-400 bg-neutral-900/20',
-      desc: 'Deploy dynamic context-aware profiles: Spectator Spec Sheets, Visitor scan maps showing where your car was scanned, and Dealership Sponsored Inventory feeds.'
+      desc: 'Deploy custom vehicle profiles: spectator spec sheets, scan maps showing where your car was spotted, and dealer inventory logs.'
     },
     {
       phase: 'Phase 4',
@@ -74,7 +99,7 @@ export default function Home() {
         </h1>
 
         <p className="text-lg sm:text-xl text-neutral-400 max-w-2xl mx-auto leading-relaxed font-medium">
-          Ditch the paper spec sheets at car meets. Create a dynamic digital passport for your vehicle completely free. Build your modifications catalog, link your socials, and tell your build's story. Place a custom QR decal on your windshield or helmet so spectators scan and view your specs instantly, while supporting racetracks and local detail shops log verified history directly onto your ledger.
+          Ditch the paper spec sheets at car meets. Create a dynamic digital passport for your vehicle completely free. Build your modifications catalog, link your socials, and tell your build's story. Place a custom QR decal on your windshield or helmet so spectators scan and view your specs instantly, while supporting racetracks and local detail shops log verified history directly onto your vehicle's digital logbook.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md">
@@ -132,7 +157,7 @@ export default function Home() {
               </div>
               <h3 className="text-lg font-black text-white uppercase">Become an Original Supporter</h3>
               <p className="text-xs text-neutral-405 leading-relaxed">
-                Gridpass is crowdfunded by the automotive community. Back us today to secure a lifetime **Original Supporter badge** and a **glowing gold avatar border** for your digital garage passport.
+                Gridpass is crowdfunded by the automotive community. Back us today to secure a lifetime **Original Supporter badge** and a **glowing gold avatar border** for your profile.
               </p>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-neutral-900/60">
@@ -406,9 +431,9 @@ export default function Home() {
                 For detail shops, racetracks, and dealerships. Write verified logs to customer builds, list inventory, or set up track day waiver check-ins.
               </p>
               <ul className="space-y-2 text-xs font-mono text-neutral-500 font-bold pt-2">
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Verified Service Logs Writer ($49/mo)</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Dealer Inventory Lead CRM ($29/mo)</li>
-                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Track waiver gate check-in splitting</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Verified Service Log Book ($49/mo)</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Dealer Inventory & Leads ($29/mo)</li>
+                <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Cashless waiver & gate setup</li>
               </ul>
             </div>
             <Link href="/build-tag" className="w-full py-3 border border-neutral-800 hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all text-center">
