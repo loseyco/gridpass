@@ -36,14 +36,14 @@ test.describe('GridPass Milestone 2 E2E Suite', () => {
     const projName = testInfo.project.name.toLowerCase().replace(/\s+/g, '_');
     await page.screenshot({ path: path.join(screenshotDir, `page-1-landing-${projName}.png`) });
 
-    // Navigate to Pricing
-    await page.goto('/pricing');
-    await expect(page.locator('h1')).toContainText(/Registry/i);
+    // Navigate to Build a Tag Wizard
+    await page.goto('/build-tag');
+    await expect(page.locator('h1')).toContainText(/Design/i);
     
-    // Verify plans are displayed correctly
-    await expect(page.locator('text=Free Vehicle Passport')).toBeVisible();
-    await expect(page.locator('text=Custom QR Decals & Avery Pack')).toBeVisible();
-    await expect(page.locator('text=Dealership & Track Gate Portal')).toBeVisible();
+    // Verify customizer options are displayed correctly
+    await expect(page.locator('text=Format Layout')).toBeVisible();
+    await expect(page.locator('text=Theme Color')).toBeVisible();
+    await expect(page.locator('text=Border Finish')).toBeVisible();
     
     await page.screenshot({ path: path.join(screenshotDir, `page-2-pricing-${projName}.png`) });
   });

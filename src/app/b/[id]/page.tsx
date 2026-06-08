@@ -12,6 +12,7 @@ import {
   Building2, MapPin, Compass, ShieldCheck, Mail, Link2, 
   CarFront, Loader2, ArrowLeft, Users, Table, Phone, ClipboardCheck 
 } from 'lucide-react';
+import { GUIDES } from '@/lib/data/guides';
 
 interface BusinessProfile {
   id: string;
@@ -193,6 +194,32 @@ export default function BusinessProfilePage() {
 
             if (isMounted) setCrmLeads(checkinsList);
           }
+        } else {
+          // Fallback: search all launch spots across all guides
+          const allLaunches = GUIDES.flatMap(g => g.launches || []);
+          const foundLaunchSpot = allLaunches.find(l => {
+            const slug = l.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            return slug === businessId;
+          });
+
+          if (foundLaunchSpot) {
+            const loadedBusiness: BusinessProfile = {
+              id: businessId,
+              name: foundLaunchSpot.name,
+              type: foundLaunchSpot.name.toLowerCase().includes('marina') ? 'service_center' : 'offroad_park',
+              tag_id: `GP-BIZ-${businessId.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)}`,
+              owner_id: '', // Unclaimed!
+              address: foundLaunchSpot.location,
+              website: foundLaunchSpot.mapsUrl.includes('query=') ? undefined : foundLaunchSpot.mapsUrl,
+              is_pro: false
+            };
+
+            if (isMounted) {
+              setBusiness(loadedBusiness);
+              setInventory([]);
+              setCrmLeads([]);
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to load business profile:", err);
@@ -239,12 +266,40 @@ export default function BusinessProfilePage() {
           <Link href="/dash" className="text-xs font-mono text-neutral-400 hover:text-white flex items-center gap-1.5 uppercase font-bold transition-colors">
             <ArrowLeft className="w-4 h-4" /> Garage Dashboard
           </Link>
-          {business.is_pro && (
+          {business.is_pro ? (
             <span className="text-[10px] font-mono font-bold bg-[#10b981]/5 border border-[#10b981]/25 text-[#10b981] px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[#10b981]" /> Gridpass Verified Partner
             </span>
-          )}
+          ) : !business.owner_id ? (
+            <span className="text-[10px] font-mono font-bold bg-yellow-500/5 border border-yellow-500/25 text-yellow-500 px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+              <Building2 className="w-3.5 h-3.5 text-yellow-500" /> Unclaimed Hub
+            </span>
+          ) : null}
         </div>
+
+        {/* Unclaimed Business Banner Callout */}
+        {!business.owner_id && (
+          <div className="glass-card p-6 rounded-[2rem] border border-yellow-500/20 bg-yellow-500/[0.01] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden text-left animate-in slide-in-from-top-4 duration-300">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/[0.02] to-transparent pointer-events-none" />
+            
+            <div className="space-y-1.5 relative z-10">
+              <h4 className="text-sm font-bold text-white uppercase flex items-center gap-1.5">
+                <span className="flex h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+                Is this your business?
+              </h4>
+              <p className="text-xs text-neutral-400 max-w-2xl leading-relaxed">
+                Claim this business passport page to update your launch fees, hours, and amenities. Plus, get direct warm sales lead check-ins when riders scan the QR code at your docks!
+              </p>
+            </div>
+            
+            <Link 
+              href={`/join?claim=${business.id}`}
+              className="btn-glow bg-yellow-500 hover:bg-yellow-400 text-black font-mono font-black text-xs uppercase tracking-wider py-3.5 px-6 rounded-xl transition-all self-stretch md:self-auto text-center shrink-0 z-10"
+            >
+              Claim This Page
+            </Link>
+          </div>
+        )}
 
         {/* Storefront Info Header */}
         <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/40 space-y-6">

@@ -14,7 +14,8 @@ export default function Footer() {
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-xs font-semibold text-neutral-500">
-          <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+          <Link href="/guides" className="hover:text-white transition-colors">Guides</Link>
+          <Link href="/build-tag" className="hover:text-white transition-colors">Build a Tag</Link>
           <Link href="/scan" className="hover:text-white transition-colors">Scan Tag</Link>
           <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
           <Link href="/dash" className="hover:text-white transition-colors">Digital Garage</Link>

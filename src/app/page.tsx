@@ -392,7 +392,7 @@ export default function Home() {
                 <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-yellow-500" /> Shipped Premium Vinyl Sticker Options</li>
               </ul>
             </div>
-            <Link href="/pricing" className="w-full btn-glow py-3 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all text-center">
+            <Link href="/build-tag" className="w-full btn-glow py-3 bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all text-center">
               Configure Decals
             </Link>
           </div>
@@ -411,7 +411,7 @@ export default function Home() {
                 <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-rose-500" /> Track waiver gate check-in splitting</li>
               </ul>
             </div>
-            <Link href="/pricing" className="w-full py-3 border border-neutral-800 hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all text-center">
+            <Link href="/build-tag" className="w-full py-3 border border-neutral-800 hover:bg-neutral-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all text-center">
               View B2B Features
             </Link>
           </div>

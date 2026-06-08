@@ -45,6 +45,12 @@ interface TelemetryState {
   isSwitch2On: boolean;
   launchLat: number | null;
   launchLng: number | null;
+  topSpeed: number;
+  zeroToSixty: number | null;
+  brakingDistance: number | null;
+  gForceX: number;
+  gForceY: number;
+  maxGForce: number;
 }
 
 export default function DashboardOSPage() {
@@ -68,7 +74,7 @@ function DashboardOSContent() {
   // Component States
   const [vehicle, setVehicle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [preset, setPreset] = useState<'marine' | 'trail' | 'moto'>('marine');
+  const [preset, setPreset] = useState<'marine' | 'trail' | 'moto' | 'street'>('marine');
   const [mode, setMode] = useState<'dark' | 'light'>('dark');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [firebaseSync, setFirebaseSync] = useState(false);
@@ -90,13 +96,41 @@ function DashboardOSContent() {
     isSwitch1On: false,
     isSwitch2On: false,
     launchLat: null,
-    launchLng: null
+    launchLng: null,
+    topSpeed: 0,
+    zeroToSixty: null,
+    brakingDistance: null,
+    gForceX: 0,
+    gForceY: 0,
+    maxGForce: 0
   });
 
   const [trail, setTrail] = useState<{ lat: number; lng: number }[]>([]);
   const [simDrawerOpen, setSimDrawerOpen] = useState(false);
   const [cruiseActive, setCruiseActive] = useState(false);
   const [systemTime, setSystemTime] = useState('12:00 PM');
+
+  // Drag Racing simulation states
+  const [dragStage, setDragStage] = useState<'idle' | 'staged' | 'countdown' | 'go' | 'foul' | 'braking' | 'complete'>('idle');
+  const [dragTree, setDragTree] = useState({
+    preStage: false,
+    stage: false,
+    y1: false,
+    y2: false,
+    y3: false,
+    green: false,
+    red: false
+  });
+  const [dragReactionTime, setDragReactionTime] = useState<number | null>(null);
+  const [dragZeroToSixty, setDragZeroToSixty] = useState<number | null>(null);
+  const [dragBrakingDistance, setDragBrakingDistance] = useState<number | null>(null);
+  const [dragFtsAccumulated, setDragFtsAccumulated] = useState<number>(0);
+  
+  // Ref variables for countdown timing
+  const dragGreenTimeRef = useRef<number | null>(null);
+  const dragLaunchTimeRef = useRef<number | null>(null);
+  const dragZeroToSixtyTimeRef = useRef<number | null>(null);
+  const dragBrakingStartTimeRef = useRef<number | null>(null);
 
   const cruiseIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const simTimeRef = useRef<number>(0);
@@ -126,6 +160,57 @@ function DashboardOSContent() {
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Drag Racing Countdown Lights Ticker Ticker
+  useEffect(() => {
+    if (dragStage !== 'countdown') return;
+
+    // Reset countdown sequence
+    setDragTree({
+      preStage: true,
+      stage: true,
+      y1: false,
+      y2: false,
+      y3: false,
+      green: false,
+      red: false
+    });
+
+    let active = true;
+    const timeouts: NodeJS.Timeout[] = [];
+
+    // Yellow 1 after 500ms
+    timeouts.push(setTimeout(() => {
+      if (active) setDragTree(t => ({ ...t, y1: true }));
+    }, 500));
+
+    // Yellow 2 after 1000ms
+    timeouts.push(setTimeout(() => {
+      if (active) setDragTree(t => ({ ...t, y2: true }));
+    }, 1000));
+
+    // Yellow 3 after 1500ms
+    timeouts.push(setTimeout(() => {
+      if (active) setDragTree(t => ({ ...t, y3: true }));
+    }, 1500));
+
+    // Green after 2000ms
+    timeouts.push(setTimeout(() => {
+      if (active) {
+        setDragTree(t => ({ ...t, green: true }));
+        setDragStage('go');
+        dragGreenTimeRef.current = Date.now();
+        dragLaunchTimeRef.current = null;
+        dragZeroToSixtyTimeRef.current = null;
+        dragBrakingStartTimeRef.current = null;
+      }
+    }, 2000));
+
+    return () => {
+      active = false;
+      timeouts.forEach(t => clearTimeout(t));
+    };
+  }, [dragStage]);
 
   // Fetch Vehicle Metadata & Auto-Detect Preset
   useEffect(() => {
@@ -164,6 +249,7 @@ function DashboardOSContent() {
           // Detect Preset keywords
           const make = (data.make || '').toLowerCase();
           const model = (data.model || '').toLowerCase();
+          let detectedPreset: 'marine' | 'trail' | 'moto' | 'street' = 'marine';
 
           if (
             make.includes('jeep') || make.includes('toyota') || make.includes('ford') ||
@@ -174,6 +260,7 @@ function DashboardOSContent() {
             model.includes('sxs') || model.includes('side-by-side') || model.includes('polaris') ||
             model.includes('can-am')
           ) {
+            detectedPreset = 'trail';
             setPreset('trail');
           } else if (
             make.includes('ktm') || make.includes('honda') || make.includes('bmw') ||
@@ -182,14 +269,36 @@ function DashboardOSContent() {
             model.includes('dual sport') || model.includes('dualsport') || model.includes('adventure') ||
             model.includes('dirt bike') || model.includes('dirtbike')
           ) {
-            setPreset('moto');
+            if (
+              model.includes('r1') || model.includes('r6') || model.includes('cbr') ||
+              model.includes('ninja') || model.includes('gsxr') || model.includes('gsx-r') ||
+              model.includes('gixxer') || model.includes('panigale') || model.includes('s1000rr') ||
+              model.includes('hayabusa')
+            ) {
+              detectedPreset = 'street';
+              setPreset('street');
+            } else {
+              detectedPreset = 'moto';
+              setPreset('moto');
+            }
+          } else if (
+            make.includes('porsche') || make.includes('ferrari') || make.includes('lamborghini') ||
+            make.includes('mclaren') || make.includes('corvette') || model.includes('mustang') ||
+            model.includes('camaro') || model.includes('miata') || model.includes('mx-5') ||
+            model.includes('supra') || model.includes('brz') || model.includes('gr86') ||
+            model.includes('s2000') || model.includes('nsx') || model.includes('gtr') ||
+            model.includes('type r') || model.includes('m3') || model.includes('m4') ||
+            model.includes('m5') || model.includes('rs6') || model.includes('r8')
+          ) {
+            detectedPreset = 'street';
+            setPreset('street');
           } else {
-            // Default to Marine for boats, yachts, and personal watercraft (Sea-Doo, Chaparral, etc.)
+            detectedPreset = 'marine';
             setPreset('marine');
           }
 
           // Center starting location based on preset
-          const startCoords = getPresetStartingCoords(make.includes('jeep') ? 'trail' : make.includes('ktm') ? 'moto' : 'marine');
+          const startCoords = getPresetStartingCoords(detectedPreset);
           setState(prev => ({
             ...prev,
             latitude: startCoords.lat,
@@ -212,9 +321,10 @@ function DashboardOSContent() {
   }, [user, vehicleId]);
 
   // Set default coordinates for simulation starting points
-  const getPresetStartingCoords = (targetPreset: 'marine' | 'trail' | 'moto') => {
+  const getPresetStartingCoords = (targetPreset: 'marine' | 'trail' | 'moto' | 'street') => {
     if (targetPreset === 'trail') return { lat: 34.3639, lng: -118.4312 }; // Mojave Trail Desert
     if (targetPreset === 'moto') return { lat: 39.7392, lng: -104.9903 }; // Denver mountain climbs
+    if (targetPreset === 'street') return { lat: 34.8732, lng: -118.2646 }; // Willow Springs Raceway
     return { lat: 25.7617, lng: -80.1918 }; // Miami bay
   };
 
@@ -310,9 +420,7 @@ function DashboardOSContent() {
       simTimeRef.current += 0.1;
       const now = Date.now();
       const deltaTime = (now - lastTimeRef.current) / 1000;
-      lastTimeRef.current = now;
-
-      setState(prev => {
+      lastTimeRef.current = now;      setState(prev => {
         let speed = prev.speed;
         let rpm = prev.rpm;
         let temp = prev.temp;
@@ -325,6 +433,8 @@ function DashboardOSContent() {
         let pitch = prev.pitch;
         let roll = prev.roll;
         let altitude = prev.altitude;
+        let gForceX = prev.gForceX;
+        let gForceY = prev.gForceY;
 
         const cycle = simTimeRef.current;
 
@@ -336,6 +446,8 @@ function DashboardOSContent() {
           temp = Math.min(185, 130 + Math.sin(cycle / 5) * 10);
           fuel = Math.max(5, prev.fuel - 0.01);
           battery = 13.6 + Math.sin(cycle * 3) * 0.1;
+          gForceX = (Math.random() - 0.5) * 0.1;
+          gForceY = (Math.random() - 0.5) * 0.1;
 
           // Float coordinates
           const milesPerSec = speed / 3600;
@@ -356,6 +468,8 @@ function DashboardOSContent() {
           temp = Math.min(225, 205 + Math.sin(cycle / 3) * 8);
           battery = 13.8 + Math.sin(cycle * 0.5) * 0.2;
           fuel = Math.max(12, prev.fuel - 0.005);
+          gForceX = (Math.random() - 0.5) * 0.2;
+          gForceY = (Math.random() - 0.5) * 0.15;
 
           // Simulated Pitch & Roll shifts
           pitch = Math.sin(cycle * 1.5) * 18 + Math.cos(cycle) * 4;
@@ -374,13 +488,15 @@ function DashboardOSContent() {
           // Rugged steering corrections
           heading = (heading + (Math.sin(cycle * 3) * 60) * deltaTime) % 360;
 
-        } else {
+        } else if (preset === 'moto') {
           // Moto mountain run
           speed = Math.max(25, Math.min(85, 50 + Math.sin(cycle) * 20));
           rpm = Math.max(3000, Math.min(8500, 5500 + Math.sin(cycle) * 2200));
           battery = 14.1 + Math.sin(cycle) * 0.1;
           temp = Math.min(195, 175 + Math.sin(cycle / 6) * 5);
           fuel = Math.max(8, prev.fuel - 0.015);
+          gForceX = Math.sin(cycle * 1.2) * 0.4;
+          gForceY = Math.cos(cycle * 1.5) * 0.2;
           
           // Climb in altitude
           altitude = Math.max(100, prev.altitude + Math.sin(cycle / 2) * 15);
@@ -396,6 +512,121 @@ function DashboardOSContent() {
           lng += dLng;
           distance += distMoved;
           heading = (heading + (Math.sin(cycle / 2) * 35) * deltaTime) % 360;
+
+        } else {
+          // Street performance preset
+          const startCoords = getPresetStartingCoords('street');
+          
+          if (dragStage !== 'idle') {
+            // Drag mode physics
+            if (dragStage === 'staged') {
+              speed = 0;
+              rpm = 4500 + Math.sin(cycle * 30) * 120;
+              gForceX = 0;
+              gForceY = 0;
+            } else if (dragStage === 'countdown') {
+              speed = 0;
+              rpm = 4500 + Math.sin(cycle * 30) * 120;
+              gForceX = 0;
+              gForceY = 0;
+            } else if (dragStage === 'go') {
+              if (dragLaunchTimeRef.current === null) {
+                // Reaction time delay (simulate driver reaction of 180ms)
+                const elapsedSinceGreen = dragGreenTimeRef.current ? Date.now() - dragGreenTimeRef.current : 0;
+                if (elapsedSinceGreen >= 180) {
+                  dragLaunchTimeRef.current = Date.now();
+                  const rt = (dragLaunchTimeRef.current - (dragGreenTimeRef.current || 0)) / 1000;
+                  setDragReactionTime(rt);
+                }
+              }
+
+              if (dragLaunchTimeRef.current !== null) {
+                // Accelerate hard
+                const accelRate = 26; // mph per second acceleration rate
+                speed = prev.speed + accelRate * deltaTime;
+                gForceY = 0.85 + Math.random() * 0.15;
+                gForceX = (Math.random() - 0.5) * 0.05;
+
+                // Gear shifting RPM emulation
+                if (speed < 30) {
+                  rpm = 4500 + (speed / 30) * 3000; // 1st gear
+                } else if (speed < 60) {
+                  rpm = 5000 + ((speed - 30) / 30) * 2500; // 2nd gear
+                } else if (speed < 90) {
+                  rpm = 5200 + ((speed - 60) / 30) * 2300; // 3rd gear
+                } else {
+                  rpm = 5500 + ((speed - 90) / 30) * 2000; // 4th gear
+                }
+
+                // 0-60 Time calculation
+                if (speed >= 60 && dragZeroToSixtyTimeRef.current === null) {
+                  dragZeroToSixtyTimeRef.current = Date.now();
+                  const z60 = (dragZeroToSixtyTimeRef.current - dragLaunchTimeRef.current) / 1000;
+                  setDragZeroToSixty(z60);
+                }
+
+                if (speed >= 110) {
+                  setDragStage('braking');
+                  dragBrakingStartTimeRef.current = Date.now();
+                }
+              } else {
+                speed = 0;
+                rpm = 4500;
+                gForceX = 0;
+                gForceY = 0;
+              }
+            } else if (dragStage === 'braking') {
+              // Brake extremely hard
+              const brakeRate = 38; // mph per second braking rate
+              speed = Math.max(0, prev.speed - brakeRate * deltaTime);
+              gForceY = -1.15 - Math.random() * 0.1;
+              gForceX = (Math.random() - 0.5) * 0.08;
+              rpm = 850 + (speed / 110) * 1200;
+
+              // Track 60-0 braking distance
+              if (prev.speed <= 60 && speed > 0) {
+                const feetInStep = prev.speed * 1.46667 * deltaTime;
+                setDragFtsAccumulated(f => f + feetInStep);
+              }
+
+              if (speed <= 0) {
+                setDragStage('complete');
+                setDragBrakingDistance(dragFtsAccumulated);
+              }
+            } else {
+              // Foul or Complete
+              speed = 0;
+              rpm = 850;
+              gForceX = 0;
+              gForceY = 0;
+            }
+          } else {
+            // Normal performance track cruise - Willow Springs loop
+            speed = Math.max(45, Math.min(145, 85 + Math.sin(cycle) * 35));
+            rpm = Math.max(2200, Math.min(7500, 4800 + Math.sin(cycle * 1.3) * 1800));
+            temp = Math.min(215, 192 + Math.sin(cycle / 4) * 6);
+            fuel = Math.max(2, prev.fuel - 0.008);
+            battery = 14.1 + Math.sin(cycle * 2) * 0.08;
+            gForceX = Math.sin(cycle * 1.5) * 0.5;
+            gForceY = Math.cos(cycle * 0.8) * 0.3;
+
+            // Track driving coordinates simulation
+            lat = startCoords.lat + Math.sin(cycle / 4) * 0.0035;
+            lng = startCoords.lng + Math.cos(cycle / 4) * 0.0045;
+            heading = (heading + 60 * deltaTime) % 360;
+          }
+
+          // Float coordinates (if in drag mode, keep moving forward straight)
+          if (dragStage === 'go' || dragStage === 'braking') {
+            const milesPerSec = speed / 3600;
+            const distMoved = milesPerSec * deltaTime;
+            const headingRad = (heading * Math.PI) / 180;
+            const dLat = (distMoved * Math.cos(headingRad)) / 69;
+            const dLng = (distMoved * Math.sin(headingRad)) / (69 * Math.cos((lat * Math.PI) / 180));
+            lat += dLat;
+            lng += dLng;
+            distance += distMoved;
+          }
         }
 
         // Periodically append trail breadcrumbs
@@ -406,6 +637,8 @@ function DashboardOSContent() {
             return newTrail;
           });
         }
+
+        const newTopSpeed = Math.max(prev.topSpeed || 0, speed);
 
         return {
           ...prev,
@@ -420,7 +653,13 @@ function DashboardOSContent() {
           tripDistance: distance,
           pitch,
           roll,
-          altitude
+          altitude,
+          topSpeed: newTopSpeed,
+          zeroToSixty: dragZeroToSixty !== null ? dragZeroToSixty : prev.zeroToSixty,
+          brakingDistance: dragBrakingDistance !== null ? dragBrakingDistance : prev.brakingDistance,
+          gForceX,
+          gForceY,
+          maxGForce: Math.max(prev.maxGForce || 0, Math.sqrt(gForceX * gForceX + gForceY * gForceY))
         };
       });
     }, 100);
@@ -457,6 +696,17 @@ function DashboardOSContent() {
           switch2: 'AUX LIGHTS',
           homeLabel: 'START POINT',
           homeEmoji: '🏍️'
+        };
+      case 'street':
+        return {
+          name: 'PERFORMANCE OS',
+          badge: 'Street Track Mode',
+          colorClass: 'text-[#00e676]',
+          accentRgb: '0, 230, 118',
+          switch1: 'SPORT MODE',
+          switch2: 'LAUNCH CONTROL',
+          homeLabel: 'STARTING GRID',
+          homeEmoji: '🏁'
         };
       default:
         return {
@@ -639,12 +889,12 @@ function DashboardOSContent() {
                 <div className="absolute right-0 mt-2 w-64 p-4 rounded-2xl border border-neutral-850 bg-[#060608]/95 backdrop-blur-xl shadow-2xl z-50 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="space-y-1.5">
                     <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest block">Select Preset Preset</span>
-                    <div className="grid grid-cols-3 gap-1">
-                      {(['marine', 'trail', 'moto'] as const).map(p => (
+                    <div className="grid grid-cols-4 gap-1">
+                      {(['marine', 'trail', 'moto', 'street'] as const).map(p => (
                         <button
                           key={p}
                           onClick={() => { triggerHaptic(); setPreset(p); setDropdownOpen(false); }}
-                          className={`py-1.5 rounded-lg border text-[10px] font-black uppercase transition-all cursor-pointer ${
+                          className={`py-1.5 rounded-lg border text-[9px] font-black uppercase transition-all cursor-pointer ${
                             preset === p 
                               ? 'bg-neutral-900 border-[#bd2925] text-white' 
                               : 'bg-neutral-950 border-neutral-900 text-neutral-500 hover:text-white hover:border-neutral-800'
@@ -707,7 +957,7 @@ function DashboardOSContent() {
                     className="fill-none stroke-[8] stroke-linecap-round transition-all duration-150 gauge-fill" 
                     stroke="var(--accent)"
                     strokeDasharray="264"
-                    strokeDashoffset={drawCircularGauge(state.speed, 80)}
+                    strokeDashoffset={drawCircularGauge(state.speed, preset === 'street' ? 180 : preset === 'trail' ? 25 : 80)}
                     cx="50" cy="50" r="42"
                   ></circle>
                 </svg>
@@ -780,6 +1030,37 @@ function DashboardOSContent() {
                 </div>
                 <span className="text-[11px] font-black tracking-widest text-neutral-500 uppercase mt-4 gauge-title">COMPASS</span>
               </div>
+            ) : preset === 'street' ? (
+              /* G-FORCE METER WIDGET */
+              <div className={`glass-card p-6 rounded-[2rem] border border-neutral-900 bg-neutral-950/40 aspect-square flex flex-col items-center justify-center relative overflow-hidden ${mode === 'light' ? 'light-mode-card' : ''}`}>
+                <div className="relative w-full max-w-[160px] aspect-square flex items-center justify-center">
+                  <svg className="w-full h-full absolute" viewBox="0 0 100 100">
+                    <circle className="fill-none stroke-neutral-900/60 stroke-[1]" cx="50" cy="50" r="14"></circle>
+                    <circle className="fill-none stroke-neutral-900/60 stroke-[1]" cx="50" cy="50" r="28"></circle>
+                    <circle className="fill-none stroke-neutral-900/60 stroke-[1]" cx="50" cy="50" r="42"></circle>
+                    <line x1="50" y1="8" x2="50" y2="92" className="stroke-neutral-900/60 stroke-[1]"></line>
+                    <line x1="8" y1="50" x2="92" y2="50" className="stroke-neutral-900/60 stroke-[1]"></line>
+                    
+                    <text x="50" y="24" fill="#52525b" fontSize="6" fontWeight="bold" textAnchor="middle">1.0G</text>
+                    <text x="50" y="38" fill="#52525b" fontSize="6" fontWeight="bold" textAnchor="middle">0.5G</text>
+                    
+                    {/* Live G-force indicator dot */}
+                    <circle 
+                      cx={50 + state.gForceX * 28} 
+                      cy={50 - state.gForceY * 28} 
+                      r="4.5" 
+                      fill="var(--accent)"
+                      style={{ filter: 'drop-shadow(0 0 4px var(--accent))' }}
+                      className="transition-all duration-75"
+                    ></circle>
+                  </svg>
+                  <div className="absolute bottom-2 flex justify-between gap-6 text-[10px] font-mono font-bold text-neutral-500">
+                    <span>LAT: <span className={mode === 'light' ? 'text-black font-bold' : 'text-white font-bold'}>{state.gForceX.toFixed(2)}G</span></span>
+                    <span>LON: <span className={mode === 'light' ? 'text-black font-bold' : 'text-white font-bold'}>{state.gForceY.toFixed(2)}G</span></span>
+                  </div>
+                </div>
+                <span className="text-[11px] font-black tracking-widest text-neutral-500 uppercase mt-4 gauge-title">G-FORCE METER</span>
+              </div>
             ) : (
               /* TACHOMETER WIDGET (MARINE) */
               <div className={`glass-card p-6 rounded-[2rem] border border-neutral-900 bg-neutral-950/40 aspect-square flex flex-col items-center justify-center relative overflow-hidden ${mode === 'light' ? 'light-mode-card' : ''}`}>
@@ -846,6 +1127,45 @@ function DashboardOSContent() {
                 </div>
                 <span className="text-[11px] font-black tracking-widest text-neutral-500 uppercase mt-4 gauge-title">ALTIMETER</span>
               </div>
+            ) : preset === 'street' ? (
+              /* PERFORMANCE METRICS CARD */
+              <div className={`glass-card p-6 rounded-[2rem] border border-neutral-900 bg-neutral-950/40 aspect-square flex flex-col justify-between relative overflow-hidden ${mode === 'light' ? 'light-mode-card' : ''}`}>
+                <h3 className="text-xs font-black tracking-widest text-neutral-500 uppercase">PERFORMANCE STATS</h3>
+                
+                <div className="flex-1 flex flex-col justify-center gap-3.5 my-2">
+                  <div className="flex justify-between items-center border-b border-neutral-900/50 pb-1.5 font-mono">
+                    <span className="text-[10px] text-neutral-500 font-bold uppercase">Top Speed</span>
+                    <span className={mode === 'light' ? 'text-black font-extrabold text-sm' : 'text-white font-extrabold text-sm'}>
+                      {Math.round(state.topSpeed)} <span className="text-[10px] text-neutral-500 font-bold">MPH</span>
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b border-neutral-900/50 pb-1.5 font-mono">
+                    <span className="text-[10px] text-neutral-500 font-bold uppercase">0-60 MPH</span>
+                    <span className={mode === 'light' ? 'text-black font-extrabold text-sm' : 'text-white font-extrabold text-sm'}>
+                      {dragZeroToSixty !== null ? `${dragZeroToSixty.toFixed(2)}s` : state.zeroToSixty !== null ? `${state.zeroToSixty.toFixed(2)}s` : '--'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b border-neutral-900/50 pb-1.5 font-mono">
+                    <span className="text-[10px] text-neutral-500 font-bold uppercase">60-0 Brake</span>
+                    <span className={mode === 'light' ? 'text-black font-extrabold text-sm' : 'text-white font-extrabold text-sm'}>
+                      {dragBrakingDistance !== null ? `${Math.round(dragBrakingDistance)} ft` : state.brakingDistance !== null ? `${Math.round(state.brakingDistance)} ft` : '--'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center font-mono">
+                    <span className="text-[10px] text-neutral-500 font-bold uppercase">Reaction RT</span>
+                    <span className={mode === 'light' ? 'text-black font-extrabold text-sm' : 'text-white font-extrabold text-sm'}>
+                      {dragReactionTime !== null ? `${dragReactionTime.toFixed(3)}s` : '--'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[9px] font-mono text-neutral-500 font-bold text-center uppercase tracking-wider">
+                  Peak G-Force: <span className="text-accent-color font-black">{state.maxGForce.toFixed(2)}G</span>
+                </div>
+              </div>
             ) : (
               /* COOLANT TEMP GAUGE (MARINE) */
               <div className={`glass-card p-6 rounded-[2rem] border border-neutral-900 bg-neutral-950/40 aspect-square flex flex-col items-center justify-center relative overflow-hidden ${mode === 'light' ? 'light-mode-card' : ''}`}>
@@ -911,6 +1231,102 @@ function DashboardOSContent() {
                   </div>
                 </div>
                 <span className="text-[11px] font-black tracking-widest text-neutral-500 uppercase mt-4 gauge-title">TACHOMETER</span>
+              </div>
+            ) : preset === 'street' ? (
+              /* DRAG STRIP CHRISTMAS TREE WIDGET */
+              <div className={`glass-card p-4 rounded-[2rem] border border-neutral-900 bg-neutral-950/40 aspect-square flex flex-col justify-between relative overflow-hidden ${mode === 'light' ? 'light-mode-card' : ''}`}>
+                <div className="flex justify-between items-center border-b border-neutral-900/40 pb-2">
+                  <h3 className="text-[10px] font-black tracking-widest text-neutral-500 uppercase">DRAG STRIP TREE</h3>
+                  <span className="text-[9px] font-mono font-bold text-accent-color px-1.5 py-0.5 rounded bg-zinc-900 border border-neutral-850 uppercase">
+                    {dragStage}
+                  </span>
+                </div>
+
+                {/* Staging Lights Panel */}
+                <div className="flex-1 flex flex-col items-center justify-center gap-2 my-2">
+                  {/* Pre-Stage and Stage LEDs */}
+                  <div className="flex gap-4 mb-1">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[7px] font-mono font-bold text-neutral-500 uppercase">Pre-Stage</span>
+                      <div className={`w-4 h-4 rounded-full border border-neutral-800 transition-all ${
+                        dragTree.preStage ? 'bg-amber-500 shadow-md shadow-amber-500/70 border-amber-400' : 'bg-zinc-900'
+                      }`} />
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-[7px] font-mono font-bold text-neutral-500 uppercase">Stage</span>
+                      <div className={`w-4 h-4 rounded-full border border-neutral-800 transition-all ${
+                        dragTree.stage ? 'bg-amber-500 shadow-md shadow-amber-500/70 border-amber-400' : 'bg-zinc-900'
+                      }`} />
+                    </div>
+                  </div>
+
+                  {/* Christmas Tree Countdown Lights Column */}
+                  <div className="flex flex-col items-center gap-1.5 bg-black/45 p-2 rounded-xl border border-neutral-900/50 w-24">
+                    {/* Yellow 1 */}
+                    <div className={`w-5.5 h-5.5 rounded-full border border-neutral-900 transition-all ${
+                      dragTree.y1 ? 'bg-yellow-500 shadow-md shadow-yellow-500/70 border-yellow-400' : 'bg-zinc-800'
+                    }`} />
+                    {/* Yellow 2 */}
+                    <div className={`w-5.5 h-5.5 rounded-full border border-neutral-900 transition-all ${
+                      dragTree.y2 ? 'bg-yellow-500 shadow-md shadow-yellow-500/70 border-yellow-400' : 'bg-zinc-800'
+                    }`} />
+                    {/* Yellow 3 */}
+                    <div className={`w-5.5 h-5.5 rounded-full border border-neutral-900 transition-all ${
+                      dragTree.y3 ? 'bg-yellow-500 shadow-md shadow-yellow-500/70 border-yellow-400' : 'bg-zinc-800'
+                    }`} />
+                    {/* Green (GO) and Red (FOUL) row */}
+                    <div className="flex gap-2.5">
+                      {/* Green */}
+                      <div className={`w-5.5 h-5.5 rounded-full border border-neutral-900 transition-all ${
+                        dragTree.green ? 'bg-green-500 shadow-md shadow-green-500/70 border-green-400' : 'bg-zinc-800'
+                      }`} />
+                      {/* Red */}
+                      <div className={`w-5.5 h-5.5 rounded-full border border-neutral-900 transition-all ${
+                        dragStage === 'foul' || dragTree.red ? 'bg-red-600 shadow-md shadow-red-600/70 border-red-500' : 'bg-zinc-800'
+                      }`} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Control Action Buttons */}
+                <div className="w-full">
+                  {dragStage === 'idle' || dragStage === 'complete' || dragStage === 'foul' ? (
+                    <button
+                      onClick={() => {
+                        triggerHaptic();
+                        setDragStage('staged');
+                        setDragReactionTime(null);
+                        setDragZeroToSixty(null);
+                        setDragBrakingDistance(null);
+                        setDragFtsAccumulated(0);
+                        dragGreenTimeRef.current = null;
+                        dragLaunchTimeRef.current = null;
+                        dragZeroToSixtyTimeRef.current = null;
+                        dragBrakingStartTimeRef.current = null;
+                        setDragTree({ preStage: true, stage: true, y1: false, y2: false, y3: false, green: false, red: false });
+                        setState(prev => ({ ...prev, speed: 0, rpm: 850, tripDistance: 0.0 }));
+                        setTrail([]);
+                      }}
+                      className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-[10px] font-black uppercase tracking-wider rounded-xl cursor-pointer text-white shadow-md shadow-black/10 transition-all"
+                    >
+                      🚦 Stage Engine
+                    </button>
+                  ) : dragStage === 'staged' ? (
+                    <button
+                      onClick={() => {
+                        triggerHaptic();
+                        setDragStage('countdown');
+                      }}
+                      className="w-full py-2 bg-red-600 hover:bg-red-700 text-[10px] font-black uppercase tracking-wider rounded-xl cursor-pointer text-white shadow-md shadow-red-600/10 transition-all animate-pulse"
+                    >
+                      🚀 Launch Control
+                    </button>
+                  ) : (
+                    <div className="w-full text-center text-[9px] font-mono font-bold text-neutral-400 py-2 border border-neutral-900/60 rounded-xl bg-neutral-900/5 leading-none flex items-center justify-center gap-1.5 uppercase">
+                      {dragStage === 'countdown' ? 'Arming Gears...' : dragStage === 'go' ? 'Throttle WOT!' : 'Decelerating!'}
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               /* FUEL LEVEL GAUGE (MARINE) */

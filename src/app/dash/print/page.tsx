@@ -527,7 +527,7 @@ function PrintPageContent() {
                   <Download className="w-4 h-4" /> Download Printable File (SVG)
                 </button>
                 <Link
-                  href="/pricing"
+                  href="/build-tag"
                   className="w-full py-3.5 bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[54px]"
                 >
                   <Sparkles className="w-4 h-4" /> Order Shipped Weatherproof Decals

@@ -8,7 +8,7 @@ interface MapComponentProps {
   latitude: number;
   longitude: number;
   heading: number;
-  preset: 'marine' | 'trail' | 'moto';
+  preset: 'marine' | 'trail' | 'moto' | 'street';
   trail: { lat: number; lng: number }[];
   launchLat: number | null;
   launchLng: number | null;
@@ -37,6 +37,7 @@ export default function MapComponent({
   const getAccentColor = () => {
     if (preset === 'marine') return mode === 'light' ? '#000000' : '#00e5ff';
     if (preset === 'trail') return mode === 'light' ? '#000000' : '#ff3d00';
+    if (preset === 'street') return mode === 'light' ? '#000000' : '#00e676';
     return mode === 'light' ? '#000000' : '#ff9100'; // moto
   };
 
@@ -76,6 +77,7 @@ export default function MapComponent({
     const getVehiclePath = () => {
       if (preset === 'marine') return 'M50 15 L78 75 L50 58 L22 75 Z'; // Boat arrow
       if (preset === 'trail') return 'M30 40 H70 V60 H30 Z M20 48 H80 M35 60 V70 M65 60 V70'; // Simple box Jeep layout representation
+      if (preset === 'street') return 'M50 10 L85 80 L50 65 L15 80 Z'; // Fast race car arrow shape
       return 'M50 10 L75 50 L50 90 L25 50 Z'; // Diamond Moto arrow
     };
 
@@ -146,6 +148,7 @@ export default function MapComponent({
     const getVehiclePath = () => {
       if (preset === 'marine') return 'M50 15 L78 75 L50 58 L22 75 Z';
       if (preset === 'trail') return 'M30 40 H70 V60 H30 Z M20 48 H80';
+      if (preset === 'street') return 'M50 10 L85 80 L50 65 L15 80 Z';
       return 'M50 10 L75 50 L50 90 L25 50 Z';
     };
 
@@ -198,6 +201,7 @@ export default function MapComponent({
     const getHomeEmoji = () => {
       if (preset === 'trail') return '⛺';
       if (preset === 'moto') return '🏍️';
+      if (preset === 'street') return '🏁';
       return '⚓';
     };
 

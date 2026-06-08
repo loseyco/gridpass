@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { 
-  QrCode, LogOut, User, ChevronDown, CreditCard, Layers, Compass
+  QrCode, LogOut, User, ChevronDown, Tag, Layers, Compass, BookOpen
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { auth } from '@/lib/firebase/config';
@@ -45,9 +45,13 @@ export default function Navbar() {
           <Logo className="w-7 h-7" textClassName="text-lg" />
         </Link>
         <div className="flex items-center gap-4 md:gap-6 text-sm font-medium">
-          <Link href="/pricing" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
-            <CreditCard className="w-3.5 h-3.5 text-rose-500" />
-            <span>Pricing</span>
+          <Link href="/guides" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
+            <BookOpen className="w-3.5 h-3.5 text-rose-500" />
+            <span>Guides</span>
+          </Link>
+          <Link href="/build-tag" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
+            <Tag className="w-3.5 h-3.5 text-rose-500" />
+            <span>Build a Tag</span>
           </Link>
           <Link href="/scan" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
             <span className="relative flex h-2 w-2">

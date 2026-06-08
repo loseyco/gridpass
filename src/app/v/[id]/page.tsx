@@ -638,7 +638,7 @@ export default function VehicleProfilePage() {
                     Order a custom pack of high-res outdoor weatherproof vinyl decals and poster sheets printed directly with your vehicle's registry passport QR code.
                   </p>
                   <Link 
-                    href="/pricing" 
+                    href="/build-tag" 
                     className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 flex items-center justify-center gap-1 min-h-[44px]"
                   >
                     Order Decal Kit ($14.99)

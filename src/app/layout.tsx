@@ -9,6 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://gridpass.app'),
   title: "Gridpass | The Universal Vehicle Network",
   description: "Transform any vehicle—car, boat, motorcycle, or plane—into a connected digital asset. Get a universal QR tag for service records, event entries, and ownership transfers.",
   keywords: ["gridpass", "vehicle network", "qr tag", "car community", "digital garage", "service logs", "ownership transfer"],
@@ -19,11 +20,20 @@ export const metadata: Metadata = {
     siteName: "Gridpass",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Gridpass | The Universal Vehicle Network",
+      }
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Gridpass | The Universal Vehicle Network",
     description: "Transform any vehicle into a connected digital asset with a single, permanent QR code tag.",
+    images: ["/opengraph-image"],
   }
 };
 
