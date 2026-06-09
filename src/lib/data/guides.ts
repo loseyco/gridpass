@@ -825,5 +825,151 @@ Let me know what type of vest you prefer and if you have a favorite dog life jac
         desc: "To test fit, buckle the vest and have someone lift it by the shoulders. If the vest slides up past your nose or ears, it is too large and will float over your head in the water, rendering it useless."
       }
     ]
+  },
+  {
+    slug: 'torch-lake-michigan-pwc-boating-guide',
+    title: "Torch Lake Michigan PWC & Boating Guide: Best Launches, Sandbar Rules, & Gear",
+    description: "The ultimate handbook for exploring Torch Lake's crystal-clear waters. Discover the best boat launches, sandbar anchoring tips, local PWC laws, and required safety gear.",
+    category: 'watercraft',
+    readTime: '6 min read',
+    publishDate: 'June 9, 2026',
+    tags: ['Torch Lake', 'Michigan', 'PWC', 'Boating Rules', 'Sandbar', 'Gear Guide'],
+    contributors: ['PJ Losey', 'Ranger Dave', 'TorchRider26'],
+    introduction: [
+      "Torch Lake in Antrim County, Michigan, is legendary for its crystal-clear, Caribbean-like turquoise water and its white sand bottom. Stretching over 19 miles long, it is Michigan’s longest and deepest inland lake, making it a dream destination for boaters and personal watercraft (PWC) riders.",
+      "However, Torch Lake poses unique challenges. The famous Torch Lake Sandbar at the south end is a massive shallow-water shelf that can get congested with thousands of vessels on summer weekends. Anchoring in these conditions requires specific gear to handle heavy spectator wakes and prevent your vessel from drifting into others.",
+      "Additionally, local and state authorities (including the Antrim County Sheriff and Michigan DNR) strictly enforce boating safety laws, PWC operating hours, and slow-no-wake zones. This guide breaks down the best motorized launches, sandbar rules, PWC laws, and recommended gear for a perfect day on the water."
+    ],
+    gearSectionTitle: "Recommended Torch Lake Gear",
+    gearSectionDesc: "Compare the best anchor systems, bungee lines, and protective gear tested for sandbar anchoring and deep-water riding on Torch Lake.",
+    launchesTitle: "Motorized Boat Launches & Access Ramps",
+    launchesDesc: "The best public concrete boat launches and DNR access sites around Torch Lake.",
+    facebookTemplate: `Hey everyone! Planning a trip to Torch Lake, Michigan this summer? I put together a comprehensive boating and PWC guide that covers the best motorized launch ramps (with active fees/Recreation Passport requirements), sandbar anchoring tips, and local PWC rules. Check it out here: [LINK]`,
+    gear: [
+      {
+        name: 'Slide Anchor Shore Spike (Large - Chrome)',
+        asin: 'B0000AXPBF',
+        price: '$89.99',
+        rating: 4.8,
+        badge: 'Premium Choice',
+        desc: 'The ultimate shallow-water anchor for sandbars. Drive it into the sand to hold your bow or stern securely. Designed to hold in heavy boat wakes without dragging.',
+        pros: ['Superior holding power in shallow sand', 'Durable hot-dip galvanized steel', 'Collapses for easy storage'],
+        cons: ['Expensive compared to standard grapnels'],
+        url: getAmazonSearchUrl('Slide Anchor Shore Spike')
+      },
+      {
+        name: 'Cooper Anchor 1.0 kg (2.2 lbs) Nylon Anchor',
+        asin: 'B00B4U0IQU',
+        price: '$55.00',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Highly recommended for PWC riders. Made from high-strength composite nylon with no sharp edges to scratch your gelcoat. It digs aggressively into the sand.',
+        pros: ['Lightweight composite nylon', 'Zero metal parts to scratch or rust', 'Digs aggressively into sand/silt'],
+        cons: ['Sold as anchor-only (must buy rope/chain separately)'],
+        url: getAmazonSearchUrl('Cooper Anchor Nylon 1kg')
+      },
+      {
+        name: 'WavesRx PWC Anchor System & Bungee Kit',
+        asin: 'B08HSH7K8K',
+        price: '$49.99',
+        rating: 4.7,
+        badge: 'Best Value',
+        desc: 'A complete PWC kit including a marine-grade bungee rope and a padded storage bag. Perfect for absorbing wake shock in crowded sandbar environments.',
+        pros: ['Complete budget-friendly kit', 'Flexible bungee line absorbs wake shocks', 'Includes premium storage bag'],
+        cons: ['Anchor requires proper scope to set in deeper waters'],
+        url: getAmazonSearchUrl('WavesRx PWC Anchor Kit')
+      },
+      {
+        name: 'Better Boat PWC Fenders & Bumper Guards (Pair)',
+        asin: 'B07V2H3H3S',
+        price: '$39.99',
+        rating: 4.8,
+        badge: 'Heavy Duty Choice',
+        desc: 'Custom-molded fenders designed specifically to clip onto the rub rail of jet skis. Essential when docking at concrete municipal launches to protect your gelcoat.',
+        pros: ['Clips securely to PWC rub rail', 'Durable closed-cell foam', 'Protects hull from rough dock pylons'],
+        cons: ['Bulky to store in small gloveboxes'],
+        url: getAmazonSearchUrl('Better Boat PWC Fenders Bumper Guards')
+      }
+    ],
+    launches: [
+      {
+        name: "Torch River Bridge DNR Access Site",
+        location: "9555 Rapid City Rd NW, Rapid City, MI 49676",
+        fee: "$12.00 Daily or Michigan Recreation Passport required",
+        amenities: ["Paved Ramps", "Restrooms", "Trailer Parking", "Direct Sandbar Access"],
+        desc: "Located on the south end of the lake on the Torch River. Extremely popular because it is the closest launch to the Torch Lake Sandbar. Ramps are paved, but the parking lot fills up very early on summer weekends.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Torch+River+Bridge+Boat+Launch+Rapid+City+MI"
+      },
+      {
+        name: "Torch Lake Township Day Park Launch",
+        location: "12201 Pub Dock Rd, Kewadin, MI 49648",
+        fee: "$20.00 Daily Trailer Parking Fee",
+        amenities: ["Concrete Ramp", "Picnic Area", "Restrooms", "Temporary Docks", "Sandy Beach"],
+        desc: "A well-maintained public launch on the northwest side of the lake. Features a paved ramp and temporary docks. Note that paddle sports (kayaks/SUPs) are not permitted to launch from the motorized ramp.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Torch+Lake+Township+Day+Park+Boat+Launch"
+      },
+      {
+        name: "DNR Eastport Boat Launch",
+        location: "M-88, Eastport, MI 49627 (North End)",
+        fee: "Michigan Recreation Passport required",
+        amenities: ["Concrete Ramp", "Vault Toilets", "Large Parking Lot", "Picnic Tables"],
+        desc: "Located at the far northern tip of Torch Lake. Excellent deep-water concrete ramp with plenty of trailer parking. This is a quieter launch point, ideal if you want to avoid the south-end sandbar traffic.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Eastport+DNR+Boat+Launch+Torch+Lake+MI"
+      },
+      {
+        name: "Alden Harbor Boat Launch",
+        location: "Alden Harbor Park, Alden, MI 49612 (Southeast Side)",
+        fee: "Municipal daily fee applies",
+        amenities: ["Concrete Ramp", "Docks", "Restrooms Nearby", "Walkable to Downtown Alden"],
+        desc: "A beautiful municipal launch located in the village of Alden on the southeast side of the lake. Great ramp and docks, with direct access to shops, restaurants, and parks within walking distance of the harbor.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Alden+Harbor+Boat+Launch+Alden+MI"
+      }
+    ],
+    hotspots: [
+      {
+        name: "Torch Lake Sandbar",
+        lake: "Torch Lake (South End)",
+        desc: "The ultimate social hotspot on Torch Lake. Located where the lake outlet drains into the Torch River. A massive shallow-water shelf of white sand where boaters and jet skiers anchor in 1-4 feet of crystal-clear water to socialize.",
+        anchorRequirement: "Highly recommended to use a double-anchor setup (bow anchor and stern shore spike) to keep your vessel steady in heavy crowds and prevent boat wakes from swinging your hull into others."
+      },
+      {
+        name: "Clam River Inlet & Dockside",
+        lake: "Torch Lake (East Side)",
+        desc: "A scenic channel connecting Clam Lake to Torch Lake. Famously home to 'Dockside' restaurant, a popular waterfront eatery where boaters can pull right up to the docks for food, drinks, and fuel.",
+        anchorRequirement: "No-wake zone is strictly enforced throughout the river and near the restaurant docks. Use fenders on your hull when tieing up."
+      },
+      {
+        name: "Alden Harbor & Depths",
+        lake: "Torch Lake (Southeast)",
+        desc: "A beautiful, sheltered harbor on the southeast corner of the lake. Perfect spot to dock, walk into town for ice cream or dining, or cruise the deep, open waters of the southern basin.",
+        anchorRequirement: "Anchoring outside the harbor in deep water requires substantial anchor line scope, as depths drop off rapidly to over 100+ feet."
+      }
+    ],
+    rules: [
+      {
+        title: "Michigan Boating Safety Certificate",
+        desc: "All PWC operators born after December 31, 1978, must carry a valid boating safety certificate. For motorized boats, any operator born after July 1, 1996, must also carry one."
+      },
+      {
+        title: "PWC Operating Age Limits",
+        desc: "No one under 14 years of age may operate a PWC. Operators aged 14 and 15 must have a safety certificate and either have an adult (21+) on board or operate within 100 feet of a supervising adult (21+)."
+      },
+      {
+        title: "PWC Operating Hours",
+        desc: "Personal watercraft (PWCs/jet skis) are strictly prohibited from operating between sunset and 8:00 AM. Motorized boats can operate at night with proper navigation lights."
+      },
+      {
+        title: "Life Jacket (PFD) Regulations",
+        desc: "All PWC riders must wear a USCG-approved Type I, II, or III life jacket at all times. Inflatable life jackets are strictly illegal on PWCs and for towed sports. Children under 6 must wear a vest while on open decks."
+      },
+      {
+        title: "Slow-No Wake Zones",
+        desc: "You must operate at slow-no wake speed (under 5 mph) inside rivers, channels, marinas, and within 100 feet of docks, shorelines, anchored vessels, or swimmers."
+      },
+      {
+        title: "Respect Riparian Rights & Landings",
+        desc: "While you have a legal right to temporarily anchor in the water, the shoreline and lakebed bottomlands are owned by adjacent property owners. Trespassing on private docks, beaches, or dry land is illegal."
+      }
+    ]
   }
 ];
