@@ -13,7 +13,7 @@ import {
 import { 
   CarFront, MapPin, Wrench, ShieldCheck, Heart, User, Calendar, 
   Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun,
-  Settings, Award, Printer, DollarSign, Trash2, Plus, Coins, Fuel, CreditCard
+  Settings, Award, Printer, DollarSign, Trash2, Plus, Coins, Fuel, CreditCard, Pencil
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
 
@@ -99,10 +99,11 @@ interface VehicleExpense {
   vehicle_id: string;
   owner_id: string;
   title: string;
-  category: 'purchase' | 'license' | 'fuel' | 'addon' | 'service' | 'insurance' | 'other';
+  category: 'purchase' | 'license' | 'fees' | 'fuel' | 'addon' | 'service' | 'insurance' | 'other';
   cost: number;
   date: string;
   notes?: string;
+  paid_by?: string;
   created_at?: any;
 }
 
@@ -135,10 +136,12 @@ export default function VehicleProfilePage() {
   // Expense Tracker States
   const [expenses, setExpenses] = useState<VehicleExpense[]>([]);
   const [expenseTitle, setExpenseTitle] = useState('');
-  const [expenseCategory, setExpenseCategory] = useState<'purchase' | 'license' | 'fuel' | 'addon' | 'service' | 'insurance' | 'other'>('fuel');
+  const [expenseCategory, setExpenseCategory] = useState<'purchase' | 'license' | 'fees' | 'fuel' | 'addon' | 'service' | 'insurance' | 'other'>('fuel');
   const [expenseCost, setExpenseCost] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
   const [expenseNotes, setExpenseNotes] = useState('');
+  const [expensePaidBy, setExpensePaidBy] = useState('');
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [submittingExpense, setSubmittingExpense] = useState(false);
 
   // Edit Build states
@@ -563,7 +566,8 @@ export default function VehicleProfilePage() {
             category: 'fuel',
             cost: 45,
             date: '2026-06-05',
-            notes: 'Standard marina gas fill'
+            notes: 'Standard marina gas fill',
+            paid_by: 'Marcus Mustang'
           },
           {
             id: 'exp-2',
@@ -573,7 +577,8 @@ export default function VehicleProfilePage() {
             category: 'addon',
             cost: 1200,
             date: '2025-10-12',
-            notes: 'Installed Roush exhaust'
+            notes: 'Installed Roush exhaust',
+            paid_by: 'Marcus Mustang'
           },
           {
             id: 'exp-3',
@@ -583,7 +588,8 @@ export default function VehicleProfilePage() {
             category: 'license',
             cost: 120,
             date: '2026-06-02',
-            notes: 'Registration renewal'
+            notes: 'Registration renewal',
+            paid_by: 'Kristina'
           }
         ];
 
@@ -703,7 +709,8 @@ export default function VehicleProfilePage() {
                   category: eData.category,
                   cost: eData.cost,
                   date: eData.date || '',
-                  notes: eData.notes || ''
+                  notes: eData.notes || '',
+                  paid_by: eData.paid_by || ''
                 } as VehicleExpense;
               }).sort((a, b) => b.date.localeCompare(a.date));
 
@@ -839,63 +846,150 @@ export default function VehicleProfilePage() {
     }
 
     const ownerUid = isMock ? 'user-marcus-123' : (user?.uid || 'unknown-uid');
+    const resolvedPaidBy = expensePaidBy.trim() || user?.displayName || user?.email?.split('@')[0] || 'Owner';
 
-    if (isMock) {
-      const newExpense: VehicleExpense = {
-        id: `exp-mock-${Date.now()}`,
-        vehicle_id: vehicleId,
-        owner_id: ownerUid,
-        title: expenseTitle.trim(),
-        category: expenseCategory,
-        cost: costNum,
-        date: expenseDate,
-        notes: expenseNotes.trim()
-      };
-      setExpenses(prev => [newExpense, ...prev]);
-      setExpenseTitle('');
-      setExpenseCost('');
-      setExpenseNotes('');
-      setSubmittingExpense(false);
-      return;
+    if (editingExpenseId) {
+      // EDIT MODE
+      if (isMock) {
+        setExpenses(prev => prev.map(exp => exp.id === editingExpenseId ? {
+          ...exp,
+          title: expenseTitle.trim(),
+          category: expenseCategory,
+          cost: costNum,
+          date: expenseDate,
+          notes: expenseNotes.trim(),
+          paid_by: resolvedPaidBy
+        } : exp));
+        setExpenseTitle('');
+        setExpenseCost('');
+        setExpenseNotes('');
+        setExpensePaidBy('');
+        setEditingExpenseId(null);
+        setSubmittingExpense(false);
+        return;
+      }
+
+      try {
+        const expenseDocRef = doc(db, 'expenses', editingExpenseId);
+        await updateDoc(expenseDocRef, {
+          title: expenseTitle.trim(),
+          category: expenseCategory,
+          cost: costNum,
+          date: expenseDate,
+          notes: expenseNotes.trim(),
+          paid_by: resolvedPaidBy
+        });
+
+        setExpenses(prev => prev.map(exp => exp.id === editingExpenseId ? {
+          ...exp,
+          title: expenseTitle.trim(),
+          category: expenseCategory,
+          cost: costNum,
+          date: expenseDate,
+          notes: expenseNotes.trim(),
+          paid_by: resolvedPaidBy
+        } : exp));
+
+        setExpenseTitle('');
+        setExpenseCost('');
+        setExpenseNotes('');
+        setExpensePaidBy('');
+        setEditingExpenseId(null);
+        await logEvent('success', 'system', `Expense updated for vehicle [${vehicleId}]: ${expenseTitle.trim()} ($${costNum})`);
+      } catch (error) {
+        console.error("Failed to update expense:", error);
+        alert("Failed to update expense record.");
+      } finally {
+        setSubmittingExpense(false);
+      }
+    } else {
+      // ADD MODE
+      if (isMock) {
+        const newExpense: VehicleExpense = {
+          id: `exp-mock-${Date.now()}`,
+          vehicle_id: vehicleId,
+          owner_id: ownerUid,
+          title: expenseTitle.trim(),
+          category: expenseCategory,
+          cost: costNum,
+          date: expenseDate,
+          notes: expenseNotes.trim(),
+          paid_by: resolvedPaidBy
+        };
+        setExpenses(prev => [newExpense, ...prev]);
+        setExpenseTitle('');
+        setExpenseCost('');
+        setExpenseNotes('');
+        setExpensePaidBy('');
+        setSubmittingExpense(false);
+        return;
+      }
+
+      try {
+        const payload = {
+          vehicle_id: vehicleId,
+          owner_id: ownerUid,
+          title: expenseTitle.trim(),
+          category: expenseCategory,
+          cost: costNum,
+          date: expenseDate,
+          notes: expenseNotes.trim(),
+          paid_by: resolvedPaidBy,
+          created_at: serverTimestamp()
+        };
+
+        const docRef = await addDoc(collection(db, 'expenses'), payload);
+
+        const newExpense: VehicleExpense = {
+          id: docRef.id,
+          vehicle_id: payload.vehicle_id,
+          owner_id: payload.owner_id,
+          title: payload.title,
+          category: payload.category as any,
+          cost: payload.cost,
+          date: payload.date,
+          notes: payload.notes,
+          paid_by: payload.paid_by
+        };
+
+        setExpenses(prev => [newExpense, ...prev]);
+        setExpenseTitle('');
+        setExpenseCost('');
+        setExpenseNotes('');
+        setExpensePaidBy('');
+
+        await logEvent('success', 'system', `Expense logged for vehicle [${vehicleId}]: ${payload.title} ($${payload.cost})`);
+      } catch (error) {
+        console.error("Failed to save expense:", error);
+        alert("Failed to save expense record.");
+      } finally {
+        setSubmittingExpense(false);
+      }
     }
+  };
 
-    try {
-      const payload = {
-        vehicle_id: vehicleId,
-        owner_id: ownerUid,
-        title: expenseTitle.trim(),
-        category: expenseCategory,
-        cost: costNum,
-        date: expenseDate,
-        notes: expenseNotes.trim(),
-        created_at: serverTimestamp()
-      };
-
-      const docRef = await addDoc(collection(db, 'expenses'), payload);
-
-      const newExpense: VehicleExpense = {
-        id: docRef.id,
-        vehicle_id: payload.vehicle_id,
-        owner_id: payload.owner_id,
-        title: payload.title,
-        category: payload.category as any,
-        cost: payload.cost,
-        date: payload.date,
-        notes: payload.notes
-      };
-
-      setExpenses(prev => [newExpense, ...prev]);
-      setExpenseTitle('');
-      setExpenseCost('');
-      setExpenseNotes('');
-
-      await logEvent('success', 'system', `Expense logged for vehicle [${vehicleId}]: ${payload.title} ($${payload.cost})`);
-    } catch (error) {
-      console.error("Failed to save expense:", error);
-      alert("Failed to save expense record.");
-    } finally {
-      setSubmittingExpense(false);
+  const handleStartEditExpense = (exp: VehicleExpense) => {
+    if (!exp.id) return;
+    setEditingExpenseId(exp.id);
+    setExpenseTitle(exp.title);
+    setExpenseCategory(exp.category);
+    setExpenseCost(String(exp.cost));
+    setExpenseDate(exp.date);
+    setExpenseNotes(exp.notes || '');
+    setExpensePaidBy(exp.paid_by || '');
+    
+    const formEl = document.getElementById('log-expense-form-container');
+    if (formEl) {
+      formEl.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleCancelEditExpense = () => {
+    setEditingExpenseId(null);
+    setExpenseTitle('');
+    setExpenseCost('');
+    setExpenseNotes('');
+    setExpensePaidBy('');
   };
 
   const handleDeleteExpense = async (expenseId: string) => {
@@ -928,17 +1022,19 @@ export default function VehicleProfilePage() {
   const purchasePriceVal = vehicle?.purchase_price ? parseFloat(String(vehicle.purchase_price)) || 0 : 0;
   const fuelTotal = expenses.filter(e => e.category === 'fuel').reduce((sum, e) => sum + e.cost, 0);
   const licenseTotal = expenses.filter(e => e.category === 'license').reduce((sum, e) => sum + e.cost, 0);
+  const feesTotal = expenses.filter(e => e.category === 'fees').reduce((sum, e) => sum + e.cost, 0);
   const addonTotal = expenses.filter(e => e.category === 'addon').reduce((sum, e) => sum + e.cost, 0);
   const serviceTotal = expenses.filter(e => e.category === 'service').reduce((sum, e) => sum + e.cost, 0);
   const insuranceTotal = expenses.filter(e => e.category === 'insurance').reduce((sum, e) => sum + e.cost, 0);
   const otherTotal = expenses.filter(e => e.category === 'other').reduce((sum, e) => sum + e.cost, 0);
   const loggedPurchaseTotal = expenses.filter(e => e.category === 'purchase').reduce((sum, e) => sum + e.cost, 0);
   const finalPurchasePrice = loggedPurchaseTotal || purchasePriceVal;
-  const totalTCO = finalPurchasePrice + fuelTotal + licenseTotal + addonTotal + serviceTotal + insuranceTotal + otherTotal;
+  const totalTCO = finalPurchasePrice + fuelTotal + licenseTotal + feesTotal + addonTotal + serviceTotal + insuranceTotal + otherTotal;
 
   const CATEGORY_MAP = {
     purchase: { label: 'Purchase Price', color: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' },
     license: { label: 'Stickers & License', color: 'bg-purple-500/10 border-purple-500/30 text-purple-400' },
+    fees: { label: 'Launch & Slip Fees', color: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' },
     fuel: { label: 'Fuel', color: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' },
     addon: { label: 'Add-ons & Mods', color: 'bg-pink-500/10 border-pink-500/30 text-pink-400' },
     service: { label: 'Service & Maintenance', color: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' },
@@ -1688,15 +1784,15 @@ export default function VehicleProfilePage() {
                   </div>
                 </div>
 
-                {/* Stickers & Decals Card */}
+                {/* Launch, Slip & License Card */}
                 <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
                   <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-mono font-bold text-purple-400 uppercase">Stickers & Decals</span>
+                    <span className="text-[10px] font-mono font-bold text-purple-400 uppercase">Launch, Slip & License</span>
                     <CreditCard className="w-4 h-4 text-purple-500" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-white font-mono">${licenseTotal.toLocaleString()}</h4>
-                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Registration & tags</p>
+                    <h4 className="text-xl font-bold text-white font-mono">${(licenseTotal + feesTotal).toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Registration, ramps & slips</p>
                   </div>
                 </div>
 
@@ -1749,14 +1845,15 @@ export default function VehicleProfilePage() {
                 </div>
               </div>
 
-              {/* Lower Section: Form and Ledger */}
+{/* Lower Section: Form and Ledger */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                 
                 {/* Log Expense Form */}
-                <div className="md:col-span-5 space-y-4">
+                <div className="md:col-span-5 space-y-4" id="log-expense-form-container">
                   <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
                     <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900/60 pb-3">
-                      <Plus className="w-4 h-4 text-yellow-500" /> Log Vehicle Expense
+                      {editingExpenseId ? <Pencil className="w-4 h-4 text-yellow-500 animate-pulse" /> : <Plus className="w-4 h-4 text-yellow-500" />}
+                      {editingExpenseId ? 'Edit Vehicle Expense' : 'Log Vehicle Expense'}
                     </h3>
 
                     <form onSubmit={handleAddExpense} className="space-y-3.5">
@@ -1784,6 +1881,7 @@ export default function VehicleProfilePage() {
                           >
                             <option value="fuel">Fuel & Gas</option>
                             <option value="license">Stickers & License</option>
+                            <option value="fees">Launch & Slip Fees</option>
                             <option value="addon">Add-ons & Mods</option>
                             <option value="service">Service & Maintenance</option>
                             <option value="insurance">Insurance</option>
@@ -1819,6 +1917,18 @@ export default function VehicleProfilePage() {
                       </div>
 
                       <div className="space-y-1">
+                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Paid By</label>
+                        <input 
+                          type="text" 
+                          value={expensePaidBy}
+                          onChange={(e) => setExpensePaidBy(e.target.value)}
+                          placeholder={user?.displayName || user?.email?.split('@')[0] || "e.g. Marcus Mustang"} 
+                          className="glass-input w-full p-2.5 rounded-xl text-xs"
+                          id="expense-paid-by-input"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
                         <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Notes / Details</label>
                         <textarea 
                           rows={2}
@@ -1830,15 +1940,28 @@ export default function VehicleProfilePage() {
                         />
                       </div>
 
-                      <button
-                        type="submit"
-                        disabled={submittingExpense}
-                        className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-yellow-600/15 flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
-                        id="submit-expense-btn"
-                      >
-                        {submittingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
-                        Log Expense
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={submittingExpense}
+                          className={`bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-yellow-600/15 flex items-center justify-center gap-1 min-h-[44px] cursor-pointer ${editingExpenseId ? 'flex-1' : 'w-full'}`}
+                          id="submit-expense-btn"
+                        >
+                          {submittingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
+                          {editingExpenseId ? 'Save Changes' : 'Log Expense'}
+                        </button>
+                        
+                        {editingExpenseId && (
+                          <button
+                            type="button"
+                            onClick={handleCancelEditExpense}
+                            className="px-4 py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-neutral-400 hover:text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all min-h-[44px] cursor-pointer"
+                            id="cancel-expense-edit-btn"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </form>
                   </div>
                 </div>
@@ -1867,12 +1990,26 @@ export default function VehicleProfilePage() {
                                       {catInfo.label}
                                     </span>
                                   </h4>
-                                  <p className="text-neutral-500 font-mono text-[10px] font-medium">
-                                    {new Date(exp.date).toLocaleDateString()}
+                                  <p className="text-neutral-500 font-mono text-[10px] font-medium flex items-center gap-2">
+                                    <span>{new Date(exp.date).toLocaleDateString()}</span>
+                                    {exp.paid_by && (
+                                      <>
+                                        <span className="text-neutral-700">•</span>
+                                        <span>Paid by: {exp.paid_by}</span>
+                                      </>
+                                    )}
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-3 shrink-0">
+                                <div className="flex items-center gap-2 shrink-0">
                                   <span className="text-white font-mono text-sm">${exp.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  <button
+                                    onClick={() => handleStartEditExpense(exp)}
+                                    className="text-neutral-600 hover:text-yellow-500 hover:bg-yellow-500/10 p-1.5 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                    title="Edit expense"
+                                    data-testid={`edit-btn-${exp.id}`}
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
                                   <button
                                     onClick={() => exp.id && handleDeleteExpense(exp.id)}
                                     className="text-neutral-600 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"

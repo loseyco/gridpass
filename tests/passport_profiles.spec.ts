@@ -247,14 +247,48 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await page.selectOption('#expense-category-input', 'addon');
     await page.fill('#expense-cost-input', '250.00');
     await page.fill('#expense-date-input', '2026-06-10');
+    await page.fill('#expense-paid-by-input', 'Marcus Mustang');
     await page.fill('#expense-notes-input', 'Tuned on 93 octane. Gained 15hp.');
     await page.click('#submit-expense-btn');
 
     // Verify it was appended to the timeline ledger
     await expect(page.locator('text=Performance Dyno Tune').first()).toBeVisible();
+    await expect(page.locator('text=Paid by: Marcus Mustang').first()).toBeVisible();
 
     // TCO should increase by 250 (5865 + 250 = 6115.00)
     await expect(page.locator('text=$6,115.00')).toBeVisible();
+
+    // Start editing the newly added expense
+    const dynoItem = page.locator('[data-testid="expense-item"]', { hasText: 'Performance Dyno Tune' });
+    await dynoItem.hover();
+    const editBtn = dynoItem.locator('button[title="Edit expense"]');
+    await editBtn.click();
+
+    // Verify fields populated
+    await expect(page.locator('#expense-title-input')).toHaveValue('Performance Dyno Tune');
+    await expect(page.locator('#expense-paid-by-input')).toHaveValue('Marcus Mustang');
+
+    // Cancel edit check
+    await page.click('#cancel-expense-edit-btn');
+    await expect(page.locator('#expense-title-input')).toHaveValue('');
+
+    // Re-trigger edit
+    await dynoItem.hover();
+    await editBtn.click();
+
+    // Modify details
+    await page.fill('#expense-title-input', 'Supercharger Dyno Tune');
+    await page.fill('#expense-cost-input', '350.00');
+    await page.fill('#expense-paid-by-input', 'Marcus & Kristina');
+    await page.click('#submit-expense-btn');
+
+    // Verify changes are updated in ledger
+    await expect(page.locator('text=Supercharger Dyno Tune').first()).toBeVisible();
+    await expect(page.locator('text=Paid by: Marcus & Kristina').first()).toBeVisible();
+    await expect(page.locator('text=Performance Dyno Tune')).not.toBeVisible();
+
+    // TCO should increase by another 100 (6115 + 100 = 6215.00)
+    await expect(page.locator('text=$6,215.00')).toBeVisible();
 
     // Setup dialog listener for delete confirmation
     page.once('dialog', async dialog => {
@@ -262,7 +296,7 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     });
 
     // Delete the Premium Gas Fill-up expense ($45)
-    // Total TCO should decrease by 45 (6115 - 45 = 6070.00)
+    // Total TCO should decrease by 45 (6215 - 45 = 6170.00)
     const gasItem = page.locator('[data-testid="expense-item"]', { hasText: 'Premium Gas Fill-up' });
     await gasItem.hover();
     const deleteBtn = gasItem.locator('button[title="Delete expense"]');
@@ -270,7 +304,7 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
 
     // Verify the item is gone and TCO is updated
     await expect(page.locator('text=Premium Gas Fill-up')).not.toBeVisible();
-    await expect(page.locator('text=$6,070.00')).toBeVisible();
+    await expect(page.locator('text=$6,170.00')).toBeVisible();
   });
 
 });
