@@ -257,4 +257,57 @@ test.describe('Gridpass: Mobile Waterway Dashboard E2E Suite', () => {
     await page.click('#close-add-spot-btn');
   });
 
+  test('Sign In / Out flow, onboarding button, HUD controls, and URL query parameter parsing', async ({ page }) => {
+    // 1. Check Onboarding Sign In button redirects correctly
+    await page.goto('/water/round-lake-beach');
+    const signInOnboardingBtn = page.locator('button:has-text("Sign In with Gridpass")');
+    await expect(signInOnboardingBtn).toBeVisible();
+    await signInOnboardingBtn.click();
+    await page.waitForURL(/.*\/login\?redirect=.*/);
+    expect(page.url()).toContain('/login');
+    expect(page.url()).toContain('redirect');
+
+    // 2. Parse URL parameters for shared friend
+    await page.goto('/water/round-lake-beach?lat=42.4430&lng=-88.1250&nickname=Kristina');
+    
+    // Check for the welcome toast
+    await expect(page.locator('text=Found shared friend: Kristina!')).toBeVisible();
+    
+    // Fill in nickname to complete guest onboarding
+    await page.fill('input[placeholder="e.g. Captain PJ"]', 'PJ Guest');
+    await page.click('button:has-text("Join Live Map")');
+
+    // Onboarding closed, we should see the "Sign In" button in top HUD
+    const hudSignInBtn = page.locator('button:has-text("Sign In")');
+    await expect(hudSignInBtn).toBeVisible();
+
+    // Click top HUD Sign In and check redirect
+    await hudSignInBtn.click();
+    await page.waitForURL(/.*\/login\?redirect=.*/);
+
+    // 3. Test authenticated user view (MOCKED User)
+    await page.addInitScript(() => {
+      (window as any).__MOCK_USER__ = {
+        uid: 'marcus-mustang',
+        email: 'marcus@gridpass.app',
+        displayName: 'Marcus Mustang'
+      };
+    });
+    
+    // Navigate back to water view
+    await page.goto('/water/round-lake-beach');
+    
+    // Onboarding should NOT be visible for logged in user
+    await expect(page.locator('text=Join Live Waterway Map')).not.toBeVisible();
+    
+    // The HUD should display the Exit button instead of "Sign In"
+    const hudExitBtn = page.locator('button[title*="Marcus Mustang"]');
+    await expect(hudExitBtn).toBeVisible();
+    await expect(hudExitBtn.locator('text=Exit')).toBeVisible();
+
+    // Click Exit (logout) and verify onboarding is shown again
+    await hudExitBtn.click();
+    await expect(page.locator('text=Join Live Waterway Map')).toBeVisible();
+  });
+
 });

@@ -12,6 +12,9 @@ import {
 import { useAuth } from '@/components/auth/AuthProvider';
 import { SEEDED_VENUES, SEEDED_SPOTS, SEEDED_FRIENDS } from '@/lib/data/venues';
 import { Venue, VenueSpot, FriendBeacon } from '@/lib/types/venue';
+import { auth, db } from '@/lib/firebase/config';
+import { signOut } from 'firebase/auth';
+import { doc, setDoc, deleteDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface WaterMobileViewProps {
   venueId?: string;
@@ -20,6 +23,7 @@ interface WaterMobileViewProps {
 export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
   const { user } = useAuth();
   const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
+  const [sessionUid] = useState(() => 'guest-' + Math.random().toString(36).substring(2, 11));
 
   // Venue matching state
   const [venue, setVenue] = useState<Venue>(() => {
@@ -256,9 +260,43 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
 
   // Initialize data
   useEffect(() => {
-    // Initial spots & friends (only load demo data if running E2E tests mock)
+    // Initial spots & friends
     setSpots(SEEDED_SPOTS.filter(s => s.venue_id === venue.id));
-    setFriends(isMock ? SEEDED_FRIENDS : []);
+    
+    // Check for query parameters first to load shared friend
+    let sharedFriend: FriendBeacon | null = null;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const sharedLat = params.get('lat');
+      const sharedLng = params.get('lng');
+      const sharedNickname = params.get('nickname');
+      if (sharedLat && sharedLng && sharedNickname) {
+        const lat = parseFloat(sharedLat);
+        const lng = parseFloat(sharedLng);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const name = decodeURIComponent(sharedNickname);
+          sharedFriend = {
+            user_id: `shared-${name}`,
+            display_name: name,
+            latitude: lat,
+            longitude: lng,
+            status: 'active',
+            updated_at: new Date().toISOString()
+          };
+          setUserCoords({ lat, lng });
+          setCheckInToastMsg(`Found shared friend: ${name}!`);
+          setTimeout(() => setCheckInToastMsg(null), 3000);
+        }
+      }
+    }
+
+    if (isMock) {
+      setFriends(SEEDED_FRIENDS);
+    } else if (sharedFriend) {
+      setFriends([sharedFriend]);
+    } else {
+      setFriends([]);
+    }
     
     // Set nickname if user is authenticated
     if (user) {
@@ -267,6 +305,121 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
       setIsSpectator(false);
     }
   }, [user, venue, isMock]);
+
+  // Write location updates to Firestore venue_radar
+  useEffect(() => {
+    if (isMock) return;
+    if (showOnboarding) return;
+    
+    const userId = user ? user.uid : sessionUid;
+    const docRef = doc(db, 'venue_radar', `${venue.id}-${userId}`);
+
+    if (visibility === 'ghost') {
+      // If we went ghost, immediately delete our document from Firestore
+      deleteDoc(docRef).catch(console.error);
+      return;
+    }
+
+    const writeLocation = async () => {
+      try {
+        await setDoc(docRef, {
+          venue_id: venue.id,
+          user_id: userId,
+          display_name: nickname || 'Rider',
+          latitude: userCoords.lat,
+          longitude: userCoords.lng,
+          speed: speed,
+          heading: heading,
+          updated_at: new Date().toISOString(),
+          status: visibility
+        });
+      } catch (err) {
+        console.error("Failed to sync location to Firestore:", err);
+      }
+    };
+
+    writeLocation();
+
+    // Set up interval for updates every 8 seconds
+    const interval = setInterval(writeLocation, 8000);
+
+    return () => {
+      clearInterval(interval);
+      deleteDoc(docRef).catch(console.error);
+    };
+  }, [isMock, showOnboarding, visibility, venue.id, user, sessionUid, nickname, userCoords, speed, heading]);
+
+  // Subscribe to venue radar buddies in real-time
+  useEffect(() => {
+    if (isMock) return;
+    if (showOnboarding) return;
+
+    const q = query(
+      collection(db, 'venue_radar'),
+      where('venue_id', '==', venue.id)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const activeBuddies: FriendBeacon[] = [];
+      const now = Date.now();
+      const currentUserId = user ? user.uid : sessionUid;
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const isSelf = data.user_id === currentUserId;
+        const updatedAtStr = data.updated_at;
+        const updatedAt = updatedAtStr ? Date.parse(updatedAtStr) : 0;
+        const isStale = now - updatedAt > 5 * 60 * 1000; // 5 minutes staleness limit
+
+        if (!isSelf && !isStale) {
+          activeBuddies.push({
+            user_id: data.user_id,
+            display_name: data.display_name,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            speed: data.speed || 0,
+            heading: data.heading || 0,
+            updated_at: data.updated_at,
+            status: data.status || 'active'
+          });
+        }
+      });
+
+      // Preserve query param friend if not in the snapshot yet
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const sharedLat = params.get('lat');
+        const sharedLng = params.get('lng');
+        const sharedNickname = params.get('nickname');
+        if (sharedLat && sharedLng && sharedNickname) {
+          const lat = parseFloat(sharedLat);
+          const lng = parseFloat(sharedLng);
+          const name = decodeURIComponent(sharedNickname);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            const hasSharedFriend = activeBuddies.some(b => b.display_name === name);
+            if (!hasSharedFriend) {
+              activeBuddies.push({
+                user_id: `shared-${name}`,
+                display_name: name,
+                latitude: lat,
+                longitude: lng,
+                status: 'active',
+                updated_at: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+
+      setFriends(activeBuddies);
+    }, (err) => {
+      console.error("Error subscribing to venue radar:", err);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isMock, showOnboarding, venue.id, user, sessionUid]);
 
   // Auto-bind to nearest venue based on coordinates
   useEffect(() => {
@@ -347,8 +500,9 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
     };
   }, [isSpectator, isMock]);
 
-  // Friend movement coordinates simulator to keep map dynamic
+  // Friend movement coordinates simulator to keep map dynamic (Mock mode only)
   useEffect(() => {
+    if (!isMock) return;
     const interval = setInterval(() => {
       setFriends(prevFriends => 
         prevFriends.map(f => {
@@ -774,6 +928,27 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
     handleRecenter();
   };
 
+  const handleSignOut = async () => {
+    try {
+      if (!isMock) {
+        const userId = user ? user.uid : sessionUid;
+        const docRef = doc(db, 'venue_radar', `${venue.id}-${userId}`);
+        await deleteDoc(docRef).catch(console.error);
+      }
+      await signOut(auth);
+      setNickname('');
+      setShowOnboarding(true);
+      setIsSpectator(false);
+      setVisibility('public');
+      setCheckInToastMsg("Logged out successfully.");
+      setTimeout(() => setCheckInToastMsg(null), 3000);
+    } catch (err) {
+      console.error("Sign out error:", err);
+      setCheckInToastMsg("Sign out failed.");
+      setTimeout(() => setCheckInToastMsg(null), 3000);
+    }
+  };
+
   // SOS Toggle logic
   const handleSosPress = () => {
     if (isSosActive) {
@@ -971,7 +1146,7 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
           </div>
         )}
 
-        {/* Right HUD: Visibility Control Banner */}
+        {/* Right HUD: Visibility Control Banner & Auth Button */}
         <div className="pointer-events-auto flex items-center gap-2">
           <div className="bg-neutral-950/75 backdrop-blur-md border border-neutral-900/60 p-1.5 rounded-full shadow-lg flex items-center gap-1.5">
             <button 
@@ -993,6 +1168,28 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
               Public
             </button>
           </div>
+
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="w-12 h-12 bg-neutral-950/75 backdrop-blur-md border border-neutral-900/60 rounded-full flex flex-col items-center justify-center text-white active:scale-95 transition-all shadow-lg cursor-pointer"
+              title={`Logged in as ${user.displayName || user.email}. Click to Sign Out.`}
+            >
+              <User className="w-4.5 h-4.5 text-emerald-400" />
+              <span className="text-[6.5px] font-mono font-bold text-neutral-450 uppercase leading-none mt-0.5">Exit</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                }
+              }}
+              className="px-3 py-2 bg-neutral-950/75 hover:bg-neutral-900/90 border border-cyan-500/30 text-cyan-400 rounded-full text-[9px] font-mono font-black uppercase shadow-lg active:scale-95 transition-all cursor-pointer min-h-[40px] flex items-center justify-center"
+            >
+              Sign In
+            </button>
+          )}
         </div>
 
       </div>
@@ -1743,10 +1940,21 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
               </button>
             </form>
 
-            <div className="border-t border-neutral-900 pt-4 flex flex-col gap-2">
+            <div className="border-t border-neutral-900 pt-4 flex flex-col gap-2.5">
+              <button 
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                  }
+                }}
+                className="w-full bg-neutral-900 hover:bg-neutral-850 text-white font-bold uppercase text-[10px] tracking-wider py-3 rounded-xl border border-neutral-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <User className="w-3.5 h-3.5 text-cyan-400" />
+                Sign In with Gridpass
+              </button>
               <button 
                 onClick={handleSpectatorMode}
-                className="text-[10px] text-neutral-400 hover:text-white uppercase font-bold font-mono tracking-wide cursor-pointer"
+                className="text-[10px] text-neutral-400 hover:text-white uppercase font-bold font-mono tracking-wide cursor-pointer mt-1"
               >
                 Or Browse Privately (Hide Your Location)
               </button>

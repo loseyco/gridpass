@@ -8,12 +8,12 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase/config';
 import { 
-  collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp 
+  collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp, deleteDoc 
 } from 'firebase/firestore';
 import { 
   CarFront, MapPin, Wrench, ShieldCheck, Heart, User, Calendar, 
   Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun,
-  Settings, Award, Printer
+  Settings, Award, Printer, DollarSign, Trash2, Plus, Coins, Fuel, CreditCard
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
 
@@ -94,6 +94,18 @@ interface ServiceLog {
   shop_id?: string;
 }
 
+interface VehicleExpense {
+  id?: string;
+  vehicle_id: string;
+  owner_id: string;
+  title: string;
+  category: 'purchase' | 'license' | 'fuel' | 'addon' | 'service' | 'insurance' | 'other';
+  cost: number;
+  date: string;
+  notes?: string;
+  created_at?: any;
+}
+
 interface Sighting {
   id: string;
   spotted_by: string;
@@ -117,8 +129,17 @@ export default function VehicleProfilePage() {
   const [serviceLogs, setServiceLogs] = useState<ServiceLog[]>([]);
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'specs' | 'telemetry' | 'service' | 'settings'>('specs');
+  const [activeTab, setActiveTab] = useState<'specs' | 'telemetry' | 'service' | 'expenses' | 'settings'>('specs');
   const [showPrintModal, setShowPrintModal] = useState(false);
+
+  // Expense Tracker States
+  const [expenses, setExpenses] = useState<VehicleExpense[]>([]);
+  const [expenseTitle, setExpenseTitle] = useState('');
+  const [expenseCategory, setExpenseCategory] = useState<'purchase' | 'license' | 'fuel' | 'addon' | 'service' | 'insurance' | 'other'>('fuel');
+  const [expenseCost, setExpenseCost] = useState('');
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [expenseNotes, setExpenseNotes] = useState('');
+  const [submittingExpense, setSubmittingExpense] = useState(false);
 
   // Edit Build states
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
@@ -533,10 +554,44 @@ export default function VehicleProfilePage() {
           }
         ];
 
+        const mockExpenses: VehicleExpense[] = [
+          {
+            id: 'exp-1',
+            vehicle_id: vehicleId,
+            owner_id: ownerId,
+            title: 'Premium Gas Fill-up',
+            category: 'fuel',
+            cost: 45,
+            date: '2026-06-05',
+            notes: 'Standard marina gas fill'
+          },
+          {
+            id: 'exp-2',
+            vehicle_id: vehicleId,
+            owner_id: ownerId,
+            title: 'Roush Cat-Back Exhaust Installation',
+            category: 'addon',
+            cost: 1200,
+            date: '2025-10-12',
+            notes: 'Installed Roush exhaust'
+          },
+          {
+            id: 'exp-3',
+            vehicle_id: vehicleId,
+            owner_id: ownerId,
+            title: 'Yearly Sticker & Decal',
+            category: 'license',
+            cost: 120,
+            date: '2026-06-02',
+            notes: 'Registration renewal'
+          }
+        ];
+
         if (isMounted) {
           setVehicle(mockVehicle);
           setServiceLogs(mockLogs);
           setSightings(mockSightings);
+          setExpenses(mockExpenses);
           setVibeChecks(24);
           setLoading(false);
         }
@@ -620,6 +675,43 @@ export default function VehicleProfilePage() {
           });
 
           if (isMounted) setSightings(sightingsList);
+
+          // Fetch Expenses (only if logged-in user is the vehicle owner or admin)
+          if (user && (user.uid === vData.owner_id || user.email === 'loseyp@gmail.com')) {
+            try {
+              let expensesQuery;
+              if (user.email === 'loseyp@gmail.com') {
+                expensesQuery = query(
+                  collection(db, 'expenses'),
+                  where('vehicle_id', '==', docSnap.id)
+                );
+              } else {
+                expensesQuery = query(
+                  collection(db, 'expenses'),
+                  where('vehicle_id', '==', docSnap.id),
+                  where('owner_id', '==', user.uid)
+                );
+              }
+              const expensesSnap = await getDocs(expensesQuery);
+              const expensesList = expensesSnap.docs.map(eDoc => {
+                const eData = eDoc.data();
+                return {
+                  id: eDoc.id,
+                  vehicle_id: eData.vehicle_id,
+                  owner_id: eData.owner_id,
+                  title: eData.title,
+                  category: eData.category,
+                  cost: eData.cost,
+                  date: eData.date || '',
+                  notes: eData.notes || ''
+                } as VehicleExpense;
+              }).sort((a, b) => b.date.localeCompare(a.date));
+
+              if (isMounted) setExpenses(expensesList);
+            } catch (expErr) {
+              console.warn("Failed to fetch vehicle expenses:", expErr);
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to load vehicle profile:", err);
@@ -734,6 +826,96 @@ export default function VehicleProfilePage() {
     }
   };
 
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseTitle.trim() || !expenseCost) return;
+    setSubmittingExpense(true);
+
+    const costNum = parseFloat(expenseCost);
+    if (isNaN(costNum)) {
+      alert("Invalid cost number.");
+      setSubmittingExpense(false);
+      return;
+    }
+
+    const ownerUid = isMock ? 'user-marcus-123' : (user?.uid || 'unknown-uid');
+
+    if (isMock) {
+      const newExpense: VehicleExpense = {
+        id: `exp-mock-${Date.now()}`,
+        vehicle_id: vehicleId,
+        owner_id: ownerUid,
+        title: expenseTitle.trim(),
+        category: expenseCategory,
+        cost: costNum,
+        date: expenseDate,
+        notes: expenseNotes.trim()
+      };
+      setExpenses(prev => [newExpense, ...prev]);
+      setExpenseTitle('');
+      setExpenseCost('');
+      setExpenseNotes('');
+      setSubmittingExpense(false);
+      return;
+    }
+
+    try {
+      const payload = {
+        vehicle_id: vehicleId,
+        owner_id: ownerUid,
+        title: expenseTitle.trim(),
+        category: expenseCategory,
+        cost: costNum,
+        date: expenseDate,
+        notes: expenseNotes.trim(),
+        created_at: serverTimestamp()
+      };
+
+      const docRef = await addDoc(collection(db, 'expenses'), payload);
+
+      const newExpense: VehicleExpense = {
+        id: docRef.id,
+        vehicle_id: payload.vehicle_id,
+        owner_id: payload.owner_id,
+        title: payload.title,
+        category: payload.category as any,
+        cost: payload.cost,
+        date: payload.date,
+        notes: payload.notes
+      };
+
+      setExpenses(prev => [newExpense, ...prev]);
+      setExpenseTitle('');
+      setExpenseCost('');
+      setExpenseNotes('');
+
+      await logEvent('success', 'system', `Expense logged for vehicle [${vehicleId}]: ${payload.title} ($${payload.cost})`);
+    } catch (error) {
+      console.error("Failed to save expense:", error);
+      alert("Failed to save expense record.");
+    } finally {
+      setSubmittingExpense(false);
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!confirm("Are you sure you want to delete this expense record?")) return;
+
+    if (isMock) {
+      setExpenses(prev => prev.filter(exp => exp.id !== expenseId));
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'expenses', expenseId));
+      setExpenses(prev => prev.filter(exp => exp.id !== expenseId));
+      await logEvent('success', 'system', `Expense deleted for vehicle [${vehicleId}]: ${expenseId}`);
+    } catch (error) {
+      console.error("Failed to delete expense:", error);
+      alert("Failed to delete expense record.");
+    }
+  };
+
   if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-[#060608] text-[#f4f4f7] flex items-center justify-center">
@@ -741,6 +923,28 @@ export default function VehicleProfilePage() {
       </div>
     );
   }
+
+  // Math for Expenses Tab
+  const purchasePriceVal = vehicle?.purchase_price ? parseFloat(String(vehicle.purchase_price)) || 0 : 0;
+  const fuelTotal = expenses.filter(e => e.category === 'fuel').reduce((sum, e) => sum + e.cost, 0);
+  const licenseTotal = expenses.filter(e => e.category === 'license').reduce((sum, e) => sum + e.cost, 0);
+  const addonTotal = expenses.filter(e => e.category === 'addon').reduce((sum, e) => sum + e.cost, 0);
+  const serviceTotal = expenses.filter(e => e.category === 'service').reduce((sum, e) => sum + e.cost, 0);
+  const insuranceTotal = expenses.filter(e => e.category === 'insurance').reduce((sum, e) => sum + e.cost, 0);
+  const otherTotal = expenses.filter(e => e.category === 'other').reduce((sum, e) => sum + e.cost, 0);
+  const loggedPurchaseTotal = expenses.filter(e => e.category === 'purchase').reduce((sum, e) => sum + e.cost, 0);
+  const finalPurchasePrice = loggedPurchaseTotal || purchasePriceVal;
+  const totalTCO = finalPurchasePrice + fuelTotal + licenseTotal + addonTotal + serviceTotal + insuranceTotal + otherTotal;
+
+  const CATEGORY_MAP = {
+    purchase: { label: 'Purchase Price', color: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' },
+    license: { label: 'Stickers & License', color: 'bg-purple-500/10 border-purple-500/30 text-purple-400' },
+    fuel: { label: 'Fuel', color: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' },
+    addon: { label: 'Add-ons & Mods', color: 'bg-pink-500/10 border-pink-500/30 text-pink-400' },
+    service: { label: 'Service & Maintenance', color: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' },
+    insurance: { label: 'Insurance', color: 'bg-blue-500/10 border-blue-500/30 text-blue-400' },
+    other: { label: 'Other', color: 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400' }
+  };
 
   if (!vehicle) {
     return (
@@ -856,6 +1060,18 @@ export default function VehicleProfilePage() {
           >
             <History className="w-4 h-4" /> Service Logbook
           </button>
+
+          {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
+            <button 
+              onClick={() => setActiveTab('expenses')}
+              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'expenses' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              }`}
+              id="tab-expenses"
+            >
+              <Coins className="w-4 h-4" /> Expenses & TCO
+            </button>
+          )}
 
           {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
             <button 
@@ -1437,6 +1653,253 @@ export default function VehicleProfilePage() {
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* TAB 5: Expense Tracker & TCO */}
+          {activeTab === 'expenses' && (isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
+            <div className="space-y-8 animate-in fade-in duration-200" id="expenses-tab-content">
+              {/* TCO Analytics Dashboard */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Total Investment Card */}
+                <div className="glass-card p-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 col-span-2 relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                  <div className="absolute right-0 top-0 w-24 h-24 bg-yellow-500/5 blur-3xl rounded-full" />
+                  <div className="flex justify-between items-start relative z-10">
+                    <span className="text-[10px] font-mono font-bold text-yellow-500 uppercase tracking-widest">Total Investment (TCO)</span>
+                    <Coins className="w-5 h-5 text-yellow-500 animate-pulse" />
+                  </div>
+                  <div className="relative z-10">
+                    <h4 className="text-2xl font-black text-white font-mono">
+                      ${totalTCO.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </h4>
+                    <p className="text-[9px] text-neutral-450 font-mono mt-1">Purchase Price + All Logged Expenses</p>
+                  </div>
+                </div>
+
+                {/* Purchase Price Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase">Purchase Price</span>
+                    <DollarSign className="w-4 h-4 text-neutral-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${finalPurchasePrice.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Base asset cost</p>
+                  </div>
+                </div>
+
+                {/* Stickers & Decals Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-purple-400 uppercase">Stickers & Decals</span>
+                    <CreditCard className="w-4 h-4 text-purple-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${licenseTotal.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Registration & tags</p>
+                  </div>
+                </div>
+
+                {/* Fuel Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase">Fuel & Gas</span>
+                    <Fuel className="w-4 h-4 text-cyan-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${fuelTotal.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Gas & electric fill-ups</p>
+                  </div>
+                </div>
+
+                {/* Add-ons & Mods Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-pink-400 uppercase">Add-ons & Mods</span>
+                    <Wrench className="w-4 h-4 text-pink-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${addonTotal.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Aftermarket upgrades</p>
+                  </div>
+                </div>
+
+                {/* Maintenance Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">Maintenance</span>
+                    <History className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${serviceTotal.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Service & repairs</p>
+                  </div>
+                </div>
+
+                {/* Insurance Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-blue-450 uppercase">Insurance & Other</span>
+                    <ShieldCheck className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${(insuranceTotal + otherTotal).toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Policies & custom fees</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lower Section: Form and Ledger */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                
+                {/* Log Expense Form */}
+                <div className="md:col-span-5 space-y-4">
+                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                    <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900/60 pb-3">
+                      <Plus className="w-4 h-4 text-yellow-500" /> Log Vehicle Expense
+                    </h3>
+
+                    <form onSubmit={handleAddExpense} className="space-y-3.5">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Expense Title</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={expenseTitle}
+                          onChange={(e) => setExpenseTitle(e.target.value)}
+                          placeholder="e.g. Premium Gas Fill-up, Dyno Tune" 
+                          className="glass-input w-full p-2.5 rounded-xl text-xs"
+                          id="expense-title-input"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Category</label>
+                          <select
+                            value={expenseCategory}
+                            onChange={(e: any) => setExpenseCategory(e.target.value)}
+                            className="glass-input w-full p-2.5 rounded-xl text-xs bg-[#060608] border border-neutral-800 text-neutral-300 font-mono"
+                            id="expense-category-input"
+                          >
+                            <option value="fuel">Fuel & Gas</option>
+                            <option value="license">Stickers & License</option>
+                            <option value="addon">Add-ons & Mods</option>
+                            <option value="service">Service & Maintenance</option>
+                            <option value="insurance">Insurance</option>
+                            <option value="purchase">Purchase Price</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Cost ($ USD)</label>
+                          <input 
+                            type="number" 
+                            required
+                            step="0.01"
+                            value={expenseCost}
+                            onChange={(e) => setExpenseCost(e.target.value)}
+                            placeholder="e.g. 45.50" 
+                            className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                            id="expense-cost-input"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Expense Date</label>
+                        <input 
+                          type="date" 
+                          required
+                          value={expenseDate}
+                          onChange={(e) => setExpenseDate(e.target.value)}
+                          className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                          id="expense-date-input"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Notes / Details</label>
+                        <textarea 
+                          rows={2}
+                          value={expenseNotes}
+                          onChange={(e) => setExpenseNotes(e.target.value)}
+                          placeholder="Fitted hardware, 93 Octane, annual policy renewal..." 
+                          className="glass-input w-full p-2.5 rounded-xl text-xs"
+                          id="expense-notes-input"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submittingExpense}
+                        className="w-full py-3 bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-yellow-600/15 flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
+                        id="submit-expense-btn"
+                      >
+                        {submittingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
+                        Log Expense
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                {/* Ledger Timeline */}
+                <div className="md:col-span-7 space-y-4">
+                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                    <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <History className="w-4 h-4 text-yellow-500" /> Expense Ledger Timeline
+                    </h3>
+
+                    {expenses.length > 0 ? (
+                      <div className="space-y-4 relative border-l border-neutral-900 ml-3 pl-4 max-h-[500px] overflow-y-auto pr-2">
+                        {expenses.map((exp) => {
+                          const catInfo = CATEGORY_MAP[exp.category] || CATEGORY_MAP.other;
+                          return (
+                            <div key={exp.id} className="relative space-y-1.5 text-xs group" data-testid="expense-item">
+                              {/* Dot pointer indicator */}
+                              <div className="absolute -left-[21px] top-1.5 h-3.5 w-3.5 rounded-full border-2 bg-neutral-850 border-neutral-900 group-hover:border-yellow-500 transition-all" />
+                              
+                              <div className="flex items-start justify-between font-bold gap-4">
+                                <div className="space-y-1">
+                                  <h4 className="text-white uppercase flex items-center gap-2 flex-wrap">
+                                    {exp.title}
+                                    <span className={`inline-flex text-[8px] font-mono px-1.5 py-0.5 rounded uppercase font-bold border ${catInfo.color}`}>
+                                      {catInfo.label}
+                                    </span>
+                                  </h4>
+                                  <p className="text-neutral-500 font-mono text-[10px] font-medium">
+                                    {new Date(exp.date).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-white font-mono text-sm">${exp.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  <button
+                                    onClick={() => exp.id && handleDeleteExpense(exp.id)}
+                                    className="text-neutral-600 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                    title="Delete expense"
+                                    data-testid={`delete-btn-${exp.id}`}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                              {exp.notes && (
+                                <p className="text-neutral-400 font-medium pl-1 italic border-l border-neutral-800">{exp.notes}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-neutral-555 space-y-2">
+                        <Coins className="w-8 h-8 mx-auto opacity-40 text-yellow-500 animate-pulse" />
+                        <p className="text-xs uppercase font-mono font-bold">No custom expenses logged yet.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 

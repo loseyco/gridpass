@@ -215,5 +215,63 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await expect(checkbox).toBeChecked();
   });
 
+  test('Owner view of vehicle profile allows expense tracking and TCO ledger management', async ({ page }) => {
+    // Mock Marcus (Owner) login
+    await page.addInitScript(() => {
+      (window as any).__MOCK_USER__ = {
+        uid: "user-marcus-123",
+        email: "marcus@enthusiast.com",
+        is_supporter: true,
+        display_name: "Marcus Mustang"
+      };
+    });
+
+    // Navigate to vehicle profile page
+    await page.goto('/v/mock-v1');
+
+    // Verify "Expenses & TCO" tab is visible
+    const expensesTab = page.locator('button:has-text("Expenses & TCO")');
+    await expect(expensesTab).toBeVisible();
+    await expensesTab.click();
+
+    // Verify stats cards are rendered with default mock math
+    // Default mock has: purchase_price: 4500, fuel: 45, addon: 1200, license: 120
+    // Total Investment TCO should be: 4500 + 45 + 1200 + 120 = 5865.00
+    await expect(page.locator('text=$5,865.00')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '$4,500' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '$120' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '$45' })).toBeVisible();
+
+    // Log a new expense
+    await page.fill('#expense-title-input', 'Performance Dyno Tune');
+    await page.selectOption('#expense-category-input', 'addon');
+    await page.fill('#expense-cost-input', '250.00');
+    await page.fill('#expense-date-input', '2026-06-10');
+    await page.fill('#expense-notes-input', 'Tuned on 93 octane. Gained 15hp.');
+    await page.click('#submit-expense-btn');
+
+    // Verify it was appended to the timeline ledger
+    await expect(page.locator('text=Performance Dyno Tune').first()).toBeVisible();
+
+    // TCO should increase by 250 (5865 + 250 = 6115.00)
+    await expect(page.locator('text=$6,115.00')).toBeVisible();
+
+    // Setup dialog listener for delete confirmation
+    page.once('dialog', async dialog => {
+      await dialog.accept();
+    });
+
+    // Delete the Premium Gas Fill-up expense ($45)
+    // Total TCO should decrease by 45 (6115 - 45 = 6070.00)
+    const gasItem = page.locator('[data-testid="expense-item"]', { hasText: 'Premium Gas Fill-up' });
+    await gasItem.hover();
+    const deleteBtn = gasItem.locator('button[title="Delete expense"]');
+    await deleteBtn.click();
+
+    // Verify the item is gone and TCO is updated
+    await expect(page.locator('text=Premium Gas Fill-up')).not.toBeVisible();
+    await expect(page.locator('text=$6,070.00')).toBeVisible();
+  });
+
 });
 
