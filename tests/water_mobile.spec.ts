@@ -147,4 +147,114 @@ test.describe('Gridpass: Mobile Waterway Dashboard E2E Suite', () => {
     await expect(page.locator('text=Local Waterway').first()).toBeVisible();
   });
 
+  test('Search Box Overlay - spots and friends search filtering and map centering', async ({ page }) => {
+    // Navigate to Round Lake Beach
+    await page.goto('/water/round-lake-beach');
+
+    // Onboarding
+    await page.fill('input[placeholder="e.g. Captain PJ"]', 'Searcher PJ');
+    await page.click('button:has-text("Join Live Map")');
+
+    // 1. Open Search Overlay
+    const searchToggle = page.locator('#search-toggle-btn');
+    await expect(searchToggle).toBeVisible();
+    await searchToggle.click();
+
+    // Verify search overlay panel opens
+    await expect(page.locator('text=Search Waterway')).toBeVisible();
+    const searchInput = page.locator('input[placeholder*="Search food, fuel"]');
+    await expect(searchInput).toBeVisible();
+
+    // 2. Search for a spot
+    await searchInput.fill('Blarney');
+
+    // Expect to see Port of Blarney Boat Launch & Grill and Blarney Island Sandbar & Docks
+    await expect(page.locator('text=Port of Blarney Boat Launch & Grill').first()).toBeVisible();
+    await expect(page.locator('text=Blarney Island Sandbar & Docks').first()).toBeVisible();
+
+    // 3. Search for a friend
+    await searchInput.fill('Marcus');
+    await expect(page.locator('text=Marcus Mustang').first()).toBeVisible();
+    await expect(page.locator('text=Port of Blarney Boat Launch & Grill')).not.toBeVisible();
+
+    // 4. Click result and check details open
+    await searchInput.fill('Blarney');
+    await page.click('text=Port of Blarney Boat Launch & Grill');
+
+    // Search overlay should close
+    await expect(page.locator('text=Search Waterway')).not.toBeVisible();
+
+    // Spot detail bottom sheet should open
+    await expect(page.locator('h4:has-text("Port of Blarney Boat Launch & Grill")')).toBeVisible();
+    await expect(page.locator('text=verified Spot')).toBeVisible();
+    
+    // Close detail sheet
+    await page.click('#close-details-btn');
+  });
+
+  test('Search Filters and Muted Google Maps results', async ({ page }) => {
+    // Navigate to Round Lake Beach
+    await page.goto('/water/round-lake-beach');
+
+    // Onboarding
+    await page.fill('input[placeholder="e.g. Captain PJ"]', 'Google Finder');
+    await page.click('button:has-text("Join Live Map")');
+
+    // Open search
+    const searchToggle = page.locator('#search-toggle-btn');
+    await searchToggle.click();
+
+    // Verify filter buttons exist
+    const allFilter = page.locator('#search-filter-all');
+    const gpFilter = page.locator('#search-filter-gridpass');
+    const gFilter = page.locator('#search-filter-google');
+    await expect(allFilter).toBeVisible();
+    await expect(gpFilter).toBeVisible();
+    await expect(gFilter).toBeVisible();
+
+    // Click "All" filter chip to enable third-party Google Maps place search (since search defaults to gridpass-only)
+    await allFilter.click();
+
+    // Search for "Lake" (should match Gridpass "Petite Lake Sandbar" AND Google Maps "Lakeshore Grillhouse & Bar")
+    const searchInput = page.locator('input[placeholder*="Search food, fuel"]');
+    await searchInput.fill('Lake');
+
+    // Verify both are listed
+    await expect(page.locator('text=Petite Lake Sandbar').first()).toBeVisible();
+    await expect(page.locator('text=Lakeshore Grillhouse & Bar').first()).toBeVisible();
+
+    // Verify Google Maps item has "Google Maps" tag
+    await expect(page.locator('text=Google Maps').first()).toBeVisible();
+
+    // Click "Gridpass Only" filter
+    await gpFilter.click();
+    await expect(page.locator('text=Petite Lake Sandbar').first()).toBeVisible();
+    await expect(page.locator('text=Lakeshore Grillhouse & Bar')).not.toBeVisible();
+
+    // Click "Google Maps" filter
+    await gFilter.click();
+    await expect(page.locator('text=Lakeshore Grillhouse & Bar').first()).toBeVisible();
+    await expect(page.locator('text=Petite Lake Sandbar')).not.toBeVisible();
+
+    // Click the Google Maps result
+    await page.click('text=Lakeshore Grillhouse & Bar');
+
+    // Search closes, and Google Maps place details sheet opens
+    await expect(page.locator('text=Search Waterway')).not.toBeVisible();
+    await expect(page.locator('text=Google Maps Place').first()).toBeVisible();
+    await expect(page.locator('h4:has-text("Lakeshore Grillhouse & Bar")')).toBeVisible();
+
+    // Check click CTA
+    const claimBtn = page.locator('#claim-google-spot-btn');
+    await expect(claimBtn).toBeVisible();
+    await claimBtn.click();
+
+    // Claim opens the drop spot form with prefilled values
+    await expect(page.locator('text=Drop New Pin At GPS')).toBeVisible();
+    await expect(page.locator('input[value="Lakeshore Grillhouse & Bar"]')).toBeVisible();
+
+    // Close add spot
+    await page.click('#close-add-spot-btn');
+  });
+
 });

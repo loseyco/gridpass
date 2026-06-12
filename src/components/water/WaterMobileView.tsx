@@ -7,7 +7,7 @@ import {
   Compass, Eye, EyeOff, Crosshair, Plus, X, ShieldCheck, 
   AlertTriangle, Check, Info, Building2, Edit3, Trash2, 
   Loader2, HelpCircle, Send, Battery, Wifi, User, Waves,
-  Shield, Navigation2, Flame, MapPin, Settings, BarChart2, Share2, Layers
+  Shield, Navigation2, Flame, MapPin, Settings, BarChart2, Share2, Layers, Search
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { SEEDED_VENUES, SEEDED_SPOTS, SEEDED_FRIENDS } from '@/lib/data/venues';
@@ -44,6 +44,7 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
   const friendMarkersRef = useRef<{ [key: string]: L.Marker }>({});
   const spotMarkersRef = useRef<{ [key: string]: L.Marker }>({});
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const tempGoogleMarkerRef = useRef<L.Marker | null>(null);
 
   // Core application states
   const [nickname, setNickname] = useState<string>('');
@@ -57,6 +58,10 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
   const [selectedSpot, setSelectedSpot] = useState<VenueSpot | null>(null);
   const [showAddSpot, setShowAddSpot] = useState<boolean>(false);
   const [showEditSpot, setShowEditSpot] = useState<boolean>(false);
+  const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchSourceFilter, setSearchSourceFilter] = useState<'all' | 'gridpass' | 'google'>('gridpass');
+  const [tempGoogleSpot, setTempGoogleSpot] = useState<any | null>(null);
 
   // SOS States
   const [sosCountdown, setSosCountdown] = useState<number | null>(null);
@@ -96,6 +101,16 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
     { id: 'monmouth-marine-demo', name: 'Monmouth Marine Ford & Boats' },
     { id: 'west-shore-marina', name: 'West Shore Marina' },
     { id: 'blarney-shuttle-dock', name: 'Port of Blarney Boat Rentals' }
+  ];
+
+  // Mock Google Maps Places (Third-party data, less prominent)
+  const MOCK_GOOGLE_PLACES = [
+    { id: 'g-beach-park', name: 'Round Lake Beach Park', latitude: 42.4430, longitude: -88.1250, type: 'park', address: '2007 Civic Center Way, Round Lake Beach, IL 60073', waterRelated: true },
+    { id: 'g-walmart', name: 'Walmart Supercenter', latitude: 42.4580, longitude: -88.1100, type: 'store', address: '2680 N IL Route 83, Round Lake Beach, IL 60073', waterRelated: false },
+    { id: 'g-lakeshore-grill', name: 'Lakeshore Grillhouse & Bar', latitude: 42.4380, longitude: -88.1290, type: 'food', address: '120 W Lakeshore Dr, Round Lake, IL 60073', waterRelated: true },
+    { id: 'g-speedway', name: 'Speedway Gas Station', latitude: 42.4510, longitude: -88.1220, type: 'fuel', address: '2010 N IL Route 83, Round Lake Beach, IL 60073', waterRelated: false },
+    { id: 'g-nippersink-launch', name: 'Nippersink Canoe Launch', latitude: 42.4650, longitude: -88.1400, type: 'launch', address: 'Nippersink Road, Fox Lake, IL 60020', waterRelated: true },
+    { id: 'g-hook-line', name: 'Hook Line & Sinker Bait Shop', latitude: 42.4360, longitude: -88.1350, type: 'bait', address: '302 W Nippersink Rd, Round Lake, IL 60073', waterRelated: true }
   ];
 
   // Dynamic venue config helpers
@@ -241,9 +256,9 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
 
   // Initialize data
   useEffect(() => {
-    // Initial spots & friends
+    // Initial spots & friends (only load demo data if running E2E tests mock)
     setSpots(SEEDED_SPOTS.filter(s => s.venue_id === venue.id));
-    setFriends(SEEDED_FRIENDS);
+    setFriends(isMock ? SEEDED_FRIENDS : []);
     
     // Set nickname if user is authenticated
     if (user) {
@@ -251,7 +266,7 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
       setShowOnboarding(false);
       setIsSpectator(false);
     }
-  }, [user, venue]);
+  }, [user, venue, isMock]);
 
   // Auto-bind to nearest venue based on coordinates
   useEffect(() => {
@@ -374,15 +389,15 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
     const map = L.map(mapContainerRef.current, {
       zoomControl: false,
       attributionControl: false,
-      maxZoom: 18,
+      maxZoom: 22,
       minZoom: 10
     }).setView([userCoords.lat, userCoords.lng], 14);
 
     mapRef.current = map;
 
     // Google Maps Roadmap tiles
-    const tiles = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-      maxZoom: 20,
+    const tiles = L.tileLayer('https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}', {
+      maxZoom: 22,
       attribution: '© Google'
     }).addTo(map);
 
@@ -410,10 +425,139 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
     if (tileLayerRef.current) {
       const url = mapType === 'satellite'
         ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Hybrid (Sat + Roads/Labels)
-        : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Roadmap
+        : 'https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}'; // Google Roadmap
       tileLayerRef.current.setUrl(url);
     }
   }, [mapType]);
+
+  // Distance helper
+  const calculateDistanceMiles = useCallback((lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const dLat = lat2 - lat1;
+    const dLng = lng2 - lng1;
+    return Math.sqrt(dLat * dLat + dLng * dLng) * 69; // Euclidean approximation * 69 miles/deg
+  }, []);
+
+  // Search Results selector
+  const getSearchResults = useCallback(() => {
+    if (!searchQuery.trim()) return [];
+    const query = searchQuery.toLowerCase();
+
+    const spotResults = searchSourceFilter === 'google' ? [] : spots
+      .filter(spot => spot.status !== 'reported_closed' && spot.name.toLowerCase().includes(query))
+      .map(spot => ({
+        type: 'spot' as const,
+        id: spot.id,
+        name: spot.name,
+        category: spot.features[0] || 'spot',
+        distance: calculateDistanceMiles(userCoords.lat, userCoords.lng, spot.latitude, spot.longitude),
+        latitude: spot.latitude,
+        longitude: spot.longitude,
+        item: spot
+      }));
+
+    const friendResults = searchSourceFilter === 'google' ? [] : friends
+      .filter(friend => friend.status !== 'ghost' && friend.display_name.toLowerCase().includes(query))
+      .map(friend => ({
+        type: 'friend' as const,
+        id: friend.user_id,
+        name: friend.display_name,
+        category: 'friend',
+        distance: calculateDistanceMiles(userCoords.lat, userCoords.lng, friend.latitude, friend.longitude),
+        latitude: friend.latitude,
+        longitude: friend.longitude,
+        item: friend
+      }));
+
+    const googleResults = searchSourceFilter === 'gridpass' ? [] : MOCK_GOOGLE_PLACES
+      .filter(place => place.name.toLowerCase().includes(query) && place.waterRelated)
+      .map(place => ({
+        type: 'google' as const,
+        id: place.id,
+        name: place.name,
+        category: place.type,
+        distance: calculateDistanceMiles(userCoords.lat, userCoords.lng, place.latitude, place.longitude),
+        latitude: place.latitude,
+        longitude: place.longitude,
+        address: place.address,
+        item: place
+      }));
+
+    const sortedGridpass = [...spotResults, ...friendResults].sort((a, b) => a.distance - b.distance);
+    const sortedGoogle = googleResults.sort((a, b) => a.distance - b.distance);
+
+    // Keep first-party Gridpass results at the top for maximum prominence
+    return [...sortedGridpass, ...sortedGoogle];
+  }, [searchQuery, searchSourceFilter, spots, friends, userCoords, calculateDistanceMiles]);
+
+  // Handle Search Result Click
+  const handleSearchResultClick = useCallback((result: any) => {
+    if (mapRef.current) {
+      mapRef.current.setView([result.latitude, result.longitude], 17);
+    }
+
+    if (result.type === 'spot') {
+      setSelectedSpot(result.item);
+      setTempGoogleSpot(null);
+      setShowAddSpot(false);
+      setShowEditSpot(false);
+    } else if (result.type === 'friend') {
+      const marker = friendMarkersRef.current[result.id];
+      if (marker) {
+        marker.openPopup();
+      }
+      setSelectedSpot(null);
+      setTempGoogleSpot(null);
+    } else if (result.type === 'google') {
+      setTempGoogleSpot(result.item);
+      setSelectedSpot(null);
+      setShowAddSpot(false);
+      setShowEditSpot(false);
+    }
+
+    setShowSearch(false);
+    setSearchQuery('');
+  }, []);
+
+  // Render/Update Temporary Google Maps marker
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+
+    // Clear old temporary marker
+    if (tempGoogleMarkerRef.current) {
+      map.removeLayer(tempGoogleMarkerRef.current);
+      tempGoogleMarkerRef.current = null;
+    }
+
+    if (!tempGoogleSpot) return;
+
+    const latlng: L.LatLngExpression = [tempGoogleSpot.latitude, tempGoogleSpot.longitude];
+    const markerHtml = `
+      <div class="relative w-8 h-8 flex items-center justify-center cursor-pointer">
+        <div class="absolute w-7 h-7 bg-neutral-950/90 border border-neutral-750 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform animate-bounce" style="border-top: 3px solid #737373;">
+          <span class="text-[12px]">📍</span>
+        </div>
+      </div>
+    `;
+
+    const marker = L.marker(latlng, {
+      icon: L.divIcon({
+        html: markerHtml,
+        className: `temp-google-marker-${tempGoogleSpot.id}`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      })
+    }).addTo(map);
+
+    marker.on('click', () => {
+      setTempGoogleSpot(tempGoogleSpot);
+      setSelectedSpot(null);
+      setShowAddSpot(false);
+      setShowEditSpot(false);
+    });
+
+    tempGoogleMarkerRef.current = marker;
+  }, [tempGoogleSpot]);
 
   // Center Map View
   const handleRecenter = useCallback(() => {
@@ -798,10 +942,19 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
         {/* Left HUD: Telemetry slide-out trigger & Venue name */}
         <div className="pointer-events-auto flex items-center gap-2">
           <button 
-            onClick={() => setShowTelemetry(!showTelemetry)}
+            onClick={() => { setShowTelemetry(!showTelemetry); if (!showTelemetry) setShowSearch(false); }}
             className="w-12 h-12 bg-neutral-950/75 backdrop-blur-md border border-neutral-900/60 rounded-full flex items-center justify-center text-white active:scale-95 transition-all shadow-lg"
           >
             <Compass className={`w-5 h-5 text-cyan-400 ${showTelemetry ? 'rotate-90' : ''} transition-transform`} />
+          </button>
+
+          <button 
+            id="search-toggle-btn"
+            onClick={() => { setShowSearch(!showSearch); if (!showSearch) setShowTelemetry(false); }}
+            className={`w-12 h-12 bg-neutral-950/75 backdrop-blur-md border border-neutral-900/60 rounded-full flex items-center justify-center text-white active:scale-95 transition-all shadow-lg ${showSearch ? 'border-cyan-500' : ''}`}
+            title="Search Spots & Friends"
+          >
+            <Search className="w-5 h-5 text-cyan-400" />
           </button>
           
           <div className="px-4 py-2 bg-neutral-950/75 backdrop-blur-md border border-neutral-900/60 rounded-full shadow-lg text-left block">
@@ -843,6 +996,154 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
         </div>
 
       </div>
+
+      {/* Sliding Search Overlay Panel */}
+      {showSearch && (
+        <div className="absolute top-20 left-4 right-4 bg-neutral-950/95 backdrop-blur-md border border-neutral-900 rounded-[2rem] z-30 p-5 shadow-2xl flex flex-col gap-4 animate-in slide-in-from-top duration-300">
+          <div className="flex justify-between items-center border-b border-neutral-900 pb-2">
+            <span className="text-[8.5px] font-mono font-bold text-cyan-400 uppercase tracking-widest">Search Waterway</span>
+            <button 
+              id="close-search-btn"
+              onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchSourceFilter('all'); }}
+              className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-850 flex items-center justify-center text-neutral-450 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Search food, fuel, launches, sandbars, friends..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-neutral-900 border border-neutral-850 text-white rounded-2xl pl-10 pr-12 py-3 text-xs outline-none min-h-[46px]"
+              autoFocus
+            />
+            <Search className="w-4.5 h-4.5 text-neutral-400 absolute left-3 top-3.5" />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-3.5 text-neutral-400 hover:text-white text-xs font-bold font-mono"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Source Filter Chips */}
+          <div className="flex gap-2 pb-1">
+            <button
+              type="button"
+              id="search-filter-all"
+              onClick={() => setSearchSourceFilter('all')}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase transition-all border ${
+                searchSourceFilter === 'all' 
+                  ? 'bg-cyan-500/15 border-cyan-500 text-cyan-400 font-black' 
+                  : 'bg-neutral-900 border-neutral-850 text-neutral-450 hover:text-white'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              id="search-filter-gridpass"
+              onClick={() => setSearchSourceFilter('gridpass')}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase transition-all border ${
+                searchSourceFilter === 'gridpass' 
+                  ? 'bg-cyan-500/15 border-cyan-500 text-cyan-400 font-black' 
+                  : 'bg-neutral-900 border-neutral-850 text-neutral-450 hover:text-white'
+              }`}
+            >
+              Gridpass Only
+            </button>
+            <button
+              type="button"
+              id="search-filter-google"
+              onClick={() => setSearchSourceFilter('google')}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase transition-all border ${
+                searchSourceFilter === 'google' 
+                  ? 'bg-neutral-950/20 border-neutral-600 text-neutral-400 font-black shadow-inner' 
+                  : 'bg-neutral-900 border-neutral-850 text-neutral-450 hover:text-white'
+              }`}
+              style={searchSourceFilter === 'google' ? { borderColor: '#404040', backgroundColor: 'rgba(64, 64, 64, 0.15)', color: '#888888' } : {}}
+            >
+              Google Maps
+            </button>
+          </div>
+          
+          {searchQuery.trim() ? (
+            <div className="space-y-2 max-h-[200px] overflow-y-auto no-scrollbar">
+              {getSearchResults().length > 0 ? (
+                getSearchResults().map((result: any) => {
+                  const isGoogle = result.type === 'google';
+                  
+                  let emoji = '⚓';
+                  if (result.type === 'friend') emoji = '🟢';
+                  else if (result.category === 'hazard') emoji = '⚠️';
+                  else if (result.category === 'food') emoji = '🍔';
+                  else if (result.category === 'fuel') emoji = '⛽';
+                  else if (result.category === 'sandbar') emoji = '🏝️';
+                  else if (result.category === 'vendor' || result.category === 'business') emoji = '🏢';
+                  else if (isGoogle) {
+                    if (result.category === 'food') emoji = '🍽️';
+                    else if (result.category === 'fuel') emoji = '⛽';
+                    else if (result.category === 'park') emoji = '🌳';
+                    else emoji = '📍';
+                  }
+
+                  if (isGoogle) {
+                    return (
+                      <button
+                        key={`${result.type}-${result.id}`}
+                        onClick={() => handleSearchResultClick(result)}
+                        className="w-full p-2.5 bg-neutral-900/30 border border-neutral-850 hover:border-neutral-700/50 rounded-xl flex items-center justify-between transition-all active:scale-98 text-left"
+                      >
+                        <div className="flex items-center gap-2 text-left">
+                          <span className="text-xs text-neutral-500">{emoji}</span>
+                          <div>
+                            <div className="text-[11px] font-bold text-neutral-450 leading-tight">{result.name}</div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[7.5px] font-mono text-neutral-500 uppercase tracking-wide">{result.category}</span>
+                              <span className="text-[7px] font-mono font-bold bg-neutral-950 px-1 py-0.2 rounded border border-neutral-900 text-neutral-500 uppercase">Google Maps</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[8.5px] font-mono font-bold text-neutral-550">
+                          {result.distance.toFixed(1)} mi
+                        </div>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      onClick={() => handleSearchResultClick(result)}
+                      className="w-full p-3 bg-neutral-900/60 border border-neutral-850 hover:border-cyan-500/50 rounded-xl flex items-center justify-between transition-all active:scale-98"
+                    >
+                      <div className="flex items-center gap-2.5 text-left">
+                        <span className="text-sm">{emoji}</span>
+                        <div>
+                          <div className="text-xs font-bold text-white capitalize leading-tight">{result.name}</div>
+                          <div className="text-[8px] font-mono text-neutral-500 uppercase tracking-wider mt-0.5">{result.type}</div>
+                        </div>
+                      </div>
+                      <div className="text-[9px] font-mono font-bold text-cyan-400">
+                        {result.distance.toFixed(1)} mi
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="py-6 text-center text-xs text-neutral-500 font-medium">No results found for "{searchQuery}"</div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4 text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Type to search items around you</div>
+          )}
+        </div>
+      )}
 
       {/* Left Telemetry Sidebar Panel */}
       <div className={`absolute top-0 bottom-0 left-0 w-[280px] bg-neutral-950/95 backdrop-blur-lg border-r border-neutral-900 z-40 transition-transform duration-300 shadow-2xl flex flex-col justify-between ${showTelemetry ? 'translate-x-0' : '-translate-x-full invisible pointer-events-none'}`}>
@@ -1169,6 +1470,65 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
         </div>
       )}
 
+      {/* Bottom Sheet Modal: Temporary Google Maps Spot Details Drawer Panel */}
+      {tempGoogleSpot && (
+        <div className="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 backdrop-blur-md border-t border-neutral-900 rounded-t-[2rem] z-30 p-6 space-y-5 shadow-2xl animate-in slide-in-from-bottom duration-300 text-left">
+          <button 
+            id="close-google-details-btn"
+            onClick={() => setTempGoogleSpot(null)}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-neutral-900 border border-neutral-850 flex items-center justify-center text-neutral-450 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="space-y-1">
+            <div className="flex gap-2 items-center">
+              <span className="text-[8.5px] font-mono font-bold bg-neutral-900 border border-neutral-800 text-neutral-500 px-2 py-0.5 rounded uppercase">
+                Google Maps Place
+              </span>
+            </div>
+            <h4 className="text-base font-black text-neutral-300 uppercase pt-1 tracking-tight leading-tight">{tempGoogleSpot.name}</h4>
+            <p className="text-[8.5px] font-mono text-neutral-500 font-bold">Coordinates: {tempGoogleSpot.latitude.toFixed(5)}, {tempGoogleSpot.longitude.toFixed(5)}</p>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[8.5px] font-mono font-bold text-neutral-550 uppercase tracking-widest block">Address</span>
+            <p className="text-xs text-neutral-400 font-medium">{tempGoogleSpot.address}</p>
+          </div>
+
+          <div className="p-3 bg-neutral-900/40 border border-neutral-850 rounded-2xl flex items-start gap-2 text-[10px] text-neutral-450 leading-relaxed">
+            <Info className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />
+            <span>
+              This location is imported from Google Maps search index. You can claim it to register it as an official Gridpass hotspot with water depths, observation logs, and safety tags.
+            </span>
+          </div>
+
+          {/* Action Row */}
+          <div className="pt-2 border-t border-neutral-900 flex gap-3">
+            <button 
+              id="claim-google-spot-btn"
+              onClick={() => {
+                setNewSpotName(tempGoogleSpot.name);
+                setNewSpotNotes(`Imported from Google Maps at ${tempGoogleSpot.address}`);
+                setNewSpotType(tempGoogleSpot.type === 'food' ? 'food' : tempGoogleSpot.type === 'fuel' ? 'fuel' : tempGoogleSpot.type === 'launch' ? 'launch' : 'dock');
+                setUserCoords({ lat: tempGoogleSpot.latitude, lng: tempGoogleSpot.longitude });
+                setShowAddSpot(true);
+                setTempGoogleSpot(null);
+              }}
+              className="flex-1 py-3.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-neutral-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer min-h-[46px]"
+            >
+              <Plus className="w-4 h-4 text-cyan-400" /> Claim Spot on Gridpass
+            </button>
+            <button 
+              onClick={() => setTempGoogleSpot(null)}
+              className="px-6 py-3.5 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 text-neutral-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider active:scale-95 cursor-pointer min-h-[46px]"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Bottom Sheet Modal: Drop/Add New Spot Form */}
       {showAddSpot && (
         <div className="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 backdrop-blur-md border-t border-neutral-900 rounded-t-[2rem] z-30 p-6 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-300 text-left overflow-y-auto max-h-[90dvh] no-scrollbar">
