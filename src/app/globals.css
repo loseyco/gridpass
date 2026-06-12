@@ -21,6 +21,40 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Map cyan tailwind utilities to dynamic mobile theme variables */
+  --color-cyan-400: var(--mobile-accent-light, #22d3ee);
+  --color-cyan-500: var(--mobile-accent, #06b6d4);
+  --color-cyan-600: var(--mobile-accent-dark, #0891b2);
+  --color-cyan-950: var(--mobile-accent-deep, #083344);
+}
+
+:root, .waterway-theme {
+  --mobile-accent: #06b6d4;      /* Cyan 500 */
+  --mobile-accent-dark: #0891b2; /* Cyan 600 */
+  --mobile-accent-light: #22d3ee;/* Cyan 400 */
+  --mobile-accent-deep: #083344; /* Cyan 950 */
+}
+
+.racetrack-theme {
+  --mobile-accent: #ef4444;      /* Red 500 */
+  --mobile-accent-dark: #dc2626; /* Red 600 */
+  --mobile-accent-light: #f87171;/* Red 400 */
+  --mobile-accent-deep: #450a0a; /* Red 950 */
+}
+
+.offroad-theme {
+  --mobile-accent: #f59e0b;      /* Amber 500 */
+  --mobile-accent-dark: #d97706; /* Amber 600 */
+  --mobile-accent-light: #fbbf24;/* Amber 400 */
+  --mobile-accent-deep: #451a03; /* Amber 950 */
+}
+
+.event-theme {
+  --mobile-accent: #eab308;      /* Yellow 500 */
+  --mobile-accent-dark: #ca8a04; /* Yellow 600 */
+  --mobile-accent-light: #facc15;/* Yellow 400 */
+  --mobile-accent-deep: #422006; /* Yellow 950 */
 }
 
 /* Base resets & typography */
@@ -155,3 +189,19 @@ html, body {
 .gold-glow-ring {
   animation: supporter-glow 3s infinite ease-in-out;
 }
+
+/* Custom Leaflet Dark/Glassmorphic Popups */
+.custom-map-popup .leaflet-popup-content-wrapper {
+  background: rgba(10, 10, 12, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f4f4f7 !important;
+  border-radius: 1rem !important;
+  padding: 2px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+.custom-map-popup .leaflet-popup-tip {
+  background: rgba(10, 10, 12, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+

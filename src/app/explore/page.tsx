@@ -10,6 +10,7 @@ import {
   Search, Car, User, Building2, Compass, ShieldCheck, 
   MapPin, Loader2, Wrench, Heart
 } from 'lucide-react';
+import { SEEDED_VENUES } from '@/lib/data/venues';
 
 interface ExploreVehicle {
   id: string;
@@ -41,13 +42,21 @@ interface ExploreBusiness {
   is_pro?: boolean;
 }
 
+interface ExploreVenue {
+  id: string;
+  name: string;
+  type: string;
+  location?: string;
+}
+
 export default function ExplorePage() {
-  const [activeTab, setActiveTab] = useState<'vehicles' | 'people' | 'businesses'>('vehicles');
+  const [activeTab, setActiveTab] = useState<'vehicles' | 'people' | 'businesses' | 'venues'>('vehicles');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [vehicles, setVehicles] = useState<ExploreVehicle[]>([]);
   const [people, setPeople] = useState<ExploreUser[]>([]);
   const [businesses, setBusinesses] = useState<ExploreBusiness[]>([]);
+  const [venues, setVenues] = useState<ExploreVenue[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
@@ -109,7 +118,7 @@ export default function ExplorePage() {
             id: 'user-kristina-456',
             display_name: 'Kristina',
             bio: 'Co-owner of the 2007 Sea-Doo GTI SE. Out on the water every weekend!',
-            location: 'Lake Geneva, WI',
+            location: 'Round Lake Beach, IL',
             is_supporter: false
           },
           {
@@ -145,10 +154,18 @@ export default function ExplorePage() {
           }
         ];
 
+        const mockVenues: ExploreVenue[] = SEEDED_VENUES.map(v => ({
+          id: v.id,
+          name: v.name,
+          type: v.type === 'waterway' ? 'Waterway' : v.type === 'racetrack' ? 'Racetrack' : v.type === 'offroad_park' ? 'Offroad Park' : 'Event Center',
+          location: v.location
+        }));
+
         if (isMounted) {
           setVehicles(mockVehicles);
           setPeople(mockPeople);
           setBusinesses(mockBusinesses);
+          setVenues(mockVenues);
           setLoading(false);
         }
         return;
@@ -156,10 +173,11 @@ export default function ExplorePage() {
 
       try {
         // Real firestore load
-        const [vSnap, uSnap, bSnap] = await Promise.all([
+        const [vSnap, uSnap, bSnap, venueSnap] = await Promise.all([
           getDocs(query(collection(db, 'vehicles'), limit(30))),
           getDocs(query(collection(db, 'users'), limit(30))),
-          getDocs(query(collection(db, 'businesses'), limit(30)))
+          getDocs(query(collection(db, 'businesses'), limit(30))),
+          getDocs(query(collection(db, 'venues'), limit(30)))
         ]);
 
         const vList = vSnap.docs.map(docSnap => ({
@@ -177,15 +195,44 @@ export default function ExplorePage() {
           ...docSnap.data()
         } as ExploreBusiness));
 
+        const venueList = venueSnap.docs.map(docSnap => {
+          const data = docSnap.data();
+          const rawType = data.type || 'racetrack';
+          return {
+            id: docSnap.id,
+            name: data.name || 'Anonymous Venue',
+            type: rawType === 'waterway' ? 'Waterway' : rawType === 'racetrack' ? 'Racetrack' : rawType === 'offroad_park' ? 'Offroad Park' : 'Event Center',
+            location: data.location
+          } as ExploreVenue;
+        });
+
+        // Use seed fallbacks if Firestore contains no venues
+        const finalVenues = venueList.length > 0 ? venueList : SEEDED_VENUES.map(v => ({
+          id: v.id,
+          name: v.name,
+          type: v.type === 'waterway' ? 'Waterway' : v.type === 'racetrack' ? 'Racetrack' : v.type === 'offroad_park' ? 'Offroad Park' : 'Event Center',
+          location: v.location
+        }));
+
         if (isMounted) {
           setVehicles(vList);
           setPeople(uList);
           setBusinesses(bList);
+          setVenues(finalVenues);
           setLoading(false);
         }
       } catch (err) {
         console.error("Failed to load explore directory data:", err);
-        if (isMounted) setLoading(false);
+        // Fallback to seeds on db failure
+        if (isMounted) {
+          setVenues(SEEDED_VENUES.map(v => ({
+            id: v.id,
+            name: v.name,
+            type: v.type === 'waterway' ? 'Waterway' : v.type === 'racetrack' ? 'Racetrack' : v.type === 'offroad_park' ? 'Offroad Park' : 'Event Center',
+            location: v.location
+          })));
+          setLoading(false);
+        }
       }
     }
 
@@ -223,6 +270,15 @@ export default function ExplorePage() {
     );
   });
 
+  const filteredVenues = venues.filter(v => {
+    const term = searchQuery.toLowerCase();
+    return (
+      (v.name || '').toLowerCase().includes(term) ||
+      (v.type || '').toLowerCase().includes(term) ||
+      (v.location || '').toLowerCase().includes(term)
+    );
+  });
+
   return (
     <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col">
       <div className="mesh-glow" />
@@ -231,15 +287,15 @@ export default function ExplorePage() {
       <div className="max-w-6xl mx-auto px-6 pt-28 pb-16 w-full flex-1 relative z-10 space-y-8">
         
         {/* Title Block */}
-        <div className="glass-card p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/40 space-y-3">
+        <div className="glass-card p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/40 space-y-3 text-left">
           <span className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest bg-red-950/20 border border-red-900/30 px-3 py-1 rounded-full inline-flex items-center gap-1">
-            <Compass className="w-3.5 h-3.5" /> Registry Directory
+            <Compass className="w-3.5 h-3.5 animate-spin-slow" /> Registry Directory
           </span>
           <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none">
             Explore Gridpass
           </h1>
           <p className="text-sm text-neutral-400 max-w-xl">
-            Browse and search public passports for vehicles, registered drivers, and verified B2B automotive businesses.
+            Browse and search public passports for vehicles, registered drivers, verified B2B automotive businesses, and active geofenced venues.
           </p>
         </div>
 
@@ -271,6 +327,14 @@ export default function ExplorePage() {
             >
               <Building2 className="w-4 h-4" /> Businesses ({filteredBusinesses.length})
             </button>
+            <button 
+              onClick={() => { setActiveTab('venues'); setSearchQuery(''); }}
+              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'venues' ? 'border-red-500 text-white font-black' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              }`}
+            >
+              <Compass className="w-4 h-4" /> Venues ({filteredVenues.length})
+            </button>
           </div>
 
           {/* Search Box */}
@@ -294,7 +358,7 @@ export default function ExplorePage() {
             <Loader2 className="w-8 h-8 text-[#bd2925] animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
             
             {/* Vehicles Render */}
             {activeTab === 'vehicles' && (
@@ -425,6 +489,38 @@ export default function ExplorePage() {
                 ))
               ) : (
                 <div className="col-span-full py-16 text-center text-neutral-500">No partners match your search.</div>
+              )
+            )}
+
+            {/* Venues Render */}
+            {activeTab === 'venues' && (
+              filteredVenues.length > 0 ? (
+                filteredVenues.map(v => (
+                  <div key={v.id} className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/40 flex flex-col justify-between space-y-4 hover:border-neutral-850 hover:bg-neutral-900/10 transition-all animate-fade-in">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-mono font-bold text-cyan-400 uppercase bg-cyan-950/20 border border-cyan-900/20 px-2 py-0.5 rounded">
+                            {v.type}
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-black text-white uppercase mt-2">{v.name}</h3>
+                        {v.location && (
+                          <p className="text-[10px] text-neutral-500 font-mono font-bold flex items-center gap-0.5 mt-1"><MapPin className="w-3 h-3 text-rose-500" /> {v.location}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/venue/${v.id}`}
+                      className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-850 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[40px]"
+                    >
+                      Enter Venue Portal
+                    </Link>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-16 text-center text-neutral-500">No venues match your search.</div>
               )
             )}
 

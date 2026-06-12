@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Loader2, AlertTriangle } from 'lucide-react';
@@ -11,10 +10,11 @@ import VenueMarshalView from '@/components/venue/VenueMarshalView';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 
-export default function GridConsolePage() {
-  const params = useParams();
-  const trackId = (params?.id as string) || '';
-  
+interface VenueMarshalClientProps {
+  venueId: string;
+}
+
+export default function VenueMarshalClient({ venueId }: VenueMarshalClientProps) {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,47 +23,42 @@ export default function GridConsolePage() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadTrack() {
-      if (!trackId) {
+    async function loadVenue() {
+      if (!venueId) {
         setLoading(false);
         return;
       }
 
-      // Map "demo-track" to "badlands-raceway" to satisfy Playwright E2E expectations
-      const targetId = trackId === 'demo-track' ? 'badlands-raceway' : trackId;
-      const seeded = SEEDED_VENUES.find(v => v.id === targetId);
-      
+      // Check seeded list first
+      const seeded = SEEDED_VENUES.find(v => v.id === venueId);
       if (seeded) {
         if (isMounted) {
-          // Keep the ID as trackId for tests
-          setVenue({
-            ...seeded,
-            id: trackId
-          });
+          setVenue(seeded);
           setLoading(false);
         }
         return;
       }
 
       if (isMock) {
-        const demoVenue = SEEDED_VENUES.find(v => v.id === 'badlands-raceway') || SEEDED_VENUES[0];
+        // Fallback for demo in mock environment
+        const demoVenue = SEEDED_VENUES.find(v => v.id === 'round-lake-beach') || SEEDED_VENUES[0];
         if (isMounted) {
-          setVenue({ ...demoVenue, id: trackId });
+          setVenue({ ...demoVenue, id: venueId, name: venueId.replace(/-/g, ' ').toUpperCase() });
           setLoading(false);
         }
         return;
       }
 
       try {
-        const tDoc = await getDoc(doc(db, 'venues', trackId));
-        if (tDoc.exists()) {
-          const data = tDoc.data();
+        const vDoc = await getDoc(doc(db, 'venues', venueId));
+        if (vDoc.exists()) {
+          const data = vDoc.data();
           if (isMounted) {
             setVenue({
-              id: tDoc.id,
-              name: data.name || 'Anonymous Raceway',
+              id: vDoc.id,
+              name: data.name || 'Anonymous Venue',
               location: data.location || 'Unknown Location',
-              type: 'racetrack',
+              type: data.type || 'racetrack',
               pois: data.pois || [],
               hazards: data.hazards || [],
               rules: data.rules || [],
@@ -74,36 +69,37 @@ export default function GridConsolePage() {
             } as Venue);
           }
         } else {
-          // Default fallback
-          const fallbackTrack: Venue = {
-            id: trackId,
-            name: trackId.replace(/-/g, ' ').toUpperCase(),
+          // Generate fallback venue based on ID format
+          const type: Venue['type'] = venueId.includes('lake') || venueId.includes('water') ? 'waterway' : 'racetrack';
+          const defaultVenue: Venue = {
+            id: venueId,
+            name: venueId.replace(/-/g, ' ').toUpperCase(),
             location: 'Local Region',
-            type: 'racetrack',
+            type,
             pois: [],
             hazards: [],
             rules: [
-              { title: 'Motorsports Waiver Required', desc: 'All drivers must sign safety releases.' }
+              { title: 'Observe Safety Rules', desc: 'Maintain safe speeds and follow local guidelines.' }
             ],
             occupancy: { current: 0, max: 100 }
           };
-          if (isMounted) setVenue(fallbackTrack);
+          if (isMounted) setVenue(defaultVenue);
         }
       } catch (err) {
-        console.error("Failed to load track from Firestore:", err);
+        console.error("Failed to load venue from Firestore:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
     }
 
-    loadTrack();
+    loadVenue();
     return () => { isMounted = false; };
-  }, [trackId, isMock]);
+  }, [venueId, isMock]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#060608] text-[#f4f4f7] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
       </div>
     );
   }
@@ -113,7 +109,8 @@ export default function GridConsolePage() {
       <main className="min-h-screen bg-[#060608] text-[#f4f4f7] flex flex-col items-center justify-center space-y-4">
         <Navbar />
         <AlertTriangle className="w-16 h-16 text-yellow-500" />
-        <h2 className="text-xl font-bold uppercase tracking-wider">Track Portal Not Found</h2>
+        <h2 className="text-xl font-bold uppercase tracking-wider">Venue Station Not Found</h2>
+        <a href="/explore" className="text-xs font-mono text-cyan-400 hover:underline">Explore Active Registry</a>
         <Footer />
       </main>
     );
