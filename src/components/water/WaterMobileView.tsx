@@ -7,7 +7,7 @@ import {
   Compass, Eye, EyeOff, Crosshair, Plus, X, ShieldCheck, 
   AlertTriangle, Check, Info, Building2, Edit3, Trash2, 
   Loader2, HelpCircle, Send, Battery, Wifi, User, Waves,
-  Shield, Navigation2, Flame, MapPin, Settings, BarChart2, Share2
+  Shield, Navigation2, Flame, MapPin, Settings, BarChart2, Share2, Layers
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { SEEDED_VENUES, SEEDED_SPOTS, SEEDED_FRIENDS } from '@/lib/data/venues';
@@ -43,12 +43,14 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
   const userMarkerRef = useRef<L.Marker | null>(null);
   const friendMarkersRef = useRef<{ [key: string]: L.Marker }>({});
   const spotMarkersRef = useRef<{ [key: string]: L.Marker }>({});
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Core application states
   const [nickname, setNickname] = useState<string>('');
   const [showOnboarding, setShowOnboarding] = useState<boolean>(true);
   const [isSpectator, setIsSpectator] = useState<boolean>(false);
   const [visibility, setVisibility] = useState<'ghost' | 'friends' | 'public'>('public');
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
 
   // Interactive panels
   const [showTelemetry, setShowTelemetry] = useState<boolean>(false);
@@ -379,10 +381,12 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
     mapRef.current = map;
 
     // Google Maps Roadmap tiles
-    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    const tiles = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       maxZoom: 20,
       attribution: '© Google'
     }).addTo(map);
+
+    tileLayerRef.current = tiles;
 
     // Initial load adjustment
     const timer = setTimeout(() => {
@@ -396,9 +400,20 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        tileLayerRef.current = null;
       }
     };
   }, []);
+
+  // Dynamically toggle Google Maps tile layer types (Roadmap / Hybrid Satellite)
+  useEffect(() => {
+    if (tileLayerRef.current) {
+      const url = mapType === 'satellite'
+        ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Hybrid (Sat + Roads/Labels)
+        : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Roadmap
+      tileLayerRef.current.setUrl(url);
+    }
+  }, [mapType]);
 
   // Center Map View
   const handleRecenter = useCallback(() => {
@@ -955,6 +970,18 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
           title="Share Live Radar Link"
         >
           <Share2 className="w-5.5 h-5.5 text-cyan-400" />
+        </button>
+
+        {/* Map Type Toggle (Roadmap / Satellite Hybrid) */}
+        <button 
+          onClick={() => setMapType(prev => prev === 'roadmap' ? 'satellite' : 'roadmap')}
+          className="pointer-events-auto w-14 h-14 bg-neutral-950/75 backdrop-blur-md border border-neutral-900/60 rounded-full flex flex-col items-center justify-center text-white active:scale-95 transition-all shadow-lg"
+          title="Toggle Map Satellite View"
+        >
+          <Layers className="w-5 h-5 text-cyan-400" />
+          <span className="text-[7px] font-mono font-bold uppercase mt-1 leading-none text-neutral-300">
+            {mapType === 'roadmap' ? 'Road' : 'Sat'}
+          </span>
         </button>
 
         {/* Recenter Button (56px touch target area) */}
