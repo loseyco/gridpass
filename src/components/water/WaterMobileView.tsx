@@ -378,9 +378,10 @@ export default function WaterMobileView({ venueId }: WaterMobileViewProps) {
 
     mapRef.current = map;
 
-    // Dark styled map tiles
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{y}/{x}{r}.png', {
-      maxZoom: 19
+    // Google Maps Roadmap tiles
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      attribution: '© Google'
     }).addTo(map);
 
     // Initial load adjustment
