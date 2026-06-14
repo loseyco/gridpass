@@ -163,8 +163,8 @@ test.describe('Gridpass Guides & Slalom Map E2E Suite', () => {
     await expect(page.locator('text=Sequoit Harbor Marina Launch')).toBeVisible();
 
     // Verify that hotspots are displayed
-    await expect(page.locator('text=Channel Lake Beach Bar')).toBeVisible();
-    await expect(page.locator('text=Route 173 Channel & Bridge')).toBeVisible();
+    await expect(page.locator('text=Channel Lake Beach Bar').first()).toBeVisible();
+    await expect(page.locator('text=Route 173 Channel & Bridge').first()).toBeVisible();
 
     // Verify specific rules are present
     await expect(page.locator('text=Fox Waterway Agency Sticker')).toBeVisible();
@@ -193,8 +193,8 @@ test.describe('Gridpass Guides & Slalom Map E2E Suite', () => {
     await expect(page.locator('text=North Point Marina Public Boat Launch')).toBeVisible();
 
     // Verify that hotspots are displayed
-    await expect(page.locator('text=North Point Marina Harbor Basin')).toBeVisible();
-    await expect(page.locator('text=Winthrop Harbor Yacht Club')).toBeVisible();
+    await expect(page.locator('text=North Point Marina Harbor Basin').first()).toBeVisible();
+    await expect(page.locator('text=Winthrop Harbor Yacht Club').first()).toBeVisible();
 
     // Verify specific rules are present
     await expect(page.locator('text=Open Water Equipment Requirements')).toBeVisible();
