@@ -24,6 +24,8 @@ export interface Hotspot {
   lake: string;
   desc: string;
   anchorRequirement: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface Rule {
@@ -1151,5 +1153,670 @@ Let me know what type of vest you prefer and if you have a favorite dog life jac
         desc: "The Wilmot Dam is located just north of Wilmot, Wisconsin. There are no locks. Motorized navigation ends here; attempting to approach or portage around the dam is highly dangerous."
       }
     ]
+  },
+  {
+    slug: 'fox-chain-july-4th-boating-guide',
+    title: "Fox Chain O' Lakes 4th of July Boating Guide: Fireworks, Events, & Safety Rules",
+    description: "The ultimate survival guide for Fourth of July weekend on the Fox Chain O' Lakes. Interactive event locations, fireworks schedules, police patrols, no-wake zones, and best anchoring spots.",
+    category: 'watercraft',
+    readTime: '8 min read',
+    publishDate: 'June 14, 2026',
+    tags: ['Fox Chain O Lakes', '4th of July', 'Fireworks', 'Boating Rules', 'PWC', 'Lake County Sheriff'],
+    contributors: ['PJ Losey', 'Ranger Dave', 'ChainRider84'],
+    introduction: [
+      "Fourth of July weekend is the single busiest boating weekend of the year on the Fox Chain O' Lakes in Northern Illinois. With thousands of personal watercraft (PWC), speedboats, pontoons, and cruisers squeeze-packed into Grass Lake, Pistakee Lake, and connecting channels, the water becomes a chaotic washing machine of wakes, waves, and enforcement officers.",
+      "Navigating this holiday chaos requires a solid plan. Whether you are looking for the best spots to view the Nippersink Lake, Antioch, or Pistakee Bay fireworks, hunting for a sandbar tie-up, or trying to stay clear of the Lake County Sheriff's Marine Unit BUI patrols, this guide has you covered with local schedules, rules, and recommended preparation.",
+      "Please note: Regulations are strictly enforced on holiday weekends. Ensure your vessel is properly registered, has a valid Fox Waterway Agency (FWA) sticker, and that your navigation lights are fully functional before heading out."
+    ],
+    gearSectionTitle: "Recommended Holiday Boating Gear",
+    gearSectionDesc: "Holiday weekends bring heavy wakes and late-night transits. Make sure you are equipped for safety and compliance.",
+    launchesTitle: "Fox Chain Ramps & Launches",
+    launchesDesc: "The most convenient concrete launches for launching during the busy Fourth of July weekend.",
+    facebookTemplate: `Heading out to the Fox Chain O' Lakes for the 4th of July weekend? 🎆 I just put together a comprehensive survival guide! It features an interactive map of the fireworks spots (Celebrate Fox Lake on June 27, Antioch on July 4, and Pistakee Bay on July 11), sandbar anchor spots, fuel docks, and crucial safety rules like the 25 mph night speed limit and strict no-wake zones.
+
+Check out the full guide here: [LINK]
+
+Stay safe out there, keep it under 25 mph at night, and remember that PWCs must be off the water by sunset!`,
+    gear: [
+      {
+        name: 'Attwood LED 2-Mile Sidelights & Pole Light Kit',
+        asin: 'B003E21CSY',
+        price: '$45.00',
+        rating: 4.7,
+        badge: 'Premium Choice',
+        desc: 'Essential for running after dark during fireworks shows. Provides USCG-approved 2-mile visibility. Make sure your white all-around stern pole light is high enough to be seen above your motor or bimini top.',
+        pros: ['Energy-efficient LED bulbs', 'USCG-certified 2-mile rating', 'Waterproof housing'],
+        cons: ['Requires 12V hardwiring'],
+        url: getAmazonSearchUrl('Attwood LED Navigation Light Kit')
+      },
+      {
+        name: 'Cooper Anchor 1.0 kg (2.2 lbs) Nylon Anchor',
+        asin: 'B00B4U0IQU',
+        price: '$55.00',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Lightweight composite nylon anchor that digs aggressively into the soft muck and mud bottoms of Grass Lake and Petite Lake sandbars. Zero sharp edges to scratch your PWC gelcoat.',
+        pros: ['Lightweight composite nylon', 'Extremely strong hold in mud/silt', 'Won\'t scratch gelcoat'],
+        cons: ['Rope and lead chain sold separately'],
+        url: getAmazonSearchUrl('Cooper Anchor Nylon 1kg')
+      },
+      {
+        name: 'Kwik Tek DryTek Boat Hook & Safety Whistle',
+        asin: 'B000OF9152',
+        price: '$18.99',
+        rating: 4.6,
+        badge: 'Best Value',
+        desc: 'Includes a Coast Guard required safety whistle and a floating flashlight. Extremely handy for signaling or emergencies in crowded channels after the fireworks displays conclude.',
+        pros: ['Loud pea-less safety whistle', 'Floating flashlight with lanyard', 'Cheap insurance'],
+        cons: ['Flashlight batteries not included'],
+        url: getAmazonSearchUrl('Boat Safety Whistle and Flashlight Kit')
+      },
+      {
+        name: 'WavesRx PWC Anchor System & Bungee Kit',
+        asin: 'B08HSH7K8K',
+        price: '$49.99',
+        rating: 4.7,
+        badge: 'Heavy Duty Choice',
+        desc: 'Elastic bungee dock lines that absorb heavy holiday boat wakes, preventing cleats from ripping out when rafting up or tying up at fuel docks.',
+        pros: ['Absorbs heavy wake shock', 'Dual rust-proof clips', 'Foam floatation'],
+        cons: ['Requires proper anchoring scope'],
+        url: getAmazonSearchUrl('WavesRx Bungee Dock Lines')
+      }
+    ],
+    launches: [
+      {
+        name: "Chain O' Lakes State Park Launch Ramps",
+        location: "8916 Wilmot Rd, Spring Grove, IL 60081",
+        fee: "Free for IL residents",
+        amenities: ["Concrete Ramps", "Restrooms", "Trailer Parking", "Direct Channel Access"],
+        desc: "Deep concrete ramps launching into a channel that connects directly to Grass Lake. Free and spacious, but trailer parking fills up fast. Arrive before 8:00 AM on holiday weekends.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Chain+O+Lakes+State+Park+Boat+Launch"
+      },
+      {
+        name: "Port of Blarney Boat Launch",
+        location: "27843 W Grass Lake Rd, Antioch, IL 60002",
+        fee: "$20.00 Daily Launch Fee",
+        amenities: ["Concrete Ramp", "Bar & Restaurant", "Secure Parking", "Fuel Dock"],
+        desc: "Ideal launch point if heading directly to Blarney Island or Grass Lake. Broad concrete ramp and safe parking for your trailer.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Port+of+Blarney+Boat+Launch"
+      },
+      {
+        name: "Ben Watts Marina Boat Launch",
+        location: "116 US-12, Fox Lake, IL 60020",
+        fee: "$20.00 Daily Launch Fee",
+        amenities: ["Concrete Ramp", "Restrooms", "Ship Store", "Gas Dock"],
+        desc: "Central launching location right on Nippersink Lake near the US-12 bridge. Direct access to the entire Chain system. Excellent concrete ramp.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Ben+Watts+Marina"
+      }
+    ],
+    hotspots: [
+      {
+        name: "Celebrate Fox Lake Fireworks",
+        lake: "Nippersink Lake",
+        desc: "Fox Lake's official celebration held on Saturday, June 27, 2026. Fireworks are launched at dusk over Nippersink Lake/Lakefront Park.",
+        anchorRequirement: "Boaters anchor in Nippersink Lake. Note that water entry to Lakefront Park is prohibited. Maintain safe distance from launch barge."
+      },
+      {
+        name: "Pistakee Bay Fireworks",
+        lake: "Pistakee Lake (Pistakee Bay)",
+        desc: "The largest boat-in fireworks display on the Chain, scheduled for Saturday, July 11, 2026. Launched at dusk from Oak Grove Rd area.",
+        anchorRequirement: "Thousands of boats anchor in Pistakee Bay. Deploy bow and stern anchors to prevent swinging in heavy post-show wakes."
+      },
+      {
+        name: "Antioch Fireworks",
+        lake: "Sequoit Creek Park (Antioch)",
+        desc: "Antioch's traditional celebration held on July 4th at dusk. Can be viewed from land or near northern channels feeding into Lake Marie.",
+        anchorRequirement: "If viewing from northern channels, keep clear of the navigation channel. Avoid blocking other vessels."
+      },
+      {
+        name: "Grass Lake Sandbar",
+        lake: "Grass Lake (Chain)",
+        desc: "The ultimate social hotspot on summer holiday weekends. Shallow water (2-4 ft) with a soft silt bottom, holding hundreds of boats.",
+        anchorRequirement: "A fluke-style bow anchor is mandatory. A stern spike is highly recommended to prevent your vessel from swinging into others."
+      },
+      {
+        name: "Petite Lake Sandbar",
+        lake: "Petite Lake (Chain)",
+        desc: "A popular, crowded sandy-bottom sandbar on the west side of Petite Lake. Busy raft-ups and social gatherings.",
+        anchorRequirement: "Standard anchor with bungee dock lines. Deploy fenders on both sides since boat wakes roll into the sandbar constantly."
+      },
+      {
+        name: "Stratton Lock & Dam",
+        lake: "Fox River (McHenry)",
+        desc: "The lock system connecting the Chain to the lower Fox River. Expect extreme holiday queues exceeding 2 hours.",
+        anchorRequirement: "Keep your engine off while in the lock chamber. Life jackets must be worn by all occupants inside the lock."
+      }
+    ],
+    rules: [
+      {
+        title: "PWC Nighttime Operation Ban",
+        desc: "In Illinois and Wisconsin, operating personal watercraft (jet skis) is strictly illegal between sunset and sunrise. You must be off the water before dusk."
+      },
+      {
+        title: "25 MPH Night Speed Limit",
+        desc: "From sunset to sunrise, a strict 25 mph speed limit is enforced on the entire Chain O' Lakes. This is heavily monitored during fireworks egress."
+      },
+      {
+        title: "Zero Tolerance BUI Patrols",
+        desc: "Lake County Sheriff, McHenry County Conservation, and IDNR patrol actively. Boating Under the Influence (BUI) carries severe fines and jail time."
+      },
+      {
+        title: "Strict No-Wake Restrictions",
+        desc: "No-wake speed (under 5 mph) is mandatory under all bridges, inside channels, and within 150 feet of docks, swimmers, or anchored boats."
+      },
+      {
+        title: "Required Navigation Lights",
+        desc: "Vessels underway at night must display red/green bow lights and a 360-degree white stern light. Docking/light bars must be turned off while moving."
+      },
+      {
+        title: "FWA User Decal Required",
+        desc: "All vessels operating on the Chain O' Lakes must purchase and display a valid Fox Waterway Agency sticker (annual or daily)."
+      }
+    ]
+  },
+  {
+    slug: 'fox-chain-squirt-gun-battles',
+    title: "Fox Chain O' Lakes Water Gun Battles: Sandbar Rules, Best Blasters, & Boating Etiquette",
+    description: "Your ultimate survival and tactical guide for the unofficial boat-to-boat water gun fights on the Fox Chain O' Lakes. Best blasters, sandbar hotspots, refill tactics, and safety rules.",
+    category: 'watercraft',
+    readTime: '5 min read',
+    publishDate: 'June 15, 2026',
+    tags: ['Fox Chain O Lakes', 'Water Fight', 'Boating Etiquette', 'PWC', 'Super Soaker', 'Summer Fun'],
+    contributors: ['PJ Losey', 'Ranger Dave', 'ChainRider84'],
+    introduction: [
+      "On hot summer weekends, the Fox Chain O' Lakes turns into a high-octane playground. Alongside the standard cruising and wakeboarding, a legendary unofficial tradition takes over the sandbars and slow-no-wake channels: boat-to-boat and PWC water gun battles.",
+      "What starts as a playful squirt from a Super Soaker can quickly escalate into a full-scale water war between pontoons, speedboats, and personal watercraft. While it is one of the most fun ways to cool off under the Illinois sun, engaging in water gun battles on a crowded waterway requires strict adherence to safety, local boating laws, and unwritten sandbar etiquette.",
+      "To help you navigate the soak zones without getting ticketed or ruining someone's day, we've compiled the ultimate guide to gear, hotspots, and rules of engagement."
+    ],
+    gearSectionTitle: "Top Gear for the Water War",
+    gearSectionDesc: "Tested blasters and protection gear designed to keep you locked and loaded on the water.",
+    launchesTitle: "Quick Launch Access",
+    launchesDesc: "The closest and most convenient ramps to access the prime water war sandbars.",
+    facebookTemplate: `Summer is here and the water wars are on! 🔫💦 I put together a quick survival guide for the legendary, unofficial squirt gun battles at the Grass Lake & Petite Lake sandbars. It reviews the best water blasters (the electric Spyra is insane), crucial eye safety, and unwritten rules like keeping non-participants dry and avoiding silt-clogged pumps.
+
+Check it out here: [LINK]
+
+Raft up, stay safe, protect your key fobs, and let me know what blaster you're rocking this year!`,
+    gear: [
+      {
+        name: 'Spyra SpyraThree Electric Water Gun',
+        asin: 'B0B94H7M36',
+        price: '$179.00',
+        rating: 4.5,
+        badge: 'Premium Choice',
+        desc: 'The absolute king of the sandbar. An electric water blaster that shoots pressurized "water bullets" with insane accuracy up to 30 feet, refills automatically in seconds by dipping the nozzle, and features a digital display.',
+        pros: ['Automatic motorized refilling', 'Tactical water bullets (no constant stream)', 'High range and accuracy', 'Digital status display'],
+        cons: ['Expensive premium toy', 'Needs careful washing if used in muddy water'],
+        url: getAmazonSearchUrl('Spyra SpyraThree Electric Water Gun')
+      },
+      {
+        name: 'Zuru X-Shot Water Warfare Fast-Fill Soaker',
+        asin: 'B07VZZY368',
+        price: '$19.99',
+        rating: 4.7,
+        badge: 'Best Value',
+        desc: 'The fastest manual blaster on the market. Features a break-action back that allows you to dunk and fill the entire reservoir in just 1 second, keeping you in the action when a PWC raids your boat.',
+        pros: ['Dunks and refills in 1 second', 'Decent 30-foot blast range', 'Very affordable', 'Lightweight and easy to carry'],
+        cons: ['Pump action can wear out after heavy sand exposure'],
+        url: getAmazonSearchUrl('Zuru X-Shot Fast-Fill Soaker')
+      },
+      {
+        name: 'COCOSAND Floating Polarized Sport Sunglasses',
+        asin: 'B0832MHY46',
+        price: '$22.99',
+        rating: 4.6,
+        badge: 'Community Favorite',
+        desc: 'Crucial eye protection. Water streams to the face can sting and cause you to lose orientation. These polarized sunglasses shield your eyes, improve water visibility, and float if they get knocked into the lake.',
+        pros: ['Float on water (won\'t sink)', '100% UV400 polarized protection', 'Durable bendable frame'],
+        cons: ['Slightly snug fit for larger heads'],
+        url: getAmazonSearchUrl('Floating Polarized Sport Sunglasses')
+      },
+      {
+        name: 'Earth Pak Waterproof Dry Bag (10L)',
+        asin: 'B01GZCU1F2',
+        price: '$24.99',
+        rating: 4.8,
+        badge: 'Heavy Duty Choice',
+        desc: 'An absolute necessity for protecting your non-waterproof gear. Phones, key fobs, registration papers, and speakers will get splashed. Keep them locked tight in a heavy-duty roll-top dry bag.',
+        pros: ['500D PVC waterproof material', 'Floats if dropped in water', 'Includes waterproof phone case'],
+        cons: ['Stiff material in cold weather'],
+        url: getAmazonSearchUrl('Earth Pak Waterproof Dry Bag 10L')
+      }
+    ],
+    launches: [
+      {
+        name: "Port of Blarney Boat Launch",
+        location: "27843 W Grass Lake Rd, Antioch, IL 60002",
+        fee: "$20.00 Daily Launch Fee",
+        amenities: ["Concrete Ramp", "Bar & Restaurant", "Trailer Parking", "Gas Dock"],
+        desc: "Launches you directly onto the Grass Lake channel. Perfect access to the Grass Lake Sandbar and the high-activity zone near Blarney Island.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Port+of+Blarney+Boat+Launch"
+      },
+      {
+        name: "Ben Watts Marina Boat Launch",
+        location: "116 US-12, Fox Lake, IL 60020",
+        fee: "$20.00 Daily Launch Fee",
+        amenities: ["Concrete Ramp", "Ship Store", "Gas Dock", "Restrooms"],
+        desc: "Centrally located on Nippersink Lake. Provides fast, direct access to Petite Lake, Nippersink, and Pistakee.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Ben+Watts+Marina"
+      }
+    ],
+    rules: [
+      {
+        title: "Strict 'No Headshots' Rule",
+        desc: "Never aim water streams at anyone's face, eyes, or ears. High-velocity streams from electric blasters can cause eye injuries or cause a driver to lose control of their vessel."
+      },
+      {
+        title: "No Spraying Non-Participants",
+        desc: "Respect the 'white flag' or those who clearly want to remain dry. Never target boats with small infants, elderly passengers, expensive cameras, or people eating. If they aren't holding a blaster or laughing, keep them out of it."
+      },
+      {
+        title: "No-Wake Zone Means No Speed Battles",
+        desc: "Never engage in water fights while either vessel is moving under power at speed. Active battles must only happen when boats are anchored (e.g., at sandbars) or drifting at idle speed (under 5 mph) in designated channels."
+      },
+      {
+        title: "Use Clean Settled Water Only",
+        desc: "Silt, mud, and sand from the bottom of Grass Lake will clog and destroy the seals of pump-action water guns. Scoop lake water into a clean bucket and let any sand settle before refilling your blaster."
+      },
+      {
+        title: "No Industrial Pump Setups",
+        desc: "Recreational water guns only. Do not use high-pressure deck washdown pumps, fire hoses, or bilge-pump-powered cannons. They shoot with dangerous force and can easily damage canvas covers or upholstery."
+      },
+      {
+        title: "Secure Electronics & Documentation",
+        desc: "Before entering any sandbar area, ensure your boat registration papers, car key fobs, non-waterproof speakers, and phones are securely stored in a sealed dry bag or cabin glovebox."
+      }
+    ]
+  },
+  {
+    slug: 'midwest-adventure-life-chain-of-lakes-tour',
+    title: "Tour O' Lakes: Complete Waterway Guide, Waterfront Stops, & Boat Reviews",
+    description: "The definitive guide to cruising, dining, launching, and swimming on the Fox Chain O' Lakes based on Midwest Adventure Life. Features the Manitou Explore 26 review and Nielsen Enterprises.",
+    category: 'watercraft',
+    readTime: '8 min read',
+    publishDate: 'June 14, 2026',
+    tags: ['Fox Chain O Lakes', 'Midwest Adventure Life', 'Nielsen Enterprises', 'Manitou Pontoon', 'Boating Guide', 'Waterfront Dining'],
+    contributors: ['Midwest Adventure Life', 'PJ Losey', 'Ranger Dave'],
+    introduction: [
+      "The Fox Chain O' Lakes and Fox River form a legendary boating paradise in Northern Illinois. In their popular tour video, Midwest Adventure Life guides boaters through the complete system, showing exactly where to eat, swim, ski, fish, and launch.",
+      "Cruising in a state-of-the-art 2023 Manitou Explore 26 Switchback provided by the tour sponsor, Nielsen Enterprises, the guide showcases how to navigate from the McHenry locks up to the northern lakes, highlighting critical rules of the water.",
+      "Below is the complete mapped guide of all key locations, local hazards, and the featured pontoon specs to help you plan your ultimate adventure."
+    ],
+    gearSectionTitle: "Featured Boat & Cruise Essentials",
+    gearSectionDesc: "Check out the high-end pontoon boat featured in the video and the safety gear needed for docking along the route.",
+    launchesTitle: "Key Ramps & Access Points",
+    launchesDesc: "Concrete ramps to launch your vessel and start the complete river and lake tour.",
+    facebookTemplate: `Hey everyone! Just put together a comprehensive tour guide for the Fox Chain O' Lakes based on the Midwest Adventure Life video. It covers all the best boat-accessible restaurants (Famous Freddy's, The Snuggery, Captain's Quarters), 24/7 gas docks like Munson, boat launches (like Charles Miller Road), and how to navigate the Johnsburg 'washing machine'.
+    
+Check out the full tour guide here: [LINK]`,
+    gear: [
+      {
+        name: '2023 Manitou Explore 26 Switchback Pontoon Boat',
+        asin: 'B0C77X8L1D',
+        price: 'Contact Dealership',
+        rating: 4.9,
+        badge: 'Premium Choice',
+        desc: 'The exact premium pontoon featured in the Midwest Adventure Life tour. Features a versatile Switchback layout with a trifold bench and a single Rotax outboard engine, available at Nielsen Enterprises.',
+        pros: ['Innovative trifold bench layout', 'Rotax outboard engine stealth/under-deck design', 'Smooth, high-end handling', 'Available locally in Lake Villa'],
+        cons: ['High-end price range'],
+        url: 'https://www.nielsens.com/New-Inventory-2023-Manitou-Boat-Explore-26-Switchback-W-Trifold-Bench-Single-Engine-Nielsen-Enterprises-13693401'
+      },
+      {
+        name: 'Better Boat PWC Fenders & Bumper Guards (Pair)',
+        asin: 'B07V2H3H3S',
+        price: '$39.99',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Protect your boat or PWC hull from rough docks at waterfront restaurants or concrete seawalls. Closed-cell foam provides durable protection.',
+        pros: ['Clips securely to rub rails', 'Durable closed-cell foam', 'Protects gelcoat from scratches'],
+        cons: ['Bulky to store in small compartments'],
+        url: getAmazonSearchUrl('Better Boat PWC Fenders')
+      },
+      {
+        name: 'WavesRx PWC Anchor System & Bungee Kit',
+        asin: 'B08HSH7K8K',
+        price: '$49.99',
+        rating: 4.7,
+        badge: 'Best Value',
+        desc: 'Absorbs boat wakes in channels and busy marinas. Bungee dock lines stretch from 4 to 6 feet to prevent cleat ripping.',
+        pros: ['Absorbs wake shock', 'Stainless steel clips', 'Floating foam protection'],
+        cons: ['Requires proper scope for anchoring in deep mud'],
+        url: getAmazonSearchUrl('WavesRx PWC Anchor Kit')
+      }
+    ],
+    launches: [
+      {
+        name: "Charles J. Miller Memorial Highway Boat Launch",
+        location: "3100 Charles J Miller Memorial Hwy, McHenry, IL 60050",
+        fee: "Daily parking fee for non-residents",
+        amenities: ["Concrete Ramps", "Restrooms", "Trailer Parking", "Boarding Pier"],
+        desc: "The southernmost public launch on the upper Fox River. Features dual concrete ramps and a floating pier, providing easy access to run the river north toward the Chain.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=McHenry+River+Park+Boat+Launch"
+      },
+      {
+        name: "Chain O' Lakes State Park Launch Ramps",
+        location: "8916 Wilmot Rd, Spring Grove, IL 60081",
+        fee: "Free for Illinois residents",
+        amenities: ["Paved Ramps", "Restrooms", "Trailer Parking", "Picnic Area"],
+        desc: "Convenient public launch on the north end of the Chain, feeding directly into Grass Lake channel. Highly secure and spacious.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Chain+O+Lakes+State+Park+Boat+Launch"
+      }
+    ],
+    hotspots: [
+      {
+        name: "Nielsen Enterprises Marine Center",
+        lake: "Lake Villa, IL (Dealer Partner)",
+        desc: "The primary dealership sponsor for the Midwest Adventure Life tour. Located in Lake Villa, IL, Nielsen Enterprises carries a massive inventory of Manitou Pontoons, Yamaha Jet Boats, and PWCs. Visit them to check out the Manitou Explore 26 Switchback featured in the tour.",
+        anchorRequirement: "Trailer-access showroom; full marine parts, service, and winterization center."
+      },
+      {
+        name: "Famous Freddy's Roadhouse",
+        lake: "Pistakee Lake",
+        desc: "A legendary long-standing waterfront restaurant and bar located in a sheltered bay. Features active docks and a lively atmosphere for boaters to tie up and grab food.",
+        anchorRequirement: "Mooring at floating slips. Watch out for boat wakes from the main lake."
+      },
+      {
+        name: "The Snuggery McHenry",
+        lake: "Fox River (McHenry)",
+        desc: "A popular dining destination located right along the riverbank. Features boat docks and is a great lunch or dinner stop while cruising the river corridor.",
+        anchorRequirement: "Tie up along the riverfront docks; use fenders to protect your hull."
+      },
+      {
+        name: "Captain's Quarters & Electric Harbor",
+        lake: "Fox Lake",
+        desc: "Waterfront spots with shared ownership, known for having dedicated PWC docks, easy docking access, and a playground. Extremely visitor-friendly.",
+        anchorRequirement: "Utilize the specialized PWC slips or standard boat slips."
+      },
+      {
+        name: "Downtown McHenry Riverwalk",
+        lake: "Fox River (McHenry)",
+        desc: "A scenic riverwalk in a designated no-wake zone. Offers free public docks at Weber Park and multiple dining options within walking distance.",
+        anchorRequirement: "Tie up at the public docks. Observe strict no-wake speeds."
+      },
+      {
+        name: "Munson on the Water",
+        lake: "Fox Lake Channel",
+        desc: "A highly convenient 24-hour marine fuel dock located in a protected no-wake channel. Known for very helpful staff and quick fuel-ups.",
+        anchorRequirement: "Tie up to the fuel dock bumpers."
+      },
+      {
+        name: "Petite Lake Sandbar",
+        lake: "Petite Lake",
+        desc: "A massive social hub where boaters raft up and hang out. Features a relatively clean sandy bottom and shallow waters for swimming.",
+        anchorRequirement: "Requires double anchoring (bow and stern) to stay stable in weekend crowds."
+      },
+      {
+        name: "Fox Lake North Wading Area",
+        lake: "Fox Lake (North End)",
+        desc: "A popular spot on the far north side of Fox Lake known for having cleaner, sandier water, making it a great place to anchor and swim.",
+        anchorRequirement: "Standard fluke anchor holds well in the sandy bottom."
+      }
+    ],
+    rules: [
+      {
+        title: "Understand the Navigation Zones",
+        desc: "The waterway is divided into three distinct zones: the lower river (south of the dam), the upper river (between the dam and Pistakee Lake), and the lakes. High water or 'no wake' orders can be active on the river while the lakes remain open."
+      },
+      {
+        title: "The Johnsburg 'Washing Machine' Hazard",
+        desc: "The section of the river near the Johnsburg Bridge features seawalls that reflect boat wakes back on themselves, creating turbulent 'washing machine' waves. Smaller boats and PWCs should exercise caution and maintain control."
+      },
+      {
+        title: "Avoid Island Shortcuts",
+        desc: "Do not attempt to navigate between the main islands and the mainland. These channels are extremely shallow (often only ankle-deep, especially in low-water seasons) and will ground your vessel."
+      },
+      {
+        title: "Stay in Marked Channels",
+        desc: "Areas outside the marked channels (especially near Pistakee Lake and Grass Lake) can become extremely shallow and silt-heavy. Stay within green and red markers to prevent sucking mud or weeds into your engine."
+      }
+    ]
+  },
+  {
+    slug: 'channel-lake-boating-fishing-guide',
+    title: "Channel Lake PWC & Boating Guide: Launches, Deep Water, & Boundary Rules",
+    description: "Explore Channel Lake (Antioch, IL). Get details on depth contours, Route 173 bridge clearance, local marinas, boat launches, dining stops, and Wisconsin border crossing rules.",
+    category: 'watercraft',
+    readTime: '5 min read',
+    publishDate: 'June 14, 2026',
+    tags: ['Channel Lake', 'Antioch', 'Fox Chain O Lakes', 'Boating Rules', 'Marinas', 'Border Crossing'],
+    contributors: ['PJ Losey', 'Ranger Dave', 'ChainRider84'],
+    introduction: [
+      "Welcome to Channel Lake, the northernmost gem of the Fox Chain O' Lakes system in Antioch, Illinois. Sitting directly against the Wisconsin border and connected to Lake Catherine and Lake Marie, Channel Lake stands out from the rest of the Chain for its deep waters (reaching up to 45 feet) and clean, sandy-to-silt bottom.",
+      "For boaters and personal watercraft (PWC) riders, Channel Lake offers a fantastic mix of open-water cruising, water skiing, and premium 'dock-and-dine' options. However, navigating this northern basin comes with specific responsibilities: you must watch out for bridge clearance under Route 173, respect the local no-wake zones in the channels, and understand the legal transition when crossing into Wisconsin.",
+      "Below, we outline the best launches, local marinas, hotspots, and rules for a safe and legal day on Channel Lake."
+    ],
+    gearSectionTitle: "Recommended Channel Lake Gear",
+    gearSectionDesc: "Tested PWC gear designed for the deep waters, docks, and channels of the northern Chain.",
+    launchesTitle: "Featured Boat Launches & Access Ramps",
+    launchesDesc: "The best public and private boat ramps surrounding Channel Lake and the northern Chain.",
+    facebookTemplate: `Hey everyone! Just compiled a complete boating and PWC guide for Channel Lake in Antioch, IL. Covers the Route 173 bridge height clearance, local marinas (Turtle Beach, Pedersen, Sequoit), docking at Channel Lake Beach Bar, and what you need to know when crossing the state line into Wisconsin.
+    
+Check it out here: [LINK]`,
+    gear: [
+      {
+        name: 'Cooper Anchor 1.0 kg (2.2 lbs) Nylon Anchor',
+        asin: 'B00B4U0IQU',
+        price: '$55.00',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Lightweight composite nylon anchor that digs aggressively into the sand and silt. Zero sharp edges to scratch your PWC gelcoat, making it perfect for shallow sandy anchoring on Channel Lake.',
+        pros: ['Lightweight composite nylon', 'Extremely strong hold in mud/silt', 'Won\'t scratch gelcoat'],
+        cons: ['Rope and lead chain sold separately'],
+        url: getAmazonSearchUrl('Cooper Anchor Nylon 1kg')
+      },
+      {
+        name: 'Better Boat PWC Fenders & Bumper Guards (Pair)',
+        asin: 'B07V2H3H3S',
+        price: '$39.99',
+        rating: 4.8,
+        badge: 'Premium Choice',
+        desc: 'Custom-molded fenders designed specifically to clip onto the rub rail of jet skis. Essential when docking at concrete municipal launches or tieing up at local restaurant piers to protect your hull.',
+        pros: ['Clips securely to rub rail', 'Durable closed-cell foam', 'Protects hull from rough dock bumpers'],
+        cons: ['Bulky to store in small gloveboxes'],
+        url: getAmazonSearchUrl('Better Boat PWC Fenders Bumper Guards')
+      },
+      {
+        name: 'WavesRx PWC Anchor System & Bungee Kit',
+        asin: 'B08HSH7K8K',
+        price: '$49.99',
+        rating: 4.7,
+        badge: 'Best Value',
+        desc: 'Elastic bungee dock lines that stretch from 4 to 6 feet, absorbing heavy wake shocks in channels and near busy marinas.',
+        pros: ['Absorbs heavy wake shock', 'Dual rust-proof clips', 'Foam floatation'],
+        cons: ['Requires proper anchoring scope'],
+        url: getAmazonSearchUrl('WavesRx Bungee Dock Lines')
+      }
+    ],
+    launches: [
+      {
+        name: "Anchor Pointe Marina Launch",
+        location: "Route 173 near IL-59, Antioch, IL 60002",
+        fee: "Daily Launch Fee applies (Dated 2026)",
+        amenities: ["Concrete Ramp", "Boat Rentals", "Gas Dock", "Parking Lot"],
+        desc: "A convenient marina offering a 24/7 public boat ramp. Ideal if you want quick access to Channel Lake or want to rent a tritoon/jet ski for the day.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Anchor+Pointe+Marina+Antioch+IL"
+      },
+      {
+        name: "Sequoit Harbor Marina Launch",
+        location: "1000 IL-173, Antioch, IL 60002",
+        fee: "Daily Launch Fee applies (Dated 2026)",
+        amenities: ["Concrete Ramps", "Boat Slips", "Fuel", "Swimming Pool", "Marine Service"],
+        desc: "A full-service marina located right on the channel leading to the main lakes. Excellent concrete ramps and professional staff.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Sequoit+Harbor+Marina+Antioch+IL"
+      },
+      {
+        name: "Chain O' Lakes State Park Launch Ramps",
+        location: "8916 Wilmot Rd, Spring Grove, IL 60081",
+        fee: "Free for IL residents",
+        amenities: ["Paved Ramps", "Restrooms", "Trailer Parking", "Picnic Areas"],
+        desc: "The primary free public concrete ramps launching into the Grass Lake channel. Boaters can launch here and cruise north through Lake Marie and the Ackerman Channel to reach Channel Lake.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Chain+O+Lakes+State+Park+Boat+Launch"
+      }
+    ],
+    hotspots: [
+      {
+        name: "Channel Lake Beach Bar",
+        lake: "Channel Lake (East Shore)",
+        desc: "Located on N. Woodbine Ave. A popular, family- and dog-friendly waterfront destination on Channel Lake. Features boat slips, live music, outdoor seating, and casual dining.",
+        anchorRequirement: "Pull straight into their boat docks. Deploy fenders on both sides to protect your hull from wake action.",
+        lat: 42.4905,
+        lng: -88.1315
+      },
+      {
+        name: "Route 173 Channel & Bridge",
+        lake: "Ackerman Channel (Route 173)",
+        desc: "The connecting waterway between Channel Lake and Lake Catherine. The channel is a strict slow-no-wake zone. Drivers must be highly conscious of vertical height clearance under the bridge.",
+        anchorRequirement: "Do not anchor inside the channel. Observe the slow-no-wake speed limit (under 5 mph) at all times.",
+        lat: 42.4812,
+        lng: -88.1365
+      },
+      {
+        name: "Choppers Bar and Grill",
+        lake: "W. IL-173 Channel",
+        desc: "A great local dining spot located off the channel connecting Lake Catherine and Channel Lake, offering convenient boat slips, great food, and drinks.",
+        anchorRequirement: "Use boat slips on the channel. Put out fenders on both sides to prevent hull contact with dock pylons.",
+        lat: 42.4820,
+        lng: -88.1378
+      },
+      {
+        name: "Wisconsin Border Line",
+        lake: "Channel Lake (North Basin)",
+        desc: "The northernmost part of Channel Lake touches the Wisconsin state border. Boating past this invisible line transitions you into Wisconsin jurisdiction.",
+        anchorRequirement: "Watch for shallow rock bars or sandbars near the border. Slow no-wake rules apply within 100 feet of other boats/docks.",
+        lat: 42.4948,
+        lng: -88.1350
+      }
+    ],
+    rules: [
+      {
+        title: "Fox Waterway Agency Sticker",
+        desc: "All motorized vessels operating in the Illinois section of the Fox Chain O' Lakes must purchase and display a valid FWA User Sticker (daily or annual)."
+      },
+      {
+        title: "Strict No-Wake Channel Limits",
+        desc: "Under the Route 173 bridge and inside all channels connecting Channel Lake to Lake Catherine and Lake Marie, you must operate at slow-no-wake speed (under 5 mph)."
+      },
+      {
+        title: "Wisconsin Border Regulations",
+        desc: "Once you cross into Wisconsin waters, state laws apply. PWCs cannot operate between sunset and sunrise. Slow-no-wake is enforced within 200 feet of the shoreline and 100 feet of other vessels/swimmers/docks."
+      },
+      {
+        title: "Impeller Silt & Shallow Warning",
+        desc: "While Channel Lake is deep in the center, weed beds and silt flats line the shores and channels. Keep engine speeds low in shallow areas to prevent vacuuming debris into your PWC impeller."
+      }
+    ]
+  },
+  {
+    slug: 'north-point-marina-boating-pwc-guide',
+    title: "North Point Marina PWC & Boating Guide: Lanes, Ramps, & Great Lakes Riding",
+    description: "Discover North Point Marina in Winthrop Harbor, IL—the largest marina on the Great Lakes. Get details on the 10-lane public launch, trailer parking, pricing, and Lake Michigan riding tips.",
+    category: 'watercraft',
+    readTime: '4 min read',
+    publishDate: 'June 14, 2026',
+    tags: ['North Point Marina', 'Winthrop Harbor', 'Lake Michigan', 'PWC', 'Boat Launch', 'Great Lakes'],
+    contributors: ['PJ Losey', 'Ranger Dave', 'ChainRider84'],
+    introduction: [
+      `Clearing the massive stone breakwalls of **North Point Marina** in Winthrop Harbor feels like crossing an invisible boundary into another realm. If you are willing to drive up near the Illinois/Wisconsin border, you will find yourself at the largest marina on the Great Lakes—an absolute playground for PWC riders and boaters who crave raw, unfiltered open-water freedom. Unlike the crowded, speed-restricted channels of inland lakes, here the horizon is your only limit. The deep blue swells of Lake Michigan stretch out as far as the eye can see, offering a massive playground where you can unleash your watercraft's full potential.`,
+      `What makes this gateway so legendary is its sheer scale and stress-free operation. The facility features a massive, commercial-grade public boat launch equipped with **10 paved concrete lanes** and over **200 dedicated truck-and-trailer parking spaces**. Because of its professional layout and expansive design, there is almost never a wait to get in or out of the water—even on the hottest holiday weekends of the summer. A quick stop at the electronic fee box in the trailer parking lot secures your pass for just **$10 per day**, which is hands-down the best value on the lake for a launch of this caliber. Open 24 hours a day from April 1 through October 31, it gives you the flexibility to launch for a sunrise cruise or return long after dusk.`,
+      `However, the Great Lakes demand respect. The moment you throttle past the harbor walls, you are in deep, unpredictable offshore waters. Lake Michigan can go from glass-smooth to six-foot rolling swells in a matter of minutes. To ride safely, you need the right setup: keeping a reliable [Uniden MHS75 Handheld VHF Marine Radio](https://www.amazon.com/s?k=Uniden+MHS75+Handheld+VHF+Marine+Radio&tag=loseyco-20) clipped to your life vest is your direct line to the Coast Guard on Channel 16 if things go south. When you want to pull up and beach your craft on the pristine sand dunes of Illinois Beach State Park just south of the harbor, a lightweight [Cooper Anchor Nylon 1kg](https://www.amazon.com/s?k=Cooper+Anchor+Nylon+1kg&tag=loseyco-20) will hold you secure in the shifting sands without scratching your PWC's gelcoat. And when you finally head back into the basin, having [Better Boat PWC Fenders](https://www.amazon.com/s?k=Better+Boat+PWC+Fenders+Bumper+Guards&tag=loseyco-20) on hand will protect your hull from getting slammed against the concrete docks by the restless harbor surge.`,
+      `Whether you are planning to cruise north past the Wisconsin state line to explore new shorelines, or test your skills wave-jumping in the deep blue, this guide outlines everything you need to know. Below, we detail the exact coordinates of key hotspots, launch logistics, operating guidelines, and essential open-water safety protocols to ensure your Great Lakes adventure is both thrilling and secure.`
+    ],
+    gearSectionTitle: "Recommended Great Lakes PWC Gear",
+    gearSectionDesc: "Essential gear designed for the unique challenges of open water riding on Lake Michigan.",
+    launchesTitle: "Featured Boat Launches & Access Ramps",
+    launchesDesc: "The premier launching facilities at North Point Marina and the Illinois/Wisconsin border.",
+    facebookTemplate: `Hey everyone! Just compiled a complete boating and PWC guide for North Point Marina in Winthrop Harbor, IL. Covers the 10-lane commercial launch, trailer parking, $10 fee, 24/7 hours, and what you need to know for open-water riding on Lake Michigan.
+    
+Check it out here: [LINK]`,
+    gear: [
+      {
+        name: 'Uniden MHS75 Handheld VHF Marine Radio',
+        asin: 'B001J5850G',
+        price: '$89.99',
+        rating: 4.6,
+        badge: 'Premium Choice',
+        desc: 'Essential for safety on the open waters of Lake Michigan. Waterproof, floats, and allows direct communication with the Coast Guard and local harbors on Channel 16.',
+        pros: ['Waterproof & floating design', 'Access to all US/International channels', 'High/low power output'],
+        cons: ['Battery life requires monitoring on long rides'],
+        url: getAmazonSearchUrl('Uniden MHS75 Handheld VHF Marine Radio')
+      },
+      {
+        name: 'Cooper Anchor 1.0 kg (2.2 lbs) Nylon Anchor',
+        asin: 'B00B4U0IQU',
+        price: '$55.00',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Lightweight composite nylon anchor that digs aggressively into the sandy bottoms of Lake Michigan. Zero sharp edges to scratch your PWC gelcoat, making it perfect for shallow beach anchoring.',
+        pros: ['Lightweight composite nylon', 'Extremely strong hold in sand', 'Won\'t scratch gelcoat'],
+        cons: ['Rope and lead chain sold separately'],
+        url: getAmazonSearchUrl('Cooper Anchor Nylon 1kg')
+      },
+      {
+        name: 'Better Boat PWC Fenders & Bumper Guards (Pair)',
+        asin: 'B07V2H3H3S',
+        price: '$39.99',
+        rating: 4.8,
+        badge: 'Best Value',
+        desc: 'Custom-molded fenders designed specifically to clip onto the rub rail of jet skis. Essential when docking at concrete municipal launches or tieing up to protect your hull from wake action.',
+        pros: ['Clips securely to rub rail', 'Durable closed-cell foam', 'Protects hull from rough dock bumpers'],
+        cons: ['Bulky to store in small gloveboxes'],
+        url: getAmazonSearchUrl('Better Boat PWC Fenders Bumper Guards')
+      }
+    ],
+    launches: [
+      {
+        name: "North Point Marina Public Boat Launch",
+        location: "1st St, Winthrop Harbor, IL 60096",
+        fee: "$10.00 Daily Fee (Paid via electronic fee box for trailer parking)",
+        amenities: ["10 Paved Launch Lanes", "200+ Trailer Parking Spaces", "Restrooms", "Fish Cleaning Station", "24/7 Access", "Security Patrols"],
+        desc: "A massive, commercial-grade public boat launch with 10 paved lanes and over 200 parking spots. Located right on the harbor with excellent wind protection and almost no wait times even on busy summer weekends.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=North+Point+Marina+Public+Boat+Launch+Winthrop+Harbor"
+      }
+    ],
+    hotspots: [
+      {
+        name: "North Point Marina Harbor Basin",
+        lake: "Lake Michigan (Harbor Basin)",
+        desc: "A fully protected, deep-water basin serving as the entrance to the marina. Strict slow-no-wake rules apply within the harbor walls.",
+        anchorRequirement: "No anchoring allowed in the navigation channels. Keep speed under 5 mph.",
+        lat: 42.4860,
+        lng: -87.7980
+      },
+      {
+        name: "Winthrop Harbor Yacht Club",
+        lake: "North Point Marina (North Basin)",
+        desc: "A private yacht club offering premium dining and social events, overlooking the slips.",
+        anchorRequirement: "Docking is reserved for members and transient guests. Contact the club for guest slip availability.",
+        lat: 42.4895,
+        lng: -87.8035
+      },
+      {
+        name: "Illinois Beach State Park (South Beach)",
+        lake: "Lake Michigan (Just South of Marina)",
+        desc: "Located just south of North Point Marina, offering miles of sandy shoreline. A popular spot for PWC riders to beach and relax.",
+        anchorRequirement: "Anchor or beach in designated swimming-free zones. Watch for shallow sandbars and breaking waves.",
+        lat: 42.4720,
+        lng: -87.8040
+      }
+    ],
+    rules: [
+      {
+        title: "Open Water Equipment Requirements",
+        desc: "Since you are launching into Lake Michigan (federally controlled waters), you must carry a USCG-approved Type I, II, or III life jacket (PFD) for each rider, a working whistle or horn, a fire extinguisher, and visual distress signals (flares/lights) if operating after sunset."
+      },
+      {
+        title: "Trailer Parking & Daily Fee",
+        desc: "The $10 daily fee must be paid at the electronic fee box located in the trailer parking lot. Display the receipt on your vehicle's dashboard. Violations are heavily ticketed by local police."
+      },
+      {
+        title: "Harbor Slow-No-Wake Zones",
+        desc: "Strict slow-no-wake rules are enforced inside all marina basins and within 200 feet of the shoreline and harbor entrances."
+      },
+      {
+        title: "Operating Hours & Seasons",
+        desc: "The public launch is open 24 hours a day, April 1 through October 31. Off-season access is restricted, and gates may be locked."
+      }
+    ]
   }
 ];
+
