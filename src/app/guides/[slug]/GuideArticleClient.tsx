@@ -45,7 +45,12 @@ export default function GuideArticleClient({ slug }: { slug: string }) {
     if (typeof window !== 'undefined') {
       setCurrentUrl(window.location.href);
     }
-  }, []);
+    if (slug === 'fox-river-mchenry-wisconsin-jet-ski-guide') {
+      setSelectedBuoy('river-overview');
+    } else {
+      setSelectedBuoy('slalom-overview');
+    }
+  }, [slug]);
 
   // Check admin privileges (either email matches or ?admin=true search param)
   const isAdmin = user?.email === 'loseyp@gmail.com' || searchParams.get('admin') === 'true';
@@ -513,6 +518,656 @@ export default function GuideArticleClient({ slug }: { slug: string }) {
                       </div>
                     )}
 
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Custom Interactive River Map for Fox River guide */}
+            {guide.slug === 'fox-river-mchenry-wisconsin-jet-ski-guide' && (
+              <section className="space-y-6">
+                <div className="relative border border-neutral-900 bg-neutral-950/40 rounded-3xl p-6 overflow-hidden space-y-6">
+                  {/* Aquatic overlay background */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#0e2735]/35 via-[#0b1c28]/20 to-[#020617]/50 pointer-events-none" />
+                  
+                  <h2 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight flex items-center gap-2 relative z-10">
+                    <Compass className="w-5 h-5 text-rose-500" /> Interactive River Cruise Map
+                  </h2>
+                  
+                  <p className="text-xs text-neutral-400 relative z-10 leading-relaxed">
+                    Trace the Fox River corridor from McHenry to the Wisconsin border. Tap the colored markers or buoys on the map to inspect key navigation checkpoints, no-wake zones, gas docks, and channel rules.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10 items-stretch">
+                    {/* SVG Map (Vertical River Path) */}
+                    <div className="md:col-span-5 border border-neutral-900/40 bg-neutral-950/60 rounded-2xl p-4 flex items-center justify-center min-h-[500px]">
+                      <svg viewBox="0 0 200 620" className="w-full max-w-[240px] h-full" xmlns="http://www.w3.org/2000/svg">
+                        {/* Glow Filter */}
+                        <defs>
+                          <filter id="cyan-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                          </filter>
+                          <filter id="orange-glow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="6" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                          </filter>
+                        </defs>
+
+                        {/* River path (thick stylized blue water ribbon) */}
+                        <path
+                          d="M 100,20 L 100,100 Q 110,130 90,160 T 100,220 L 100,270 Q 80,310 120,350 T 100,430 L 100,470 Q 110,510 90,550 L 100,600"
+                          fill="none"
+                          stroke="#1e3a8a"
+                          strokeWidth="20"
+                          strokeLinecap="round"
+                          opacity="0.3"
+                        />
+                        <path
+                          d="M 100,20 L 100,100 Q 110,130 90,160 T 100,220 L 100,270 Q 80,310 120,350 T 100,430 L 100,470 Q 110,510 90,550 L 100,600"
+                          fill="none"
+                          stroke="#0284c7"
+                          strokeWidth="12"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M 100,20 L 100,100 Q 110,130 90,160 T 100,220 L 100,270 Q 80,310 120,350 T 100,430 L 100,470 Q 110,510 90,550 L 100,600"
+                          fill="none"
+                          stroke="#06b6d4"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          opacity="0.8"
+                          filter="url(#cyan-glow)"
+                        />
+
+                        {/* Strictly Enforced No Wake Zone Overlays (Orange Glow Paths) */}
+                        {/* 1. Upper River No Wake (y=20 to y=85) */}
+                        <path
+                          d="M 100,20 L 100,85"
+                          fill="none"
+                          stroke="#f97316"
+                          strokeWidth="15"
+                          strokeLinecap="round"
+                          opacity="0.35"
+                        />
+                        {/* 2. State Line Narrow Channel (y=120 to y=150) */}
+                        <path
+                          d="M 100,120 Q 110,135 95,150"
+                          fill="none"
+                          stroke="#f97316"
+                          strokeWidth="15"
+                          strokeLinecap="round"
+                          opacity="0.35"
+                        />
+                        {/* 3. Central Connecting Channels (y=290 to y=350) */}
+                        <path
+                          d="M 100,290 Q 80,310 120,350"
+                          fill="none"
+                          stroke="#f97316"
+                          strokeWidth="15"
+                          strokeLinecap="round"
+                          opacity="0.35"
+                        />
+                        {/* 4. Stratton Lock Approach Canal (y=500 to y=535) */}
+                        <path
+                          d="M 94,500 L 100,535"
+                          fill="none"
+                          stroke="#f97316"
+                          strokeWidth="15"
+                          strokeLinecap="round"
+                          opacity="0.35"
+                        />
+
+                        {/* Grass Lake widening (around Y=220) */}
+                        <ellipse cx="100" cy="220" rx="32" ry="26" fill="#0369a1" fillOpacity="0.25" stroke="#0284c7" strokeWidth="2" />
+                        <text x="100" y="224" fill="#38bdf8" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="middle" opacity="0.7">GRASS LAKE</text>
+
+                        {/* Lake Marie widening (around X=155, Y=180) */}
+                        <ellipse cx="155" cy="180" rx="22" ry="18" fill="#0369a1" fillOpacity="0.25" stroke="#0284c7" strokeWidth="1.5" />
+                        <text x="155" y="183" fill="#38bdf8" fontSize="6" fontWeight="bold" fontFamily="monospace" textAnchor="middle" opacity="0.6">LAKE MARIE</text>
+
+                        {/* Petite Lake widening (around X=155, Y=245) */}
+                        <ellipse cx="155" cy="245" rx="20" ry="16" fill="#0369a1" fillOpacity="0.25" stroke="#0284c7" strokeWidth="1.5" />
+                        <text x="155" y="248" fill="#38bdf8" fontSize="6" fontWeight="bold" fontFamily="monospace" textAnchor="middle" opacity="0.6">PETITE LAKE</text>
+
+                        {/* Connecting channels to Marie & Petite */}
+                        <path d="M 100,195 Q 130,190 135,180" fill="none" stroke="#0284c7" strokeWidth="6" strokeLinecap="round" />
+                        <path d="M 100,235 Q 130,242 135,245" fill="none" stroke="#0284c7" strokeWidth="6" strokeLinecap="round" />
+
+                        {/* Pistakee Lake widening (around Y=400) */}
+                        <ellipse cx="110" cy="400" rx="38" ry="32" fill="#0369a1" fillOpacity="0.25" stroke="#0284c7" strokeWidth="2" />
+                        <text x="110" y="404" fill="#38bdf8" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="middle" opacity="0.7">PISTAKEE LAKE</text>
+
+                        {/* State Line Dotted Line */}
+                        <line x1="20" y1="120" x2="180" y2="120" stroke="#f43f5e" strokeWidth="2" strokeDasharray="4,4" opacity="0.6" />
+                        <text x="30" y="115" fill="#f43f5e" fontSize="7" fontWeight="bold" fontFamily="monospace">WI BORDER</text>
+                        <text x="30" y="132" fill="#06b6d4" fontSize="7" fontWeight="bold" fontFamily="monospace">IL LINE</text>
+
+                        {/* Interactive Pins */}
+                        {/* 1. Wilmot Dam (Red Hazard) */}
+                        <g id="pin-wilmot-dam" className="cursor-pointer group" onClick={() => setSelectedBuoy('wilmot-dam')}>
+                          <circle cx="100" cy="35" r="9" fill="#f43f5e" fillOpacity={selectedBuoy === 'wilmot-dam' ? 0.4 : 0.2} className="animate-pulse" />
+                          <circle cx="100" cy="35" r="6" fill="#f43f5e" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 2. Wisconsin State Line Crossing (Orange Checkpoint) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('state-line')}>
+                          <circle cx="100" cy="120" r="7" fill="#f97316" fillOpacity={selectedBuoy === 'state-line' ? 0.4 : 0.1} />
+                          <circle cx="100" cy="120" r="5" fill="#f97316" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 3. Blarney Island (Gold Dining) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('blarney-island')}>
+                          <circle cx="105" cy="205" r="8" fill="#eab308" fillOpacity={selectedBuoy === 'blarney-island' ? 0.4 : 0.2} />
+                          <circle cx="105" cy="205" r="5.5" fill="#eab308" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 4. Grass Lake Sandbar (Gold Hangout) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('sandbar')}>
+                          <circle cx="85" cy="230" r="8" fill="#eab308" fillOpacity={selectedBuoy === 'sandbar' ? 0.4 : 0.2} />
+                          <circle cx="85" cy="230" r="5.5" fill="#eab308" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 5. Chain O' Lakes State Park Launch (Green Launch) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('state-park-launch')}>
+                          <circle cx="75" cy="180" r="7" fill="#10b981" fillOpacity={selectedBuoy === 'state-park-launch' ? 0.4 : 0.1} />
+                          <circle cx="75" cy="180" r="5" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 6. Port of Blarney Launch (Green Launch) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('port-blarney')}>
+                          <circle cx="120" cy="270" r="7" fill="#10b981" fillOpacity={selectedBuoy === 'port-blarney' ? 0.4 : 0.1} />
+                          <circle cx="120" cy="270" r="5" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 7. Famous Freddie's (Gold Dining) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('freddies')}>
+                          <circle cx="132" cy="390" r="8" fill="#eab308" fillOpacity={selectedBuoy === 'freddies' ? 0.4 : 0.2} />
+                          <circle cx="132" cy="390" r="5.5" fill="#eab308" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 8. Ben Watts Marina (Cyan Fuel) */}
+                        <g id="pin-watts-marina" className="cursor-pointer group" onClick={() => setSelectedBuoy('watts-marina')}>
+                          <circle cx="95" cy="415" r="8" fill="#06b6d4" fillOpacity={selectedBuoy === 'watts-marina' ? 0.4 : 0.2} />
+                          <circle cx="95" cy="415" r="5.5" fill="#06b6d4" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 9. McHenry River Park Launch (Green Launch) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('mchenry-launch')}>
+                          <circle cx="90" cy="495" r="7" fill="#10b981" fillOpacity={selectedBuoy === 'mchenry-launch' ? 0.4 : 0.1} />
+                          <circle cx="90" cy="495" r="5" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 10. Stratton Lock & Dam (Red Lock) */}
+                        <g id="pin-stratton-lock" className="cursor-pointer group" onClick={() => setSelectedBuoy('stratton-lock')}>
+                          <circle cx="100" cy="535" r="8" fill="#f43f5e" fillOpacity={selectedBuoy === 'stratton-lock' ? 0.4 : 0.2} />
+                          <circle cx="100" cy="535" r="5.5" fill="#f43f5e" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 11. Broken Oar (Gold Dining) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('broken-oar')}>
+                          <circle cx="115" cy="570" r="8" fill="#eab308" fillOpacity={selectedBuoy === 'broken-oar' ? 0.4 : 0.2} />
+                          <circle cx="115" cy="570" r="5.5" fill="#eab308" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* New Gas Docks */}
+                        {/* 12. Pistakee Marina (Cyan Fuel) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('pistakee-marina')}>
+                          <circle cx="80" cy="380" r="8" fill="#06b6d4" fillOpacity={selectedBuoy === 'pistakee-marina' ? 0.4 : 0.2} />
+                          <circle cx="80" cy="380" r="5.5" fill="#06b6d4" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 13. Chain O' Lakes Marina (Cyan Fuel) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('chain-marina')}>
+                          <circle cx="112" cy="175" r="8" fill="#06b6d4" fillOpacity={selectedBuoy === 'chain-marina' ? 0.4 : 0.2} />
+                          <circle cx="112" cy="175" r="5.5" fill="#06b6d4" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 14. Oak Park Marina (Cyan Fuel) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('oak-park-marina')}>
+                          <circle cx="118" cy="335" r="8" fill="#06b6d4" fillOpacity={selectedBuoy === 'oak-park-marina' ? 0.4 : 0.2} />
+                          <circle cx="118" cy="335" r="5.5" fill="#06b6d4" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* Navigation Buoys (Special Icons) */}
+                        {/* 15. No-Wake Regulatory Buoy */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('no-wake-buoy')}>
+                          <rect x="58" y="310" width="10" height="18" rx="2" fill="#ffffff" stroke="#f97316" strokeWidth="1.5" />
+                          <circle cx="63" cy="319" r="2.5" fill="none" stroke="#f97316" strokeWidth="1.5" />
+                          <circle cx="63" cy="319" r="7" fill="#f97316" fillOpacity={selectedBuoy === 'no-wake-buoy' ? 0.4 : 0} />
+                        </g>
+
+                        {/* 16. Red Channel Nun Marker */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('red-marker')}>
+                          <path d="M 110,450 L 115,465 L 105,465 Z" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
+                          <circle cx="110" cy="460" r="7" fill="#ef4444" fillOpacity={selectedBuoy === 'red-marker' ? 0.4 : 0} />
+                        </g>
+
+                        {/* 17. Green Channel Can Marker */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('green-marker')}>
+                          <rect x="80" y="450" width="8" height="15" fill="#22c55e" stroke="#ffffff" strokeWidth="1" />
+                          <circle cx="84" cy="458" r="7" fill="#22c55e" fillOpacity={selectedBuoy === 'green-marker' ? 0.4 : 0} />
+                        </g>
+
+                        {/* 18. Hazard Buoy Pin */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('hazard-buoy')}>
+                          <rect x="75" y="24" width="10" height="18" rx="2" fill="#ffffff" stroke="#f97316" strokeWidth="1.5" />
+                          <rect x="78" y="30" width="4" height="4" fill="none" stroke="#f97316" strokeWidth="1" transform="rotate(45 80 32)" />
+                          <circle cx="80" cy="33" r="7" fill="#f97316" fillOpacity={selectedBuoy === 'hazard-buoy' ? 0.4 : 0} />
+                        </g>
+
+                        {/* 19. Lake Marie Sandbar (Gold Hangout) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('marie-sandbar')}>
+                          <circle cx="160" cy="180" r="7" fill="#eab308" fillOpacity={selectedBuoy === 'marie-sandbar' ? 0.4 : 0.2} />
+                          <circle cx="160" cy="180" r="4.5" fill="#eab308" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+
+                        {/* 20. Petite Lake Sandbar (Gold Hangout) */}
+                        <g className="cursor-pointer group" onClick={() => setSelectedBuoy('petite-sandbar')}>
+                          <circle cx="155" cy="245" r="7" fill="#eab308" fillOpacity={selectedBuoy === 'petite-sandbar' ? 0.4 : 0.2} />
+                          <circle cx="155" cy="245" r="4.5" fill="#eab308" stroke="#ffffff" strokeWidth="1.5" />
+                        </g>
+                      </svg>
+                    </div>
+
+                    {/* Checkpoint Details Panel */}
+                    <div className="md:col-span-7 flex flex-col justify-between glass-card p-5 border border-neutral-900 bg-neutral-950/60 rounded-2xl relative overflow-hidden text-left">
+                      <div className="absolute inset-0 bg-gradient-to-r from-neutral-900/40 to-transparent pointer-events-none" />
+                      
+                      <div className="space-y-4 relative z-10">
+                        {/* Map legend */}
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-b border-neutral-900 pb-3.5 text-[10px] font-mono text-neutral-400">
+                          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#f43f5e]" /> Safety/Hazard</span>
+                          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#10b981]" /> Boat Launch</span>
+                          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#eab308]" /> Food/Hangout</span>
+                          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#06b6d4]" /> Gas/Marina</span>
+                          <span className="flex items-center gap-1"><span className="h-2 w-2 border border-dashed border-[#f97316] bg-[#f97316]/20" /> No Wake Zone</span>
+                        </div>
+
+                        {selectedBuoy === 'river-overview' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-rose-500/10 text-rose-405 border border-rose-500/20">
+                              Overview
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Fox River Cruise Overview</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Cruising the Fox River from McHenry, Illinois to Wisconsin is an outstanding 15+ mile journey. 
+                              The route connects quiet river banks, the wide-open Chain O&apos; Lakes system, and ends at the Wisconsin border.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Tap the markers, buoys, or gas points on the map to view specifics for each landing, dining deck, gas dock, and local regulations.
+                            </p>
+                            <div className="p-3 bg-[#bd2925]/5 border border-[#bd2925]/10 rounded-xl flex gap-2 items-start text-[11px] text-neutral-300">
+                              <Info className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                              <p className="leading-relaxed">
+                                <strong>Sticker Required:</strong> Operating in the Illinois section requires a valid Fox Waterway Agency (FWA) sticker affixed to your PWC.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'wilmot-dam' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-rose-600/10 text-rose-450 border border-rose-600/20">
+                              Hazard Zone
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                              <AlertTriangle className="w-4.5 h-4.5 text-rose-500" /> Wilmot Dam (Wisconsin)
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Located in Wilmot, WI. This low-head dam marks the absolute northern limit of navigation on this stretch of the Fox River. There are no locks or safe bypasses.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Rider Note:</strong> Do not approach the dam. The currents nearby are extremely unpredictable and shallow rocks can destroy your impeller. Make this your turnaround point and head back south.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'state-line' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              Boundary Checkpoint
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Illinois-Wisconsin State Line</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              There is no physical gate, but state regulations change once you cross this boundary. FWA stickers are not required in Wisconsin waters.
+                            </p>
+                            <div className="p-3 bg-neutral-900 border border-neutral-850 rounded-xl space-y-1.5 text-[11px] text-neutral-400">
+                              <p className="font-bold text-white uppercase text-[9px] tracking-wider text-rose-550">Wisconsin PWC Laws:</p>
+                              <ul className="list-disc list-inside space-y-1 pl-1">
+                                <li>PWC operation is strictly prohibited from sunset to sunrise.</li>
+                                <li>Operators must be at least 12 years old.</li>
+                                <li>Boating Safety Certificates are required for anyone born on or after Jan 1, 1989.</li>
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'blarney-island' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-405 border border-yellow-500/20">
+                              Dining & Nightlife
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                              <Anchor className="w-4 h-4 text-yellow-500" /> Blarney Island (Grass Lake)
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Known as the &quot;Key West of the Midwest.&quot; This iconic bar and restaurant is built entirely on a floating dock in the middle of Grass Lake. Only accessible by boat/PWC or the shuttle boat.
+                            </p>
+                            <p className="text-xs text-neutral-405 leading-relaxed">
+                              <strong>Docks:</strong> Extensive perimeter floating docks. Always utilize fenders and secure bungee lines since passing boats generate heavy wakes.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Safety:</em> The water around the island drops off to deep silt. Keep your PFD on when docking.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'sandbar' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-405 border border-yellow-500/20">
+                              Social Hangout
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Grass Lake Sandbar</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A massive shallow shelf in Grass Lake where boaters and jet skiers gather on summer weekends. The bottom is very soft silt/mud.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Anchoring Tip:</strong> Use a double-anchor setup. Drop a fluke anchor off the bow to face the wind/waves, and use a shore spike off the stern to prevent your PWC from swinging into other vessels.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'state-park-launch' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              State Launch
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Chain O&apos; Lakes State Park Launch</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A highly secure, DNR-maintained concrete ramp on the northern end of Grass Lake.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Amenities:</strong> Large paved trailer parking, restrooms, and direct canal access feeding into Grass Lake. Free daily launch for Illinois-registered vehicles.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 8916 Wilmot Rd, Spring Grove, IL 60081.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'port-blarney' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Launch & Dining
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Port of Blarney</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              The mainland terminal for Blarney Island, featuring a concrete ramp, bar, and restaurant.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Fee:</strong> $20.00 daily launch fee (includes secure trailer parking). Provides immediate access to the Grass Lake channel. Gas dock on site.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 27843 W Grass Lake Rd, Antioch, IL 60002.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'freddies' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-405 border border-yellow-500/20">
+                              Waterfront Dining
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Famous Freddie&apos;s Roadhouse</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A large waterfront restaurant on the eastern shore of Pistakee Lake. Features a large tiki deck, pub dining, and dedicated boat/PWC slips.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Rider Note:</strong> Pistakee Lake experiences heavy boat traffic. Ensure your jet ski has fenders out and is docked securely to absorb constant wakes.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'watts-marina' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              Fuel & Store
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                              <Star className="w-4 h-4 text-cyan-500" /> Ben Watts Marina
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A full-service marina right off the main Pistakee-to-Fox Lake channel under the US-12 bridge.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Fuel:</strong> Offers ethanol-free marine gas at their floating fuel docks. Includes a stocked ship store for oil, life jackets, and accessories.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 116 US-12, Fox Lake, IL 60020.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'pistakee-marina' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              Fuel & Service
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Pistakee Marina</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Located on the southwest shore of Pistakee Lake. Offers active marine gas pumps, transient docks, marine parts, and mechanical services.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Features:</strong> Convenient fuel stop for PWC riders crossing the south end of the Chain O&apos; Lakes.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 410 Kings Rd, Fox Lake, IL 60020.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'chain-marina' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              Fuel & Conveniences
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Chain O&apos; Lakes Marina</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A major marina serving the northern Chain, located near the Route 173 bridge channel.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Features:</strong> Non-ethanol marine gas, dock hand assistance, basic snacks, and PWC engine oil.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 28500 W Grass Lake Rd, Antioch, IL 60002.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'oak-park-marina' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                              Fuel & Dock
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Oak Park Marina</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Positioned right inside the channel connecting Pistakee Lake with Fox Lake. Very convenient for quick fuel-ups during a long cruise.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Rule:</strong> A strict no-wake zone is enforced in the entire marina channel basin. Fenders out.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'no-wake-buoy' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              Regulatory Marker
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                              Regulatory Buoy: Slow, No Wake
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Cylindrical white buoy with orange bands and an orange circle. Tells boaters that a <strong>Slow, No Wake speed zone</strong> is in effect.
+                            </p>
+                            <div className="p-3 bg-orange-500/5 border border-orange-500/10 rounded-xl text-[11px] text-neutral-350 space-y-1.5">
+                              <p className="font-bold text-white uppercase text-[9px]">What is No-Wake Speed?</p>
+                              <p>
+                                Operate your PWC at the absolute slowest speed at which you can maintain steerage (typically under 5 mph). Your vessel must not produce any wake or white water waves behind it.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'red-marker' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-rose-600/10 text-rose-400 border border-rose-600/20">
+                              Lateral Marker
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                              <span className="h-2 w-2 rounded-full bg-rose-500" /> Red Channel Marker (Nun)
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Red conical buoy marked with even numbers. It marks the starboard (right) side of the navigation channel when returning upstream.
+                            </p>
+                            <div className="p-3 bg-neutral-900 border border-neutral-850 rounded-xl text-[11px] text-neutral-450 space-y-1">
+                              <p className="font-bold text-white uppercase text-[9px] tracking-wider text-rose-550">Red Right Returning Rule:</p>
+                              <p>
+                                Because the Fox River flows south, riding north (from McHenry to Wisconsin) is traveling upstream (returning). Keep red markers on your right to stay in the deep-water channel.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'green-marker' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Lateral Marker
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Green Channel Marker (Can)
+                            </h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Green cylindrical buoy marked with odd numbers. It marks the port (left) side of the navigation channel when returning upstream (traveling north).
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Rider Tip:</strong> Stay between the green and red markers to avoid sandbars, shallow mud flats, and submerged rocks.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'hazard-buoy' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              Regulatory Marker
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Regulatory Buoy: Hazard Warning</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              White buoy with orange bands and an orange diamond. Warns of dangers like shallow rocks, shipwrecks, shoals, or proximity to dams.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Fox River Application:</strong> Strictly keep clear of these markers near the lock gates and dam slipways to prevent dangerous suction or grounding.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'mchenry-launch' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Public Launch
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">McHenry River Park Launch</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A premier municipal boat launch located on the east bank of the Fox River, just north of the Stratton Lock.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Details:</strong> Clean concrete ramps, a floating boarding pier, restrooms, and plenty of secure trailer parking. Requires a daily launch fee for non-residents.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 3100 Charles J Miller Memorial Hwy, McHenry, IL 60050.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'stratton-lock' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-rose-500/10 text-rose-405 border border-rose-500/20">
+                              Lock Checkpoint
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Stratton Lock & Dam</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              Operated by the IDNR. Bypasses the McHenry Dam to connect the upper Chain with the lower Fox River. Lock transit is free and takes about 15 minutes.
+                            </p>
+                            <div className="p-3 bg-neutral-900 border border-neutral-850 rounded-xl space-y-1.5 text-[11px] text-neutral-400">
+                              <p className="font-bold text-white uppercase text-[9px] tracking-wider text-rose-550">Lock Transit Rules:</p>
+                              <ul className="list-disc list-inside space-y-1 pl-1">
+                                <li>Wait for the green light or lockmaster horn before entering.</li>
+                                <li>Fenders out are required. Secure your vessel to lock ropes.</li>
+                                <li>Shut off your PWC engine immediately once secured inside.</li>
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'broken-oar' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-405 border border-yellow-500/20">
+                              Waterfront Dining
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Broken Oar Marina & Bar</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A famous waterfront bar and restaurant located in Port Barrington, just south of the Stratton Lock and Dam.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Rider Note:</strong> Features a massive outdoor deck, live music, and extensive floating docks. Requires transiting the Stratton Lock to visit if you started in McHenry/Chain O&apos; Lakes.
+                            </p>
+                            <p className="text-[10px] text-neutral-500">
+                              <em>Address:</em> 614 Rawson Bridge Rd, Port Barrington, IL 60010.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'marie-sandbar' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-405 border border-yellow-500/20">
+                              Social Sandbar
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Lake Marie Sandbar</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              A popular gathering spot on the east shore of Lake Marie. It features a firm sand and gravel bottom and very shallow water near the shore.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Rider Tip:</strong> It is generally quieter than Petite Lake, making it a great place to wade and relax. Always check for rocks before beaching your PWC hull.
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedBuoy === 'petite-sandbar' && (
+                          <div className="space-y-3">
+                            <div className="inline-block px-2.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-405 border border-yellow-500/20">
+                              Social Sandbar & Party Spot
+                            </div>
+                            <h3 className="text-base font-black text-white uppercase tracking-tight">Petite Lake Sandbar</h3>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              One of the most famous social hotspots on the Chain. Located on the west end of Petite Lake. It has a beautiful sandy bottom and gets extremely busy on summer afternoons.
+                            </p>
+                            <p className="text-xs text-neutral-400 leading-relaxed">
+                              <strong>Anchoring Tip:</strong> Heavy boat wakes roll in constantly. A dual anchor (fluke anchor off the bow, shore spike off the stern) is highly recommended to prevent your PWC from spinning or colliding with other vessels.
+                            </p>
+                          </div>
+                        )}
+
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBuoy('river-overview')}
+                        className="mt-6 w-full py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-850 hover:border-neutral-750 text-neutral-300 rounded-xl text-xs font-mono uppercase tracking-wider transition-colors relative z-10 cursor-pointer"
+                      >
+                        Reset to Overview
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>

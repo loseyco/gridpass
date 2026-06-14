@@ -971,5 +971,185 @@ Let me know what type of vest you prefer and if you have a favorite dog life jac
         desc: "While you have a legal right to temporarily anchor in the water, the shoreline and lakebed bottomlands are owned by adjacent property owners. Trespassing on private docks, beaches, or dry land is illegal."
       }
     ]
+  },
+  {
+    slug: 'fox-river-mchenry-wisconsin-jet-ski-guide',
+    title: "Fox River Jet Skiing Guide: McHenry to Wisconsin Rules, Gas, & Stops",
+    description: "The ultimate interactive rider guide for cruising the Fox River from McHenry Lock & Dam up to the Wisconsin border. Features lock rules, gas stops, and waterfront restaurants.",
+    category: 'watercraft',
+    readTime: '7 min read',
+    publishDate: 'June 14, 2026',
+    tags: ['Fox River', 'Jet Ski', 'PWC', 'McHenry', 'Wisconsin Boating', 'Waterfront Dining'],
+    contributors: ['PJ Losey', 'Ranger Dave'],
+    introduction: [
+      "Cruising the Fox River from the McHenry Lock and Dam north to the Wisconsin state line is one of the most scenic and rewarding personal watercraft (PWC) adventures in Northern Illinois. This river corridor connects the quiet waters south of the Chain O' Lakes with the massive lake system itself, extending into the southern border of Wisconsin near Wilmot.",
+      "However, this stretch of water requires careful navigation. The Fox River is a dynamic waterway managed by multiple state and local agencies, including the Fox Waterway Agency (FWA), Illinois DNR, and Wisconsin DNR. You will encounter wake restrictions, shallow silt channels, sandbars, and the Stratton Lock and Dam.",
+      "Whether you're looking for high-energy waterfront restaurants, scenic routes, or are curious about safety certificate age laws and lockage procedures, this guide covers everything you need for a smooth run."
+    ],
+    gearSectionTitle: "Recommended River Cruising Gear",
+    gearSectionDesc: "Before heading out, make sure you are equipped for river mooring, wake safety, and lock transits.",
+    launchesTitle: "Fox River & Chain Ramps",
+    launchesDesc: "The most convenient concrete launches for starting your McHenry-to-Wisconsin river cruise.",
+    gear: [
+      {
+        name: 'Better Boat PWC Fenders & Bumper Guards (Pair)',
+        asin: 'B07V2H3H3S',
+        price: '$39.99',
+        rating: 4.8,
+        badge: 'Premium Choice',
+        desc: 'Heavy-duty closed-cell foam bumpers that clip directly to your jet ski rub rail. Crucial when holding your vessel against concrete lock walls or docking at waterfront restaurants with rough timber pylons.',
+        pros: ['Clips securely to PWC rub rail', 'Impact-resistant closed-cell foam', 'Protects gelcoat from scratches'],
+        cons: ['Slightly bulky in smaller storage compartments'],
+        url: getAmazonSearchUrl('Better Boat PWC Fenders')
+      },
+      {
+        name: 'WavesRx PWC Anchor System & Bungee Kit',
+        asin: 'B08HSH7K8K',
+        price: '$49.99',
+        rating: 4.7,
+        badge: 'Best Value',
+        desc: 'Elastic bungee dock lines that stretch from 4 to 6 feet, absorbing heavy wake shocks in channels and near busy marinas.',
+        pros: ['Bungee action prevents cleat ripping', 'Dual rust-proof 316 stainless clips', 'Built-in foam floatation'],
+        cons: ['Not suitable for overnight mooring without secondary lines'],
+        url: getAmazonSearchUrl('WavesRx Bungee Dock Lines')
+      },
+      {
+        name: 'Cooper Anchor 1.0 kg (2.2 lbs) Nylon Anchor',
+        asin: 'B00B4U0IQU',
+        price: '$55.00',
+        rating: 4.8,
+        badge: 'Community Favorite',
+        desc: 'Lightweight composite nylon anchor with no sharp edges to scratch your ski. Highly recommended for holding in the soft silt and mud bottoms of the Fox River and Grass Lake Sandbar.',
+        pros: ['High-strength composite nylon', 'Digs aggressively into river silt/mud', 'Lightweight and compact'],
+        cons: ['Rope and lead chain must be purchased separately'],
+        url: getAmazonSearchUrl('Cooper Anchor Nylon 1kg')
+      }
+    ],
+    launches: [
+      {
+        name: "McHenry River Park Boat Launch",
+        location: "3100 Charles J Miller Memorial Hwy, McHenry, IL 60050",
+        fee: "Daily parking pass required for non-residents",
+        amenities: ["Concrete Ramps", "Restrooms", "Trailer Parking", "Kayak Launch", "Picnic Shelter"],
+        desc: "Located just north of the Stratton Lock and Dam. This is the absolute best starting point if you want to run the river upstream toward the Chain. The launch features dual wide concrete ramps, a floating boarding pier, and plenty of trailer parking.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=McHenry+River+Park+Boat+Launch"
+      },
+      {
+        name: "Port of Blarney Boat Launch",
+        location: "27843 W Grass Lake Rd, Antioch, IL 60002",
+        fee: "$20.00 Daily Launch Fee",
+        amenities: ["Concrete Ramp", "Bar & Restaurant", "Secure Parking", "Fuel Dock"],
+        desc: "Perfect launching pad for the northern section of the Chain and the upper Fox River leading to Wisconsin. The ramp is wide and in excellent condition, with direct access to Grass Lake and the river channel.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Port+of+Blarney+Boat+Launch"
+      },
+      {
+        name: "Chain O' Lakes State Park Launch Ramps",
+        location: "8916 Wilmot Rd, Spring Grove, IL 60081",
+        fee: "Free for IL residents",
+        amenities: ["Paved Ramps", "Restrooms", "Ample Trailer Parking", "Direct Channel Access"],
+        desc: "Situated on the north end of the Chain, launching directly into a channel that feeds into Grass Lake. Excellent facilities and a very safe place to leave your vehicle and trailer for the day.",
+        mapsUrl: "https://www.google.com/maps/search/?api=1&query=Chain+O+Lakes+State+Park+Boat+Launch"
+      }
+    ],
+    hotspots: [
+      {
+        name: "Stratton Lock & Dam",
+        lake: "Fox River (McHenry)",
+        desc: "The William G. Stratton Lock and Dam controls water levels on the Chain and allows vessels to transition between the upper Chain and lower Fox River. Going through the lock is free, but you must follow lockmaster signals, tie up to the lock walls with fenders out, and shut down engines once secured.",
+        anchorRequirement: "Do not anchor within 300 feet of the dam. Tie-up lines are provided inside the lock chamber; keep your life jacket on at all times."
+      },
+      {
+        name: "Broken Oar Marina & Bar",
+        lake: "Fox River (Port Barrington)",
+        desc: "A legendary waterfront restaurant and bar located just south of the Stratton Lock and Dam. Known for its massive outdoor deck, live music, and PWC docks. It makes an excellent destination or lunch stop, but requires navigating the lock if coming from McHenry.",
+        anchorRequirement: "Utilize the floating docks on the river. Be sure to put fenders on the shore side of your jet ski, as boat traffic generates constant wakes."
+      },
+      {
+        name: "Famous Freddie's Roadhouse",
+        lake: "Pistakee Lake (Fox Lake)",
+        desc: "A lively waterfront hotspot with a massive outdoor tiki bar, live entertainment, and dedicated boat/PWC slips. Located right on Pistakee Lake where the Fox River widens into the Chain.",
+        anchorRequirement: "Secure to the floating dock slips. Wake protection is minimal, so bungee dock lines and fenders are highly recommended."
+      },
+      {
+        name: "Grass Lake Sandbar",
+        lake: "Grass Lake (Chain)",
+        desc: "A massive, shallow sandbar where hundreds of boaters and PWC riders anchor to swim and socialize. The bottom is a mix of sand and soft silt, making it perfect for shallow-water wading.",
+        anchorRequirement: "Use a double-anchor setup: a fluke/Cooper anchor off the bow to face the wind/wakes, and a shore spike off the stern to prevent the ski from swinging."
+      },
+      {
+        name: "Blarney Island",
+        lake: "Grass Lake (Chain)",
+        desc: "Known as the 'Key West of the Midwest,' Blarney Island is a unique bar and restaurant built on a floating dock in the middle of Grass Lake. It is accessible only by boat or PWC (or the Port shuttle).",
+        anchorRequirement: "Tie up at the perimeter docks. Note that the lake bottom around the island is very deep silt; if you drop off the dock, the water is deep, so keep your vest buckled."
+      },
+      {
+        name: "Wisconsin Border Crossing",
+        lake: "Upper Fox River",
+        desc: "The state border line where the Fox River exits Illinois and enters Wisconsin near Wilmot. While there are no checkpoints, you must transition to Wisconsin boating laws, and your Fox Waterway sticker is no longer required once past the state line.",
+        anchorRequirement: "River becomes narrower and shallower past the border. Keep a close eye on your depth finder to avoid sucking silt, weeds, or rocks into your PWC impeller."
+      },
+      {
+        name: "Ben Watts Marina",
+        lake: "Fox Lake / Pistakee Channel",
+        desc: "A premier full-service marina offering non-ethanol marine fuel, a ship store stocked with oils and accessories, and temporary tie-ups. Easily accessible just off the US-12 bridge.",
+        anchorRequirement: "Utilize the floating fuel docks. Be prepared for channel wake roll."
+      },
+      {
+        name: "Pistakee Marina",
+        lake: "Pistakee Lake",
+        desc: "Located on the southwest shore of Pistakee Lake. Offers active gas pumps, transient docks, marine parts, and basic service support.",
+        anchorRequirement: "Tie up at designated fuel/transient slips; keep fenders deployed."
+      },
+      {
+        name: "Chain O' Lakes Marina",
+        lake: "Grass Lake Area",
+        desc: "A vital northern marina with quick-access ethanol-free gas docks, snacks, and oils for PWC riders exploring Grass Lake.",
+        anchorRequirement: "Use fenders on the rub rail to prevent scraping against raw timber dock boards."
+      },
+      {
+        name: "Oak Park Marina & Gas",
+        lake: "Fox Lake Channel",
+        desc: "A convenient fuel stop in the center of the lake-connecting channels. Great for grab-and-go refreshments and quick fuel ups.",
+        anchorRequirement: "Strict no-wake speed is enforced through the entire marina basin."
+      },
+      {
+        name: "Petite Lake Sandbar",
+        lake: "Petite Lake (Chain)",
+        desc: "One of the most famous social sandbars on the Chain O' Lakes. Located on the west side of Petite Lake. It features a clean sandy bottom and relatively shallow waters, making it a prime spot to anchor, swim, and meet other riders.",
+        anchorRequirement: "Use a bow anchor and a stern shore spike to hold your position. Be mindful that it can get very crowded and wavy on summer weekend afternoons."
+      },
+      {
+        name: "Lake Marie Sandbar",
+        lake: "Lake Marie (Chain)",
+        desc: "A popular hangout spot on the east side of Lake Marie. It offers a firm sand and gravel bottom and shallow water close to shore, ideal for wading and cooling off.",
+        anchorRequirement: "Standard PWC anchor or fluke anchor with a short bungee lead. Deploy fenders if other jet skis are anchored nearby."
+      }
+    ],
+    rules: [
+      {
+        title: "Fox Waterway Agency (FWA) Sticker",
+        desc: "Every vessel operating on the Fox River or Chain O' Lakes in Illinois must display a valid FWA User Sticker in addition to state registration. Daily and annual stickers can be purchased online or at local marinas."
+      },
+      {
+        title: "Stratton Lock Operating Hours",
+        desc: "The Stratton Lock is open from May 1 through October 31. Operating hours are 8:00 AM to midnight from May through September, and 8:00 AM to 8:00 PM in October. Transit is free."
+      },
+      {
+        title: "No-Wake Zones & Speeds",
+        desc: "Strict 'Slow, No Wake' (under 5 mph) zones are enforced in all channels, within 150 feet of docks, swimmers, or shorelines, and under all bridges (including the US-12 and railroad bridges in Pistakee)."
+      },
+      {
+        title: "Wisconsin Boating Age Laws",
+        desc: "In Wisconsin, no one under 12 may operate a PWC. Those born on or after Jan 1, 1989, must carry a valid Boating Safety Certificate. Wisconsin does not allow PWC operation between sunset and sunrise."
+      },
+      {
+        title: "Illinois Boating Age Laws",
+        desc: "In Illinois, PWC operators aged 10-17 must carry an IDNR boating safety certificate or be accompanied by an adult (18+). Operating a PWC at night is illegal."
+      },
+      {
+        title: "Wilmot Dam Hazard",
+        desc: "The Wilmot Dam is located just north of Wilmot, Wisconsin. There are no locks. Motorized navigation ends here; attempting to approach or portage around the dam is highly dangerous."
+      }
+    ]
   }
 ];

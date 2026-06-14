@@ -54,4 +54,38 @@ test.describe('Gridpass Guides & Slalom Map E2E Suite', () => {
     await expect(page.locator('text=Infant (under 30 lbs), Child (30-50 lbs), and Youth (50-90 lbs)')).toBeVisible();
     await expect(page.locator('text=Dog & Pet Flotation Safety')).toBeVisible();
   });
+
+  test('Fox River jet ski guide loads correctly and interactive map works', async ({ page }) => {
+    // Navigate directly to the Fox River guide
+    await page.goto('/guides/fox-river-mchenry-wisconsin-jet-ski-guide');
+
+    // Verify the title
+    await expect(page.locator('h1')).toContainText(/Fox River/i);
+    await expect(page.locator('h1')).toContainText(/Jet Skiing Guide/i);
+
+    // Verify that the interactive map section is present
+    await expect(page.locator('h2:has-text("Interactive River Cruise Map")').first()).toBeVisible();
+
+    // Verify default details text is present (River overview)
+    await expect(page.locator('text=Fox River Cruise Overview')).toBeVisible();
+    await expect(page.locator('text=Wisconsin border').first()).toBeVisible();
+
+    // Click on Wilmot Dam pin/element
+    await page.locator('#pin-wilmot-dam').click();
+    // Verify details panel updates with Wilmot Dam information
+    await expect(page.locator('h3:has-text("Wilmot Dam")')).toBeVisible();
+    await expect(page.locator('text=low-head dam').first()).toBeVisible();
+
+    // Click on Stratton Lock pin/element
+    await page.locator('#pin-stratton-lock').click();
+    // Verify details panel updates with Stratton Lock information
+    await expect(page.locator('h3:has-text("Stratton Lock & Dam")')).toBeVisible();
+    await expect(page.locator('text=transit is free').first()).toBeVisible();
+
+    // Click on Ben Watts Marina pin/element
+    await page.locator('#pin-watts-marina').click();
+    // Verify details panel updates with Ben Watts Marina information
+    await expect(page.locator('h3:has-text("Ben Watts Marina")')).toBeVisible();
+    await expect(page.locator('text=floating fuel docks').first()).toBeVisible();
+  });
 });
