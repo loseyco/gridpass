@@ -133,22 +133,6 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   Vehicles
                 </Link>
-                <Link 
-                  href="/explore?tab=businesses" 
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                    activeMenu === 'buisniess' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Business
-                </Link>
-                <Link 
-                  href="/explore?tab=venues" 
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                    activeMenu === 'events' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Events
-                </Link>
               </nav>
             )}
           </div>
@@ -217,25 +201,6 @@ export function AppShell({ children }: AppShellProps) {
             <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Vehicles</span>
           </Link>
 
-          <Link 
-            href="/explore?tab=businesses" 
-            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${
-              activeMenu === 'buisniess' ? 'text-[#ff3b30]' : 'text-neutral-500 hover:text-[#bd2925]'
-            }`}
-          >
-            <Building2 className="w-4.5 h-4.5" />
-            <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Business</span>
-          </Link>
-
-          <Link 
-            href="/explore?tab=venues" 
-            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${
-              activeMenu === 'events' ? 'text-[#ff3b30]' : 'text-neutral-500 hover:text-[#bd2925]'
-            }`}
-          >
-            <Calendar className="w-4.5 h-4.5" />
-            <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Events</span>
-          </Link>
 
         </nav>
       )}

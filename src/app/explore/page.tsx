@@ -319,22 +319,7 @@ export default function ExplorePage() {
             >
               <User className="w-4 h-4" /> People ({filteredPeople.length})
             </button>
-            <button 
-              onClick={() => { setActiveTab('businesses'); setSearchQuery(''); }}
-              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'businesses' ? 'border-red-500 text-white font-black' : 'border-transparent text-neutral-500 hover:text-neutral-300'
-              }`}
-            >
-              <Building2 className="w-4 h-4" /> Businesses ({filteredBusinesses.length})
-            </button>
-            <button 
-              onClick={() => { setActiveTab('venues'); setSearchQuery(''); }}
-              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'venues' ? 'border-red-500 text-white font-black' : 'border-transparent text-neutral-500 hover:text-neutral-300'
-              }`}
-            >
-              <Compass className="w-4 h-4" /> Venues ({filteredVenues.length})
-            </button>
+
           </div>
 
           {/* Search Box */}
