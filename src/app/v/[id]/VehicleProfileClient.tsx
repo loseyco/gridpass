@@ -1938,7 +1938,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                   
                   <div className="space-y-3">
                     {/* Primary Owner Link Card */}
-                    <Link href={`/u/${ownerProfile?.username || 'pjlosey-mock'}`} className="flex items-center gap-3 p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] hover:shadow-sm transition-all group cursor-pointer">
+                    <Link href={`/u/${ownerProfile?.username || vehicle.owner_id || ''}`} className="flex items-center gap-3 p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] hover:shadow-sm transition-all group cursor-pointer">
                       <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-black text-[#ff3b30] uppercase text-sm">
                         {(ownerProfile?.displayName || 'Marcus Mustang').split(' ').map(n => n[0]).join('')}
                       </div>
@@ -1966,21 +1966,36 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                         list = [{ name, split, memberId: name.toLowerCase().includes('kristina') ? 'kristina-mock' : '' }];
                       }
 
-                      return list.map((co, idx) => (
-                        <Link 
-                          href={co.memberId ? `/u/${co.memberId}` : `/u/pjlosey-mock`} 
-                          key={idx} 
-                          className="flex items-center gap-3 p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] hover:shadow-sm transition-all group cursor-pointer"
-                        >
-                          <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-black text-neutral-550 uppercase text-sm">
-                            {co.name.split(' ').map(n => n[0]).join('')}
+                      return list.map((co, idx) => {
+                        return co.memberId ? (
+                          <Link 
+                            href={`/u/${co.memberId}`} 
+                            key={idx} 
+                            className="flex items-center gap-3 p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] hover:shadow-sm transition-all group cursor-pointer"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-black text-neutral-550 uppercase text-sm">
+                              {co.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-black text-neutral-900 uppercase text-xs group-hover:text-[#ff3b30] transition-colors">{co.name}</h4>
+                              <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split})</p>
+                            </div>
+                          </Link>
+                        ) : (
+                          <div 
+                            key={idx} 
+                            className="flex items-center gap-3 p-3 bg-neutral-100 border border-neutral-200 rounded-2xl"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-neutral-200 border border-neutral-300 flex items-center justify-center font-black text-neutral-550 uppercase text-sm">
+                              {co.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-black text-neutral-900 uppercase text-xs">{co.name}</h4>
+                              <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split})</p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <h4 className="font-black text-neutral-900 uppercase text-xs group-hover:text-[#ff3b30] transition-colors">{co.name}</h4>
-                            <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split})</p>
-                          </div>
-                        </Link>
-                      ));
+                        );
+                      });
                     })()}
                   </div>
                 </div>
