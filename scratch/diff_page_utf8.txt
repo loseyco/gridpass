@@ -1,0 +1,221 @@
+﻿diff --git a/src/app/v/[id]/page.tsx b/src/app/v/[id]/page.tsx
+index 465eea4..ed4ee3b 100644
+--- a/src/app/v/[id]/page.tsx
++++ b/src/app/v/[id]/page.tsx
+@@ -968,6 +968,216 @@ export default function VehicleProfilePage() {
+     }
+   };
+ 
++  const resolveCanonicalMember = (nameOrEmail: string): string[] => {
++    if (!nameOrEmail) return [];
++    const clean = nameOrEmail.trim().toLowerCase();
++    if (clean.includes('&') || clean.includes(' and ')) {
++      const parts = clean.split(/&| and /);
++      return parts.flatMap(p => resolveCanonicalMember(p));
++    }
++    if (clean === 'pjlosey@outlook.com' || clean === 'pjlosey@gmail.com' || clean === 'pj') {
++      return ['PJ'];
++    }
++    if (clean === 'kristinaandersonmm@gmail.com' || clean === 'kristina.andersonmm@gmail.com' || clean === 'kristina') {
++      return ['Kristina'];
++    }
++    return [nameOrEmail.trim()];
++  };
++
++  const getDisplayName = (nameOrEmail: string): string => {
++    if (!nameOrEmail) return '';
++    const canonical = resolveCanonicalMember(nameOrEmail);
++    if (canonical.length > 0) return canonical.join(' & ');
++    return nameOrEmail;
++  };
++
++  const getSplitMembersForVehicle = (v: VehicleData | null, u: any): string[] => {
++    const names = new Set<string>();
++    if (v && v.owner_id) {
++      if (v.id === 'mock-v1') {
++        names.add('Marcus Mustang');
++      } else {
++        names.add('PJ');
++      }
++    }
++    if (v && v.co_owners) {
++      if (Array.isArray(v.co_owners)) {
++        v.co_owners.forEach((co: any) => {
++          const name = typeof co === 'string' ? co : co.name;
++          if (name) names.add(name);
++        });
++      } else if (typeof v.co_owners === 'string') {
++        v.co_owners.split('&').forEach(n => {
++          const name = n.trim();
++          if (name) names.add(name);
++        });
++      }
++    }
++    return Array.from(names);
++  };
++
++  const getSplitMembers = () => {
++    const names = new Set<string>();
++    const vehicleMembers = getSplitMembersForVehicle(vehicle, user);
++    vehicleMembers.forEach(n => names.add(n));
++    
++    expenseSplitDetails.forEach(d => {
++      if (d.name) names.add(d.name);
++    });
++    
++    if (expensePaidBy) {
++      resolveCanonicalMember(expensePaidBy).forEach(n => names.add(n));
++    }
++    
++    return Array.from(names);
++  };
++
++  const getMemberExpenseCalculations = (exp: VehicleExpense, memberName: string) => {
++    const memberCanonical = resolveCanonicalMember(memberName);
++    let paid = 0;
++    let share = 0;
++
++    const ownerName = vehicle?.owner_id === 'user-marcus-123' ? 'Marcus Mustang' : 'Owner';
++    const payer = exp.paid_by || ownerName;
++    const payerCanonical = resolveCanonicalMember(payer);
++
++    if (exp.is_split) {
++      if (Array.isArray(exp.split_details) && exp.split_details.length > 0) {
++        exp.split_details.forEach(d => {
++          const dCanonical = resolveCanonicalMember(d.name);
++          if (dCanonical.some(dc => memberCanonical.some(mc => mc.toLowerCase() === dc.toLowerCase()))) {
++            share += (Number(d.owed) || 0) / dCanonical.length;
++            paid += (Number(d.paid) || 0) / dCanonical.length;
++          }
++        });
++
++        const sumPaidDetails = exp.split_details.reduce((sum, d) => sum + (Number(d.paid) || 0), 0);
++        if (Math.abs(sumPaidDetails - exp.cost) > 0.01) {
++          const diff = exp.cost - sumPaidDetails;
++          if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
++            paid += diff / payerCanonical.length;
++          }
++        }
++
++        const sumSharesDetails = exp.split_details.reduce((sum, d) => sum + (Number(d.owed) || 0), 0);
++        if (sumSharesDetails < 0.01) {
++          if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
++            share += exp.cost / payerCanonical.length;
++          }
++        }
++      } else if (Array.isArray(exp.split_between) && exp.split_between.length > 0) {
++        if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
++          paid = exp.cost / payerCanonical.length;
++        }
++        
++        const splitBetweenCanonical = exp.split_between.flatMap(p => resolveCanonicalMember(p));
++        const isIncluded = splitBetweenCanonical.some(sc => memberCanonical.some(mc => mc.toLowerCase() === sc.toLowerCase()));
++        if (isIncluded) {
++          const count = splitBetweenCanonical.filter(sc => memberCanonical.some(mc => mc.toLowerCase() === sc.toLowerCase())).length;
++          share = (exp.cost / splitBetweenCanonical.length) * count;
++        }
++      } else {
++        if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
++          paid = exp.cost / payerCanonical.length;
++          share = exp.cost / payerCanonical.length;
++        }
++      }
++    } else {
++      if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
++        paid = exp.cost / payerCanonical.length;
++        share = exp.cost / payerCanonical.length;
++      }
++    }
++
++    const roundedPaid = Math.round(paid * 100) / 100;
++    const roundedShare = Math.round(share * 100) / 100;
++    const owes = Math.max(0, roundedShare - roundedPaid);
++
++    return {
++      paid: roundedPaid,
++      share: roundedShare,
++      owes: Math.round(owes * 100) / 100
++    };
++  };
++
++  const getConciseSplitSummary = (exp: VehicleExpense) => {
++    const members = getSplitMembers();
++    const paidParts: string[] = [];
++    const owesParts: string[] = [];
++
++    members.forEach(member => {
++      const calc = getMemberExpenseCalculations(exp, member);
++      const displayName = getDisplayName(member);
++      if (calc.paid > 0.005) {
++        paidParts.push(`${displayName} paid $${calc.paid.toFixed(2)}`);
++      }
++      if (calc.owes > 0.005) {
++        owesParts.push(`${displayName} owes $${calc.owes.toFixed(2)}`);
++      }
++    });
++
++    const paidStr = paidParts.join(' & ');
++    const owesStr = owesParts.join(' & ');
++
++    if (!paidStr && !owesStr) return null;
++
++    return (
++      <div 
++        className="text-[10px] text-neutral-450 mt-1 font-mono flex items-center gap-1.5" 
++        data-testid={`expense-split-details-${exp.id}`}
++      >
++        <span>Split Details:</span>
++        {paidStr && <span className="text-neutral-300 font-bold">{paidStr}</span>}
++        {paidStr && owesStr && <span className="text-neutral-600">ΓÇó</span>}
++        {owesStr && <span className="text-amber-400 font-semibold">{owesStr}</span>}
++      </div>
++    );
++  };
++
++  const renderFriendlyCards = () => {
++    const members = getSplitMembers();
++    if (members.length !== 2) return null;
++    const nameA = members[0];
++    const nameB = members[1];
++    const totalOwedA = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameA).owes, 0);
++    const totalOwedB = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameB).owes, 0);
++    const owesDiff = totalOwedA - totalOwedB;
++
++    const displayNameA = getDisplayName(nameA);
++    const displayNameB = getDisplayName(nameB);
++
++    let cardA = "";
++    let cardB = "";
++
++    if (owesDiff < -0.005) {
++      const amt = Math.abs(owesDiff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
++      cardA = `${displayNameA} is currently covering $${amt} for ${displayNameB}. Settle up whenever convenient, no rush! ≡ƒÿè`;
++      cardB = `${displayNameB} is catching up by $${amt}. ${displayNameA} has got it covered for now ΓÇô thank you! ≡ƒÖÅ`;
++    } else if (owesDiff > 0.005) {
++      const amt = owesDiff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
++      cardA = `${displayNameA} is catching up by $${amt}. ${displayNameB} has got it covered for now ΓÇô thank you! ≡ƒÖÅ`;
++      cardB = `${displayNameB} is currently covering $${amt} for ${displayNameA}. Settle up whenever convenient, no rush! ≡ƒÿè`;
++    } else {
++      cardA = `${displayNameA} is perfectly settled up! Everything is square. Γ£¿`;
++      cardB = `${displayNameB} is perfectly settled up! Everything is square. Γ£¿`;
++    }
++
++    return (
++      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2" id="friendly-balance-cards">
++        <div className="glass-card p-5 rounded-2xl border border-yellow-500/10 bg-yellow-500/5 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
++          <div className="absolute right-3 top-3 w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
++          <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">{displayNameA}'s Status</span>
++          <p className="text-xs font-semibold text-neutral-200 mt-2 leading-relaxed">{cardA}</p>
++        </div>
++        <div className="glass-card p-5 rounded-2xl border border-yellow-500/10 bg-yellow-500/5 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
++          <div className="absolute right-3 top-3 w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
++          <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">{displayNameB}'s Status</span>
++          <p className="text-xs font-semibold text-neutral-200 mt-2 leading-relaxed">{cardB}</p>
++        </div>
++      </div>
++    );
++  };
++
+   const handleStartEditExpense = (exp: VehicleExpense) => {
+     if (!exp.id) return;
+     setEditingExpenseId(exp.id);

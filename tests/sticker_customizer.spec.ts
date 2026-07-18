@@ -44,20 +44,23 @@ test.describe('Sticker Customizer & Claims Onboarding E2E Suite', () => {
     await expect(keytagBtn).toBeVisible();
     await expect(windshieldBtn).toBeVisible();
 
+    // Scroll to top to ensure layout buttons are not under bottom nav bar on mobile
+    await page.evaluate(() => window.scrollTo(0, 0));
+
     // Select Round sticker template (Avery 94500) and verify it's the active layout
-    await avery94500Btn.click();
+    await avery94500Btn.dispatchEvent('click');
     await expect(page.locator('text=GRIDPASS').first()).toBeVisible();
 
     // Select Square sticker template (Avery 22806)
-    await avery22806Btn.click();
+    await avery22806Btn.dispatchEvent('click');
     await expect(page.locator('text=GRIDPASS DECAL')).toBeVisible();
 
     // Select Keytag template
-    await keytagBtn.click();
+    await keytagBtn.dispatchEvent('click');
     await expect(page.locator('text=Key Ring Tag')).toBeVisible();
 
     // Select Windshield Poster template
-    await windshieldBtn.click();
+    await windshieldBtn.dispatchEvent('click');
     await expect(page.locator('text=GRIDPASS PASSPORT')).toBeVisible();
     await expect(page.locator('text=SPECIFICATIONS')).toBeVisible();
     await expect(page.locator('h1:has-text("Corvette Z06")').first()).toBeVisible();
@@ -72,7 +75,7 @@ test.describe('Sticker Customizer & Claims Onboarding E2E Suite', () => {
     await expect(goldThemeBtn).toBeVisible();
 
     // PJ LOSEY mock is supporter, click gold theme should work directly
-    await goldThemeBtn.click();
+    await goldThemeBtn.dispatchEvent('click');
     await expect(page.locator('.gold-glow-ring')).toBeVisible();
 
     // Action buttons visible

@@ -183,9 +183,9 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await page.click('button:has-text("Save Passport Settings")');
 
     // Verify redirects back to Specs & Mod List tab and shows the updated title/story
-    await expect(page.locator('text=2007 Sea-Doo')).toBeVisible();
-    await expect(page.locator('text=GTI SE')).toBeVisible();
-    await expect(page.locator('text=We bought this 2007 Sea-Doo GTI SE')).toBeVisible();
+    await expect(page.locator('text=2007 Sea-Doo').first()).toBeVisible();
+    await expect(page.locator('text=GTI SE').first()).toBeVisible();
+    await expect(page.locator('text=We bought this 2007 Sea-Doo GTI SE').first()).toBeVisible();
 
     // Verify co-owner Kristina is visible
     await expect(page.locator('a', { hasText: 'Kristina' })).toBeVisible();
@@ -242,18 +242,31 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await expect(page.getByRole('heading', { name: '$120' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '$45' })).toBeVisible();
 
-    // Log a new expense
+    // Log a new expense with a split
     await page.fill('#expense-title-input', 'Performance Dyno Tune');
     await page.selectOption('#expense-category-input', 'addon');
     await page.fill('#expense-cost-input', '250.00');
     await page.fill('#expense-date-input', '2026-06-10');
+    await page.selectOption('#expense-paid-by-select', 'custom');
     await page.fill('#expense-paid-by-input', 'Marcus Mustang');
+    
+    // Toggle split checkbox
+    await page.check('#expense-is-split-checkbox');
+    // Verify checklist is visible
+    await expect(page.locator('[data-testid="split-checkbox-Marcus Mustang"]')).toBeVisible();
+    
+    // Add custom split name
+    await page.fill('#custom-split-name-input', 'Dave PWC');
+    await page.click('#add-custom-split-btn');
+    await expect(page.locator('[data-testid="split-checkbox-Dave PWC"]')).toBeVisible();
+    
     await page.fill('#expense-notes-input', 'Tuned on 93 octane. Gained 15hp.');
     await page.click('#submit-expense-btn');
 
     // Verify it was appended to the timeline ledger
     await expect(page.locator('text=Performance Dyno Tune').first()).toBeVisible();
     await expect(page.locator('text=Paid by: Marcus Mustang').first()).toBeVisible();
+    await expect(page.locator('[data-testid^="expense-split-details-"]').first()).toBeVisible();
 
     // TCO should increase by 250 (5865 + 250 = 6115.00)
     await expect(page.locator('text=$6,115.00')).toBeVisible();
@@ -266,7 +279,8 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
 
     // Verify fields populated
     await expect(page.locator('#expense-title-input')).toHaveValue('Performance Dyno Tune');
-    await expect(page.locator('#expense-paid-by-input')).toHaveValue('Marcus Mustang');
+    await expect(page.locator('#expense-paid-by-select')).toHaveValue('Marcus Mustang');
+    await expect(page.locator('#expense-is-split-checkbox')).toBeChecked();
 
     // Cancel edit check
     await page.click('#cancel-expense-edit-btn');
@@ -276,9 +290,10 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await dynoItem.hover();
     await editBtn.click();
 
-    // Modify details
+    // Modify details and split
     await page.fill('#expense-title-input', 'Supercharger Dyno Tune');
     await page.fill('#expense-cost-input', '350.00');
+    await page.selectOption('#expense-paid-by-select', 'custom');
     await page.fill('#expense-paid-by-input', 'Marcus & Kristina');
     await page.click('#submit-expense-btn');
 

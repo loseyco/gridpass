@@ -287,7 +287,7 @@ function PrintPageContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col">
+    <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col pb-24">
       {/* Dynamic inline styles for print layout */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {

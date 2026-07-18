@@ -3,6 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 test.beforeEach(async ({ page }) => {
+  page.on('console', msg => console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`));
+  page.on('pageerror', err => console.error('[BROWSER ERROR]', err.stack || err.message));
+
   // Inject mock environment variable
   await page.addInitScript(() => {
     (window as any).__PLAYWRIGHT_MOCK__ = true;

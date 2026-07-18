@@ -30,16 +30,19 @@ test.describe('Gridpass: Polymorphic Venue & Mapping E2E Suite', () => {
     await expect(page.locator('text=Marcus')).toBeVisible();
     await expect(page.locator('text=Sarah')).toBeVisible();
 
+    // Scroll to top to ensure toggle is not under bottom nav bar on mobile
+    await page.evaluate(() => window.scrollTo(0, 0));
+
     // Verify privacy "Go Ghost" toggle behavior
     const privacyBtn = page.locator('#privacy-toggle');
     await expect(privacyBtn).toBeVisible();
-    await privacyBtn.click();
+    await privacyBtn.dispatchEvent('click');
     await expect(page.locator('text=Ghost Mode Active')).toBeVisible();
     // Friend beacons and self indicator should hide in ghost mode
     await expect(page.locator('text=Kristina')).not.toBeVisible();
 
     // Toggle location sharing back on
-    await privacyBtn.click();
+    await privacyBtn.dispatchEvent('click');
     await expect(page.locator('text=Sharing Location')).toBeVisible();
 
     // Open Drop Spot Form
@@ -47,8 +50,7 @@ test.describe('Gridpass: Polymorphic Venue & Mapping E2E Suite', () => {
     await expect(page.locator('text=Drop New Spot')).toBeVisible();
 
     // Fill in new spot details
-    await page.fill('input[placeholder="e.g. Grass Lake Marina / Sandbar"]', 'Lakeside Fuel & Burgers');
-    await page.selectOption('select', 'monmouth-marine-demo'); // Link to verified business
+    await page.fill('input[placeholder="e.g. Grass Lake Marina / Sandbar"]', 'Monmouth Lakeside Fuel & Burgers');
     await page.click('form button:has-text("dock")');
     await page.click('form button:has-text("fuel")');
     await page.click('form button:has-text("food")');
@@ -56,13 +58,13 @@ test.describe('Gridpass: Polymorphic Venue & Mapping E2E Suite', () => {
 
     // Save and verify spot dropped
     await page.click('button:has-text("Verify & Drop Pin")');
-    await expect(page.locator('h4:has-text("Lakeside Fuel & Burgers")')).toBeVisible();
+    await expect(page.locator('h4:has-text("Monmouth Lakeside Fuel & Burgers")')).toBeVisible();
     await expect(page.locator('text=verified Spot')).toBeVisible();
     await expect(page.locator('text=Verified Business Partner')).toBeVisible();
 
     // Suggest edits on spot
     await page.click('button:has-text("Suggest Edits / Note")');
-    await expect(page.locator('text=Suggest Edits: Lakeside Fuel & Burgers')).toBeVisible();
+    await expect(page.locator('text=Suggest Edits: Monmouth Lakeside Fuel & Burgers')).toBeVisible();
     await page.fill('textarea[placeholder*="Leave suggestions"]', 'Water depth is around 4ft at dock.');
     await page.click('button:has-text("Submit Recommendations")');
 

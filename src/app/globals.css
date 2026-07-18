@@ -1,60 +1,58 @@
 @import "tailwindcss";
 
 :root {
-  --background: #060608;
-  --foreground: #f4f4f7;
+  --background: #ffffff;
+  --foreground: #1c1c1e;
   
-  /* Carbon/Crimson Brand HSL color system */
-  --brand-primary: 359 66% 44%; /* #bd2925 Crimson */
-  --brand-accent: 45 100% 50%;   /* #ffb700 Supporter Gold */
-  --brand-neon: 359 85% 60%;    /* Rose/Neon Red */
+  /* HSL colors mapped to Red Apple System Colors */
+  --brand-primary: 359 66% 44%; 
+  --brand-accent: 359 100% 50%; /* System Red HSL */
+  --brand-neon: 359 85% 60%;
   
-  /* Premium dark color tokens */
-  --neutral-pitch: #040406;
-  --neutral-dark: #09090d;
-  --neutral-card: rgba(13, 13, 20, 0.45);
-  --neutral-border: rgba(255, 255, 255, 0.04);
-  --neutral-border-hover: rgba(189, 41, 37, 0.2);
+  --neutral-pitch: #ffffff;
+  --neutral-dark: #f2f2f7;
+  --neutral-card: #f2f2f7; /* iOS System Light Grouped Background */
+  --neutral-border: #e5e5ea;
+  --neutral-border-hover: #c7c7cc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   
-  /* Map cyan tailwind utilities to dynamic mobile theme variables */
-  --color-cyan-400: var(--mobile-accent-light, #22d3ee);
-  --color-cyan-500: var(--mobile-accent, #06b6d4);
-  --color-cyan-600: var(--mobile-accent-dark, #0891b2);
-  --color-cyan-950: var(--mobile-accent-deep, #083344);
+  --color-cyan-400: #ff3b30;
+  --color-cyan-500: #ff3b30;
+  --color-cyan-600: #bd2925;
+  --color-cyan-950: #4a0604;
 }
 
 :root, .waterway-theme {
-  --mobile-accent: #06b6d4;      /* Cyan 500 */
-  --mobile-accent-dark: #0891b2; /* Cyan 600 */
-  --mobile-accent-light: #22d3ee;/* Cyan 400 */
-  --mobile-accent-deep: #083344; /* Cyan 950 */
+  --mobile-accent: #007aff;      /* System Blue */
+  --mobile-accent-dark: #0056b3; 
+  --mobile-accent-light: #0a84ff;
+  --mobile-accent-deep: #002d5a; 
 }
 
 .racetrack-theme {
-  --mobile-accent: #ef4444;      /* Red 500 */
-  --mobile-accent-dark: #dc2626; /* Red 600 */
-  --mobile-accent-light: #f87171;/* Red 400 */
-  --mobile-accent-deep: #450a0a; /* Red 950 */
+  --mobile-accent: #ff453a;      /* System Red */
+  --mobile-accent-dark: #d1241a; 
+  --mobile-accent-light: #ff6961;
+  --mobile-accent-deep: #4d0a06; 
 }
 
 .offroad-theme {
-  --mobile-accent: #f59e0b;      /* Amber 500 */
-  --mobile-accent-dark: #d97706; /* Amber 600 */
-  --mobile-accent-light: #fbbf24;/* Amber 400 */
-  --mobile-accent-deep: #451a03; /* Amber 950 */
+  --mobile-accent: #ff9f0a;      /* System Orange */
+  --mobile-accent-dark: #d67d00; 
+  --mobile-accent-light: #ffb340;
+  --mobile-accent-deep: #543200; 
 }
 
 .event-theme {
-  --mobile-accent: #eab308;      /* Yellow 500 */
-  --mobile-accent-dark: #ca8a04; /* Yellow 600 */
-  --mobile-accent-light: #facc15;/* Yellow 400 */
-  --mobile-accent-deep: #422006; /* Yellow 950 */
+  --mobile-accent: #ffd60a;      /* System Yellow */
+  --mobile-accent-dark: #b89800; 
+  --mobile-accent-light: #ffe040;
+  --mobile-accent-deep: #473a00; 
 }
 
 /* Base resets & typography */
@@ -62,146 +60,128 @@ html, body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  overflow-x: hidden;
-  scroll-behavior: smooth;
+  overflow: hidden;
+  height: 100%;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Beautiful custom dark-mode scrollbar */
+/* Apple system scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--neutral-pitch);
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: #3a3a3c;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(189, 41, 37, 0.3);
+  background: #48484a;
 }
 
-/* Ambient glow mesh background (Crimson & Gold theme) */
+/* Remove ambient glow mesh background */
 .mesh-glow {
-  position: absolute;
-  top: -10%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  height: 600px;
-  background: 
-    radial-gradient(circle at 30% 20%, rgba(189, 41, 37, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 70% 60%, rgba(255, 183, 0, 0.06) 0%, transparent 45%),
-    radial-gradient(circle at 50% 40%, rgba(244, 63, 94, 0.08) 0%, transparent 50%);
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
-/* Premium Glassmorphic utilities */
+/* Simple iOS Card Layout */
 .glass-card {
   background: var(--neutral-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--neutral-border);
-  box-shadow: 
-    0 4px 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 1px rgba(255, 255, 255, 0.03);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .glass-card:hover {
+  background-color: #e5e5ea;
   border-color: var(--neutral-border-hover);
-  box-shadow: 
-    0 10px 40px rgba(0, 0, 0, 0.7),
-    0 0 25px rgba(189, 41, 37, 0.08),
-    inset 0 1px 2px rgba(255, 255, 255, 0.05);
-  transform: translateY(-2px);
+  box-shadow: none;
+  transform: none;
 }
 
+/* Simple iOS Input fields */
 .glass-input {
-  background: rgba(10, 10, 15, 0.6);
-  border: 1px solid var(--neutral-border);
+  background: #ffffff;
+  border: 1px solid #d1d1d6;
   color: var(--foreground);
-  transition: all 0.3s ease;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s ease;
 }
 
 .glass-input:focus {
-  border-color: rgba(189, 41, 37, 0.4);
-  box-shadow: 0 0 15px rgba(189, 41, 37, 0.15);
-  background: rgba(10, 10, 15, 0.85);
+  border-color: #ff3b30;
+  background: #ffffff;
+  box-shadow: none;
   outline: none;
 }
 
-/* Micro-animations and active states */
+/* Remove button glow overlay and make clean red buttons */
 .btn-glow {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  background-color: #ff3b30 !important;
+  color: #ffffff !important;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-glow:hover {
+  background-color: #bd2925 !important;
 }
 
 .btn-glow::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transform: skewX(-25deg);
-  transition: 0.75s;
+  display: none;
 }
 
-.btn-glow:hover::after {
-  left: 125%;
-}
-
+/* Solid text colors instead of gradients */
 .text-gradient {
-  background: linear-gradient(135deg, #f43f5e 0%, #ffb700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #1c1c1e;
 }
 
 .text-gradient-neon {
-  background: linear-gradient(135deg, #bd2925 0%, #f43f5e 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #ff3b30;
 }
 
-/* Gold Supporter glowing avatar ring accent */
-@keyframes supporter-glow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(255, 224, 102, 0.4), inset 0 0 4px rgba(255, 224, 102, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 18px rgba(255, 224, 102, 0.8), inset 0 0 8px rgba(255, 224, 102, 0.4);
-  }
-}
-
+/* Muted gold supporter glow ring */
 .gold-glow-ring {
-  animation: supporter-glow 3s infinite ease-in-out;
+  box-shadow: 0 0 0 2px #ffd60a;
 }
 
-/* Custom Leaflet Dark/Glassmorphic Popups */
+/* Custom Leaflet Popups */
 .custom-map-popup .leaflet-popup-content-wrapper {
-  background: rgba(10, 10, 12, 0.95) !important;
-  backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: #f4f4f7 !important;
-  border-radius: 1rem !important;
+  background: #1c1c1e !important;
+  border: 1px solid #2c2c2e !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
   padding: 2px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: none !important;
 }
 .custom-map-popup .leaflet-popup-tip {
-  background: rgba(10, 10, 12, 0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #1c1c1e !important;
+  border: 1px solid #2c2c2e !important;
 }
+
+/* Hide Next.js dev overlay */
+nextjs-portal {
+  display: none !important;
+}
+
+/* Leaflet Marching Ants path */
+@keyframes marching-ants {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.marching-ants-line {
+  animation: marching-ants 1s linear infinite;
+  stroke: var(--mobile-accent, #007aff) !important;
+}
+
 

@@ -164,7 +164,7 @@ export default function VenuePortalView({ venue }: VenuePortalViewProps) {
   };
 
   return (
-    <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col">
+    <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col pb-24">
       {/* Mesh Glow Background */}
       <div 
         className="absolute top-0 left-0 right-0 h-[600px] pointer-events-none transition-all duration-700" 

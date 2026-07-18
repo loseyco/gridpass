@@ -34,7 +34,6 @@ export default function VenueSpotMapper({ venue }: VenueSpotMapperProps) {
   const [newCustomFeature, setNewCustomFeature] = useState('');
   const [newSpotNotes, setNewSpotNotes] = useState('');
   const [newSpotHours, setNewSpotHours] = useState('');
-  const [newSpotBusinessId, setNewSpotBusinessId] = useState('');
 
   // Editing Fields
   const [editNotes, setEditNotes] = useState('');
@@ -138,6 +137,39 @@ export default function VenueSpotMapper({ venue }: VenueSpotMapperProps) {
       return;
     }
 
+    // Automatically detect business_id based on name keywords and proximity
+    let autoBusinessId: string | undefined = undefined;
+    const BUSINESS_COORDINATES = {
+      'monmouth-marine-demo': { lat: 42.4449, lng: -88.1651 },
+      'performance-tuning-demo': { lat: 40.2934, lng: -87.2488 },
+      'badlands-offroad-demo': { lat: 40.2910, lng: -87.2500 }
+    };
+    
+    // 1. Proximity check first (within ~500m)
+    let closestId: string | undefined = undefined;
+    let minDistance = 0.005;
+    Object.entries(BUSINESS_COORDINATES).forEach(([id, coords]) => {
+      const dist = Math.sqrt(Math.pow(newSpotLat - coords.lat, 2) + Math.pow(newSpotLng - coords.lng, 2));
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestId = id;
+      }
+    });
+    
+    if (closestId) {
+      autoBusinessId = closestId;
+    } else {
+      // 2. Keyword check
+      const lowerName = newSpotName.toLowerCase();
+      if (lowerName.includes('monmouth') || lowerName.includes('marine')) {
+        autoBusinessId = 'monmouth-marine-demo';
+      } else if (lowerName.includes('tuning') || lowerName.includes('performance')) {
+        autoBusinessId = 'performance-tuning-demo';
+      } else if (lowerName.includes('badlands') || lowerName.includes('offroad') || lowerName.includes('off-road')) {
+        autoBusinessId = 'badlands-offroad-demo';
+      }
+    }
+
     const newSpot: VenueSpot = {
       id: `spot-${Date.now()}`,
       venue_id: venue.id,
@@ -147,8 +179,8 @@ export default function VenueSpotMapper({ venue }: VenueSpotMapperProps) {
       features: newSpotFeatures.length > 0 ? newSpotFeatures : ['general'],
       notes: newSpotNotes.trim() ? [{ user: 'You', text: newSpotNotes, timestamp: new Date().toISOString() }] : [],
       hours: newSpotHours.trim() || undefined,
-      status: newSpotBusinessId ? 'verified' : 'active',
-      business_id: newSpotBusinessId || undefined,
+      status: autoBusinessId ? 'verified' : 'active',
+      business_id: autoBusinessId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -162,7 +194,6 @@ export default function VenueSpotMapper({ venue }: VenueSpotMapperProps) {
     setNewSpotFeatures([]);
     setNewSpotNotes('');
     setNewSpotHours('');
-    setNewSpotBusinessId('');
   };
 
   // Submit Spot updates / edits
@@ -540,20 +571,7 @@ export default function VenueSpotMapper({ venue }: VenueSpotMapperProps) {
                 </div>
               </div>
 
-              {/* Business Link Selector */}
-              <div>
-                <label className="text-[9px] font-mono font-bold text-neutral-400 uppercase tracking-widest block mb-1">Link to Storefront (Optional)</label>
-                <select
-                  value={newSpotBusinessId}
-                  onChange={(e) => setNewSpotBusinessId(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-850 text-white rounded-xl px-3 py-3 text-xs outline-none cursor-pointer min-h-[50px]"
-                >
-                  <option value="">-- Standalone Spot / Public Land --</option>
-                  {availableBusinesses.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
+
 
               {/* Features checklists (Large 56px click box targets) */}
               <div>

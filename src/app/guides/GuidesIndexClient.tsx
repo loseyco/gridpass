@@ -21,8 +21,19 @@ export default function GuidesIndex() {
     { id: 'motorcycle', label: 'Motorcycle & Moto', icon: Compass },
   ];
 
+  // Sort guides by publishDate (latest first)
+  const sortedGuides = [...GUIDES].sort((a, b) => {
+    if (a.publishDate === 'Scheduled' && b.publishDate !== 'Scheduled') return -1;
+    if (b.publishDate === 'Scheduled' && a.publishDate !== 'Scheduled') return 1;
+    if (a.publishDate === 'Scheduled' && b.publishDate === 'Scheduled') return 0;
+
+    const dateA = new Date(a.publishDate.split('(')[0].trim());
+    const dateB = new Date(b.publishDate.split('(')[0].trim());
+    return dateB.getTime() - dateA.getTime();
+  });
+
   // Filter guides based on category and search query
-  const filteredGuides = GUIDES.filter(guide => {
+  const filteredGuides = sortedGuides.filter(guide => {
     const matchesCategory = selectedCategory === 'all' || guide.category === selectedCategory;
     const matchesSearch = guide.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           guide.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -31,9 +42,9 @@ export default function GuidesIndex() {
   });
 
   // Billboard is the Northern Illinois Lakes Registration Guide
-  const billboardGuide = GUIDES.find(g => g.slug === 'illinois-lakes-registration-launches-rules') || GUIDES[0];
+  const billboardGuide = sortedGuides.find(g => g.slug === 'illinois-lakes-registration-launches-rules') || sortedGuides[0];
   // Trending contains all guides except the billboard guide, ordered logically
-  const trendingGuides = GUIDES.filter(g => g.slug !== billboardGuide.slug);
+  const trendingGuides = sortedGuides.filter(g => g.slug !== billboardGuide.slug);
 
   const getCategoryButtonText = (category: string) => {
     switch (category) {

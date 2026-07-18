@@ -36,10 +36,10 @@ export interface VenueSpot {
   latitude: number;
   longitude: number;
   features: string[]; // e.g. ['dock', 'fuel', 'food', 'beach', 'sandbar', 'hazard']
-  notes: Array<{ user: string; text: string; timestamp: string }>;
+  notes: Array<{ user: string; text: string; timestamp: string; rating?: number; photo_urls?: string[]; tags?: string[] }>;
   photo_urls?: string[];
   hours?: string;
-  status: 'active' | 'reported_closed' | 'verified';
+  status: 'active' | 'reported_closed' | 'verified' | 'unverified';
   business_id?: string; // Optional link to verified B2B storefront
   created_at: string;
   updated_at: string;
@@ -55,4 +55,5 @@ export interface FriendBeacon {
   heading?: number; // degrees
   updated_at: string;
   status: 'active' | 'ghost';
+  vehicle?: 'boat' | 'pwc' | 'jeep' | 'bike' | 'other';
 }

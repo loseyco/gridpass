@@ -13,7 +13,8 @@ import {
 import { 
   CarFront, MapPin, Wrench, ShieldCheck, Heart, User, Calendar, 
   Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun,
-  Settings, Award, Printer, DollarSign, Trash2, Plus, Coins, Fuel, CreditCard, Pencil
+  Settings, Award, Printer, DollarSign, Trash2, Plus, Coins, Fuel, CreditCard, Pencil,
+  CheckCircle, Users, Save, Anchor
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
 
@@ -94,6 +95,13 @@ interface ServiceLog {
   shop_id?: string;
 }
 
+interface ExpenseParticipant {
+  name: string;
+  paid: number;
+  owed: number;
+  active: boolean;
+}
+
 interface VehicleExpense {
   id?: string;
   vehicle_id: string;
@@ -105,6 +113,10 @@ interface VehicleExpense {
   notes?: string;
   paid_by?: string;
   created_at?: any;
+  is_split?: boolean;
+  split_between?: string[];
+  split_details?: ExpenseParticipant[];
+  photo_url?: string;
 }
 
 interface Sighting {
@@ -143,6 +155,16 @@ export default function VehicleProfilePage() {
   const [expensePaidBy, setExpensePaidBy] = useState('');
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [submittingExpense, setSubmittingExpense] = useState(false);
+  const [expenseSplitDetails, setExpenseSplitDetails] = useState<ExpenseParticipant[]>([]);
+  const [expenseIsSplit, setExpenseIsSplit] = useState(false);
+  const [expenseSplitBetween, setExpenseSplitBetween] = useState<string[]>([]);
+  const [customSplitName, setCustomSplitName] = useState('');
+  const [expensePhotoUrl, setExpensePhotoUrl] = useState('');
+  const [customPaidByActive, setCustomPaidByActive] = useState(false);
+  const [customSplitActive, setCustomSplitActive] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [paidBySelect, setPaidBySelect] = useState('');
 
   // Edit Build states
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
@@ -373,7 +395,8 @@ export default function VehicleProfilePage() {
   const getBadgeSVGMarkup = () => {
     if (!vehicle) return '';
     const tagId = vehicle.tag_id || `GP-VEH-${vehicle.id.slice(0, 6).toUpperCase()}`;
-    const qrRedirectUrl = `${window.location.origin}/qr/${tagId}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://gridpass.app';
+    const qrRedirectUrl = `${origin}/qr/${tagId}`;
     const qrCodeImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrRedirectUrl)}`;
     const escapedQrCodeImgSrc = qrCodeImgSrc.replace(/&/g, '&amp;');
     const badgeTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
@@ -848,6 +871,13 @@ export default function VehicleProfilePage() {
     const ownerUid = isMock ? 'user-marcus-123' : (user?.uid || 'unknown-uid');
     const resolvedPaidBy = expensePaidBy.trim() || user?.displayName || user?.email?.split('@')[0] || 'Owner';
 
+    const splitPayload = {
+      is_split: expenseIsSplit,
+      split_between: expenseIsSplit ? expenseSplitBetween : [],
+      split_details: expenseIsSplit ? expenseSplitDetails.map(d => ({ name: d.name, paid: d.paid, owed: d.owed, active: d.active })) : [],
+      photo_url: expensePhotoUrl
+    };
+
     if (editingExpenseId) {
       // EDIT MODE
       if (isMock) {
@@ -858,12 +888,19 @@ export default function VehicleProfilePage() {
           cost: costNum,
           date: expenseDate,
           notes: expenseNotes.trim(),
-          paid_by: resolvedPaidBy
+          paid_by: resolvedPaidBy,
+          ...splitPayload
         } : exp));
         setExpenseTitle('');
         setExpenseCost('');
         setExpenseNotes('');
         setExpensePaidBy('');
+        setExpenseIsSplit(false);
+        setExpenseSplitBetween([]);
+        setExpenseSplitDetails([]);
+        setExpensePhotoUrl('');
+        setCustomSplitName('');
+        setPaidBySelect('');
         setEditingExpenseId(null);
         setSubmittingExpense(false);
         return;
@@ -877,7 +914,8 @@ export default function VehicleProfilePage() {
           cost: costNum,
           date: expenseDate,
           notes: expenseNotes.trim(),
-          paid_by: resolvedPaidBy
+          paid_by: resolvedPaidBy,
+          ...splitPayload
         });
 
         setExpenses(prev => prev.map(exp => exp.id === editingExpenseId ? {
@@ -887,13 +925,20 @@ export default function VehicleProfilePage() {
           cost: costNum,
           date: expenseDate,
           notes: expenseNotes.trim(),
-          paid_by: resolvedPaidBy
+          paid_by: resolvedPaidBy,
+          ...splitPayload
         } : exp));
 
         setExpenseTitle('');
         setExpenseCost('');
         setExpenseNotes('');
         setExpensePaidBy('');
+        setExpenseIsSplit(false);
+        setExpenseSplitBetween([]);
+        setExpenseSplitDetails([]);
+        setExpensePhotoUrl('');
+        setCustomSplitName('');
+        setPaidBySelect('');
         setEditingExpenseId(null);
         await logEvent('success', 'system', `Expense updated for vehicle [${vehicleId}]: ${expenseTitle.trim()} ($${costNum})`);
       } catch (error) {
@@ -914,13 +959,20 @@ export default function VehicleProfilePage() {
           cost: costNum,
           date: expenseDate,
           notes: expenseNotes.trim(),
-          paid_by: resolvedPaidBy
+          paid_by: resolvedPaidBy,
+          ...splitPayload
         };
         setExpenses(prev => [newExpense, ...prev]);
         setExpenseTitle('');
         setExpenseCost('');
         setExpenseNotes('');
         setExpensePaidBy('');
+        setExpenseIsSplit(false);
+        setExpenseSplitBetween([]);
+        setExpenseSplitDetails([]);
+        setExpensePhotoUrl('');
+        setCustomSplitName('');
+        setPaidBySelect('');
         setSubmittingExpense(false);
         return;
       }
@@ -935,7 +987,8 @@ export default function VehicleProfilePage() {
           date: expenseDate,
           notes: expenseNotes.trim(),
           paid_by: resolvedPaidBy,
-          created_at: serverTimestamp()
+          created_at: serverTimestamp(),
+          ...splitPayload
         };
 
         const docRef = await addDoc(collection(db, 'expenses'), payload);
@@ -949,7 +1002,8 @@ export default function VehicleProfilePage() {
           cost: payload.cost,
           date: payload.date,
           notes: payload.notes,
-          paid_by: payload.paid_by
+          paid_by: payload.paid_by,
+          ...splitPayload
         };
 
         setExpenses(prev => [newExpense, ...prev]);
@@ -957,6 +1011,12 @@ export default function VehicleProfilePage() {
         setExpenseCost('');
         setExpenseNotes('');
         setExpensePaidBy('');
+        setExpenseIsSplit(false);
+        setExpenseSplitBetween([]);
+        setExpenseSplitDetails([]);
+        setExpensePhotoUrl('');
+        setCustomSplitName('');
+        setPaidBySelect('');
 
         await logEvent('success', 'system', `Expense logged for vehicle [${vehicleId}]: ${payload.title} ($${payload.cost})`);
       } catch (error) {
@@ -965,6 +1025,393 @@ export default function VehicleProfilePage() {
       } finally {
         setSubmittingExpense(false);
       }
+    }
+  };
+
+  const recalculateEqualSplit = (totalCost: number, currentParticipants: ExpenseParticipant[], payerName: string) => {
+    const activeList = currentParticipants.filter(p => p.active);
+    const count = activeList.length;
+    const equalShare = count > 0 ? Math.round((totalCost / count) * 100) / 100 : 0;
+    
+    // Resolve canonical name of payer
+    const payerCanonical = resolveCanonicalMember(payerName).map(p => p.toLowerCase());
+    
+    return currentParticipants.map(p => {
+      if (!p.active) {
+        return { ...p, owed: 0, paid: 0 };
+      }
+      const pCanonical = resolveCanonicalMember(p.name).map(pn => pn.toLowerCase());
+      const isPayer = pCanonical.some(pn => payerCanonical.includes(pn));
+      
+      return {
+        ...p,
+        owed: equalShare,
+        paid: isPayer ? totalCost : 0
+      };
+    });
+  };
+
+  const handleToggleMemberSelection = (name: string, checked: boolean) => {
+    setExpenseSplitDetails(prev => {
+      let list = [...prev];
+      const index = list.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+      if (index >= 0) {
+        list[index] = { ...list[index], active: checked };
+      } else {
+        list.push({ name, active: checked, paid: 0, owed: 0 });
+      }
+      const updated = recalculateEqualSplit(Number(expenseCost) || 0, list, expensePaidBy);
+      setExpenseSplitBetween(updated.filter(p => p.active).map(p => p.name));
+      return updated;
+    });
+  };
+
+  const handleToggleSplit = (checked: boolean) => {
+    setExpenseIsSplit(checked);
+    if (checked && expenseSplitDetails.length === 0) {
+      const initialNames = getSplitMembersForVehicle(vehicle, user);
+      const initialParticipants = initialNames.map(name => {
+        const pCanonical = resolveCanonicalMember(name).map(pn => pn.toLowerCase());
+        const payerCanonical = resolveCanonicalMember(expensePaidBy).map(p => p.toLowerCase());
+        const isPayer = pCanonical.some(pn => payerCanonical.includes(pn));
+        return {
+          name,
+          active: true,
+          paid: isPayer ? (Number(expenseCost) || 0) : 0,
+          owed: 0
+        };
+      });
+      const updated = recalculateEqualSplit(Number(expenseCost) || 0, initialParticipants, expensePaidBy);
+      setExpenseSplitDetails(updated);
+      setExpenseSplitBetween(updated.map(p => p.name));
+    }
+  };
+
+  const handleAddCustomSplitter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customSplitName.trim()) return;
+    const newName = customSplitName.trim();
+    
+    setExpenseSplitDetails(prev => {
+      if (prev.some(p => p.name.toLowerCase() === newName.toLowerCase())) {
+        alert("This participant is already in the split.");
+        return prev;
+      }
+      const newList = [...prev, { name: newName, active: true, paid: 0, owed: 0 }];
+      const updated = recalculateEqualSplit(Number(expenseCost) || 0, newList, expensePaidBy);
+      setExpenseSplitBetween(updated.filter(p => p.active).map(p => p.name));
+      return updated;
+    });
+    setCustomSplitName('');
+  };
+
+  const handleRemoveCustomSplitter = (name: string) => {
+    setExpenseSplitDetails(prev => {
+      const newList = prev.filter(p => p.name.toLowerCase() !== name.toLowerCase());
+      const updated = recalculateEqualSplit(Number(expenseCost) || 0, newList, expensePaidBy);
+      setExpenseSplitBetween(updated.filter(p => p.active).map(p => p.name));
+      return updated;
+    });
+  };
+
+  const handleUpdatePaid = (name: string, value: number) => {
+    setExpenseSplitDetails(prev =>
+      prev.map(p => p.name === name ? { ...p, paid: value } : p)
+    );
+  };
+
+  const handleUpdateOwed = (name: string, value: number) => {
+    setExpenseSplitDetails(prev =>
+      prev.map(p => p.name === name ? { ...p, owed: value } : p)
+    );
+  };
+
+  const handleCostChange = (val: string) => {
+    setExpenseCost(val);
+    const costNum = Number(val) || 0;
+    setExpenseSplitDetails(prev => {
+      const updated = recalculateEqualSplit(costNum, prev, expensePaidBy);
+      return updated;
+    });
+  };
+
+  const handlePayerChange = (val: string) => {
+    setExpensePaidBy(val);
+    setExpenseSplitDetails(prev => {
+      const updated = recalculateEqualSplit(Number(expenseCost) || 0, prev, val);
+      return updated;
+    });
+  };
+
+  const handlePaidBySelectChange = (val: string) => {
+    setPaidBySelect(val);
+    if (val !== 'custom') {
+      handlePayerChange(val);
+    } else {
+      handlePayerChange('');
+    }
+  };
+
+  const resolveCanonicalMember = (nameOrEmail: string): string[] => {
+    if (!nameOrEmail) return [];
+    const clean = nameOrEmail.trim().toLowerCase();
+    if (clean.includes('&') || clean.includes(' and ')) {
+      const parts = clean.split(/&| and /);
+      return parts.flatMap(p => resolveCanonicalMember(p));
+    }
+    if (clean === 'pjlosey@outlook.com' || clean === 'pjlosey@gmail.com' || clean === 'pj') {
+      return ['PJ'];
+    }
+    if (clean === 'kristinaandersonmm@gmail.com' || clean === 'kristina.andersonmm@gmail.com' || clean === 'kristina') {
+      return ['Kristina'];
+    }
+    return [nameOrEmail.trim()];
+  };
+
+  const getDisplayName = (nameOrEmail: string): string => {
+    if (!nameOrEmail) return '';
+    const canonical = resolveCanonicalMember(nameOrEmail);
+    if (canonical.length > 0) return canonical.join(' & ');
+    return nameOrEmail;
+  };
+
+  const getSplitMembersForVehicle = (v: VehicleData | null, u: any): string[] => {
+    const names = new Set<string>();
+    if (v && v.owner_id) {
+      if (v.id === 'mock-v1') {
+        names.add('Marcus Mustang');
+      } else {
+        names.add('PJ');
+      }
+    }
+    if (v && v.co_owners) {
+      if (Array.isArray(v.co_owners)) {
+        v.co_owners.forEach((co: any) => {
+          const name = typeof co === 'string' ? co : co.name;
+          if (name) names.add(name);
+        });
+      } else if (typeof v.co_owners === 'string') {
+        v.co_owners.split('&').forEach(n => {
+          const name = n.trim();
+          if (name) names.add(name);
+        });
+      }
+    }
+    return Array.from(names);
+  };
+
+  const getSplitMembers = () => {
+    const names = new Set<string>();
+    const vehicleMembers = getSplitMembersForVehicle(vehicle, user);
+    vehicleMembers.forEach(n => names.add(n));
+    
+    expenseSplitDetails.forEach(d => {
+      if (d.name) names.add(d.name);
+    });
+    
+    if (expensePaidBy) {
+      resolveCanonicalMember(expensePaidBy).forEach(n => names.add(n));
+    }
+    
+    return Array.from(names);
+  };
+
+  const getMemberExpenseCalculations = (exp: VehicleExpense, memberName: string) => {
+    const memberCanonical = resolveCanonicalMember(memberName);
+    let paid = 0;
+    let share = 0;
+
+    const ownerName = vehicle?.owner_id === 'user-marcus-123' ? 'Marcus Mustang' : 'Owner';
+    const payer = exp.paid_by || ownerName;
+    const payerCanonical = resolveCanonicalMember(payer);
+
+    if (exp.is_split) {
+      if (Array.isArray(exp.split_details) && exp.split_details.length > 0) {
+        exp.split_details.forEach(d => {
+          const dCanonical = resolveCanonicalMember(d.name);
+          if (dCanonical.some(dc => memberCanonical.some(mc => mc.toLowerCase() === dc.toLowerCase()))) {
+            share += (Number(d.owed) || 0) / dCanonical.length;
+            paid += (Number(d.paid) || 0) / dCanonical.length;
+          }
+        });
+
+        const sumPaidDetails = exp.split_details.reduce((sum, d) => sum + (Number(d.paid) || 0), 0);
+        if (Math.abs(sumPaidDetails - exp.cost) > 0.01) {
+          const diff = exp.cost - sumPaidDetails;
+          if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
+            paid += diff / payerCanonical.length;
+          }
+        }
+
+        const sumSharesDetails = exp.split_details.reduce((sum, d) => sum + (Number(d.owed) || 0), 0);
+        if (sumSharesDetails < 0.01) {
+          if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
+            share += exp.cost / payerCanonical.length;
+          }
+        }
+      } else if (Array.isArray(exp.split_between) && exp.split_between.length > 0) {
+        if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
+          paid = exp.cost / payerCanonical.length;
+        }
+        
+        const splitBetweenCanonical = exp.split_between.flatMap(p => resolveCanonicalMember(p));
+        const isIncluded = splitBetweenCanonical.some(sc => memberCanonical.some(mc => mc.toLowerCase() === sc.toLowerCase()));
+        if (isIncluded) {
+          const count = splitBetweenCanonical.filter(sc => memberCanonical.some(mc => mc.toLowerCase() === sc.toLowerCase())).length;
+          share = (exp.cost / splitBetweenCanonical.length) * count;
+        }
+      } else {
+        if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
+          paid = exp.cost / payerCanonical.length;
+          share = exp.cost / payerCanonical.length;
+        }
+      }
+    } else {
+      if (payerCanonical.some(pc => memberCanonical.some(mc => mc.toLowerCase() === pc.toLowerCase()))) {
+        paid = exp.cost / payerCanonical.length;
+        share = exp.cost / payerCanonical.length;
+      }
+    }
+
+    const roundedPaid = Math.round(paid * 100) / 100;
+    const roundedShare = Math.round(share * 100) / 100;
+    const owes = Math.max(0, roundedShare - roundedPaid);
+
+    return {
+      paid: roundedPaid,
+      share: roundedShare,
+      owes: Math.round(owes * 100) / 100
+    };
+  };
+
+  const getConciseSplitSummary = (exp: VehicleExpense) => {
+    const members = getSplitMembers();
+    const paidParts: string[] = [];
+    const owesParts: string[] = [];
+
+    members.forEach(member => {
+      const calc = getMemberExpenseCalculations(exp, member);
+      const displayName = getDisplayName(member);
+      if (calc.paid > 0.005) {
+        paidParts.push(`${displayName} paid $${calc.paid.toFixed(2)}`);
+      }
+      if (calc.owes > 0.005) {
+        owesParts.push(`${displayName} owes $${calc.owes.toFixed(2)}`);
+      }
+    });
+
+    const paidStr = paidParts.join(' & ');
+    const owesStr = owesParts.join(' & ');
+
+    if (!paidStr && !owesStr) return null;
+
+    return (
+      <div 
+        className="text-[10px] text-neutral-450 mt-1 font-mono flex items-center gap-1.5" 
+        data-testid={`expense-split-details-${exp.id}`}
+      >
+        <span>Split Details:</span>
+        {paidStr && <span className="text-neutral-300 font-bold">{paidStr}</span>}
+        {paidStr && owesStr && <span className="text-neutral-600">•</span>}
+        {owesStr && <span className="text-amber-400 font-semibold">{owesStr}</span>}
+      </div>
+    );
+  };
+
+  const renderFriendlyCards = () => {
+    const members = getSplitMembers();
+    if (members.length !== 2) return null;
+    const nameA = members[0];
+    const nameB = members[1];
+    const totalOwedA = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameA).owes, 0);
+    const totalOwedB = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameB).owes, 0);
+    const owesDiff = totalOwedA - totalOwedB;
+
+    const displayNameA = getDisplayName(nameA);
+    const displayNameB = getDisplayName(nameB);
+
+    let cardA = "";
+    let cardB = "";
+
+    if (owesDiff < -0.005) {
+      const amt = Math.abs(owesDiff).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      cardA = `${displayNameA} is currently covering $${amt} for ${displayNameB}. Settle up whenever convenient, no rush! 😊`;
+      cardB = `${displayNameB} is catching up by $${amt}. ${displayNameA} has got it covered for now – thank you! 🙏`;
+    } else if (owesDiff > 0.005) {
+      const amt = owesDiff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      cardA = `${displayNameA} is catching up by $${amt}. ${displayNameB} has got it covered for now – thank you! 🙏`;
+      cardB = `${displayNameB} is currently covering $${amt} for ${displayNameA}. Settle up whenever convenient, no rush! 😊`;
+    } else {
+      cardA = `${displayNameA} is perfectly settled up! Everything is square. ✨`;
+      cardB = `${displayNameB} is perfectly settled up! Everything is square. ✨`;
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2" id="friendly-balance-cards">
+        <div className="glass-card p-5 rounded-2xl border border-yellow-500/10 bg-yellow-500/5 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+          <div className="absolute right-3 top-3 w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
+          <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">{displayNameA}'s Status</span>
+          <p className="text-xs font-semibold text-neutral-200 mt-2 leading-relaxed">{cardA}</p>
+        </div>
+        <div className="glass-card p-5 rounded-2xl border border-yellow-500/10 bg-yellow-500/5 relative overflow-hidden flex flex-col justify-between min-h-[90px]">
+          <div className="absolute right-3 top-3 w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
+          <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">{displayNameB}'s Status</span>
+          <p className="text-xs font-semibold text-neutral-200 mt-2 leading-relaxed">{cardB}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const handleSettleUp = async () => {
+    const members = getSplitMembers();
+    if (members.length !== 2) return;
+    const nameA = members[0];
+    const nameB = members[1];
+    const totalOwedA = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameA).owes, 0);
+    const totalOwedB = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameB).owes, 0);
+    const owesDiff = totalOwedA - totalOwedB;
+
+    if (Math.abs(owesDiff) < 0.01) {
+      alert("Balances are already settled!");
+      return;
+    }
+
+    const debtor = owesDiff > 0 ? nameA : nameB;
+    const creditor = owesDiff > 0 ? nameB : nameA;
+    const amount = Math.round(Math.abs(owesDiff) * 100) / 100;
+
+    const payload: VehicleExpense = {
+      vehicle_id: vehicleId,
+      owner_id: isMock ? 'user-marcus-123' : (user?.uid || 'unknown-uid'),
+      title: `Settle Up: ${debtor} paid ${creditor}`,
+      category: 'other',
+      cost: amount,
+      date: new Date().toISOString().split('T')[0],
+      notes: `Settled up net balance of $${amount.toFixed(2)}`,
+      paid_by: debtor,
+      is_split: true,
+      split_between: [debtor, creditor],
+      split_details: [
+        { name: debtor, paid: amount, owed: 0, active: true },
+        { name: creditor, paid: 0, owed: amount, active: true }
+      ]
+    };
+
+    if (isMock) {
+      setExpenses(prev => [{ ...payload, id: `exp-settle-${Date.now()}` }, ...prev]);
+      return;
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, 'expenses'), {
+        ...payload,
+        created_at: serverTimestamp()
+      });
+      setExpenses(prev => [{ ...payload, id: docRef.id }, ...prev]);
+      await logEvent('success', 'system', `Settlement logged for vehicle [${vehicleId}]: $${amount.toFixed(2)}`);
+    } catch (error) {
+      console.error("Failed to settle up:", error);
+      alert("Failed to record settlement payment.");
     }
   };
 
@@ -977,8 +1424,16 @@ export default function VehicleProfilePage() {
     setExpenseDate(exp.date);
     setExpenseNotes(exp.notes || '');
     setExpensePaidBy(exp.paid_by || '');
+    setExpenseIsSplit(exp.is_split || false);
+    setExpenseSplitBetween(exp.split_between || []);
+    setExpenseSplitDetails(exp.split_details || []);
+    setExpensePhotoUrl(exp.photo_url || '');
+
+    const coOwnersList = getSplitMembersForVehicle(vehicle, user);
+    const isPayerCoOwner = coOwnersList.includes(exp.paid_by || '');
+    setPaidBySelect(isPayerCoOwner ? (exp.paid_by || '') : (exp.paid_by ? 'custom' : ''));
     
-    const formEl = document.getElementById('log-expense-form-container');
+    const formEl = document.getElementById('expenses-tab-content');
     if (formEl) {
       formEl.scrollIntoView({ behavior: 'smooth' });
     }
@@ -990,6 +1445,12 @@ export default function VehicleProfilePage() {
     setExpenseCost('');
     setExpenseNotes('');
     setExpensePaidBy('');
+    setExpenseIsSplit(false);
+    setExpenseSplitBetween([]);
+    setExpenseSplitDetails([]);
+    setExpensePhotoUrl('');
+    setCustomSplitName('');
+    setPaidBySelect('');
   };
 
   const handleDeleteExpense = async (expenseId: string) => {
@@ -1012,8 +1473,8 @@ export default function VehicleProfilePage() {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-[#060608] text-[#f4f4f7] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
       </div>
     );
   }
@@ -1032,106 +1493,100 @@ export default function VehicleProfilePage() {
   const totalTCO = finalPurchasePrice + fuelTotal + licenseTotal + feesTotal + addonTotal + serviceTotal + insuranceTotal + otherTotal;
 
   const CATEGORY_MAP = {
-    purchase: { label: 'Purchase Price', color: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-500' },
-    license: { label: 'Stickers & License', color: 'bg-purple-500/10 border-purple-500/30 text-purple-400' },
-    fees: { label: 'Launch & Slip Fees', color: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' },
-    fuel: { label: 'Fuel', color: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' },
-    addon: { label: 'Add-ons & Mods', color: 'bg-pink-500/10 border-pink-500/30 text-pink-400' },
-    service: { label: 'Service & Maintenance', color: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' },
-    insurance: { label: 'Insurance', color: 'bg-blue-500/10 border-blue-500/30 text-blue-400' },
-    other: { label: 'Other', color: 'bg-neutral-500/10 border-neutral-500/30 text-neutral-400' }
+    purchase: { label: 'Purchase Price', color: 'bg-yellow-50 border border-yellow-150 text-yellow-600' },
+    license: { label: 'Title & Registration', color: 'bg-purple-55/10 border-purple-200 text-purple-600' },
+    fees: { label: 'Launches & Slips', color: 'bg-indigo-50 border border-indigo-150 text-indigo-600' },
+    fuel: { label: 'Fuel & Gas', color: 'bg-cyan-50 border border-cyan-150 text-cyan-600' },
+    addon: { label: 'Add-ons & Mods', color: 'bg-pink-50 border border-pink-150 text-pink-600' },
+    service: { label: 'Inspections & Repairs', color: 'bg-emerald-50 border border-emerald-150 text-emerald-600' },
+    insurance: { label: 'Insurance', color: 'bg-blue-50 border border-blue-150 text-blue-600' },
+    other: { label: 'Other', color: 'bg-neutral-50 border border-neutral-200 text-neutral-600' }
   };
 
   if (!vehicle) {
     return (
-      <div className="min-h-screen bg-[#060608] text-[#f4f4f7] flex flex-col items-center justify-center space-y-4">
-        <CarFront className="w-16 h-16 text-neutral-700" />
-        <h2 className="text-xl font-bold uppercase tracking-wider">Vehicle Passport Not Found</h2>
-        <Link href="/" className="text-xs font-mono text-blue-400 hover:underline flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to Safety
+      <div className="flex-1 bg-white text-neutral-900 flex flex-col items-center justify-center space-y-4 p-8">
+        <CarFront className="w-16 h-16 text-neutral-300" />
+        <h2 className="text-xl font-black text-neutral-900 uppercase">Vehicle Profile Not Found</h2>
+        <Link href="/vehicles" className="text-xs font-bold text-[#ff3b30] uppercase hover:underline flex items-center gap-1">
+          <ArrowLeft className="w-4 h-4" /> Browse Vehicles
         </Link>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col">
-      <div className="mesh-glow" />
+    <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full p-4 md:p-8 space-y-8">
       
-      <Navbar />
+      {/* Breadcrumb Header */}
+      <div className="flex items-center justify-between">
+        <Link href="/vehicles" className="text-xs font-mono text-neutral-500 hover:text-neutral-900 flex items-center gap-1.5 uppercase font-bold transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Vehicles Directory
+        </Link>
+        {vehicle.partner_dealer && (
+          <span className="text-[10px] font-mono font-bold bg-[#10b981]/5 border border-[#10b981]/15 text-[#10b981] px-3 py-1 rounded-full uppercase tracking-wider">
+            Verified Lot: {vehicle.partner_dealer}
+          </span>
+        )}
+      </div>
 
-      <div className="max-w-5xl mx-auto px-6 pt-28 pb-16 w-full flex-1 relative z-10 space-y-8">
-        
-        {/* Breadcrumb Header */}
-        <div className="flex items-center justify-between">
-          <Link href="/dash" className="text-xs font-mono text-neutral-400 hover:text-white flex items-center gap-1.5 uppercase font-bold transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Garage Dashboard
-          </Link>
-          {vehicle.partner_dealer && (
-            <span className="text-[10px] font-mono font-bold bg-[#10b981]/5 border border-[#10b981]/25 text-[#10b981] px-3 py-1 rounded-full uppercase tracking-wider">
-              Verified Lot: {vehicle.partner_dealer}
+      {/* Dynamic Photo Banner */}
+      {vehicle.photo_url && (
+        <div className="relative w-full h-64 md:h-96 rounded-[2.5rem] overflow-hidden border border-neutral-200 shadow-sm animate-in fade-in duration-300">
+          <img 
+            src={vehicle.photo_url} 
+            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Hero Specs Title Card */}
+      <div className="bg-neutral-50 border border-neutral-200 p-6 md:p-8 rounded-[2rem] flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-left">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded">
+              {vehicle.tag_id}
             </span>
-          )}
+            {vehicle.is_verified_provenance && (
+              <span className="text-[10px] font-mono font-bold text-blue-600 uppercase tracking-widest bg-blue-50 border border-blue-150 px-2 py-0.5 rounded flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Provenance Verified
+              </span>
+            )}
+          </div>
+          <h1 className="text-3xl md:text-4xl font-black text-neutral-900 uppercase tracking-tight leading-none pt-1">
+            {vehicle.year} {vehicle.make} <span className="text-[#ff3b30]">{vehicle.model}</span>
+          </h1>
+          {vehicle.trim && <p className="text-xs text-neutral-500 uppercase font-mono font-bold tracking-widest">{vehicle.trim} Package</p>}
         </div>
 
-        {/* Dynamic Photo Banner */}
-        {vehicle.photo_url && (
-          <div className="relative w-full h-64 md:h-96 rounded-[2.5rem] overflow-hidden border border-neutral-900 shadow-2xl animate-in fade-in duration-300">
-            <img 
-              src={vehicle.photo_url} 
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-transparent" />
+        {/* Vibe Check Button */}
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <div className="text-2xl font-black text-neutral-900 font-mono leading-none">{vibeChecks}</div>
+            <div className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1">Vibe Checks</div>
           </div>
-        )}
-
-        {/* Hero Specs Title Card */}
-        <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-widest bg-neutral-900 border border-neutral-850 px-2 py-0.5 rounded">
-                {vehicle.tag_id}
-              </span>
-              {vehicle.is_verified_provenance && (
-                <span className="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest bg-blue-500/5 border border-blue-500/10 px-2 py-0.5 rounded flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> Provenance Verified
-                </span>
-              )}
-            </div>
-            <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none pt-1">
-              {vehicle.year} {vehicle.make} <span className="text-red-500">{vehicle.model}</span>
-            </h1>
-            {vehicle.trim && <p className="text-xs text-neutral-400 uppercase font-mono font-bold tracking-widest">{vehicle.trim} Package</p>}
-          </div>
-
-          {/* Vibe Check Button */}
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-black text-white font-mono leading-none">{vibeChecks}</div>
-              <div className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1">Vibe Checks</div>
-            </div>
             <button
               onClick={handleVibeCheck}
               disabled={hasVoted || voting}
               className={`px-6 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-1.5 min-h-[48px] cursor-pointer ${
                 hasVoted 
-                  ? 'bg-emerald-600/10 border border-emerald-500/20 text-emerald-400' 
-                  : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20'
+                  ? 'bg-emerald-50 border border-emerald-250 text-emerald-600' 
+                  : 'bg-[#ff3b30] hover:bg-[#bd2925] text-white shadow-sm'
               }`}
             >
-              <Heart className={`w-4 h-4 ${hasVoted ? 'fill-emerald-400 text-emerald-400' : ''}`} />
+              <Heart className={`w-4 h-4 ${hasVoted ? 'fill-emerald-600 text-emerald-600' : ''}`} />
               {hasVoted ? 'Vibe Checked' : 'Vibe Check'}
             </button>
           </div>
         </div>
 
         {/* Tab Selection */}
-        <div className="border-b border-neutral-900 flex gap-6 overflow-x-auto no-scrollbar">
+        <div className="border-b border-neutral-200 flex gap-6 overflow-x-auto no-scrollbar">
           <button 
             onClick={() => setActiveTab('specs')}
             className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'specs' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              activeTab === 'specs' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-450 hover:text-neutral-900'
             }`}
           >
             <CarFront className="w-4 h-4" /> Specs & Mod List
@@ -1141,7 +1596,7 @@ export default function VehicleProfilePage() {
             <button 
               onClick={() => setActiveTab('telemetry')}
               className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'telemetry' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                activeTab === 'telemetry' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-450 hover:text-neutral-900'
               }`}
             >
               <Map className="w-4 h-4" /> Scan Telemetry
@@ -1151,7 +1606,7 @@ export default function VehicleProfilePage() {
           <button 
             onClick={() => setActiveTab('service')}
             className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'service' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+              activeTab === 'service' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-450 hover:text-neutral-900'
             }`}
           >
             <History className="w-4 h-4" /> Service Logbook
@@ -1161,7 +1616,7 @@ export default function VehicleProfilePage() {
             <button 
               onClick={() => setActiveTab('expenses')}
               className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'expenses' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                activeTab === 'expenses' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-450 hover:text-neutral-900'
               }`}
               id="tab-expenses"
             >
@@ -1173,7 +1628,7 @@ export default function VehicleProfilePage() {
             <button 
               onClick={() => setActiveTab('settings')}
               className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'settings' ? 'border-red-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                activeTab === 'settings' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-450 hover:text-neutral-900'
               }`}
             >
               <Settings className="w-4 h-4" /> Settings
@@ -1192,51 +1647,39 @@ export default function VehicleProfilePage() {
               <div className="md:col-span-5 space-y-6">
                 
                 {/* Factory Specifications */}
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
                     <Info className="w-4 h-4 text-blue-500" /> Factory Specifications
                   </h3>
                   
                   <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs font-bold pt-2">
-                    <span className="text-neutral-555 uppercase">Engine</span>
-                    <span className="text-white text-right truncate">{vehicle.specs?.engine || 'N/A'}</span>
+                    <span className="text-neutral-450 uppercase">Engine</span>
+                    <span className="text-neutral-900 text-right truncate">{vehicle.specs?.engine || 'N/A'}</span>
 
-                    <span className="text-neutral-555 uppercase">Transmission</span>
-                    <span className="text-white text-right truncate">{vehicle.specs?.transmission || 'N/A'}</span>
+                    <span className="text-neutral-450 uppercase">Transmission</span>
+                    <span className="text-neutral-900 text-right truncate">{vehicle.specs?.transmission || 'N/A'}</span>
 
-                    <span className="text-neutral-555 uppercase">Output Power</span>
-                    <span className="text-white text-right">{vehicle.specs?.hp ? `${vehicle.specs.hp} HP` : 'N/A'}</span>
+                    <span className="text-neutral-450 uppercase">Output Power</span>
+                    <span className="text-neutral-900 text-right">{vehicle.specs?.hp ? `${vehicle.specs.hp} HP` : 'N/A'}</span>
 
-                    <span className="text-neutral-555 uppercase">Peak Torque</span>
-                    <span className="text-white text-right">{vehicle.specs?.torque ? `${vehicle.specs.torque} lb-ft` : 'N/A'}</span>
+                    <span className="text-neutral-450 uppercase">Peak Torque</span>
+                    <span className="text-neutral-900 text-right">{vehicle.specs?.torque ? `${vehicle.specs.torque} lb-ft` : 'N/A'}</span>
                   </div>
                 </div>
 
                 {/* Joint-Ownership & Registry */}
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-red-500" /> Ownership & Registry
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-[#ff3b30]" /> Ownership & Registry
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs font-bold pt-2 border-b border-neutral-900 pb-4">
-                    <span className="text-neutral-555 uppercase">Owners</span>
-                    <span className="text-white text-right font-bold">
+                  <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs font-bold pt-2 border-b border-neutral-200 pb-4">
+                    <span className="text-neutral-450 uppercase">Owners</span>
+                    <span className="text-neutral-900 text-right font-bold">
                       {Array.isArray(vehicle.co_owners) 
                         ? (vehicle.co_owners as any[]).map(c => typeof c === 'string' ? c : c.name).join(' & ') 
                         : (typeof vehicle.co_owners === 'string' ? vehicle.co_owners : 'N/A')}
                     </span>
-
-                    <span className="text-neutral-555 uppercase">Ownership Split</span>
-                    <span className="text-white text-right">{vehicle.ownership_split || 'N/A'}</span>
-
-                    <span className="text-neutral-555 uppercase">Engine Hours</span>
-                    <span className="text-white text-right">{vehicle.engine_hours ? `${vehicle.engine_hours} Hrs` : 'N/A'}</span>
-
-                    <span className="text-neutral-555 uppercase">Purchase Date</span>
-                    <span className="text-white text-right">{vehicle.purchase_date || 'N/A'}</span>
-
-                    <span className="text-neutral-555 uppercase">Purchase Price</span>
-                    <span className="text-white text-right">{vehicle.purchase_price ? `$${vehicle.purchase_price}` : 'N/A'}</span>
 
                     <span className="text-neutral-555 uppercase">Title Status</span>
                     <span className="text-white text-right">{vehicle.title_status || 'N/A'}</span>
@@ -1256,23 +1699,23 @@ export default function VehicleProfilePage() {
                           const memberId = typeof co === 'string' ? '' : co.member_id;
 
                           return (
-                            <div key={idx} className="flex items-center justify-between p-2.5 bg-neutral-900/30 border border-neutral-900 rounded-xl text-xs">
+                            <div key={idx} className="flex items-center justify-between p-2.5 bg-neutral-100 border border-neutral-200 rounded-xl text-xs">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-red-500" />
+                                <div className="w-2 h-2 rounded-full bg-[#ff3b30]" />
                                 {memberId ? (
-                                  <Link href={`/u/${memberId}`} className="font-bold text-blue-400 hover:underline">
+                                  <Link href={`/u/${memberId}`} className="font-bold text-blue-600 hover:underline">
                                     {name}
                                   </Link>
                                 ) : (
-                                  <span className="font-bold text-white">{name}</span>
+                                  <span className="font-bold text-neutral-900">{name}</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className="font-mono font-bold text-neutral-400 bg-neutral-850 px-2 py-0.5 rounded border border-neutral-800">{split}</span>
+                                <span className="font-mono font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded border border-neutral-300">{split}</span>
                                 {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
                                   <button
                                     onClick={() => getInviteLink(name)}
-                                    className="text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:underline cursor-pointer"
+                                    className="text-[10px] font-mono font-bold text-[#ff3b30] hover:text-[#bd2925] hover:underline cursor-pointer"
                                   >
                                     Invite
                                   </button>
@@ -1283,29 +1726,29 @@ export default function VehicleProfilePage() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-[10px] text-neutral-500 italic">No joint owners registered.</p>
+                      <p className="text-[10px] text-neutral-400 italic">No joint owners registered.</p>
                     )}
                   </div>
                 </div>
 
                 {/* Shipped Stickers Callout */}
-                <div className="glass-card p-6 rounded-3xl border border-red-500/10 bg-[#07070a] space-y-4 text-center shadow-lg">
-                  <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center justify-center gap-1">
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4 text-center shadow-sm">
+                  <h4 className="text-xs font-black text-neutral-900 uppercase tracking-wider flex items-center justify-center gap-1">
                     <Sparkles className="w-4 h-4 text-yellow-500" /> WANT PHYSICAL STICKERS?
                   </h4>
-                  <p className="text-[11px] text-neutral-400 leading-normal">
+                  <p className="text-[11px] text-neutral-500 leading-normal font-medium">
                     Generate and download a free high-res QR Badge to print your own weatherproof stickers, keyring tags, or display sheets.
                   </p>
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => setShowPrintModal(true)}
-                      className="w-full py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-red-600/15 flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
+                      className="w-full py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
                     >
                       <Printer className="w-4 h-4 text-white" /> PRINT FREE QR BADGE
                     </button>
                     <Link 
                       href={`/build-tag?vehicleId=${vehicle.id}`}
-                      className="w-full py-3 bg-transparent hover:bg-white/5 border border-white text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[44px]"
+                      className="w-full py-3 bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 text-[10px] font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1 min-h-[44px]"
                     >
                       CUSTOMIZE QR BADGE DESIGN
                     </Link>
@@ -1315,33 +1758,32 @@ export default function VehicleProfilePage() {
 
               {/* Right Column: Modifications, Story, Docs, Gallery */}
               <div className="md:col-span-7 space-y-6">
-                
                 {/* Modification List */}
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-6">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <ClipboardList className="w-4 h-4 text-red-500" /> Modification List
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-6">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                    <ClipboardList className="w-4 h-4 text-[#ff3b30]" /> Modification List
                   </h3>
 
                   {Array.isArray(vehicle.mods) && vehicle.mods.length > 0 ? (
                     <div className="space-y-3">
                       {vehicle.mods.map((mod, idx) => (
-                        <div key={idx} className="p-4 bg-neutral-900/30 border border-neutral-900 rounded-2xl flex items-center justify-between text-xs">
+                        <div key={idx} className="p-4 bg-neutral-100 border border-neutral-200 rounded-2xl flex items-center justify-between text-xs">
                           <div className="space-y-1">
-                            <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-wider bg-neutral-900 border border-neutral-850 px-2 py-0.5 rounded">
+                            <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-wider bg-neutral-200 border border-neutral-300 px-2 py-0.5 rounded">
                               {mod.category}
                             </span>
-                            <h4 className="font-bold text-white pt-1">{mod.brand} {mod.name}</h4>
+                            <h4 className="font-bold text-neutral-900 pt-1">{mod.brand} {mod.name}</h4>
                           </div>
                           {mod.cost && (
-                            <span className="font-mono font-bold text-neutral-400">${mod.cost}</span>
+                            <span className="font-mono font-bold text-neutral-600">${mod.cost}</span>
                           )}
                         </div>
                       ))}
                     </div>
                   ) : typeof vehicle.mods === 'string' && vehicle.mods ? (
-                    <p className="text-sm text-neutral-300 font-medium whitespace-pre-line leading-relaxed">{vehicle.mods}</p>
+                    <p className="text-sm text-neutral-600 font-medium whitespace-pre-line leading-relaxed">{vehicle.mods}</p>
                   ) : (
-                    <div className="text-center py-8 text-neutral-550 space-y-2">
+                    <div className="text-center py-8 text-neutral-400 space-y-2">
                       <CarFront className="w-8 h-8 mx-auto opacity-40" />
                       <p className="text-xs uppercase font-mono font-bold">No modifications logged yet.</p>
                     </div>
@@ -1350,19 +1792,19 @@ export default function VehicleProfilePage() {
 
                 {/* Owner's Story */}
                 {vehicle.story && (
-                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-3">
-                    <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-3">
+                    <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-yellow-500" /> Owner's Story
                     </h3>
-                    <p className="text-sm text-neutral-300 leading-relaxed font-medium whitespace-pre-wrap italic">
+                    <p className="text-sm text-neutral-600 leading-relaxed font-medium whitespace-pre-wrap italic">
                       "{vehicle.story}"
                     </p>
                   </div>
                 )}
 
                 {/* Compliance & Safety Documents */}
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-blue-500" /> Safety & Compliance Documents
                   </h3>
                   
@@ -1374,13 +1816,13 @@ export default function VehicleProfilePage() {
                         const docUrl = typeof doc === 'string' ? '' : doc.file_url;
 
                         return (
-                          <div key={idx} className="p-4 bg-neutral-900/30 border border-neutral-900 rounded-2xl flex flex-col justify-between gap-3 text-xs">
+                          <div key={idx} className="p-4 bg-neutral-100 border border-neutral-200 rounded-2xl flex flex-col justify-between gap-3 text-xs">
                             <div className="flex items-start justify-between gap-2">
-                              <span className="font-bold text-white break-words">{docName}</span>
+                              <span className="font-bold text-neutral-900 break-words">{docName}</span>
                               <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
                                 docStatus === 'Valid' || docStatus === 'Compliant' || docStatus === 'Active'
-                                  ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-400'
-                                  : 'bg-amber-500/10 border border-amber-500/25 text-amber-400'
+                                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-600'
+                                  : 'bg-amber-50 border border-amber-200 text-amber-600'
                               }`}>
                                 {docStatus}
                               </span>
@@ -1393,7 +1835,7 @@ export default function VehicleProfilePage() {
                                     w.document.write(`
                                       <html>
                                         <head><title>View Document - ${docName}</title></head>
-                                        <body style="margin:0; background:#060608;">
+                                        <body style="margin:0; background:#ffffff;">
                                           <iframe src="${docUrl}" style="border:none; width:100%; height:100vh;"></iframe>
                                         </body>
                                       </html>
@@ -1401,7 +1843,7 @@ export default function VehicleProfilePage() {
                                     w.document.close();
                                   }
                                 }}
-                                className="self-start text-[10px] font-mono font-bold text-blue-450 hover:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                                className="self-start text-[10px] font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
                               >
                                 📎 View Attachment
                               </button>
@@ -1411,20 +1853,20 @@ export default function VehicleProfilePage() {
                       })}
                     </div>
                   ) : (
-                    <p className="text-xs text-neutral-555 italic">No compliance documents uploaded.</p>
+                    <p className="text-xs text-neutral-450 italic">No compliance documents uploaded.</p>
                   )}
                 </div>
 
                 {/* Adventure Photo Gallery */}
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <CarFront className="w-4 h-4 text-emerald-500" /> Adventure Photo Gallery
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5">
+                    <CarFront className="w-4 h-4 text-emerald-600" /> Adventure Photo Gallery
                   </h3>
                   
                   {Array.isArray(vehicle.additional_photos) && vehicle.additional_photos.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {(vehicle.additional_photos as string[]).map((photo, idx) => (
-                        <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-neutral-900 group">
+                        <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-neutral-200 group">
                           <img src={photo} alt={`Adventure ${idx + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                         </div>
                       ))}
@@ -1442,35 +1884,34 @@ export default function VehicleProfilePage() {
           {/* TAB 2: Geolocation Scan Telemetry (Owner Gated Map) */}
           {activeTab === 'telemetry' && (isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-in fade-in duration-200">
-              
               {/* Left Column: Visual Mock Map coordinates */}
               <div className="md:col-span-6 space-y-4">
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
                     <Map className="w-4 h-4 text-blue-500" /> Geographic Scan Telemetry
                   </h3>
                   
                   {/* SVG Map mockup representing geolocation pings */}
-                  <div className="w-full h-64 bg-[#07070a] border border-neutral-900 rounded-2xl relative overflow-hidden flex items-center justify-center">
+                  <div className="w-full h-64 bg-neutral-100 border border-neutral-200 rounded-2xl relative overflow-hidden flex items-center justify-center">
                     <svg viewBox="0 0 400 200" className="w-full h-full opacity-60">
                       {/* Outline map tracks */}
-                      <path d="M50 100 Q 150 20 200 100 T 350 100" fill="none" stroke="#222" strokeWidth="4" />
-                      <path d="M100 150 Q 200 80 300 150" fill="none" stroke="#222" strokeWidth="3" strokeDasharray="5,5" />
+                      <path d="M50 100 Q 150 20 200 100 T 350 100" fill="none" stroke="#ddd" strokeWidth="4" />
+                      <path d="M100 150 Q 200 80 300 150" fill="none" stroke="#ddd" strokeWidth="3" strokeDasharray="5,5" />
                       
                       {/* Scan coordinate nodes */}
-                      <circle cx="120" cy="80" r="10" fill="#bd2925" className="animate-ping" style={{ animationDuration: '3s' }} />
-                      <circle cx="120" cy="80" r="6" fill="#bd2925" />
+                      <circle cx="120" cy="80" r="10" fill="#ff3b30" className="animate-ping" style={{ animationDuration: '3s' }} />
+                      <circle cx="120" cy="80" r="6" fill="#ff3b30" />
                       
-                      <circle cx="280" cy="110" r="10" fill="#3b82f6" className="animate-ping" style={{ animationDuration: '4s' }} />
-                      <circle cx="280" cy="110" r="6" fill="#3b82f6" />
+                      <circle cx="280" cy="110" r="10" fill="#007aff" className="animate-ping" style={{ animationDuration: '4s' }} />
+                      <circle cx="280" cy="110" r="6" fill="#007aff" />
                     </svg>
                     
-                    <div className="absolute bottom-3 right-3 bg-neutral-950/80 border border-neutral-900 px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-neutral-400 uppercase">
+                    <div className="absolute bottom-3 right-3 bg-white border border-neutral-200 px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold text-neutral-600 uppercase shadow-sm">
                       📍 2 Active Coordinates
                     </div>
                   </div>
                   
-                  <p className="text-[10px] text-neutral-450 leading-relaxed font-bold uppercase tracking-wide">
+                  <p className="text-[10px] text-neutral-500 leading-relaxed font-bold uppercase tracking-wide">
                     ⚠️ GEOLOCATION DATA IS PRIVATE. Spectators scanning your vehicle QR code can only see your public specs sheet.
                   </p>
                 </div>
@@ -1478,23 +1919,23 @@ export default function VehicleProfilePage() {
 
               {/* Right Column: Scan History timeline logs */}
               <div className="md:col-span-6 space-y-4">
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <History className="w-4 h-4 text-red-500" /> Recent Scan Events
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                    <History className="w-4 h-4 text-[#ff3b30]" /> Recent Scan Events
                   </h3>
 
                   <div className="space-y-3">
                     {sightings.map((sight) => (
-                      <div key={sight.id} className="p-4 bg-neutral-900/30 border border-neutral-900 rounded-2xl space-y-1.5 text-xs">
+                      <div key={sight.id} className="p-4 bg-neutral-100 border border-neutral-200 rounded-2xl space-y-1.5 text-xs text-left">
                         <div className="flex items-center justify-between font-bold">
-                          <span className="text-white uppercase">{sight.location_name}</span>
-                          <span className="text-[10px] font-mono text-neutral-550">
+                          <span className="text-neutral-900 uppercase">{sight.location_name}</span>
+                          <span className="text-[10px] font-mono text-neutral-450">
                             {new Date(sight.timestamp).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-neutral-450">{sight.description}</p>
+                        <p className="text-neutral-500 font-medium">{sight.description}</p>
                         {sight.latitude && sight.longitude && (
-                          <div className="text-[9px] font-mono text-neutral-555">
+                          <div className="text-[9px] font-mono text-neutral-400">
                             Coords: {sight.latitude.toFixed(4)}° N, {sight.longitude.toFixed(4)}° W
                           </div>
                         )}
@@ -1503,7 +1944,6 @@ export default function VehicleProfilePage() {
                   </div>
                 </div>
               </div>
-
             </div>
           )}
 
@@ -1514,13 +1954,13 @@ export default function VehicleProfilePage() {
               {/* Left Column: Form to log new maintenance (Available to Owner and Shop) */}
               <div className="md:col-span-5 space-y-4">
                 {(isOwner || isShop || (isMock && (user?.email === 'marcus@enthusiast.com' || user?.email === 'mike@performancetuning.com'))) ? (
-                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
+                  <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
                     <div className="space-y-1">
-                      <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                        <Wrench className="w-4 h-4 text-emerald-500" /> Log Maintenance Event
+                      <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                        <Wrench className="w-4 h-4 text-[#ff3b30]" /> Log Maintenance Event
                       </h3>
                       {isShop && (
-                        <span className="text-[9px] font-mono font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded flex items-center gap-1 inline-block mt-1">
+                        <span className="text-[9px] font-mono font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded flex items-center gap-1 inline-block mt-1">
                           <ShieldCheck className="w-3.5 h-3.5" /> Stamping as Certified Shop
                         </span>
                       )}
@@ -1528,47 +1968,47 @@ export default function VehicleProfilePage() {
 
                     <form onSubmit={handleAddServiceLog} className="space-y-3.5">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Event Title</label>
+                        <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Event Title</label>
                         <input 
                           type="text" 
                           required
                           value={logTitle}
                           onChange={(e) => setLogTitle(e.target.value)}
                           placeholder="e.g. Synthetic Oil Change" 
-                          className="glass-input w-full p-2.5 rounded-xl text-xs"
+                          className="w-full p-2.5 rounded-xl text-xs bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:border-[#ff3b30] outline-none"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Service Details / Notes</label>
+                        <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Service Details / Notes</label>
                         <textarea 
                           rows={3}
                           value={logNotes}
                           onChange={(e) => setLogNotes(e.target.value)}
                           placeholder="Provide details of parts, dyno results, alignments..." 
-                          className="glass-input w-full p-2.5 rounded-xl text-xs"
+                          className="w-full p-2.5 rounded-xl text-xs bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:border-[#ff3b30] outline-none"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Cost ($ USD)</label>
+                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Cost ($ USD)</label>
                           <input 
                             type="number" 
                             value={logCost}
                             onChange={(e) => setLogCost(e.target.value)}
                             placeholder="e.g. 150" 
-                            className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                            className="w-full p-2.5 rounded-xl text-xs font-mono bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:border-[#ff3b30] outline-none"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Service Date</label>
+                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Service Date</label>
                           <input 
                             type="date" 
                             required
                             value={logDate}
                             onChange={(e) => setLogDate(e.target.value)}
-                            className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
+                            className="w-full p-2.5 rounded-xl text-xs font-mono bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:border-[#ff3b30] outline-none"
                           />
                         </div>
                       </div>
@@ -1576,18 +2016,18 @@ export default function VehicleProfilePage() {
                       <button
                         type="submit"
                         disabled={submittingLog}
-                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-emerald-600/15 flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
+                        className="w-full py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 min-h-[44px] cursor-pointer"
                       >
-                        {submittingLog ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                        {submittingLog ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4 text-white" />}
                         {isShop ? 'Stamp Certified Record' : 'Log Maintenance Event'}
                       </button>
                     </form>
                   </div>
                 ) : (
-                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 text-center space-y-3">
-                    <Info className="w-8 h-8 text-neutral-600 mx-auto" />
-                    <h4 className="text-xs font-bold text-white uppercase">Certified Stamping</h4>
-                    <p className="text-[11px] text-neutral-400 leading-normal">
+                  <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl text-center space-y-3">
+                    <Info className="w-8 h-8 text-neutral-450 mx-auto" />
+                    <h4 className="text-xs font-black text-neutral-900 uppercase">Certified Stamping</h4>
+                    <p className="text-[11px] text-neutral-500 leading-normal font-medium">
                       Only the verified vehicle owner or certified Gridpass business profiles (detailers, service centers) can log maintenance timeline events.
                     </p>
                   </div>
@@ -1596,11 +2036,10 @@ export default function VehicleProfilePage() {
 
               {/* Right Column: Historical logs & checklist */}
               <div className="md:col-span-7 space-y-6">
-                
                 {/* Maintenance & Parts Checklist */}
-                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <ClipboardList className="w-4 h-4 text-red-500" /> Maintenance & Parts Checklist
+                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                    <ClipboardList className="w-4 h-4 text-[#ff3b30]" /> Maintenance & Parts Checklist
                   </h3>
                   
                   {Array.isArray(vehicle.due_maintenance) && vehicle.due_maintenance.length > 0 ? (
@@ -1618,8 +2057,8 @@ export default function VehicleProfilePage() {
                             key={idx} 
                             className={`p-4 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
                               isDone 
-                                ? 'bg-emerald-950/10 border-emerald-500/10 opacity-70' 
-                                : 'bg-neutral-900/30 border-neutral-900'
+                                ? 'bg-emerald-50 border-emerald-150 opacity-80' 
+                                : 'bg-neutral-100 border-neutral-200'
                             }`}
                           >
                             <div className="flex items-start gap-3">
@@ -1784,15 +2223,27 @@ export default function VehicleProfilePage() {
                   </div>
                 </div>
 
-                {/* Launch, Slip & License Card */}
+                {/* Title & Registration Card */}
                 <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
                   <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-mono font-bold text-purple-400 uppercase">Launch, Slip & License</span>
+                    <span className="text-[10px] font-mono font-bold text-purple-400 uppercase">Title & Registration</span>
                     <CreditCard className="w-4 h-4 text-purple-500" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-white font-mono">${(licenseTotal + feesTotal).toLocaleString()}</h4>
-                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Registration, ramps & slips</p>
+                    <h4 className="text-xl font-bold text-white font-mono">${licenseTotal.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Stickers, title & license</p>
+                  </div>
+                </div>
+
+                {/* Launches & Slips Card */}
+                <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-mono font-bold text-indigo-400 uppercase">Launches & Slips</span>
+                    <Anchor className="w-4 h-4 text-indigo-500" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono">${feesTotal.toLocaleString()}</h4>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Ramps, slips & launch fees</p>
                   </div>
                 </div>
 
@@ -1820,15 +2271,15 @@ export default function VehicleProfilePage() {
                   </div>
                 </div>
 
-                {/* Maintenance Card */}
+                {/* Inspections & Repairs Card */}
                 <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 flex flex-col justify-between min-h-[110px]">
                   <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">Maintenance</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">Inspections & Repairs</span>
                     <History className="w-4 h-4 text-emerald-500" />
                   </div>
                   <div>
                     <h4 className="text-xl font-bold text-white font-mono">${serviceTotal.toLocaleString()}</h4>
-                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Service & repairs</p>
+                    <p className="text-[9px] text-neutral-500 font-mono mt-1">Service, inspections & repairs</p>
                   </div>
                 </div>
 
@@ -1845,197 +2296,595 @@ export default function VehicleProfilePage() {
                 </div>
               </div>
 
-{/* Lower Section: Form and Ledger */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                
-                {/* Log Expense Form */}
-                <div className="md:col-span-5 space-y-4" id="log-expense-form-container">
-                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                    <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900/60 pb-3">
-                      {editingExpenseId ? <Pencil className="w-4 h-4 text-yellow-500 animate-pulse" /> : <Plus className="w-4 h-4 text-yellow-500" />}
-                      {editingExpenseId ? 'Edit Vehicle Expense' : 'Log Vehicle Expense'}
-                    </h3>
-
-                    <form onSubmit={handleAddExpense} className="space-y-3.5">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Expense Title</label>
-                        <input 
-                          type="text" 
-                          required
-                          value={expenseTitle}
-                          onChange={(e) => setExpenseTitle(e.target.value)}
-                          placeholder="e.g. Premium Gas Fill-up, Dyno Tune" 
-                          className="glass-input w-full p-2.5 rounded-xl text-xs"
-                          id="expense-title-input"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Category</label>
-                          <select
-                            value={expenseCategory}
-                            onChange={(e: any) => setExpenseCategory(e.target.value)}
-                            className="glass-input w-full p-2.5 rounded-xl text-xs bg-[#060608] border border-neutral-800 text-neutral-300 font-mono"
-                            id="expense-category-input"
-                          >
-                            <option value="fuel">Fuel & Gas</option>
-                            <option value="license">Stickers & License</option>
-                            <option value="fees">Launch & Slip Fees</option>
-                            <option value="addon">Add-ons & Mods</option>
-                            <option value="service">Service & Maintenance</option>
-                            <option value="insurance">Insurance</option>
-                            <option value="purchase">Purchase Price</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Cost ($ USD)</label>
-                          <input 
-                            type="number" 
-                            required
-                            step="0.01"
-                            value={expenseCost}
-                            onChange={(e) => setExpenseCost(e.target.value)}
-                            placeholder="e.g. 45.50" 
-                            className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                            id="expense-cost-input"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Expense Date</label>
-                        <input 
-                          type="date" 
-                          required
-                          value={expenseDate}
-                          onChange={(e) => setExpenseDate(e.target.value)}
-                          className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                          id="expense-date-input"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Paid By</label>
-                        <input 
-                          type="text" 
-                          value={expensePaidBy}
-                          onChange={(e) => setExpensePaidBy(e.target.value)}
-                          placeholder={user?.displayName || user?.email?.split('@')[0] || "e.g. Marcus Mustang"} 
-                          className="glass-input w-full p-2.5 rounded-xl text-xs"
-                          id="expense-paid-by-input"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-mono text-neutral-400 uppercase font-bold">Notes / Details</label>
-                        <textarea 
-                          rows={2}
-                          value={expenseNotes}
-                          onChange={(e) => setExpenseNotes(e.target.value)}
-                          placeholder="Fitted hardware, 93 Octane, annual policy renewal..." 
-                          className="glass-input w-full p-2.5 rounded-xl text-xs"
-                          id="expense-notes-input"
-                        />
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          type="submit"
-                          disabled={submittingExpense}
-                          className={`bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-yellow-600/15 flex items-center justify-center gap-1 min-h-[44px] cursor-pointer ${editingExpenseId ? 'flex-1' : 'w-full'}`}
-                          id="submit-expense-btn"
-                        >
-                          {submittingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
-                          {editingExpenseId ? 'Save Changes' : 'Log Expense'}
-                        </button>
+              {/* Lower Section: Excel Spreadsheet & Friendly Status */}
+              <div className="space-y-6 col-span-12">
+                {/* Top: Net Balance Analysis + Friendly Status Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  <div className="lg:col-span-8 space-y-4">
+                    {renderFriendlyCards()}
+                  </div>
+                  
+                  <div className="lg:col-span-4 space-y-4">
+                    <div className="glass-card p-5 rounded-2xl border border-neutral-900 bg-neutral-950/20 space-y-3">
+                      <span className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Quick Settle Actions</span>
+                      
+                      {/* Net Balance Analysis summary */}
+                      {(() => {
+                        const members = getSplitMembers();
+                        if (members.length !== 2) return <p className="text-xs text-neutral-500 italic">Balances only calculated for exactly 2 co-owners.</p>;
+                        const nameA = members[0];
+                        const nameB = members[1];
+                        const totalOwedA = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameA).owes, 0);
+                        const totalOwedB = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, nameB).owes, 0);
+                        const owesDiff = totalOwedA - totalOwedB;
+                        const dispA = getDisplayName(nameA);
+                        const dispB = getDisplayName(nameB);
                         
-                        {editingExpenseId && (
-                          <button
-                            type="button"
-                            onClick={handleCancelEditExpense}
-                            className="px-4 py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-neutral-400 hover:text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all min-h-[44px] cursor-pointer"
-                            id="cancel-expense-edit-btn"
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
-                    </form>
+                        if (Math.abs(owesDiff) < 0.01) {
+                          return <p className="text-xs text-neutral-400 font-medium">Co-owners PJ and Kristina are fully settled up! Balance: $0.00</p>;
+                        }
+                        
+                        const debtor = owesDiff > 0 ? dispA : dispB;
+                        const creditor = owesDiff > 0 ? dispB : dispA;
+                        const amt = Math.abs(owesDiff).toFixed(2);
+                        
+                        return (
+                          <div className="space-y-2.5">
+                            <p className="text-xs text-neutral-300 font-semibold" id="net-balance-sentence">
+                              {debtor} owes {creditor} <span className="text-amber-400 font-bold">${amt}</span>
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleSettleUp}
+                              className="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-md py-2.5 cursor-pointer flex items-center justify-center gap-1.5"
+                              id="record-settle-up-btn"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              Record Payment to Settle Up
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </div>
 
-                {/* Ledger Timeline */}
-                <div className="md:col-span-7 space-y-4">
-                  <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4">
-                    <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <History className="w-4 h-4 text-yellow-500" /> Expense Ledger Timeline
-                    </h3>
+                {/* Full Width Excel Ledger Table */}
+                <div className="glass-card p-6 rounded-3xl border border-neutral-900 bg-neutral-950/20 space-y-4 overflow-hidden">
+                  <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <History className="w-4 h-4 text-yellow-500" /> Vehicle Expenses Ledger (Excel Spreadsheet)
+                  </h3>
+                  
+                  <form onSubmit={handleAddExpense} className="space-y-4">
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full text-xs text-left border-collapse border border-neutral-900 bg-neutral-950 font-sans min-w-[1000px]">
+                        <thead>
+                          <tr className="border-b border-neutral-900 bg-neutral-900/40 text-[9px] font-mono font-bold text-neutral-400 uppercase">
+                            <th className="p-2 border-r border-neutral-900 w-[120px]">Date</th>
+                            <th className="p-2 border-r border-neutral-900 w-[120px]">Category</th>
+                            <th className="p-2 border-r border-neutral-900 w-[300px]">Description & Notes</th>
+                            <th className="p-2 border-r border-neutral-900 w-[180px]">Paid By</th>
+                            <th className="p-2 border-r border-neutral-900 w-[80px] text-center">Split?</th>
+                            <th className="p-2 border-r border-neutral-900 w-[110px]">Total Cost ($)</th>
+                            {getSplitMembers().map(member => (
+                              <React.Fragment key={member}>
+                                <th className="p-2 border-r border-neutral-900 text-neutral-300 bg-neutral-900/10 text-center">{getDisplayName(member)} Paid</th>
+                                <th className="p-2 border-r border-neutral-900 text-neutral-400 bg-neutral-900/5 text-center">{getDisplayName(member)} Owes</th>
+                              </React.Fragment>
+                            ))}
+                            <th className="p-2 text-center w-[120px]">Actions</th>
+                          </tr>
+                        </thead>
+                        
+                        <tbody className="divide-y divide-neutral-900">
+                          {/* Inline ADD NEW ROW at top */}
+                          {editingExpenseId === null && (
+                            <>
+                              <tr className="bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors border-b-2 border-neutral-900 align-top">
+                                {/* Date input */}
+                                <td className="p-2 border-r border-neutral-900">
+                                  <input
+                                    type="date"
+                                    required
+                                    value={expenseDate}
+                                    onChange={e => setExpenseDate(e.target.value)}
+                                    id="expense-date-input"
+                                    className="w-full bg-neutral-900/60 border border-neutral-800 rounded p-1 text-white font-mono text-xs focus:border-yellow-500 focus:outline-none"
+                                  />
+                                </td>
+                                
+                                {/* Category select */}
+                                <td className="p-2 border-r border-neutral-900">
+                                  <select
+                                    value={expenseCategory}
+                                    onChange={e => setExpenseCategory(e.target.value as any)}
+                                    id="expense-category-input"
+                                    className="w-full bg-[#060608] border border-neutral-800 rounded p-1 text-white font-mono text-xs focus:border-yellow-500 focus:outline-none"
+                                  >
+                                    <option value="fuel">Fuel & Gas</option>
+                                    <option value="license">Title & Registration</option>
+                                    <option value="fees">Launches & Slips</option>
+                                    <option value="addon">Add-ons & Mods</option>
+                                    <option value="service">Inspections & Repairs</option>
+                                    <option value="insurance">Insurance</option>
+                                    <option value="purchase">Purchase Price</option>
+                                    <option value="other">Other</option>
+                                  </select>
+                                </td>
+                                
+                                {/* Title & Notes input */}
+                                <td className="p-2 border-r border-neutral-900 space-y-1">
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="Expense title..."
+                                    value={expenseTitle}
+                                    onChange={e => setExpenseTitle(e.target.value)}
+                                    id="expense-title-input"
+                                    className="w-full bg-neutral-900/60 border border-neutral-800 rounded p-1 text-white text-xs focus:border-yellow-500 focus:outline-none"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Notes / details (optional)..."
+                                    value={expenseNotes}
+                                    onChange={e => setExpenseNotes(e.target.value)}
+                                    id="expense-notes-input"
+                                    className="w-full bg-neutral-900/40 border border-neutral-850 rounded p-1 text-neutral-400 text-[10px] focus:border-yellow-500 focus:outline-none"
+                                  />
+                                </td>
+                                
+                                {/* Paid By selection & input */}
+                                <td className="p-2 border-r border-neutral-900 space-y-1">
+                                  <select
+                                    value={paidBySelect}
+                                    onChange={e => handlePaidBySelectChange(e.target.value)}
+                                    id="expense-paid-by-select"
+                                    className="w-full bg-[#060608] border border-neutral-800 rounded p-1 text-white text-xs focus:border-yellow-500 focus:outline-none"
+                                  >
+                                    <option value="">Select co-owner...</option>
+                                    {getSplitMembersForVehicle(vehicle, user).map(name => (
+                                      <option key={name} value={name}>{name}</option>
+                                    ))}
+                                    <option value="custom">Custom Payer...</option>
+                                  </select>
+                                  {(paidBySelect === 'custom' || !getSplitMembersForVehicle(vehicle, user).includes(expensePaidBy)) && (
+                                    <input
+                                      type="text"
+                                      placeholder="Custom payer name..."
+                                      value={expensePaidBy}
+                                      onChange={e => handlePayerChange(e.target.value)}
+                                      id="expense-paid-by-input"
+                                      className="w-full bg-neutral-900/60 border border-neutral-800 rounded p-1 text-white text-xs focus:border-yellow-500 focus:outline-none font-mono"
+                                    />
+                                  )}
+                                </td>
+                                
+                                {/* Split check */}
+                                <td className="p-2 border-r border-neutral-900 text-center">
+                                  <div className="flex flex-col items-center justify-center min-h-[26px]">
+                                    <input
+                                      type="checkbox"
+                                      checked={expenseIsSplit}
+                                      onChange={e => handleToggleSplit(e.target.checked)}
+                                      id="expense-is-split-checkbox"
+                                      className="cursor-pointer h-4 w-4 rounded border-neutral-800 bg-neutral-900 text-yellow-600 focus:ring-yellow-500"
+                                    />
+                                    <span className="text-[7px] text-neutral-500 font-bold uppercase font-mono mt-0.5">Split</span>
+                                  </div>
+                                </td>
+                                
+                                {/* Cost input */}
+                                <td className="p-2 border-r border-neutral-900">
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    required
+                                    placeholder="0.00"
+                                    value={expenseCost}
+                                    onChange={e => handleCostChange(e.target.value)}
+                                    id="expense-cost-input"
+                                    className="w-full bg-neutral-900/60 border border-neutral-800 rounded p-1 text-white font-mono text-xs text-right focus:border-yellow-500 focus:outline-none"
+                                  />
+                                </td>
+                                
+                                {/* Member split cells */}
+                                {getSplitMembers().map(member => {
+                                  const part = expenseSplitDetails.find(p => p.name.toLowerCase() === member.toLowerCase()) || { name: member, active: false, paid: 0, owed: 0 };
+                                  return (
+                                    <React.Fragment key={member}>
+                                      {/* Paid cell */}
+                                      <td className="p-2 border-r border-neutral-900 bg-neutral-900/5 text-right font-mono">
+                                        {expenseIsSplit ? (
+                                          <input
+                                            type="number"
+                                            step="0.01"
+                                            value={part.paid || ''}
+                                            placeholder="0.00"
+                                            onChange={e => handleUpdatePaid(member, parseFloat(e.target.value) || 0)}
+                                            className="w-16 p-0.5 bg-neutral-900 border border-neutral-850 rounded text-[10px] text-right font-mono text-white focus:outline-none focus:border-yellow-500"
+                                          />
+                                        ) : (
+                                          <span className="text-neutral-700">-</span>
+                                        )}
+                                      </td>
+                                      {/* Owes cell */}
+                                      <td className="p-2 border-r border-neutral-900 bg-neutral-900/5 font-mono">
+                                        {expenseIsSplit ? (
+                                          <div className="flex items-center gap-1 justify-end">
+                                            <input
+                                              type="checkbox"
+                                              checked={part.active}
+                                              onChange={e => handleToggleMemberSelection(member, e.target.checked)}
+                                              data-testid={`split-checkbox-${member}`}
+                                              className="cursor-pointer h-3.5 w-3.5 rounded border-neutral-800 bg-neutral-900 text-yellow-600 focus:ring-yellow-500"
+                                            />
+                                            <input
+                                              type="number"
+                                              step="0.01"
+                                              disabled={!part.active}
+                                              value={part.owed || ''}
+                                              placeholder="0.00"
+                                              onChange={e => handleUpdateOwed(member, parseFloat(e.target.value) || 0)}
+                                              className="w-16 p-0.5 bg-neutral-900 border border-neutral-850 rounded text-[10px] text-right font-mono text-white disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:border-yellow-500"
+                                            />
+                                          </div>
+                                        ) : (
+                                          <span className="text-neutral-700">-</span>
+                                        )}
+                                      </td>
+                                    </React.Fragment>
+                                  );
+                                })}
+                                
+                                {/* Log button */}
+                                <td className="p-2 text-center">
+                                  <button
+                                    type="submit"
+                                    disabled={submittingExpense}
+                                    id="submit-expense-btn"
+                                    className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:bg-neutral-800 text-white text-[9px] font-black uppercase tracking-wider py-1.5 px-2 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                  >
+                                    {submittingExpense ? <Loader2 className="w-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                    Add Row
+                                  </button>
+                                </td>
+                              </tr>
+                            </>
+                          )}
 
-                    {expenses.length > 0 ? (
-                      <div className="space-y-4 relative border-l border-neutral-900 ml-3 pl-4 max-h-[500px] overflow-y-auto pr-2">
-                        {expenses.map((exp) => {
-                          const catInfo = CATEGORY_MAP[exp.category] || CATEGORY_MAP.other;
-                          return (
-                            <div key={exp.id} className="relative space-y-1.5 text-xs group" data-testid="expense-item">
-                              {/* Dot pointer indicator */}
-                              <div className="absolute -left-[21px] top-1.5 h-3.5 w-3.5 rounded-full border-2 bg-neutral-850 border-neutral-900 group-hover:border-yellow-500 transition-all" />
+                          {/* List of existing expenses */}
+                          {expenses.length > 0 ? (
+                            expenses.map((exp) => {
+                              const isEditingThis = editingExpenseId === exp.id;
+                              const catInfo = CATEGORY_MAP[exp.category] || CATEGORY_MAP.other;
                               
-                              <div className="flex items-start justify-between font-bold gap-4">
-                                <div className="space-y-1">
-                                  <h4 className="text-white uppercase flex items-center gap-2 flex-wrap">
-                                    {exp.title}
+                              if (isEditingThis) {
+                                return (
+                                  <React.Fragment key={exp.id}>
+                                    <tr className="bg-yellow-600/5 hover:bg-yellow-600/10 border-b border-yellow-500/20 align-top">
+                                      {/* Date input */}
+                                      <td className="p-2 border-r border-neutral-900">
+                                        <input
+                                          type="date"
+                                          required
+                                          value={expenseDate}
+                                          onChange={e => setExpenseDate(e.target.value)}
+                                          id="expense-date-input"
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded p-1 text-white font-mono text-xs focus:border-yellow-500 focus:outline-none"
+                                        />
+                                      </td>
+                                      
+                                      {/* Category select */}
+                                      <td className="p-2 border-r border-neutral-900">
+                                        <select
+                                          value={expenseCategory}
+                                          onChange={e => setExpenseCategory(e.target.value as any)}
+                                          id="expense-category-input"
+                                          className="w-full bg-[#060608] border border-neutral-800 rounded p-1 text-white font-mono text-xs focus:border-yellow-500 focus:outline-none"
+                                        >
+                                          <option value="fuel">Fuel & Gas</option>
+                                          <option value="license">Title & Registration</option>
+                                          <option value="fees">Launches & Slips</option>
+                                          <option value="addon">Add-ons & Mods</option>
+                                          <option value="service">Inspections & Repairs</option>
+                                          <option value="insurance">Insurance</option>
+                                          <option value="purchase">Purchase Price</option>
+                                          <option value="other">Other</option>
+                                        </select>
+                                      </td>
+                                      
+                                      {/* Title & Notes input */}
+                                      <td className="p-2 border-r border-neutral-900 space-y-1">
+                                        <input
+                                          type="text"
+                                          required
+                                          placeholder="Expense title..."
+                                          value={expenseTitle}
+                                          onChange={e => setExpenseTitle(e.target.value)}
+                                          id="expense-title-input"
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded p-1 text-white text-xs focus:border-yellow-500 focus:outline-none"
+                                        />
+                                        <input
+                                          type="text"
+                                          placeholder="Notes / details (optional)..."
+                                          value={expenseNotes}
+                                          onChange={e => setExpenseNotes(e.target.value)}
+                                          id="expense-notes-input"
+                                          className="w-full bg-neutral-900/60 border border-neutral-850 rounded p-1 text-neutral-400 text-[10px] focus:border-yellow-500 focus:outline-none"
+                                        />
+                                      </td>
+                                      
+                                      {/* Paid By selection & input */}
+                                      <td className="p-2 border-r border-neutral-900 space-y-1">
+                                        <select
+                                          value={paidBySelect}
+                                          onChange={e => handlePaidBySelectChange(e.target.value)}
+                                          id="expense-paid-by-select"
+                                          className="w-full bg-[#060608] border border-neutral-800 rounded p-1 text-white text-xs focus:border-yellow-500 focus:outline-none"
+                                        >
+                                          <option value="">Select co-owner...</option>
+                                          {getSplitMembersForVehicle(vehicle, user).map(name => (
+                                            <option key={name} value={name}>{name}</option>
+                                          ))}
+                                          <option value="custom">Custom Payer...</option>
+                                        </select>
+                                        {(paidBySelect === 'custom' || !getSplitMembersForVehicle(vehicle, user).includes(expensePaidBy)) && (
+                                          <input
+                                            type="text"
+                                            placeholder="Custom payer name..."
+                                            value={expensePaidBy}
+                                            onChange={e => handlePayerChange(e.target.value)}
+                                            id="expense-paid-by-input"
+                                            className="w-full bg-neutral-900 border border-neutral-800 rounded p-1 text-white text-xs focus:border-yellow-500 focus:outline-none font-mono"
+                                          />
+                                        )}
+                                      </td>
+                                      
+                                      {/* Split check */}
+                                      <td className="p-2 border-r border-neutral-900 text-center">
+                                        <div className="flex flex-col items-center justify-center min-h-[26px]">
+                                          <input
+                                            type="checkbox"
+                                            checked={expenseIsSplit}
+                                            onChange={e => handleToggleSplit(e.target.checked)}
+                                            id="expense-is-split-checkbox"
+                                            className="cursor-pointer h-4 w-4 rounded border-neutral-850 bg-neutral-900 text-yellow-600 focus:ring-yellow-500"
+                                          />
+                                          <span className="text-[7px] text-neutral-500 font-bold uppercase font-mono mt-0.5">Split</span>
+                                        </div>
+                                      </td>
+                                      
+                                      {/* Cost input */}
+                                      <td className="p-2 border-r border-neutral-900">
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          required
+                                          placeholder="0.00"
+                                          value={expenseCost}
+                                          onChange={e => handleCostChange(e.target.value)}
+                                          id="expense-cost-input"
+                                          className="w-full bg-neutral-900 border border-neutral-800 rounded p-1 text-white font-mono text-xs text-right focus:border-yellow-500 focus:outline-none"
+                                        />
+                                      </td>
+                                      {/* Member split cells */}
+                                      {getSplitMembers().map(member => {
+                                        const part = expenseSplitDetails.find(p => p.name.toLowerCase() === member.toLowerCase()) || { name: member, active: false, paid: 0, owed: 0 };
+                                        return (
+                                          <React.Fragment key={member}>
+                                            {/* Paid cell */}
+                                            <td className="p-2 border-r border-neutral-900 bg-neutral-900/5 text-right font-mono">
+                                              {expenseIsSplit ? (
+                                                <input
+                                                  type="number"
+                                                  step="0.01"
+                                                  value={part.paid || ''}
+                                                  placeholder="0.00"
+                                                  onChange={e => handleUpdatePaid(member, parseFloat(e.target.value) || 0)}
+                                                  className="w-16 p-0.5 bg-neutral-900 border border-neutral-850 rounded text-[10px] text-right font-mono text-white focus:outline-none focus:border-yellow-500"
+                                                />
+                                              ) : (
+                                                <span className="text-neutral-700">-</span>
+                                              )}
+                                            </td>
+                                            {/* Owes cell */}
+                                            <td className="p-2 border-r border-neutral-900 bg-neutral-900/5 font-mono">
+                                              {expenseIsSplit ? (
+                                                <div className="flex items-center gap-1 justify-end">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={part.active}
+                                                    onChange={e => handleToggleMemberSelection(member, e.target.checked)}
+                                                    data-testid={`split-checkbox-${member}`}
+                                                    className="cursor-pointer h-3.5 w-3.5 rounded border-neutral-800 bg-neutral-900 text-yellow-600 focus:ring-yellow-500"
+                                                  />
+                                                  <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    disabled={!part.active}
+                                                    value={part.owed || ''}
+                                                    placeholder="0.00"
+                                                    onChange={e => handleUpdateOwed(member, parseFloat(e.target.value) || 0)}
+                                                    className="w-16 p-0.5 bg-neutral-900 border border-neutral-850 rounded text-[10px] text-right font-mono text-white disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:border-yellow-500"
+                                                  />
+                                                </div>
+                                              ) : (
+                                                <span className="text-neutral-700">-</span>
+                                              )}
+                                            </td>
+                                          </React.Fragment>
+                                        );
+                                      })}
+                                      
+                                      {/* Actions */}
+                                      <td className="p-2 text-center space-y-1">
+                                        <button
+                                          type="submit"
+                                          disabled={submittingExpense}
+                                          id="submit-expense-btn"
+                                          className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:bg-neutral-800 text-white text-[9px] font-black uppercase tracking-wider py-1 px-1.5 rounded transition-all cursor-pointer flex items-center justify-center gap-1"
+                                        >
+                                          {submittingExpense ? <Loader2 className="w-2.5 animate-spin" /> : <Save className="w-2.5 h-2.5" />}
+                                          Save
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={handleCancelEditExpense}
+                                          id="cancel-expense-edit-btn"
+                                          className="w-full bg-neutral-850 hover:bg-neutral-800 text-neutral-300 hover:text-white text-[9px] font-bold uppercase tracking-wider py-1 px-1.5 rounded transition-all cursor-pointer border border-neutral-850"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  </React.Fragment>
+                                );
+                              }
+
+                              // Normal (non-editing) row display
+                              return (
+                                <tr key={exp.id} className="hover:bg-neutral-900/20 text-neutral-300 transition-colors align-top group" data-testid="expense-item">
+                                  <td className="p-2 border-r border-neutral-900 text-neutral-400 font-mono text-[10px]">
+                                    {new Date(exp.date).toLocaleDateString()}
+                                  </td>
+                                  <td className="p-2 border-r border-neutral-900">
                                     <span className={`inline-flex text-[8px] font-mono px-1.5 py-0.5 rounded uppercase font-bold border ${catInfo.color}`}>
                                       {catInfo.label}
                                     </span>
-                                  </h4>
-                                  <p className="text-neutral-500 font-mono text-[10px] font-medium flex items-center gap-2">
-                                    <span>{new Date(exp.date).toLocaleDateString()}</span>
+                                  </td>
+                                  <td className="p-2 border-r border-neutral-900">
+                                    <div className="font-bold text-white text-[11px] uppercase tracking-wide">{exp.title}</div>
+                                    {exp.notes && <p className="text-[10px] text-neutral-450 italic mt-0.5">{exp.notes}</p>}
                                     {exp.paid_by && (
-                                      <>
-                                        <span className="text-neutral-700">•</span>
-                                        <span>Paid by: {exp.paid_by}</span>
-                                      </>
+                                      <div className="text-[9px] text-neutral-500 font-mono mt-0.5">
+                                        Paid by: {getDisplayName(exp.paid_by)}
+                                      </div>
                                     )}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <span className="text-white font-mono text-sm">${exp.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                  <button
-                                    onClick={() => handleStartEditExpense(exp)}
-                                    className="text-neutral-600 hover:text-yellow-500 hover:bg-yellow-500/10 p-1.5 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                    title="Edit expense"
-                                    data-testid={`edit-btn-${exp.id}`}
-                                  >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={() => exp.id && handleDeleteExpense(exp.id)}
-                                    className="text-neutral-600 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                    title="Delete expense"
-                                    data-testid={`delete-btn-${exp.id}`}
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                              {exp.notes && (
-                                <p className="text-neutral-400 font-medium pl-1 italic border-l border-neutral-800">{exp.notes}</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 text-neutral-555 space-y-2">
-                        <Coins className="w-8 h-8 mx-auto opacity-40 text-yellow-500 animate-pulse" />
-                        <p className="text-xs uppercase font-mono font-bold">No custom expenses logged yet.</p>
-                      </div>
-                    )}
+                                    {getConciseSplitSummary(exp)}
+                                  </td>
+                                  <td className="p-2 border-r border-neutral-900 font-mono text-[10px]">
+                                    {exp.paid_by ? getDisplayName(exp.paid_by) : 'Owner'}
+                                  </td>
+                                  <td className="p-2 border-r border-neutral-900 text-center">
+                                    {exp.is_split ? (
+                                      <span className="text-yellow-500 font-bold" title="Joint split enabled">✓</span>
+                                    ) : (
+                                      <span className="text-neutral-700">-</span>
+                                    )}
+                                  </td>
+                                  <td className="p-2 border-r border-neutral-900 text-right font-mono text-white text-[11px] font-semibold">
+                                    ${exp.cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </td>
+                                  
+                                  {/* Splits breakdown cells */}
+                                  {getSplitMembers().map(member => {
+                                    const calc = getMemberExpenseCalculations(exp, member);
+                                    return (
+                                      <React.Fragment key={member}>
+                                        <td className="p-2 border-r border-neutral-900 bg-neutral-900/5 text-right font-mono text-[10px]">
+                                          {calc.paid > 0.005 ? `$${calc.paid.toFixed(2)}` : <span className="text-neutral-700">-</span>}
+                                        </td>
+                                        <td className="p-2 border-r border-neutral-900 bg-neutral-900/5 text-right font-mono text-[10px]">
+                                          {calc.owes > 0.005 ? (
+                                            <span className="text-amber-400 font-semibold">${calc.owes.toFixed(2)}</span>
+                                          ) : (
+                                            <span className="text-neutral-700">-</span>
+                                          )}
+                                        </td>
+                                      </React.Fragment>
+                                    );
+                                  })}
+                                  
+                                  {/* Row actions */}
+                                  <td className="p-2 text-center shrink-0">
+                                    <div className="flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEditExpense(exp)}
+                                        className="text-neutral-400 hover:text-yellow-500 hover:bg-yellow-500/10 p-1.5 rounded transition-all cursor-pointer"
+                                        title="Edit expense"
+                                        data-testid={`edit-btn-${exp.id}`}
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => exp.id && handleDeleteExpense(exp.id)}
+                                        className="text-neutral-400 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded transition-all cursor-pointer"
+                                        title="Delete expense"
+                                        data-testid={`delete-btn-${exp.id}`}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan={6 + getSplitMembers().length * 2 + 1} className="p-8 text-center text-neutral-555 uppercase font-mono tracking-wider text-xs">
+                                No vehicle expenses logged yet.
+                              </td>
+                            </tr>
+                          )}
+
+                          {/* Sum Total Excel Row */}
+                          {expenses.length > 0 && (
+                            <tr className="bg-neutral-900/30 border-t-2 border-neutral-800 text-[10px] font-bold text-white uppercase font-mono">
+                              <td colSpan={5} className="p-2 text-right tracking-wider pr-4">Total:</td>
+                              <td className="p-2 text-right border-r border-neutral-900 text-yellow-500 text-[11px] font-bold">
+                                ${expenses.reduce((sum, e) => sum + e.cost, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                              {getSplitMembers().map(member => {
+                                const totPaid = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, member).paid, 0);
+                                const totOwes = expenses.reduce((sum, e) => sum + getMemberExpenseCalculations(e, member).owes, 0);
+                                return (
+                                  <React.Fragment key={member}>
+                                    <td className="p-2 text-right border-r border-neutral-900 bg-neutral-900/10">
+                                      ${totPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="p-2 text-right border-r border-neutral-900 bg-neutral-900/5 text-amber-400">
+                                      ${totOwes.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                  </React.Fragment>
+                                );
+                              })}
+                              <td className="p-2"></td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </form>
+                  
+                  {/* Static Controls for adding guest splitters */}
+                  <div className="mt-4 pt-4 border-t border-neutral-900 flex items-center justify-between flex-wrap gap-3">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-yellow-500" />
+                      <span className="text-xs text-neutral-450 font-mono">Custom Guest Splitters:</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add custom split name (e.g. Dave PWC)..."
+                        value={customSplitName}
+                        onChange={e => setCustomSplitName(e.target.value)}
+                        id="custom-split-name-input"
+                        className="bg-neutral-900 border border-neutral-850 rounded p-1.5 text-xs text-white focus:border-yellow-500 focus:outline-none w-64"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomSplitter}
+                        id="add-custom-split-btn"
+                        className="bg-neutral-850 hover:bg-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider py-1.5 px-3 rounded transition-all cursor-pointer border border-neutral-800 flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add Person
+                      </button>
+                    </div>
                   </div>
                 </div>
-
               </div>
             </div>
           )}
@@ -2613,7 +3462,6 @@ export default function VehicleProfilePage() {
         </div>
       )}
 
-      <Footer />
-    </main>
+    </div>
   );
 }

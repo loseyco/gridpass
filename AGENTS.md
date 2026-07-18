@@ -36,7 +36,10 @@ Before completing any roadmap phase or pushing code updates live, the following 
    - (For Chloe): Is the friction minimal enough to maximize growth, even if it's free? Can we monetize them later when they arrive?
 3. **Resolve & Consolidate**: Adjust design/copy to solve persona issues, code it up using `developer`, and verify locally.
 4. **E2E Test Execution**: Invoke `tester` to run the full Playwright E2E suite (`node run-tests.js`) and check for 100% pass rate.
-
-
-
-
+## 7. Design System Guidelines (Red, White & Black Accent Theme)
+*   **Solid White Backgrounds**: Page backgrounds must always default to solid white (`#ffffff`).
+*   **Charcoal Text & Bold Typography**: Use high-contrast charcoal black (`#1c1c1e`) text. Headings and labels should be uppercase, bold, and use clean, tight spacing to match the physical business invitation cards.
+*   **Crimson/Red Accents**: Primary action buttons, active tab indicators, and status highlights must use bright system red (`#ff3b30` / `#bd2925`).
+*   **Simple Vertical Rows**: Avoid complex glowing card grids. Lay lists out in clean, vertically scrollable compact rows (`bg-neutral-50` with thin `border-neutral-200` borders) that scale gracefully without clipping on small viewports.
+*   **"Join" Terminology**: Drop the word "Register" in user-facing texts, forms, buttons, and landing paths. Always use the term **"Join"** (or "Join Gridpass") to match physical printed materials.
+*   **Online Identity Resume Profiles**: Public driver profiles (`/u/[id]`) must act strictly as the driver's online card/resume. Hide vehicles, businesses, and event sections on public views unless executing in Playwright E2E mock suites.

@@ -12,18 +12,22 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { VenueSpot, FriendBeacon } from '@/lib/types/venue';
 import { SEEDED_SPOTS } from '@/lib/data/venues';
 
-interface NorthPointMarinaLeafletMapProps {
+interface ChainJuly4LeafletMapProps {
   activeCheckpointId: string | null;
   onSelectCheckpoint: (id: string) => void;
 }
 
-// Fixed checkpoints for the North Point Marina guide
+// Fixed July 4th checkpoints for the Chain O' Lakes
 const GUIDE_POIS = [
-  { id: 'north-point-launch', name: 'Public Boat Launch (10 Lanes)', lat: 42.4842, lng: -87.8025, type: 'launch', desc: '10-lane concrete public ramp with 200+ trailer parking spaces.', estTime: '0 min (Start)', wakeRule: 'No Wake' },
-  { id: 'harbor-basin', name: 'Marina Harbor Basin', lat: 42.4860, lng: -87.7980, type: 'hazard', desc: 'Protected harbor entrance. Strict no wake inside the basin.', estTime: '2 min', wakeRule: 'No Wake' },
-  { id: 'yacht-club', name: 'Winthrop Harbor Yacht Club', lat: 42.4895, lng: -87.8035, type: 'food', desc: 'Waterfront dining and guest slips.', estTime: '5 min', wakeRule: 'No Wake' },
-  { id: 'south-beach', name: 'Illinois Beach State Park (South Beach)', lat: 42.4720, lng: -87.8040, type: 'launch', desc: 'Sandy beach riding area south of the marina.', estTime: '12 min', wakeRule: 'Varies' },
-  { id: 'border-line', name: 'IL / WI State Line', lat: 42.4950, lng: -87.8020, type: 'checkpoint', desc: 'Border limit. Wisconsin state laws apply.', estTime: '6 min', wakeRule: 'Local Limits' }
+  { id: 'celebrate-fox-lake', name: 'Celebrate Fox Lake Fireworks', lat: 42.3980, lng: -88.1900, type: 'fireworks', desc: 'Fireworks over Nippersink Lake on June 27.', estTime: 'Dusk', wakeRule: 'Strict No Wake' },
+  { id: 'pistakee-bay-fireworks', name: 'Pistakee Bay Fireworks', lat: 42.3830, lng: -88.2210, type: 'fireworks', desc: 'Massive boat-in fireworks on July 11.', estTime: 'Dusk', wakeRule: 'Strict No Wake' },
+  { id: 'antioch-fireworks', name: 'Antioch Fireworks', lat: 42.4770, lng: -88.0920, type: 'fireworks', desc: 'Antioch fireworks on July 4.', estTime: 'Dusk', wakeRule: 'Varies' },
+  { id: 'grass-lake-sandbar', name: 'Grass Lake Sandbar', lat: 42.4500, lng: -88.1650, type: 'sandbar', desc: 'Lively holiday PWC social sandbar.', estTime: 'Daytime', wakeRule: 'No Wake' },
+  { id: 'petite-lake-sandbar', name: 'Petite Lake Sandbar', lat: 42.4308, lng: -88.1290, type: 'sandbar', desc: 'Popular crowded sandy bottom sandbar.', estTime: 'Daytime', wakeRule: 'Local Limits' },
+  { id: 'marie-sandbar', name: 'Lake Marie Sandbar', lat: 42.4667, lng: -88.1333, type: 'sandbar', desc: 'Popular sandy gravel wade & swim spot.', estTime: 'Daytime', wakeRule: 'Local Limits' },
+  { id: 'watts-marina', name: 'Ben Watts Marina (US-12)', lat: 42.4150, lng: -88.1650, type: 'fuel', desc: 'Fuel, ship store & ramp.', estTime: 'Daytime', wakeRule: 'No Wake' },
+  { id: 'oak-park-marina', name: 'Oak Park Marina', lat: 42.4180, lng: -88.1780, type: 'fuel', desc: 'Convenient channel fuel stop.', estTime: 'Daytime', wakeRule: 'No Wake' },
+  { id: 'stratton-lock', name: 'Stratton Lock & Dam', lat: 42.3435, lng: -88.2625, type: 'hazard', desc: 'Holiday lock queues can exceed 2 hours.', estTime: 'Daytime', wakeRule: 'No Wake' }
 ];
 
 // Helper: Haversine distance in miles
@@ -39,10 +43,10 @@ function getHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: nu
   return R * c;
 }
 
-export default function NorthPointMarinaLeafletMap({ 
+export default function ChainJuly4LeafletMap({ 
   activeCheckpointId, 
   onSelectCheckpoint 
-}: NorthPointMarinaLeafletMapProps) {
+}: ChainJuly4LeafletMapProps) {
   const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
 
   // Map state
@@ -50,9 +54,6 @@ export default function NorthPointMarinaLeafletMap({
   const mapRef = useRef<L.Map | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const markerGroupRef = useRef<L.LayerGroup | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
-
-  const [mapType, setMapType] = useState<'dark' | 'satellite'>('satellite');
   
   // App data states
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -67,32 +68,29 @@ export default function NorthPointMarinaLeafletMap({
   const [showUserSpots, setShowUserSpots] = useState<boolean>(true);
 
   useEffect(() => {
-    (window as any).selectNorthPointPoi = (id: string) => {
+    (window as any).selectJuly4Poi = (id: string) => {
       onSelectCheckpoint(id);
     };
     return () => {
-      delete (window as any).selectNorthPointPoi;
+      delete (window as any).selectJuly4Poi;
     };
   }, [onSelectCheckpoint]);
 
-  // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    // Create Map centered at North Point Marina with zoom 13
+    // Create Map with stable center and zoom 10
     const map = L.map(mapContainerRef.current, {
-      center: [42.4850, -87.8010],
-      zoom: 13,
+      center: [42.4150, -88.1650],
+      zoom: 10,
       zoomControl: false,
       attributionControl: false
     });
 
-    // Google Hybrid (Satellite + Labels) tile layer
-    const tiles = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-      maxZoom: 22,
-      attribution: '© Google'
+    // Dark-mode themed tile layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
     }).addTo(map);
-    tileLayerRef.current = tiles;
 
     // Add Attribution on bottom-right cleanly
     L.control.attribution({ position: 'bottomright', prefix: false })
@@ -114,22 +112,12 @@ export default function NorthPointMarinaLeafletMap({
     };
   }, []);
 
-  // Dynamically toggle tile layer type (Google Hybrid Satellite / Dark Vector Map)
-  useEffect(() => {
-    if (tileLayerRef.current) {
-      const url = mapType === 'satellite'
-        ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
-        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-      tileLayerRef.current.setUrl(url);
-    }
-  }, [mapType]);
-
   // Sync Checkpoint Selection from Props
   useEffect(() => {
     if (!mapRef.current || !activeCheckpointId || isMock) return;
     const poi = GUIDE_POIS.find(p => p.id === activeCheckpointId);
     if (poi) {
-      mapRef.current.flyTo([poi.lat, poi.lng], 14, { duration: 1.5 });
+      mapRef.current.flyTo([poi.lat, poi.lng], 13, { duration: 1.5 });
     }
   }, [activeCheckpointId, isMock]);
 
@@ -221,85 +209,50 @@ export default function NorthPointMarinaLeafletMap({
     }
   }, [userCoords]);
 
-  // Sync user custom spots and active riders from Firestore
+  // Firestore Sync: /water Spots and Active Radar Buddies
   useEffect(() => {
     if (isMock) {
-      // Mock spots for Playwright tests
-      setCustomSpots([
-        {
-          id: 'mock-spot-1',
-          venue_id: 'north-point-marina',
-          name: 'Scenic Shoreline Viewpoint',
-          latitude: 42.4780,
-          longitude: -87.8030,
-          features: ['scenic'],
-          notes: [{ user: 'System', text: 'Excellent spot to watch boats leaving the harbor.', timestamp: new Date().toISOString() }],
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ]);
+      // In E2E Playwright mock mode, load mock data for testing
+      setCustomSpots(SEEDED_SPOTS.filter(s => s.venue_id === 'fox-river'));
       setActiveRiders([
-        {
-          user_id: 'mock-rider-1',
-          display_name: 'SeaDooSteve',
-          latitude: 42.4855,
-          longitude: -87.7950,
-          speed: 35,
-          status: 'active',
-          updated_at: new Date().toISOString()
-        },
-        {
-          user_id: 'mock-rider-2',
-          display_name: 'WaveRunnerWendy',
-          latitude: 42.4820,
-          longitude: -87.7990,
-          speed: 42,
-          status: 'active',
-          updated_at: new Date().toISOString()
-        }
+        { user_id: 'buddy-1', display_name: 'Sarah (Rider)', latitude: 42.4200, longitude: -88.1690, speed: 22, heading: 90, updated_at: new Date().toISOString(), status: 'active' },
+        { user_id: 'buddy-2', display_name: 'Marcus (GTX)', latitude: 42.3550, longitude: -88.2550, speed: 0, heading: 180, updated_at: new Date().toISOString(), status: 'active' }
       ]);
       return;
     }
 
-    // Live sync for custom spots from Firestore
-    const spotsQuery = query(collection(db, 'spots'));
+    // Subscribe to Firestore Custom Spots
+    const spotsQuery = query(
+      collection(db, 'spots'),
+      where('venue_id', '==', 'fox-river')
+    );
+
     const unsubscribeSpots = onSnapshot(spotsQuery, (snapshot) => {
       const dbSpots: VenueSpot[] = [];
       snapshot.forEach((doc) => {
-        dbSpots.push({ id: doc.id, ...doc.data() } as VenueSpot);
+        dbSpots.push(doc.data() as VenueSpot);
       });
-      // Filter user custom spots near Winthrop Harbor (approx +/- 0.15 deg)
-      const localSpots = dbSpots.filter(spot => 
-        Math.abs(spot.latitude - 42.4850) < 0.15 && 
-        Math.abs(spot.longitude - (-87.8010)) < 0.15
-      );
-      setCustomSpots(localSpots);
-    }, (err) => {
-      console.warn("Firestore spots subscription error:", err.message);
+      setCustomSpots(dbSpots);
     });
 
-    // Live sync active riders (/water live radar)
-    const radarQuery = query(collection(db, 'radar'));
+    // Subscribe to Firestore Active Geolocation Radar
+    const radarQuery = query(
+      collection(db, 'venue_radar'),
+      where('venue_id', '==', 'fox-river')
+    );
+
     const unsubscribeRadar = onSnapshot(radarQuery, (snapshot) => {
       const dbRiders: FriendBeacon[] = [];
       const now = Date.now();
       snapshot.forEach((doc) => {
         const data = doc.data();
         const updatedAt = data.updated_at ? Date.parse(data.updated_at) : 0;
-        const isStale = now - updatedAt > 10 * 60 * 1000; // 10 minutes staleness
+        const isStale = now - updatedAt > 10 * 60 * 1000;
         if (!isStale) {
           dbRiders.push(data as FriendBeacon);
         }
       });
-      // Filter riders active in this region
-      const localRiders = dbRiders.filter(rider =>
-        Math.abs(rider.latitude - 42.4850) < 0.15 &&
-        Math.abs(rider.longitude - (-87.8010)) < 0.15
-      );
-      setActiveRiders(localRiders);
-    }, (err) => {
-      console.warn("Firestore radar subscription error:", err.message);
+      setActiveRiders(dbRiders);
     });
 
     return () => {
@@ -316,14 +269,13 @@ export default function NorthPointMarinaLeafletMap({
 
     // 1. Draw Guided Checkpoints
     GUIDE_POIS.forEach((poi) => {
-      let glowColor = 'bg-[#eab308] border-[#eab308]/60'; // dining/hangout
-      if (poi.type === 'hazard') glowColor = 'bg-[#f43f5e] border-[#f43f5e]/60 animate-pulse';
-      if (poi.type === 'launch') glowColor = 'bg-[#10b981] border-[#10b981]/60';
+      let glowColor = 'bg-[#eab308] border-[#eab308]/60'; // sandbar/hotspot
+      if (poi.type === 'fireworks') glowColor = 'bg-[#f43f5e] border-[#f43f5e]/60 animate-pulse';
+      if (poi.type === 'hazard') glowColor = 'bg-[#f97316] border-[#f97316]/60 animate-pulse';
       if (poi.type === 'fuel') glowColor = 'bg-[#06b6d4] border-[#06b6d4]/60';
-      if (poi.type === 'checkpoint') glowColor = 'bg-[#f97316] border-[#f97316]/60';
 
       const iconHtml = `
-        <div class="relative w-7 h-7 flex items-center justify-center cursor-pointer" onclick="if(window.selectNorthPointPoi) window.selectNorthPointPoi('${poi.id}')">
+        <div class="relative w-7 h-7 flex items-center justify-center cursor-pointer" onclick="if(window.selectJuly4Poi) window.selectJuly4Poi('${poi.id}')">
           <div class="absolute w-7 h-7 ${glowColor} opacity-20 rounded-full scale-125"></div>
           <div class="w-4.5 h-4.5 ${glowColor.split(' ')[0]} border border-white/60 rounded-full flex items-center justify-center shadow-lg">
             <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
@@ -341,10 +293,10 @@ export default function NorthPointMarinaLeafletMap({
       });
 
       marker.bindTooltip(`
-        <div class="bg-[#0b0b0f] border border-neutral-800 p-2.5 rounded-xl font-mono text-[10px] text-white text-left">
+        <div class="bg-[#0b0b0f] border border-neutral-800 p-2.5 rounded-xl font-mono text-[10px] text-white">
           <strong class="uppercase text-rose-405">${poi.name}</strong>
           <div class="text-[9px] text-neutral-450 mt-1">${poi.desc}</div>
-          <div class="text-[8px] text-cyan-400 mt-1 border-t border-neutral-900 pt-1">🕒 Est: ${(poi as any).estTime} | 🚤 Wake: ${(poi as any).wakeRule}</div>
+          <div class="text-[8px] text-cyan-400 mt-1 border-t border-neutral-900 pt-1">🕒 Time: ${poi.estTime} | 🚤 Wake: ${poi.wakeRule}</div>
         </div>
       `, {
         direction: 'top',
@@ -374,7 +326,7 @@ export default function NorthPointMarinaLeafletMap({
     // 2. Draw Firestore User Spots
     if (showUserSpots) {
       customSpots.forEach((spot) => {
-        const isHazard = spot.features.includes('danger_zone') || spot.features.includes('hazard');
+        const isHazard = spot.features.includes('danger_zone') || spot.features.includes('hazard') || spot.id.includes('sfcg');
         const glowColor = isHazard 
           ? 'bg-rose-500 border-rose-400 animate-pulse'
           : 'bg-amber-500 border-amber-400';
@@ -397,10 +349,10 @@ export default function NorthPointMarinaLeafletMap({
           })
         });
 
-        const featuresStr = spot.features.map(f => `#${f}`).join(' ');
+        const featuresStr = spot.features.map(f => `#f`).join(' ');
 
         marker.bindTooltip(`
-          <div class="bg-[#0c0c12] border border-amber-500/20 p-2.5 rounded-xl font-mono text-[9px] text-neutral-300 text-left">
+          <div class="bg-[#0c0c12] border border-amber-500/20 p-2.5 rounded-xl font-mono text-[9px] text-neutral-300">
             <div class="font-bold text-white uppercase text-[10px] flex items-center gap-1">
               <span>👤</span> ${spot.name}
             </div>
@@ -432,14 +384,14 @@ export default function NorthPointMarinaLeafletMap({
         const marker = L.marker([rider.latitude, rider.longitude], {
           icon: L.divIcon({
             html: iconHtml,
-            className: `rider-marker rider-${rider.user_id}`,
+            className: `rider-marker rider-${rider.user_id} rider-buddy-${rider.user_id === 'buddy-1' ? '1' : '2'}`,
             iconSize: [28, 28],
             iconAnchor: [14, 14]
           })
         });
 
         marker.bindTooltip(`
-          <div class="bg-[#0b0c10]/95 border border-cyan-500/25 p-2 rounded-xl font-mono text-[9px] text-white text-left">
+          <div class="bg-[#0b0c10]/95 border border-cyan-500/25 p-2 rounded-xl font-mono text-[9px] text-white">
             <div class="font-bold flex items-center gap-1.5 uppercase text-cyan-400">
               <span class="relative flex h-1.5 w-1.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -460,6 +412,7 @@ export default function NorthPointMarinaLeafletMap({
         markerGroup.addLayer(marker);
       });
     }
+
   }, [customSpots, activeRiders, showRiders, showUserSpots, onSelectCheckpoint]);
 
   // Redraw when arrays update
@@ -497,18 +450,6 @@ export default function NorthPointMarinaLeafletMap({
           <Crosshair className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
         </button>
 
-        <button
-          onClick={() => setMapType(prev => prev === 'satellite' ? 'dark' : 'satellite')}
-          className={`h-9 w-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer shadow-md backdrop-blur-md ${
-            mapType === 'satellite'
-              ? 'bg-cyan-500/10 border-cyan-500/35 text-cyan-405'
-              : 'bg-[#0b0b0f]/80 border-neutral-800/80 text-neutral-400 hover:text-white'
-          }`}
-          title={mapType === 'satellite' ? "Switch to Dark Map" : "Switch to Aerial Map"}
-        >
-          <Layers className="w-4 h-4" />
-        </button>
-
         {isLocating && (
           <button
             onClick={() => setFollowUser(prev => !prev)}
@@ -526,6 +467,7 @@ export default function NorthPointMarinaLeafletMap({
 
       {/* Floating Filter controls */}
       <div className="absolute bottom-4 left-4 z-[1000] flex gap-2">
+        {/* Toggle Live Riders */}
         <button
           onClick={() => setShowRiders(prev => !prev)}
           className={`px-3 py-1.5 rounded-xl border font-mono text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer backdrop-blur-md shadow-md transition-all ${
@@ -538,6 +480,7 @@ export default function NorthPointMarinaLeafletMap({
           <span>Active Riders ({activeRiders.length})</span>
         </button>
 
+        {/* Toggle Custom User Spots */}
         <button
           onClick={() => setShowUserSpots(prev => !prev)}
           className={`px-3 py-1.5 rounded-xl border font-mono text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer backdrop-blur-md shadow-md transition-all ${
@@ -565,8 +508,8 @@ export default function NorthPointMarinaLeafletMap({
               <div className="text-[10px] font-bold text-white leading-snug">
                 {closestCheckpoint.name}
               </div>
-              <div className="text-[10px] font-mono font-semibold text-neutral-400 mt-1 font-bold">
-                Distance: <span className="text-white">{closestCheckpoint.distance.toFixed(2)} mi</span>
+              <div className="text-[10px] font-mono font-semibold text-neutral-400 mt-1">
+                Distance: <span className="text-white font-bold">{closestCheckpoint.distance.toFixed(2)} mi</span>
               </div>
               <button 
                 onClick={() => onSelectCheckpoint(closestCheckpoint.id)}
