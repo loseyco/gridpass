@@ -3417,10 +3417,6 @@ export default function VehicleProfilePage() {
             </form>
           )}
 
-        </div>
-
-      </div>
-
       {showPrintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="glass-card max-w-md w-full p-6 md:p-8 rounded-[2rem] border border-neutral-850 bg-neutral-950/95 space-y-6 text-center relative shadow-2xl">
@@ -3463,5 +3459,6 @@ export default function VehicleProfilePage() {
       )}
 
     </div>
+  </div>
   );
 }
