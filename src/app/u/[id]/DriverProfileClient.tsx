@@ -571,7 +571,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                     </h4>
                   </div>
                   <div className="text-[9px] font-bold text-[#ff3b30] uppercase mt-3">
-                    View Profile →
+                    View Passport Details
                   </div>
                 </Link>
               ))}

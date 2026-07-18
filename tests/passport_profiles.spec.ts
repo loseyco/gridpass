@@ -29,11 +29,11 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await expect(page.locator('text=Roush')).toBeVisible();
     await expect(page.locator('text=Cat-Back Exhaust System')).toBeVisible();
 
-    // Verify Vibe-Check voting button
-    const vibeBtn = page.locator('button:has-text("Vibe Check")');
-    await expect(vibeBtn).toBeVisible();
-    await vibeBtn.click();
-    await expect(page.locator('text=Vibe Checked')).toBeVisible();
+    // Verify Like voting button
+    const likeBtn = page.getByRole('button', { name: 'Like', exact: true });
+    await expect(likeBtn).toBeVisible();
+    await likeBtn.click();
+    await expect(page.locator('text=Liked')).toBeVisible();
 
     // Verify owner-gated Telemetry tab is HIDDEN for spectators
     const telemetryTab = page.locator('button:has-text("Scan Telemetry")');
