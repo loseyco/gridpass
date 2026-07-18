@@ -1887,7 +1887,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                 
                 {/* Factory Specifications */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                  <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5">
                     <Info className="w-4 h-4 text-blue-500" /> Factory Specifications
                   </h3>
                   
@@ -1908,20 +1908,54 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
 
                 {/* VIN Verification Audit */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-200 pb-3">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" /> VIN Verification & History
-                  </h3>
+                  <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+                    <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" /> VIN Verification & History
+                    </h3>
+                    {isOwner && vehicle.vin && !isEditingVin && (
+                      <button 
+                        onClick={() => {
+                          setEditVin(vehicle.vin || '');
+                          setIsEditingVin(true);
+                        }}
+                        className="text-[9px] font-mono font-bold text-[#ff3b30] uppercase hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Pencil className="w-3 h-3" /> Edit
+                      </button>
+                    )}
+                  </div>
 
-                  {!vehicle.vin ? (
+                  {(!vehicle.vin || isEditingVin) ? (
                     <div className="text-xs space-y-2">
                       <p className="text-neutral-500 italic">No VIN number registered for this vehicle.</p>
                       {isOwner && (
-                        <button 
-                          onClick={() => setActiveTab('settings')}
-                          className="text-xs font-bold text-[#ff3b30] uppercase hover:underline"
-                        >
-                          Add VIN in Settings &rarr;
-                        </button>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-mono text-neutral-450 uppercase font-bold">Vehicle Identification Number (VIN)</label>
+                          <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              value={editVin}
+                              onChange={(e) => setEditVin(e.target.value.toUpperCase())}
+                              placeholder="Enter 17-character VIN..." 
+                              className="glass-input flex-1 px-3 py-2 text-xs font-mono tracking-widest uppercase rounded-xl border border-neutral-350 focus:border-[#ff3b30] outline-none"
+                            />
+                            <button
+                              onClick={handleSaveVinOnly}
+                              disabled={savingVin || !editVin.trim()}
+                              className="px-4 py-2 bg-neutral-900 hover:bg-neutral-850 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                            >
+                              {savingVin ? <Loader2 className="w-3 h-3 animate-spin text-white" /> : 'Save'}
+                            </button>
+                          </div>
+                          {isEditingVin && (
+                            <button
+                              onClick={() => setIsEditingVin(false)}
+                              className="text-[9px] font-mono font-bold text-neutral-450 uppercase hover:text-neutral-900"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   ) : (
@@ -1991,7 +2025,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                                   Run Verification Check
                                 </button>
                               ) : (
-                                <span className="text-neutral-450 italic text-[10px]">Verification audit pending owner trigger.</span>
+                                <span className="text-neutral-455 italic text-[10px]">Verification audit pending owner trigger.</span>
                               )}
                             </div>
                           )}
@@ -2001,73 +2035,69 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                   )}
                 </div>
 
-                {/* Joint-Ownership & Registry */}
+                {/* Ownership History */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-[#ff3b30]" /> Ownership & Registry
+                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-200 pb-3">
+                    <User className="w-4 h-4 text-[#ff3b30]" /> Ownership History
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 text-xs font-bold pt-2 border-b border-neutral-200 pb-4">
-                    <span className="text-neutral-450 uppercase">Owners</span>
-                    <span className="text-neutral-900 text-right font-bold">
-                      {Array.isArray(vehicle.co_owners) 
-                        ? (vehicle.co_owners as any[]).map(c => typeof c === 'string' ? c : c.name).join(' & ') 
-                        : (typeof vehicle.co_owners === 'string' ? vehicle.co_owners : 'N/A')}
-                    </span>
-
-                    <span className="text-neutral-555 uppercase">Title Status</span>
-                    <span className="text-white text-right">{vehicle.title_status || 'N/A'}</span>
-
-                    <span className="text-neutral-555 uppercase">Sticker Status</span>
-                    <span className="text-white text-right">{vehicle.sticker_status || 'N/A'}</span>
-                  </div>
-
-                  {/* Co-Owners registry split list */}
-                  <div className="space-y-2 pt-2">
-                    <h4 className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider">Joint Owners Registry</h4>
-                    {Array.isArray(vehicle.co_owners) && vehicle.co_owners.length > 0 ? (
-                      <div className="space-y-2">
-                        {(vehicle.co_owners as any[]).map((co, idx) => {
-                          const name = typeof co === 'string' ? co : co.name;
-                          const split = typeof co === 'string' ? '50%' : co.split;
-                          const memberId = typeof co === 'string' ? '' : co.member_id;
-
-                          return (
-                            <div key={idx} className="flex items-center justify-between p-2.5 bg-neutral-100 border border-neutral-200 rounded-xl text-xs">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-[#ff3b30]" />
-                                {memberId ? (
-                                  <Link href={`/u/${memberId}`} className="font-bold text-blue-600 hover:underline">
-                                    {name}
-                                  </Link>
-                                ) : (
-                                  <span className="font-bold text-neutral-900">{name}</span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <span className="font-mono font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded border border-neutral-300">{split}</span>
-                                {(isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
-                                  <button
-                                    onClick={() => getInviteLink(name)}
-                                    className="text-[10px] font-mono font-bold text-[#ff3b30] hover:text-[#bd2925] hover:underline cursor-pointer"
-                                  >
-                                    Invite
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                  {/* Vertical chain timeline */}
+                  <div className="space-y-4 pt-1">
+                    {/* Origin / Dealer */}
+                    {vehicle.partner_dealer && (
+                      <div className="flex gap-3 text-xs">
+                        <div className="flex flex-col items-center">
+                          <div className="w-2.5 h-2.5 rounded-full bg-neutral-300 border border-neutral-400" />
+                          <div className="w-0.5 h-8 bg-neutral-200 my-1" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-neutral-855 uppercase tracking-wider">1st Registry: {vehicle.partner_dealer}</h4>
+                          <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Provenance Verified Dealer Lot</p>
+                        </div>
                       </div>
-                    ) : (
-                      <p className="text-[10px] text-neutral-400 italic">No joint owners registered.</p>
                     )}
+
+                    {/* Current Owner */}
+                    <div className="flex gap-3 text-xs">
+                      <div className="flex flex-col items-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-[#ff3b30] border border-[#ff3b30]" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-black text-neutral-900 uppercase tracking-wider">Current Owner: Marcus Mustang</h4>
+                        <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Active Passport Holder since 2026</p>
+                        
+                        {/* Co-Owners splits list (if any) */}
+                        {Array.isArray(vehicle.co_owners) && vehicle.co_owners.length > 0 && (
+                          <div className="space-y-1.5 pt-2">
+                            {(vehicle.co_owners as any[]).map((co, idx) => {
+                              const name = typeof co === 'string' ? co : co.name;
+                              const split = typeof co === 'string' ? '50%' : co.split;
+                              const memberId = typeof co === 'string' ? '' : co.member_id;
+
+                              return (
+                                <div key={idx} className="flex items-center gap-2 p-2 bg-white border border-neutral-200 rounded-xl text-[11px] font-bold">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
+                                  <span>{name} ({split})</span>
+                                  {memberId && (
+                                    <Link href={`/u/${memberId}`} className="text-blue-600 hover:underline text-[10px] font-mono font-bold ml-auto">
+                                      View Profile
+                                    </Link>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
               </div>
 
-              {/* Right Column: Modifications, Story, Docs, Gallery */}
+              {/* Right Column: Modifications, Photo Album */}
               <div className="md:col-span-7 space-y-6">
+                
                 {/* Modification List */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-6">
                   <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
@@ -2100,77 +2130,10 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                   )}
                 </div>
 
-                {/* Owner's Story */}
-                {vehicle.story && (
-                  <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-3">
-                    <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-yellow-500" /> Owner's Story
-                    </h3>
-                    <p className="text-sm text-neutral-600 leading-relaxed font-medium whitespace-pre-wrap italic">
-                      "{vehicle.story}"
-                    </p>
-                  </div>
-                )}
-
-                {/* Compliance & Safety Documents */}
+                {/* Photo Album (Adventure Photo Gallery) */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-blue-500" /> Safety & Compliance Documents
-                  </h3>
-                  
-                  {Array.isArray(vehicle.documents) && vehicle.documents.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {(vehicle.documents as any[]).map((doc, idx) => {
-                        const docName = typeof doc === 'string' ? doc : doc.name;
-                        const docStatus = typeof doc === 'string' ? 'Valid' : doc.status;
-                        const docUrl = typeof doc === 'string' ? '' : doc.file_url;
-
-                        return (
-                          <div key={idx} className="p-4 bg-neutral-100 border border-neutral-200 rounded-2xl flex flex-col justify-between gap-3 text-xs">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="font-bold text-neutral-900 break-words">{docName}</span>
-                              <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                                docStatus === 'Valid' || docStatus === 'Compliant' || docStatus === 'Active'
-                                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-600'
-                                  : 'bg-amber-50 border border-amber-200 text-amber-600'
-                              }`}>
-                                {docStatus}
-                              </span>
-                            </div>
-                            {docUrl && (
-                              <button
-                                onClick={() => {
-                                  const w = window.open();
-                                  if (w) {
-                                    w.document.write(`
-                                      <html>
-                                        <head><title>View Document - ${docName}</title></head>
-                                        <body style="margin:0; background:#ffffff;">
-                                          <iframe src="${docUrl}" style="border:none; width:100%; height:100vh;"></iframe>
-                                        </body>
-                                      </html>
-                                    `);
-                                    w.document.close();
-                                  }
-                                }}
-                                className="self-start text-[10px] font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
-                              >
-                                📎 View Attachment
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-neutral-450 italic">No compliance documents uploaded.</p>
-                  )}
-                </div>
-
-                {/* Adventure Photo Gallery */}
-                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5">
-                    <CarFront className="w-4 h-4 text-emerald-600" /> Adventure Photo Gallery
+                  <h3 className="text-xs font-black text-emerald-650 uppercase tracking-widest flex items-center gap-1.5">
+                    <CarFront className="w-4 h-4 text-emerald-600" /> Photo Album
                   </h3>
                   
                   {Array.isArray(vehicle.additional_photos) && vehicle.additional_photos.length > 0 ? (
@@ -2189,7 +2152,8 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
               </div>
 
             </div>
-          )
+          
+)
 
           {showPrintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
