@@ -178,6 +178,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const [paidBySelect, setPaidBySelect] = useState('');
 
   // Inline VIN states
+  const [ownerProfile, setOwnerProfile] = useState<{ displayName: string, username: string } | null>(null);
   const [isEditingVin, setIsEditingVin] = useState(false);
   const [savingVin, setSavingVin] = useState(false);
 
@@ -657,6 +658,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
         ];
 
         if (isMounted) {
+          setOwnerProfile({ displayName: 'Marcus Mustang', username: 'pjlosey-mock' });
           setVehicle(mockVehicle);
           setServiceLogs(mockLogs);
           setSightings(mockSightings);
@@ -711,6 +713,22 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
             thumbs_up: vData.thumbs_up || 0,
             thumbs_down: vData.thumbs_down || 0,
           };
+
+          if (loadedVehicle.owner_id) {
+            getDoc(doc(db, 'users', loadedVehicle.owner_id)).then((uSnap) => {
+              if (uSnap.exists()) {
+                const uData = uSnap.data();
+                if (isMounted) {
+                  setOwnerProfile({
+                    displayName: uData.display_name || uData.name || 'Marcus Mustang',
+                    username: uData.username || loadedVehicle.owner_id || ''
+                  });
+                }
+              }
+            }).catch(err => {
+              console.error("Error loading owner profile:", err);
+            });
+          }
 
           if (isMounted) {
             setVehicle(loadedVehicle);
@@ -1878,7 +1896,6 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
         {/* Content Area */}
         <div className="space-y-6">
 
-          {/* TAB 1: Specs & Modifications */}
           (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-in fade-in duration-200">
               
@@ -1903,193 +1920,68 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
 
                     <span className="text-neutral-450 uppercase">Peak Torque</span>
                     <span className="text-neutral-900 text-right">{vehicle.specs?.torque ? `${vehicle.specs.torque} lb-ft` : 'N/A'}</span>
-                  </div>
-                </div>
 
-                {/* VIN Verification Audit */}
-                <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
-                    <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" /> VIN Verification & History
-                    </h3>
-                    {isOwner && vehicle.vin && !isEditingVin && (
-                      <button 
-                        onClick={() => {
-                          setEditVin(vehicle.vin || '');
-                          setIsEditingVin(true);
-                        }}
-                        className="text-[9px] font-mono font-bold text-[#ff3b30] uppercase hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Pencil className="w-3 h-3" /> Edit
-                      </button>
+                    {vehicle.vin && (
+                      <>
+                        <span className="text-neutral-450 uppercase">VIN / Serial</span>
+                        <span className="text-neutral-900 text-right font-mono tracking-wider truncate">{vehicle.vin}</span>
+                      </>
                     )}
                   </div>
-
-                  {(!vehicle.vin || isEditingVin) ? (
-                    <div className="text-xs space-y-2">
-                      <p className="text-neutral-500 italic">No VIN number registered for this vehicle.</p>
-                      {isOwner && (
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-mono text-neutral-450 uppercase font-bold">Vehicle Identification Number (VIN)</label>
-                          <div className="flex gap-2">
-                            <input 
-                              type="text" 
-                              value={editVin}
-                              onChange={(e) => setEditVin(e.target.value.toUpperCase())}
-                              placeholder="Enter 17-character VIN..." 
-                              className="glass-input flex-1 px-3 py-2 text-xs font-mono tracking-widest uppercase rounded-xl border border-neutral-350 focus:border-[#ff3b30] outline-none"
-                            />
-                            <button
-                              onClick={handleSaveVinOnly}
-                              disabled={savingVin || !editVin.trim()}
-                              className="px-4 py-2 bg-neutral-900 hover:bg-neutral-850 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1"
-                            >
-                              {savingVin ? <Loader2 className="w-3 h-3 animate-spin text-white" /> : 'Save'}
-                            </button>
-                          </div>
-                          {isEditingVin && (
-                            <button
-                              onClick={() => setIsEditingVin(false)}
-                              className="text-[9px] font-mono font-bold text-neutral-450 uppercase hover:text-neutral-900"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4 text-xs font-bold pt-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-neutral-450 uppercase">VIN Number</span>
-                        <span className="text-neutral-900 font-mono tracking-widest uppercase bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded">
-                          {isOwner ? vehicle.vin : (vehicle.vin.substring(0, 11) + 'X'.repeat(Math.max(0, vehicle.vin.length - 11)))}
-                        </span>
-                      </div>
-
-                      {vinAuditReport ? (
-                        <div className="space-y-3 pt-2">
-                          <div className="bg-emerald-50 border border-emerald-150 p-3 rounded-2xl flex items-center justify-between">
-                            <span className="text-emerald-700 font-black uppercase tracking-wider">NMVTIS Status</span>
-                            <span className="bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
-                              {vinAuditReport.status}
-                            </span>
-                          </div>
-
-                          <div className="space-y-2 text-[11px] font-mono text-neutral-600 border-t border-neutral-200 pt-2.5">
-                            <div className="flex justify-between">
-                              <span>Title Records:</span>
-                              <span className="text-emerald-600 font-bold">CLEAN</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Accident History:</span>
-                              <span className="text-emerald-600 font-bold text-right">{vinAuditReport.accident_history}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Theft Check:</span>
-                              <span className="text-emerald-600 font-bold text-right">{vinAuditReport.theft_records}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Recall Status:</span>
-                              <span className="text-emerald-600 font-bold text-right">{vinAuditReport.recall_status}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Gridpass Ledger:</span>
-                              <span className="text-emerald-600 font-bold text-right">{vinAuditReport.database_registry}</span>
-                            </div>
-                          </div>
-
-                          <div className="text-[9px] text-neutral-400 text-right italic font-mono pt-1">
-                            Audited: {vinAuditReport.audited_at}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="pt-2 space-y-3">
-                          {vinAuditing ? (
-                            <div className="bg-neutral-100 border border-neutral-200 p-4 rounded-2xl text-center space-y-3 animate-pulse">
-                              <Loader2 className="w-6 h-6 animate-spin text-[#ff3b30] mx-auto" />
-                              <div className="text-xs font-black uppercase tracking-wider text-neutral-700 font-mono">
-                                {vinAuditProgress}
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <p className="text-neutral-500 font-normal italic pb-2">
-                                VIN check has not been run yet. Verify this vehicle's history registry now.
-                              </p>
-                              {isOwner ? (
-                                <button
-                                  onClick={handleRunVinAudit}
-                                  className="w-full py-3 bg-neutral-900 hover:bg-neutral-850 text-white font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow text-center"
-                                >
-                                  Run Verification Check
-                                </button>
-                              ) : (
-                                <span className="text-neutral-455 italic text-[10px]">Verification audit pending owner trigger.</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                {/* Ownership History */}
+                {/* Owners */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
-                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-200 pb-3">
-                    <User className="w-4 h-4 text-[#ff3b30]" /> Ownership History
+                  <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-200 pb-3">
+                    <User className="w-4 h-4 text-[#ff3b30]" /> Owners
                   </h3>
                   
-                  {/* Vertical chain timeline */}
-                  <div className="space-y-4 pt-1">
-                    {/* Origin / Dealer */}
-                    {vehicle.partner_dealer && (
-                      <div className="flex gap-3 text-xs">
-                        <div className="flex flex-col items-center">
-                          <div className="w-2.5 h-2.5 rounded-full bg-neutral-300 border border-neutral-400" />
-                          <div className="w-0.5 h-8 bg-neutral-200 my-1" />
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="font-bold text-neutral-855 uppercase tracking-wider">1st Registry: {vehicle.partner_dealer}</h4>
-                          <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Provenance Verified Dealer Lot</p>
-                        </div>
+                  <div className="space-y-3">
+                    {/* Primary Owner Link Card */}
+                    <Link href={`/u/${ownerProfile?.username || 'pjlosey-mock'}`} className="flex items-center gap-3 p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] hover:shadow-sm transition-all group cursor-pointer">
+                      <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-black text-[#ff3b30] uppercase text-sm">
+                        {(ownerProfile?.displayName || 'Marcus Mustang').split(' ').map(n => n[0]).join('')}
                       </div>
-                    )}
-
-                    {/* Current Owner */}
-                    <div className="flex gap-3 text-xs">
-                      <div className="flex flex-col items-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-[#ff3b30] border border-[#ff3b30]" />
+                      <div className="flex-1">
+                        <h4 className="font-black text-neutral-900 uppercase text-xs group-hover:text-[#ff3b30] transition-colors">{ownerProfile?.displayName || 'Marcus Mustang'}</h4>
+                        <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Primary Owner</p>
                       </div>
-                      <div className="space-y-1">
-                        <h4 className="font-black text-neutral-900 uppercase tracking-wider">Current Owner: Marcus Mustang</h4>
-                        <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Active Passport Holder since 2026</p>
-                        
-                        {/* Co-Owners splits list (if any) */}
-                        {Array.isArray(vehicle.co_owners) && vehicle.co_owners.length > 0 && (
-                          <div className="space-y-1.5 pt-2">
-                            {(vehicle.co_owners as any[]).map((co, idx) => {
-                              const name = typeof co === 'string' ? co : co.name;
-                              const split = typeof co === 'string' ? '50%' : co.split;
-                              const memberId = typeof co === 'string' ? '' : co.member_id;
+                    </Link>
 
-                              return (
-                                <div key={idx} className="flex items-center gap-2 p-2 bg-white border border-neutral-200 rounded-xl text-[11px] font-bold">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
-                                  <span>{name} ({split})</span>
-                                  {memberId && (
-                                    <Link href={`/u/${memberId}`} className="text-blue-600 hover:underline text-[10px] font-mono font-bold ml-auto">
-                                      View Profile
-                                    </Link>
-                                  )}
-                                </div>
-                              );
-                            })}
+                    {/* Co-Owners Cards (if co-owners exist) */}
+                    {(() => {
+                      let list: { name: string; split: string; memberId: string }[] = [];
+                      if (Array.isArray(vehicle.co_owners)) {
+                        list = vehicle.co_owners.map((co) => {
+                          const name = typeof co === 'string' ? co : co.name;
+                          const split = typeof co === 'string' ? '50%' : co.split || '50%';
+                          const memberId = typeof co === 'string' ? '' : co.member_id || '';
+                          return { name, split, memberId };
+                        });
+                      } else if (typeof vehicle.co_owners === 'string' && vehicle.co_owners.trim()) {
+                        const str = vehicle.co_owners.trim();
+                        const match = str.match(/(.*?)\((.*?)\)/);
+                        const name = match ? match[1].trim() : str;
+                        const split = match ? match[2].trim() : '50%';
+                        list = [{ name, split, memberId: name.toLowerCase().includes('kristina') ? 'kristina-mock' : '' }];
+                      }
+
+                      return list.map((co, idx) => (
+                        <Link 
+                          href={co.memberId ? `/u/${co.memberId}` : `/u/pjlosey-mock`} 
+                          key={idx} 
+                          className="flex items-center gap-3 p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] hover:shadow-sm transition-all group cursor-pointer"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-black text-neutral-550 uppercase text-sm">
+                            {co.name.split(' ').map(n => n[0]).join('')}
                           </div>
-                        )}
-                      </div>
-                    </div>
+                          <div className="flex-1">
+                            <h4 className="font-black text-neutral-900 uppercase text-xs group-hover:text-[#ff3b30] transition-colors">{co.name}</h4>
+                            <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split})</p>
+                          </div>
+                        </Link>
+                      ));
+                    })()}
                   </div>
                 </div>
 
@@ -2100,7 +1992,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                 
                 {/* Modification List */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-6">
-                  <h3 className="text-xs font-black text-neutral-550 uppercase tracking-widest flex items-center gap-1.5">
+                  <h3 className="text-xs font-black text-neutral-555 uppercase tracking-widest flex items-center gap-1.5">
                     <ClipboardList className="w-4 h-4 text-[#ff3b30]" /> Modification List
                   </h3>
 
@@ -2130,7 +2022,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                   )}
                 </div>
 
-                {/* Photo Album (Adventure Photo Gallery) */}
+                {/* Photo Album */}
                 <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-4">
                   <h3 className="text-xs font-black text-emerald-650 uppercase tracking-widest flex items-center gap-1.5">
                     <CarFront className="w-4 h-4 text-emerald-600" /> Photo Album
@@ -2152,8 +2044,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
               </div>
 
             </div>
-          
-)
+          )
 
           {showPrintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
