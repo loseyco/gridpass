@@ -177,6 +177,10 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const [inviting, setInviting] = useState(false);
   const [paidBySelect, setPaidBySelect] = useState('');
 
+  // Inline VIN states
+  const [isEditingVin, setIsEditingVin] = useState(false);
+  const [savingVin, setSavingVin] = useState(false);
+
   // Edit Build states
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
   const [editYear, setEditYear] = useState('');
@@ -1001,6 +1005,45 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
     }
   };
 
+  // Inline VIN saving handler
+  const handleSaveVinOnly = async () => {
+    if (!editVin.trim()) return;
+    setSavingVin(true);
+
+    const hasVinChanged = editVin.trim() !== (vehicle?.vin || '');
+    const updatedFields = {
+      vin: editVin.trim(),
+      vin_checked: hasVinChanged ? false : (vehicle?.vin_checked || false),
+      vin_report: hasVinChanged ? null : (vehicle?.vin_report || null)
+    };
+
+    if (isMock) {
+      setVehicle(prev => prev ? { ...prev, ...updatedFields } : null);
+      if (hasVinChanged) {
+        setVinAuditReport(null);
+      }
+      setIsEditingVin(false);
+      setSavingVin(false);
+      await logEvent('success', 'system', `Updated vehicle VIN in mock`);
+      return;
+    }
+
+    try {
+      const docRef = doc(db, 'vehicles', vehicleId);
+      await updateDoc(docRef, updatedFields);
+      setVehicle(prev => prev ? { ...prev, ...updatedFields } : null);
+      if (hasVinChanged) {
+        setVinAuditReport(null);
+      }
+      setIsEditingVin(false);
+      await logEvent('success', 'system', `Updated vehicle VIN [${editVin}]`);
+    } catch (err) {
+      console.error("Failed to save VIN:", err);
+    } finally {
+      setSavingVin(false);
+    }
+  };
+
   // Submit New Service Log (Owner or Shop)
   const handleAddServiceLog = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1734,9 +1777,8 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const showTelemetryTab = isOwner || isMarcus;
   const showServiceTab = isOwner || isShop || isMarcus || isMike;
   const showExpensesTab = isOwner || isMarcus;
-  const showSettingsTab = isOwner || isMarcus;
 
-  const showTabsBar = showTelemetryTab || showServiceTab || showExpensesTab || showSettingsTab;
+  const showTabsBar = showTelemetryTab || showServiceTab || showExpensesTab;
 
   return (
     <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full p-4 md:p-8 space-y-8">
@@ -1876,17 +1918,6 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                 id="tab-expenses"
               >
                 <Coins className="w-4 h-4" /> Expenses & TCO
-              </button>
-            )}
-
-            {showSettingsTab && (
-              <button 
-                onClick={() => setActiveTab('settings')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'settings' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-450 hover:text-neutral-900'
-                }`}
-              >
-                <Settings className="w-4 h-4" /> Settings
               </button>
             )}
           </div>
@@ -3216,547 +3247,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
             </div>
           )}
 
-          {/* TAB 4: Settings (Owner Gated Edit Form) */}
-          {activeTab === 'settings' && (isOwner || (isMock && user?.email === 'marcus@enthusiast.com')) && (
-            <form onSubmit={handleSaveSpecs} className="space-y-8 animate-in fade-in duration-200">
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
-                <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900 pb-3">
-                  <Settings className="w-5 h-5 text-red-500" /> Vehicle Settings & Passport Registry
-                </h3>
-                
-                {/* Photo banner edit */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Main Vehicle Photo (Base64 / URL)</label>
-                    <input 
-                      type="text" 
-                      value={editPhotoUrl}
-                      onChange={(e) => setEditPhotoUrl(e.target.value)}
-                      placeholder="Paste photo URL or upload below..." 
-                      className="glass-input w-full p-3 rounded-xl text-xs"
-                    />
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] text-neutral-500">Or upload:</span>
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => handleFileUpload(e, setEditPhotoUrl)}
-                        className="text-xs text-neutral-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:uppercase file:bg-neutral-900 file:text-white hover:file:bg-neutral-850 cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Basic specifications grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Year</label>
-                      <input 
-                        type="number" 
-                        value={editYear}
-                        onChange={(e) => setEditYear(e.target.value)}
-                        placeholder="2007" 
-                        className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Make</label>
-                      <input 
-                        type="text" 
-                        value={editMake}
-                        onChange={(e) => setEditMake(e.target.value)}
-                        placeholder="Sea-Doo" 
-                        className="glass-input w-full p-2.5 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Model</label>
-                      <input 
-                        type="text" 
-                        value={editModel}
-                        onChange={(e) => setEditModel(e.target.value)}
-                        placeholder="GTI SE" 
-                        className="glass-input w-full p-2.5 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Trim</label>
-                      <input 
-                        type="text" 
-                        value={editTrim}
-                        onChange={(e) => setEditTrim(e.target.value)}
-                        placeholder="130" 
-                        className="glass-input w-full p-2.5 rounded-xl text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1 pt-4 border-t border-neutral-900">
-                  <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Vehicle Identification Number (VIN)</label>
-                  <input 
-                    type="text" 
-                    value={editVin}
-                    onChange={(e) => setEditVin(e.target.value.toUpperCase())}
-                    placeholder="Enter 17-character VIN number..." 
-                    className="glass-input w-full p-2.5 rounded-xl text-xs font-mono tracking-widest uppercase"
-                  />
-                  <p className="text-[9px] text-neutral-500 italic">Adding or changing the VIN will require a new history verification check.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Engine</label>
-                    <input 
-                      type="text" 
-                      value={editEngine}
-                      onChange={(e) => setEditEngine(e.target.value)}
-                      placeholder="Rotax 1503" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Transmission</label>
-                    <input 
-                      type="text" 
-                      value={editTransmission}
-                      onChange={(e) => setEditTransmission(e.target.value)}
-                      placeholder="Direct Drive" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">HP</label>
-                    <input 
-                      type="text" 
-                      value={editHp}
-                      onChange={(e) => setEditHp(e.target.value)}
-                      placeholder="130" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Torque</label>
-                    <input 
-                      type="text" 
-                      value={editTorque}
-                      onChange={(e) => setEditTorque(e.target.value)}
-                      placeholder="N/A" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial & Registry parameters */}
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
-                <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-neutral-900 pb-3">
-                  <ClipboardList className="w-5 h-5 text-blue-500" /> Registry & Purchase Parameters
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Purchase Date</label>
-                    <input 
-                      type="date" 
-                      value={editPurchaseDate}
-                      onChange={(e) => setEditPurchaseDate(e.target.value)}
-                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Purchase Price ($ USD)</label>
-                    <input 
-                      type="number" 
-                      value={editPurchasePrice}
-                      onChange={(e) => setEditPurchasePrice(e.target.value)}
-                      placeholder="4500" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Ownership Split</label>
-                    <input 
-                      type="text" 
-                      value={editOwnershipSplit}
-                      onChange={(e) => setEditOwnershipSplit(e.target.value)}
-                      placeholder="50/50" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Title Status</label>
-                    <input 
-                      type="text" 
-                      value={editTitleStatus}
-                      onChange={(e) => setEditTitleStatus(e.target.value)}
-                      placeholder="Clean" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Sticker Status</label>
-                    <input 
-                      type="text" 
-                      value={editStickerStatus}
-                      onChange={(e) => setEditStickerStatus(e.target.value)}
-                      placeholder="Wisconsin Registration" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Engine Hours</label>
-                    <input 
-                      type="number" 
-                      step="0.1"
-                      value={editEngineHours}
-                      onChange={(e) => setEditEngineHours(e.target.value)}
-                      placeholder="120" 
-                      className="glass-input w-full p-2.5 rounded-xl text-xs font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono text-neutral-400 uppercase font-bold">Owner's Story</label>
-                  <textarea 
-                    rows={3}
-                    value={editStory}
-                    onChange={(e) => setEditStory(e.target.value)}
-                    placeholder="Tell the story" 
-                    className="glass-input w-full p-3 rounded-xl text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Joint-Ownership list */}
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
-                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
-                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <User className="w-5 h-5 text-red-500" /> Joint Owners
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setEditCoOwnersList(prev => [...prev, { name: '', split: '50%', member_id: '' }])}
-                    className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer"
-                  >
-                    + Add Co-Owner
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {editCoOwnersList.map((co, idx) => (
-                    <div key={idx} className="p-4 bg-neutral-900/20 border border-neutral-900 rounded-2xl flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Co-Owner Name</label>
-                          <input 
-                            type="text" 
-                            required
-                            value={co.name}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditCoOwnersList(prev => prev.map((item, i) => i === idx ? { ...item, name: val } : item));
-                            }}
-                            placeholder="Kristina" 
-                            className="glass-input w-full p-2 rounded-xl text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Split %</label>
-                          <input 
-                            type="text" 
-                            value={co.split || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditCoOwnersList(prev => prev.map((item, i) => i === idx ? { ...item, split: val } : item));
-                            }}
-                            placeholder="50%" 
-                            className="glass-input w-full p-2 rounded-xl text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Driver ID (Optional)</label>
-                          <input 
-                            type="text" 
-                            value={co.member_id || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditCoOwnersList(prev => prev.map((item, i) => i === idx ? { ...item, member_id: val } : item));
-                            }}
-                            placeholder="pjlosey-mock" 
-                            className="glass-input w-full p-2 rounded-xl text-xs font-mono"
-                          />
-                        </div>
-                      </div>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setEditCoOwnersList(prev => prev.filter((_, i) => i !== idx))}
-                        className="px-2.5 py-2 text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg border border-red-500/10 cursor-pointer"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-
-                  {editCoOwnersList.length === 0 && (
-                    <p className="text-xs text-neutral-500 italic text-center py-4">No joint owners defined. Add one using the button above.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Compliance Documents list */}
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
-                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
-                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <ShieldCheck className="w-5 h-5 text-blue-500" /> Compliance Documents
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setEditDocsList(prev => [...prev, { name: '', status: 'Valid', file_url: '' }])}
-                    className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer"
-                  >
-                    + Add Document
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {editDocsList.map((docItem, idx) => (
-                    <div key={idx} className="p-4 bg-neutral-900/20 border border-neutral-900 rounded-2xl flex flex-col md:flex-row gap-4 items-end md:items-center justify-between">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-550 uppercase font-bold">Document Name</label>
-                          <input 
-                            type="text" 
-                            required
-                            value={docItem.name}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDocsList(prev => prev.map((item, i) => i === idx ? { ...item, name: val } : item));
-                            }}
-                            placeholder="Wisconsin Registration" 
-                            className="glass-input w-full p-2 rounded-xl text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Status Badge</label>
-                          <select
-                            value={docItem.status}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDocsList(prev => prev.map((item, i) => i === idx ? { ...item, status: val } : item));
-                            }}
-                            className="glass-input w-full p-2 rounded-xl text-xs bg-[#0b0b0f] text-white"
-                          >
-                            <option value="Valid">Valid</option>
-                            <option value="Compliant">Compliant</option>
-                            <option value="Active">Active</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Expired">Expired</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1 flex flex-col justify-end">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">File Upload (PDF / Image)</label>
-                          <input 
-                            type="file" 
-                            accept="application/pdf,image/*"
-                            onChange={(e) => handleFileUpload(e, (base64) => {
-                              setEditDocsList(prev => prev.map((item, i) => i === idx ? { ...item, file_url: base64 } : item));
-                            })}
-                            className="text-xs text-neutral-400 file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-neutral-900 file:text-white hover:file:bg-neutral-850 cursor-pointer w-full mt-1.5"
-                          />
-                          {docItem.file_url && (
-                            <span className="text-[9px] font-mono text-emerald-400 font-bold mt-1">✓ File Attached</span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setEditDocsList(prev => prev.filter((_, i) => i !== idx))}
-                        className="px-2.5 py-2 text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg border border-red-500/10 cursor-pointer"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-
-                  {editDocsList.length === 0 && (
-                    <p className="text-xs text-neutral-550 italic text-center py-4">No documents uploaded. Add one using the button above.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Due Maintenance Checklist list */}
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
-                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
-                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <Wrench className="w-5 h-5 text-emerald-500" /> Maintenance & Parts Checklist Settings
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setEditDueList(prev => [...prev, { title: '', due_date: '', status: 'Pending', parts_needed: '', affiliate_link: '' }])}
-                    className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer"
-                  >
-                    + Add Task
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {editDueList.map((m, idx) => (
-                    <div key={idx} className="p-4 bg-neutral-900/20 border border-neutral-900 rounded-2xl flex flex-col gap-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-500 uppercase font-bold">Task Title</label>
-                          <input 
-                            type="text" 
-                            required
-                            value={m.title}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, title: val } : item));
-                            }}
-                            placeholder="Jet Pump Inspection" 
-                            className="glass-input w-full p-2 rounded-xl text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Due Date</label>
-                          <input 
-                            type="date" 
-                            value={m.due_date}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, due_date: val } : item));
-                            }}
-                            className="glass-input w-full p-2 rounded-xl text-xs font-mono"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Status</label>
-                          <select
-                            value={m.status}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, status: val } : item));
-                            }}
-                            className="glass-input w-full p-2 rounded-xl text-xs bg-[#0b0b0f] text-white"
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Done">Done</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Parts Needed (Optional)</label>
-                          <input 
-                            type="text" 
-                            value={m.parts_needed || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, parts_needed: val } : item));
-                            }}
-                            placeholder="Spark Plugs" 
-                            className="glass-input w-full p-2 rounded-xl text-xs"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-mono text-neutral-555 uppercase font-bold">Custom Shopping Affiliate Link (Optional)</label>
-                          <input 
-                            type="text" 
-                            value={m.affiliate_link || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditDueList(prev => prev.map((item, i) => i === idx ? { ...item, affiliate_link: val } : item));
-                            }}
-                            placeholder="amazon.com" 
-                            className="glass-input w-full p-2 rounded-xl text-xs"
-                          />
-                        </div>
-                      </div>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setEditDueList(prev => prev.filter((_, i) => i !== idx))}
-                        className="self-end px-2.5 py-1.5 text-[10px] font-mono font-bold text-red-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg border border-red-500/10 cursor-pointer"
-                      >
-                        Remove Task
-                      </button>
-                    </div>
-                  ))}
-
-                  {editDueList.length === 0 && (
-                    <p className="text-xs text-neutral-550 italic text-center py-4">No due tasks set. Add one using the button above.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Adventure Photos list */}
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-neutral-900 bg-neutral-950/20 space-y-6">
-                <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
-                  <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <CarFront className="w-5 h-5 text-emerald-500" /> Adventure Photo Gallery
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-neutral-400 font-bold">Upload Photo:</span>
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, (base64) => {
-                        setEditPhotosList(prev => [...prev, base64]);
-                      })}
-                      className="text-xs text-neutral-400 file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-neutral-900 file:text-white hover:file:bg-neutral-850 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {editPhotosList.map((photo, idx) => (
-                    <div key={idx} className="relative aspect-video rounded-xl overflow-hidden border border-neutral-900 group bg-neutral-950">
-                      <img src={photo} alt={`Edit Gallery ${idx + 1}`} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setEditPhotosList(prev => prev.filter((_, i) => i !== idx))}
-                        className="absolute top-2 right-2 bg-red-600/90 text-white rounded-full p-1.5 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                {editPhotosList.length === 0 && (
-                  <p className="text-xs text-neutral-550 italic text-center py-4">No gallery photos added yet. Upload one above.</p>
-                )}
-              </div>
-
-              {/* Form Submit Button */}
-              <div className="flex justify-end gap-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('specs');
-                  }}
-                  className="px-6 py-3.5 bg-neutral-900 hover:bg-neutral-850 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer min-h-[48px]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-red-600/20 flex items-center gap-1.5 min-h-[48px] cursor-pointer"
-                >
-                  {savingSpecs ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  Save Passport Settings
-                </button>
-              </div>
-            </form>
-          )}
-
-      {showPrintModal && (
+          {showPrintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="glass-card max-w-md w-full p-6 md:p-8 rounded-[2rem] border border-neutral-850 bg-neutral-950/95 space-y-6 text-center relative shadow-2xl">
             <h3 className="text-lg font-black text-white uppercase tracking-wider">Your QR Badge</h3>

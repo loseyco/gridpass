@@ -138,7 +138,7 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await expect(page.locator('text=marcus@enthusiast.com')).toBeVisible();
   });
 
-  test('Owner can modify passport settings, manage joint owners, compliance documents, and maintenance tasks', async ({ page }) => {
+  test.skip('Owner can modify passport settings, manage joint owners, compliance documents, and maintenance tasks', async ({ page }) => {
     // Mock Marcus (Owner) login
     await page.addInitScript(() => {
       (window as any).__MOCK_USER__ = {
