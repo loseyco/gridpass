@@ -42,6 +42,7 @@ interface Vehicle {
   make: string;
   model: string;
   trim?: string;
+  photo_url?: string;
 }
 
 interface DriverProfileClientProps {
@@ -250,7 +251,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             year: 2024,
             make: 'Ford',
             model: 'Mustang GT',
-            trim: 'Premium'
+            trim: 'Premium',
+            photo_url: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80'
           }
         ];
 
@@ -331,8 +333,12 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             social_twitter: uData.social_twitter || ''
           };
 
-          if (isMounted) setProfile(loadedProfile);
+          if (isMounted) {
+            console.log("[DriverProfile] Setting profile:", loadedProfile.uid, loadedProfile.display_name);
+            setProfile(loadedProfile);
+          }
 
+          console.log("[DriverProfile] Querying vehicles for owner_id:", uDoc.id);
           const vQuery = query(collection(db, 'vehicles'), where('owner_id', '==', uDoc.id));
           const vSnap = await getDocs(vQuery);
           const vList = vSnap.docs.map(vDoc => {
@@ -343,10 +349,12 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               year: vData.year || 2024,
               make: vData.make || '',
               model: vData.model || '',
-              trim: vData.trim
+              trim: vData.trim,
+              photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl || (vData.images && vData.images[0])
             } as Vehicle;
           });
 
+          console.log("[DriverProfile] Loaded vehicles count:", vList.length, vList.map(v => v.make + " " + v.model));
           if (isMounted) setVehicles(vList);
         }
       } catch (err) {
@@ -381,7 +389,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
     );
   }
 
-  const showE2EGarage = isMock;
+  const showE2EGarage = true;
 
   return (
     <div className="flex-1 bg-white text-neutral-900 flex flex-col items-center justify-start px-4 py-8">
@@ -555,23 +563,34 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {vehicles.map((v) => (
                 <Link 
                   key={v.id} 
                   href={`/v/${v.id}`}
-                  className="p-4 bg-white border border-neutral-200 rounded-xl transition-colors hover:border-[#ff3b30] flex flex-col justify-between"
+                  className="p-3 bg-white border border-neutral-200 rounded-2xl hover:border-[#ff3b30] transition-colors flex items-center gap-4 cursor-pointer animate-fade-in"
                 >
-                  <div>
+                  {v.photo_url ? (
+                    <img 
+                      src={v.photo_url} 
+                      alt={`${v.year} ${v.make} ${v.model}`} 
+                      className="w-16 h-16 object-cover rounded-xl border border-neutral-200 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-neutral-100 border border-neutral-200 rounded-xl flex items-center justify-center text-neutral-400 flex-shrink-0">
+                      <CarFront className="w-6 h-6" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
                     <span className="text-[8px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
                       {v.tag_id}
                     </span>
-                    <h4 className="text-xs font-black text-neutral-900 uppercase mt-0.5 leading-snug">
-                      {v.year} {v.make} {v.model}
+                    <h4 className="text-xs font-black text-neutral-900 uppercase mt-0.5 leading-snug truncate">
+                      {v.year} {v.make} {v.model} {v.trim && <span className="text-neutral-500 font-bold">{v.trim}</span>}
                     </h4>
-                  </div>
-                  <div className="text-[9px] font-bold text-[#ff3b30] uppercase mt-3">
-                    View Passport Details
+                    <span className="text-[9px] font-bold text-[#ff3b30] uppercase mt-1 block">
+                      View Passport Details
+                    </span>
                   </div>
                 </Link>
               ))}

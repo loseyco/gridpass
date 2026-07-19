@@ -19,6 +19,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://gridpass.app'),
   title: "Gridpass | The Universal Vehicle Network",
+  manifest: "/manifest.json",
   description: "Transform any vehicle—car, boat, motorcycle, or plane—into a connected digital asset. Get a universal QR tag for service records, event entries, and ownership transfers.",
   keywords: ["gridpass", "vehicle network", "qr tag", "car community", "digital garage", "service logs", "ownership transfer"],
   openGraph: {
