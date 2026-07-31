@@ -12,8 +12,11 @@ import {
 } from 'firebase/firestore';
 import { 
   Car, Plus, Wrench, Heart, ShieldCheck, Loader2, User, MapPin, 
-  Printer, Sparkles, CheckCircle, Share2, Compass, QrCode
+  Printer, Sparkles, CheckCircle, Share2, Compass, QrCode, 
+  Building2, Calendar 
 } from 'lucide-react';
+import { BusinessProfile } from '@/lib/types/business';
+import { GridpassEvent } from '@/lib/types/events';
 
 interface DashboardVehicle {
   id?: string;
@@ -52,20 +55,14 @@ interface UserProfile {
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const isMock = typeof window !== 'undefined' && !!(window as any).__PLAYWRIGHT_MOCK__;
+  const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [vehicles, setVehicles] = useState<DashboardVehicle[]>([]);
+  const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
+  const [events, setEvents] = useState<GridpassEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showRegModal, setShowRegModal] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const [year, setYear] = useState('2024');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
-  const [engine, setEngine] = useState('');
-  const [hp, setHp] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -76,8 +73,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
 
-    const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
-
     if (isMock) {
       setProfile({
         display_name: 'PJ LOSEY',
@@ -85,21 +80,69 @@ export default function Dashboard() {
         is_supporter: true,
         location: 'Grayslake, IL'
       });
-      setVehicles([
-        {
-          id: 'v1',
-          year: 2023,
-          make: 'Chevrolet',
-          model: 'Corvette Z06',
-          trim: 'Z06 Coupe',
-          photo_url: 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=400&q=80',
-          specs: { engine: '5.5L V8', hp: 670 }
-        }
-      ]);
+      
+      // Load vehicles from mock local storage or defaults
+      const storedVehicles = localStorage.getItem('__mock_vehicles__');
+      if (storedVehicles) {
+        setVehicles(JSON.parse(storedVehicles));
+      } else {
+        const defaultMock = [
+          {
+            id: 'v1',
+            year: 2023,
+            make: 'Chevrolet',
+            model: 'Corvette Z06',
+            trim: 'Z06 Coupe',
+            photo_url: 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=400&q=80',
+            specs: { engine: '5.5L V8', hp: 670 }
+          }
+        ];
+        localStorage.setItem('__mock_vehicles__', JSON.stringify(defaultMock));
+        setVehicles(defaultMock);
+      }
+
+      // Load businesses from mock local storage or defaults
+      const storedBiz = localStorage.getItem('__mock_businesses__');
+      if (storedBiz) {
+        setBusinesses(JSON.parse(storedBiz));
+      } else {
+        setBusinesses([
+          {
+            id: 'nielsens',
+            owner_uid: user.uid,
+            name: 'NIELSEN ENTERPRISES',
+            description: 'Powersports and Marine Dealership',
+            category: 'dealership',
+            location_name: 'Lake Villa, IL'
+          }
+        ]);
+      }
+
+      // Load events from mock local storage or defaults
+      const storedEvts = localStorage.getItem('__mock_events__');
+      if (storedEvts) {
+        setEvents(JSON.parse(storedEvts));
+      } else {
+        setEvents([
+          {
+            id: 'maple-city-cruise',
+            host_uid: user.uid,
+            title: '27TH ANNUAL CRUISE NIGHT IN THE MAPLE CITY',
+            description: 'Monmouth\'s legendary Cruise Night!',
+            frequency: 'one_time',
+            location_name: 'Monmouth Public Square',
+            require_waiver: true,
+            require_tech_check: false,
+            staging_groups: ['Classics', 'Muscle']
+          }
+        ]);
+      }
+
       setLoading(false);
       return;
     }
 
+    // Bind real Firebase Firestore snapshot listeners
     const profileRef = doc(db, 'users', user.uid);
     const unsubProfile = onSnapshot(profileRef, (snap) => {
       if (snap.exists()) {
@@ -118,25 +161,66 @@ export default function Dashboard() {
     const unsubVehicles = onSnapshot(vehiclesQuery, (snap) => {
       const list: DashboardVehicle[] = [];
       snap.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() } as DashboardVehicle);
+        const vData = docSnap.data();
+        list.push({ 
+          id: docSnap.id, 
+          ...vData,
+          photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl || (vData.images && vData.images[0])
+        } as DashboardVehicle);
       });
       setVehicles(list);
+    }, (err) => {
+      console.error("Error loading vehicles snapshot:", err);
+    });
+
+    const businessesQuery = collection(db, 'businesses');
+    const unsubBusinesses = onSnapshot(businessesQuery, (snap) => {
+      const list: BusinessProfile[] = [];
+      snap.forEach((docSnap) => {
+        const bData = docSnap.data();
+        if (bData.owner_uid === user.uid || bData.owner_id === user.uid) {
+          list.push({ 
+            id: docSnap.id, 
+            ...bData 
+          } as BusinessProfile);
+        }
+      });
+      setBusinesses(list);
+    }, (err) => {
+      console.error("Error loading businesses snapshot:", err);
+    });
+
+    const eventsQuery = collection(db, 'events');
+    const unsubEvents = onSnapshot(eventsQuery, (snap) => {
+      const list: GridpassEvent[] = [];
+      snap.forEach((docSnap) => {
+        const eData = docSnap.data();
+        if (eData.host_uid === user.uid || eData.host_id === user.uid) {
+          list.push({ 
+            id: docSnap.id, 
+            ...eData 
+          } as GridpassEvent);
+        }
+      });
+      setEvents(list);
       setLoading(false);
     }, (err) => {
-      console.error("Error loading vehicles:", err);
+      console.error("Error loading events snapshot:", err);
       setLoading(false);
     });
 
     return () => {
       unsubProfile();
       unsubVehicles();
+      unsubBusinesses();
+      unsubEvents();
     };
-  }, [user]);
+  }, [user, isMock]);
 
   const handleBecomeSupporter = async () => {
     if (!user) return;
     
-    if (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) {
+    if (isMock) {
       setProfile(prev => prev ? { ...prev, is_supporter: true } : null);
       return;
     }
@@ -160,65 +244,29 @@ export default function Dashboard() {
     }
   };
 
-  const handleRegisterVehicle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !make || !model) return;
-
-    setSubmitting(true);
-
-    const vehicleData = {
-      owner_id: user.uid,
-      year: parseInt(year) || 2024,
-      make,
-      model,
-      specs: {
-        engine: engine || 'Default engine',
-        hp: parseInt(hp) || 0
-      },
-      created_at: serverTimestamp()
-    };
-
-    if (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) {
-      const newVehicle: DashboardVehicle = {
-        id: 'mock-' + Date.now(),
-        year: vehicleData.year,
-        make: vehicleData.make,
-        model: vehicleData.model,
-        specs: {
-          engine: vehicleData.specs.engine,
-          hp: vehicleData.specs.hp
-        }
-      };
-      setVehicles(prev => [...prev, newVehicle]);
-      setShowRegModal(false);
-      setSubmitting(false);
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, 'vehicles'), vehicleData);
-      setShowRegModal(false);
-      setYear('2024');
-      setMake('');
-      setModel('');
-      setEngine('');
-      setHp('');
-    } catch (err) {
-      console.error("Error adding vehicle:", err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (authLoading || loading) {
     return (
-      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center">
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
       </div>
     );
   }
 
   const isSupporter = profile?.is_supporter === true;
+
+  const businessCategoryLabels: Record<string, string> = {
+    dealership: 'Dealership',
+    track_venue: 'Track / Venue',
+    club_organizer: 'Club / Organizer',
+    shop_garage: 'Service Garage',
+    detailing_wrap: 'Detailing & Wrap Shop',
+    parts_accessories: 'Parts & Accessories',
+    food_beverage: 'Food & Beverage',
+    catering: 'Catering Services',
+    photography_media: 'Photography & Media',
+    website_tech: 'Tech & Marketing Services',
+    other: 'Partner Business'
+  };
 
   return (
     <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full p-4 space-y-6">
@@ -247,7 +295,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="space-y-1.5 min-w-0 flex-1">
+        <div className="space-y-1.5 min-w-0 flex-1 text-left">
           <h1 className="text-base font-extrabold uppercase text-neutral-900 truncate">
             {profile?.display_name || user?.displayName || 'DRIVER'}
           </h1>
@@ -267,13 +315,13 @@ export default function Dashboard() {
       </div>
 
       {/* Digital Garage Section */}
-      <div className="space-y-3">
+      <div className="space-y-3 text-left">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
             Digital Garage
           </h2>
           <button 
-            onClick={() => setShowRegModal(true)}
+            onClick={() => router.push('/dash/vehicles/edit')}
             className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             <Plus className="w-3 h-3" /> Add Vehicle
@@ -307,7 +355,7 @@ export default function Dashboard() {
                   <div className="space-y-0.5 min-w-0">
                     <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-[9px] font-mono font-bold text-[#ff3b30]">{v.year}</span>
-                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
+                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate animate-fade-in">
                         {v.make} {v.model}
                       </h3>
                     </div>
@@ -319,13 +367,19 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Flat, compact, un-wrapping actions */}
+                {/* Actions */}
                 <div className="flex gap-1.5 shrink-0">
                   <Link
                     href={`/v/${v.id}`}
                     className="text-[9px] font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-700 px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
                   >
                     View
+                  </Link>
+                  <Link
+                    href={`/dash/vehicles/edit?id=${v.id}`}
+                    className="text-[9px] font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                  >
+                    Edit
                   </Link>
                 </div>
               </div>
@@ -334,8 +388,144 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* iOS Settings-Like Settings Stack */}
-      <div className="space-y-3">
+      {/* My Businesses Section */}
+      <div className="space-y-3 text-left">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
+            My Businesses
+          </h2>
+          <button 
+            onClick={() => router.push('/dash/businesses/edit?id=new')}
+            className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+          >
+            <Plus className="w-3 h-3" /> Register Business
+          </button>
+        </div>
+
+        {businesses.length === 0 ? (
+          <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-xl text-center space-y-3">
+            <Building2 className="w-8 h-8 text-neutral-400 mx-auto" />
+            <h3 className="text-xs font-bold text-neutral-900 uppercase">No businesses registered</h3>
+            <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
+              Register powersport dealerships, service shops, or tracks to start hosting digital event staging.
+            </p>
+          </div>
+        ) : (
+          <div className="border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-200">
+            {businesses.map((biz) => (
+              <div key={biz.id} className="flex items-center justify-between p-3.5 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    {biz.logo_url ? (
+                      <img src={biz.logo_url} alt={biz.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-neutral-400" />
+                    )}
+                  </div>
+
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">
+                        {businessCategoryLabels[biz.category] || 'Biz'}
+                      </span>
+                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
+                        {biz.name}
+                      </h3>
+                    </div>
+                    <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-0.5">
+                      <MapPin className="w-2.5 h-2.5 text-neutral-400" /> {biz.location_name}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-1.5 shrink-0">
+                  <Link
+                    href={`/b/${biz.id}`}
+                    className="text-[9px] font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-700 px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                  >
+                    View
+                  </Link>
+                  <Link
+                    href={`/dash/businesses/edit?id=${biz.id}`}
+                    className="text-[9px] font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                  >
+                    Edit
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* My Hosted Events Section */}
+      <div className="space-y-3 text-left">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
+            My Hosted Events
+          </h2>
+          <button 
+            onClick={() => router.push('/events/create')}
+            className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+          >
+            <Plus className="w-3 h-3" /> Host Event
+          </button>
+        </div>
+
+        {events.length === 0 ? (
+          <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-xl text-center space-y-3">
+            <Calendar className="w-8 h-8 text-neutral-400 mx-auto" />
+            <h3 className="text-xs font-bold text-neutral-900 uppercase">No active events hosted</h3>
+            <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
+              Publish single meets, repeating autocrosses, or offroad park times and track staging rosters.
+            </p>
+          </div>
+        ) : (
+          <div className="border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-200">
+            {events.map((evt) => (
+              <div key={evt.id} className="flex items-center justify-between p-3.5 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-[#ff3b30]" />
+                  </div>
+
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">
+                        {evt.frequency === 'one_time' ? 'One-Time' : evt.frequency === 'repeating' ? 'Repeating' : 'Venue'}
+                      </span>
+                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
+                        {evt.title}
+                      </h3>
+                    </div>
+                    <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-0.5">
+                      <MapPin className="w-2.5 h-2.5 text-neutral-400" /> {evt.location_name}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-1.5 shrink-0">
+                  <Link
+                    href={`/events/${evt.id}`}
+                    className="text-[9px] font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-700 px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                  >
+                    View
+                  </Link>
+                  <Link
+                    href={`/events/create?id=${evt.id}`}
+                    className="text-[9px] font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
+                  >
+                    Edit
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Membership Stack */}
+      <div className="space-y-3 text-left">
         <h3 className="text-xs font-black uppercase text-neutral-900 tracking-wider">Membership</h3>
         <div className="bg-neutral-50 border border-neutral-200 rounded-xl divide-y divide-neutral-200 overflow-hidden">
           
@@ -397,93 +587,6 @@ export default function Dashboard() {
 
         </div>
       </div>
-
-      {/* Add Vehicle Modal */}
-      {showRegModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-sm p-5 rounded-2xl border border-neutral-200 relative space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-neutral-200">
-              <h3 className="text-sm font-bold text-neutral-900 uppercase">Register Vehicle</h3>
-              <button 
-                onClick={() => setShowRegModal(false)}
-                className="text-neutral-400 hover:text-neutral-600 transition-colors text-xs font-bold"
-              >
-                Cancel
-              </button>
-            </div>
-
-            <form onSubmit={handleRegisterVehicle} className="space-y-3">
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-0.5">
-                  <label className="text-[8px] font-mono font-bold text-neutral-400 uppercase">Year</label>
-                  <input 
-                    type="number"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    placeholder="2024"
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30] text-center"
-                    required
-                  />
-                </div>
-                <div className="col-span-2 space-y-0.5">
-                  <label className="text-[8px] font-mono font-bold text-neutral-400 uppercase">Make</label>
-                  <input 
-                    type="text"
-                    value={make}
-                    onChange={(e) => setMake(e.target.value)}
-                    placeholder="Chevrolet"
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-0.5">
-                <label className="text-[8px] font-mono font-bold text-neutral-400 uppercase">Model</label>
-                <input 
-                  type="text"
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  placeholder="Corvette Z06"
-                  className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-0.5">
-                  <label className="text-[8px] font-mono font-bold text-neutral-400 uppercase">Engine</label>
-                  <input 
-                    type="text"
-                    value={engine}
-                    onChange={(e) => setEngine(e.target.value)}
-                    placeholder="5.5L V8"
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
-                  />
-                </div>
-                <div className="space-y-0.5">
-                  <label className="text-[8px] font-mono font-bold text-neutral-400 uppercase">Power (HP)</label>
-                  <input 
-                    type="number"
-                    value={hp}
-                    onChange={(e) => setHp(e.target.value)}
-                    placeholder="670"
-                    className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                disabled={submitting}
-                className="w-full py-2.5 mt-2 bg-[#ff3b30] hover:bg-[#bd2925] disabled:bg-neutral-200 text-white text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center"
-              >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register Vehicle'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );

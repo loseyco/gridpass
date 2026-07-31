@@ -38,8 +38,10 @@ export function AppShell({ children }: AppShellProps) {
   // Determine active tab for highlight
   const getActiveTab = () => {
     if (pathname === '/dash' || pathname === '/') return 'dash';
-    if (pathname === '/members') return 'members';
-    if (pathname === '/vehicles') return 'vehicles';
+    if (pathname === '/members' || pathname?.startsWith('/u/')) return 'members';
+    if (pathname === '/vehicles' || pathname?.startsWith('/v/')) return 'vehicles';
+    if (pathname === '/events' || pathname?.startsWith('/events/')) return 'events';
+    if (pathname === '/businesses' || pathname?.startsWith('/b/')) return 'buisniess';
     if (pathname?.startsWith('/explore')) {
       if (typeof window !== 'undefined') {
         const tab = new URLSearchParams(window.location.search).get('tab');
@@ -55,7 +57,7 @@ export function AppShell({ children }: AppShellProps) {
   const activeMenu = getActiveTab();
 
   // Check if we are on a detail/sub-page that needs a Back button
-  const isTabRoute = pathname === '/dash' || pathname === '/' || pathname === '/members' || pathname === '/vehicles' || pathname === '/explore' || pathname === '/scan' || (user && pathname === `/u/${user.uid}`);
+  const isTabRoute = pathname === '/dash' || pathname === '/' || pathname === '/members' || pathname === '/vehicles' || pathname === '/events' || pathname === '/businesses' || pathname === '/explore' || pathname === '/scan' || (user && pathname === `/u/${user.uid}`);
   const showBackButton = !isTabRoute && pathname !== '/login';
 
   const handleSignOut = async () => {
@@ -77,7 +79,7 @@ export function AppShell({ children }: AppShellProps) {
     if (pathname?.startsWith('/scan')) return 'Scanner';
     if (pathname?.startsWith('/u/')) return 'Member Profile';
     if (pathname?.startsWith('/v/')) return 'Vehicle Profile';
-    if (pathname?.startsWith('/b/')) return 'Business Hub';
+    if (pathname?.startsWith('/b/')) return 'Business Profile';
     if (pathname?.startsWith('/build-tag')) return 'Decal Studio';
     if (pathname?.startsWith('/join')) return 'Join Gridpass';
     if (pathname?.startsWith('/guides')) return 'Local Guides';
@@ -107,34 +109,48 @@ export function AppShell({ children }: AppShellProps) {
             )}
 
             {/* Desktop Navigation Links */}
-            {user && (
-              <nav className="hidden md:flex items-center gap-1 ml-4">
-                <Link 
-                  href="/dash" 
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                    activeMenu === 'dash' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Dash
-                </Link>
-                 <Link 
-                  href="/members" 
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                    activeMenu === 'members' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Members
-                </Link>
-                <Link 
-                  href="/vehicles" 
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
-                    activeMenu === 'vehicles' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Vehicles
-                </Link>
-              </nav>
-            )}
+            <nav className="hidden md:flex items-center gap-1 ml-4">
+              <Link 
+                href="/dash" 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeMenu === 'dash' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Dash
+              </Link>
+               <Link 
+                href="/members" 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeMenu === 'members' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Members
+              </Link>
+              <Link 
+                href="/vehicles" 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeMenu === 'vehicles' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Vehicles
+              </Link>
+              <Link 
+                href="/events" 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeMenu === 'events' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Events
+              </Link>
+              <Link 
+                href="/businesses" 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                  activeMenu === 'buisniess' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Businesses
+              </Link>
+            </nav>
           </div>
 
           <div className="text-sm font-black uppercase tracking-wider text-neutral-900 absolute left-1/2 -translate-x-1/2 pointer-events-none md:pointer-events-auto">
@@ -201,7 +217,25 @@ export function AppShell({ children }: AppShellProps) {
             <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Vehicles</span>
           </Link>
 
+          <Link 
+            href="/events" 
+            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${
+              activeMenu === 'events' ? 'text-[#ff3b30]' : 'text-neutral-500 hover:text-[#bd2925]'
+            }`}
+          >
+            <Calendar className="w-4.5 h-4.5" />
+            <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Events</span>
+          </Link>
 
+          <Link 
+            href="/businesses" 
+            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${
+              activeMenu === 'buisniess' ? 'text-[#ff3b30]' : 'text-neutral-500 hover:text-[#bd2925]'
+            }`}
+          >
+            <Building2 className="w-4.5 h-4.5" />
+            <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Biz</span>
+          </Link>
         </nav>
       )}
 

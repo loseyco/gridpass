@@ -82,7 +82,7 @@ export default function VehiclesPage() {
               make: data.make || '',
               model: data.model || '',
               tag_id: data.tag_id || `GP-${vDoc.id.slice(0, 6).toUpperCase()}`,
-              photo_url: data.photo_url || '',
+              photo_url: data.photo_url || data.imageUrl || data.image_url || data.photoUrl || (data.images && data.images[0]) || '',
               specs: {
                 engine: data.specs?.engine || data.engine || '',
                 hp: data.specs?.hp || data.power || ''

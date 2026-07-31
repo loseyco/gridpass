@@ -85,11 +85,14 @@ function JoinPageContent() {
                 
                 if (tagId === 'GP-MOCK-CLAIMED') {
                     if (isMounted) {
-                        const isMarshall = (user && (user as any).role === 'marshall') || 
-                                           searchParams.get('role') === 'marshall' || 
-                                           searchParams.get('scannerType') === 'marshall' ||
-                                           user?.email === 'dave@badlandspark.com' ||
-                                           (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ && tagId === 'GP-MOCK-CLAIMED' && !searchParams.get('spectator'));
+                        const isSpectator = searchParams.get('spectator') === 'true';
+                        const isMarshall = !isSpectator && (
+                            (user && (user as any).role === 'marshall') || 
+                            searchParams.get('role') === 'marshall' || 
+                            searchParams.get('scannerType') === 'marshall' ||
+                            user?.email === 'dave@badlandspark.com' ||
+                            (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ && tagId === 'GP-MOCK-CLAIMED')
+                        );
                         if (isMarshall) {
                             setClearanceVehicle({
                                 id: 'mock-v1',

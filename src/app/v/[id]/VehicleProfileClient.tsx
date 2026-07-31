@@ -14,7 +14,7 @@ import {
   CarFront, MapPin, Wrench, ShieldCheck, Heart, User, Calendar, 
   Map, History, ClipboardList, Info, Sparkles, Loader2, ArrowLeft, Sun,
   Settings, Award, Printer, DollarSign, Trash2, Plus, Coins, Fuel, CreditCard, Pencil,
-  CheckCircle, Users, Save, Anchor, ThumbsUp, ThumbsDown, Share2
+  CheckCircle, Users, Save, Anchor, ThumbsUp, ThumbsDown, Share2, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
 
@@ -26,17 +26,20 @@ interface SpecItem {
 }
 
 interface ModItem {
-  category: string;
+  category?: string;
   brand: string;
   name: string;
   date?: string;
   cost?: number | string;
+  install_date?: string;
+  installDate?: string;
 }
 
 interface CoOwner {
   name: string;
   member_id?: string;
   split?: string;
+  email?: string;
 }
 
 interface DocItem {
@@ -182,42 +185,30 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const [isEditingVin, setIsEditingVin] = useState(false);
   const [savingVin, setSavingVin] = useState(false);
 
-  // Edit Build states
-  const [editPhotoUrl, setEditPhotoUrl] = useState('');
-  const [editYear, setEditYear] = useState('');
-  const [editMake, setEditMake] = useState('');
-  const [editModel, setEditModel] = useState('');
-  const [editTrim, setEditTrim] = useState('');
-  const [editEngine, setEditEngine] = useState('');
-  const [editTransmission, setEditTransmission] = useState('');
-  const [editHp, setEditHp] = useState('');
-  const [editTorque, setEditTorque] = useState('');
-  const [editAwards, setEditAwards] = useState('');
-  const [editHistory, setEditHistory] = useState('');
-  const [editCoOwnersList, setEditCoOwnersList] = useState<CoOwner[]>([]);
-  const [editPurchaseDate, setEditPurchaseDate] = useState('');
-  const [editPurchasePrice, setEditPurchasePrice] = useState('');
-  const [editOwnershipSplit, setEditOwnershipSplit] = useState('');
-  const [editTitleStatus, setEditTitleStatus] = useState('');
-  const [editStickerStatus, setEditStickerStatus] = useState('');
-  const [editEngineHours, setEditEngineHours] = useState('');
-  const [editStory, setEditStory] = useState('');
-  const [editDocsList, setEditDocsList] = useState<DocItem[]>([]);
-  const [editPhotosList, setEditPhotosList] = useState<string[]>([]);
-  const [editDueList, setEditDueList] = useState<DueMaintenanceItem[]>([]);
-  const [savingSpecs, setSavingSpecs] = useState(false);
+  // Photo Album Lightbox States
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        callback(reader.result);
+  useEffect(() => {
+    if (activePhotoIndex === null || !vehicle || !Array.isArray(vehicle.additional_photos)) return;
+
+    const photos = vehicle.additional_photos as string[];
+    if (photos.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActivePhotoIndex(null);
+      } else if (e.key === 'ArrowRight') {
+        setActivePhotoIndex(prev => (prev !== null ? (prev + 1) % photos.length : 0));
+      } else if (e.key === 'ArrowLeft') {
+        setActivePhotoIndex(prev => (prev !== null ? (prev - 1 + photos.length) % photos.length : 0));
       }
     };
-    reader.readAsDataURL(file);
-  };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activePhotoIndex, vehicle]);
+
+
 
   const getInviteLink = (ownerName: string) => {
     if (typeof window === 'undefined') return;
@@ -240,140 +231,11 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
 
   useEffect(() => {
     if (vehicle) {
-      setEditPhotoUrl(vehicle.photo_url || '');
-      setEditYear(String(vehicle.year));
-      setEditMake(vehicle.make || '');
-      setEditModel(vehicle.model || '');
-      setEditTrim(vehicle.trim || '');
-      setEditEngine(vehicle.specs?.engine || '');
-      setEditTransmission(vehicle.specs?.transmission || '');
-      setEditHp(String(vehicle.specs?.hp || ''));
-      setEditTorque(String(vehicle.specs?.torque || ''));
-      setEditAwards(Array.isArray(vehicle.awards) ? vehicle.awards.join('\n') : '');
-      setEditHistory(Array.isArray(vehicle.history) ? vehicle.history.join('\n') : '');
-
-      setEditPurchaseDate(vehicle.purchase_date || '');
-      setEditPurchasePrice(String(vehicle.purchase_price || ''));
-      setEditOwnershipSplit(vehicle.ownership_split || '');
-      setEditTitleStatus(vehicle.title_status || '');
-      setEditStickerStatus(vehicle.sticker_status || '');
-      setEditEngineHours(String(vehicle.engine_hours || ''));
-      setEditStory(vehicle.story || '');
       setEditVin(vehicle.vin || '');
-
-      // Co-Owners List
-      if (Array.isArray(vehicle.co_owners)) {
-        setEditCoOwnersList((vehicle.co_owners as any[]).map(co => {
-          if (typeof co === 'string') return { name: co, split: '50%' };
-          return { name: co.name || '', member_id: co.member_id || '', split: co.split || '50%' };
-        }));
-      } else if (typeof vehicle.co_owners === 'string' && vehicle.co_owners) {
-        const names = vehicle.co_owners.split('&').map(n => n.trim());
-        setEditCoOwnersList(names.map(name => ({ name, split: '50%' })));
-      } else {
-        setEditCoOwnersList([]);
-      }
-
-      // Documents List
-      if (Array.isArray(vehicle.documents)) {
-        setEditDocsList((vehicle.documents as any[]).map(doc => {
-          if (typeof doc === 'string') return { name: doc, status: 'Valid' };
-          return { name: doc.name || '', status: doc.status || 'Valid', file_url: doc.file_url || '' };
-        }));
-      } else {
-        setEditDocsList([]);
-      }
-
-      // Photos List
-      if (Array.isArray(vehicle.additional_photos)) {
-        setEditPhotosList(vehicle.additional_photos);
-      } else {
-        setEditPhotosList([]);
-      }
-
-      // Due Maintenance List
-      if (Array.isArray(vehicle.due_maintenance)) {
-        setEditDueList((vehicle.due_maintenance as any[]).map(item => {
-          if (typeof item === 'string') return { title: item, due_date: '', status: 'Pending' };
-          return {
-            title: item.title || item.name || '',
-            due_date: item.due_date || '',
-            status: item.status || 'Pending',
-            parts_needed: item.parts_needed || '',
-            affiliate_link: item.affiliate_link || ''
-          };
-        }));
-      } else {
-        setEditDueList([]);
-      }
     }
   }, [vehicle]);
 
-  const handleSaveSpecs = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingSpecs(true);
 
-    const parsedAwards = editAwards.split('\n').map(x => x.trim()).filter(Boolean);
-    const parsedHistory = editHistory.split('\n').map(x => x.trim()).filter(Boolean);
-
-    const hasVinChanged = editVin.trim() !== (vehicle?.vin || '');
-    const updatedData = {
-      photo_url: editPhotoUrl.trim(),
-      year: parseInt(editYear) || vehicle?.year || 2024,
-      make: editMake.trim(),
-      model: editModel.trim(),
-      trim: editTrim.trim(),
-      vin: editVin.trim(),
-      vin_checked: hasVinChanged ? false : (vehicle?.vin_checked || false),
-      vin_report: hasVinChanged ? null : (vehicle?.vin_report || null),
-      specs: {
-        engine: editEngine.trim(),
-        transmission: editTransmission.trim(),
-        hp: editHp.trim() ? parseInt(editHp) || editHp : '',
-        torque: editTorque.trim() ? parseInt(editTorque) || editTorque : ''
-      },
-      awards: parsedAwards,
-      history: parsedHistory,
-      co_owners: editCoOwnersList,
-      purchase_date: editPurchaseDate.trim(),
-      purchase_price: editPurchasePrice.trim() ? parseFloat(editPurchasePrice) || editPurchasePrice : '',
-      ownership_split: editOwnershipSplit.trim(),
-      title_status: editTitleStatus.trim(),
-      sticker_status: editStickerStatus.trim(),
-      engine_hours: editEngineHours.trim() ? parseFloat(editEngineHours) || editEngineHours : '',
-      story: editStory.trim(),
-      documents: editDocsList,
-      additional_photos: editPhotosList,
-      due_maintenance: editDueList
-    };
-
-    if (isMock) {
-      await new Promise(r => setTimeout(r, 200));
-      setVehicle(prev => prev ? {
-        ...prev,
-        ...updatedData
-      } : null);
-      setSavingSpecs(false);
-      setActiveTab('specs');
-      await logEvent('success', 'system', `Updated vehicle specs in mock for tag [${vehicle?.tag_id}]`);
-      return;
-    }
-
-    try {
-      await updateDoc(doc(db, 'vehicles', vehicleId), updatedData);
-      setVehicle(prev => prev ? {
-        ...prev,
-        ...updatedData
-      } : null);
-      setActiveTab('specs');
-      await logEvent('success', 'system', `Updated vehicle specs for document [${vehicleId}]`);
-    } catch (err) {
-      console.error("Failed to update vehicle specs:", err);
-      alert("Error saving vehicle specification changes.");
-    } finally {
-      setSavingSpecs(false);
-    }
-  };
 
   const handlePrint = () => {
     if (!vehicle) return;
@@ -693,7 +555,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
             is_ad_free: vData.is_ad_free,
             has_telemetry: vData.has_telemetry,
             is_verified_provenance: vData.is_verified_provenance,
-            photo_url: vData.photo_url,
+            photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl || (vData.images && vData.images[0]),
             awards: vData.awards,
             history: vData.history,
             co_owners: vData.co_owners || '',
@@ -705,7 +567,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
             engine_hours: vData.engine_hours || '',
             story: vData.story || '',
             documents: vData.documents || [],
-            additional_photos: vData.additional_photos || [],
+            additional_photos: vData.additional_photos || vData.images || [],
             due_maintenance: vData.due_maintenance || [],
             vin: vData.vin || '',
             vin_checked: vData.vin_checked === true,
@@ -1818,6 +1680,14 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
           >
             <Share2 className="w-3.5 h-3.5" /> {shareText}
           </button>
+          {isOwner && (
+            <Link 
+              href={`/dash/vehicles/edit?id=${vehicleId}`}
+              className="text-[10px] font-mono font-bold text-[#ff3b30] hover:text-[#bd2925] flex items-center gap-1.5 uppercase transition-colors cursor-pointer border border-[#ff3b30] px-3 py-1 rounded-full hover:bg-[#ff3b30]/5"
+            >
+              Edit Passport
+            </Link>
+          )}
         </div>
       </div>
 
@@ -1896,7 +1766,6 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
         {/* Content Area */}
         <div className="space-y-6">
 
-          (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-in fade-in duration-200">
               
               {/* Left Column: Specifications & Ownership */}
@@ -1950,13 +1819,14 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
 
                     {/* Co-Owners Cards (if co-owners exist) */}
                     {(() => {
-                      let list: { name: string; split: string; memberId: string }[] = [];
+                      let list: { name: string; split: string; memberId: string; email?: string }[] = [];
                       if (Array.isArray(vehicle.co_owners)) {
                         list = vehicle.co_owners.map((co) => {
                           const name = typeof co === 'string' ? co : co.name;
                           const split = typeof co === 'string' ? '50%' : co.split || '50%';
                           const memberId = typeof co === 'string' ? '' : co.member_id || '';
-                          return { name, split, memberId };
+                          const email = typeof co === 'string' ? '' : co.email || '';
+                          return { name, split, memberId, email };
                         });
                       } else if (typeof vehicle.co_owners === 'string' && vehicle.co_owners.trim()) {
                         const str = vehicle.co_owners.trim();
@@ -1967,7 +1837,10 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                       }
 
                       return list.map((co, idx) => {
-                        return co.memberId ? (
+                        const isLinked = co.memberId && co.memberId !== 'invited';
+                        const isInvited = co.memberId === 'invited' || co.email;
+
+                        return isLinked ? (
                           <Link 
                             href={`/u/${co.memberId}`} 
                             key={idx} 
@@ -1976,22 +1849,24 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                             <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center font-black text-neutral-550 uppercase text-sm">
                               {co.name.split(' ').map(n => n[0]).join('')}
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-black text-neutral-900 uppercase text-xs group-hover:text-[#ff3b30] transition-colors">{co.name}</h4>
-                              <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split})</p>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-black text-neutral-900 uppercase text-xs group-hover:text-[#ff3b30] transition-colors truncate">{co.name}</h4>
+                              <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split}) • Member</p>
                             </div>
                           </Link>
                         ) : (
                           <div 
                             key={idx} 
-                            className="flex items-center gap-3 p-3 bg-neutral-100 border border-neutral-200 rounded-2xl"
+                            className="flex items-center gap-3 p-3 bg-neutral-50 border border-neutral-200 rounded-2xl"
                           >
                             <div className="w-10 h-10 rounded-full bg-neutral-200 border border-neutral-300 flex items-center justify-center font-black text-neutral-550 uppercase text-sm">
                               {co.name.split(' ').map(n => n[0]).join('')}
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-black text-neutral-900 uppercase text-xs">{co.name}</h4>
-                              <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">Joint Owner ({co.split})</p>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-black text-neutral-900 uppercase text-xs truncate">{co.name}</h4>
+                              <p className="text-[10px] text-neutral-450 uppercase font-mono font-bold">
+                                Joint Owner ({co.split}){isInvited ? ' • Invited' : ''}
+                              </p>
                             </div>
                           </div>
                         );
@@ -2016,10 +1891,17 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                       {vehicle.mods.map((mod, idx) => (
                         <div key={idx} className="p-4 bg-neutral-100 border border-neutral-200 rounded-2xl flex items-center justify-between text-xs">
                           <div className="space-y-1">
-                            <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-wider bg-neutral-200 border border-neutral-300 px-2 py-0.5 rounded">
-                              {mod.category}
-                            </span>
+                            {mod.category && (
+                              <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-wider bg-neutral-200 border border-neutral-300 px-2 py-0.5 rounded">
+                                {mod.category}
+                              </span>
+                            )}
                             <h4 className="font-bold text-neutral-900 pt-1">{mod.brand} {mod.name}</h4>
+                            {(mod.install_date || mod.installDate) && (
+                              <p className="text-[10px] text-neutral-405 font-mono pt-0.5">
+                                Installed: {mod.install_date || mod.installDate}
+                              </p>
+                            )}
                           </div>
                           {mod.cost && (
                             <span className="font-mono font-bold text-neutral-600">${mod.cost}</span>
@@ -2046,7 +1928,11 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                   {Array.isArray(vehicle.additional_photos) && vehicle.additional_photos.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {(vehicle.additional_photos as string[]).map((photo, idx) => (
-                        <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-neutral-200 group">
+                        <div 
+                          key={idx} 
+                          onClick={() => setActivePhotoIndex(idx)}
+                          className="relative aspect-video rounded-2xl overflow-hidden border border-neutral-200 group cursor-pointer shadow-sm hover:shadow-md transition-all"
+                        >
                           <img src={photo} alt={`Adventure ${idx + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                         </div>
                       ))}
@@ -2056,10 +1942,67 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                   )}
                 </div>
 
+                {/* Photo Album Lightbox Modal */}
+                {(() => {
+                  const photos = vehicle.additional_photos;
+                  if (activePhotoIndex === null || !Array.isArray(photos) || photos.length === 0) return null;
+
+                  return (
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 animate-in fade-in duration-200 select-none">
+                      
+                      {/* Close Area */}
+                      <div className="absolute inset-0 z-0 cursor-zoom-out" onClick={() => setActivePhotoIndex(null)} />
+
+                      {/* Close Button */}
+                      <button
+                        onClick={() => setActivePhotoIndex(null)}
+                        className="absolute top-4 right-4 z-10 p-2 hover:bg-white/10 text-white rounded-full transition-all cursor-pointer"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+
+                      {/* Main Content Box */}
+                      <div className="relative z-10 flex items-center justify-center w-full max-w-5xl h-full max-h-[85vh] gap-4">
+                        
+                        {/* Left Prev Button */}
+                        <button
+                          onClick={() => setActivePhotoIndex(prev => (prev !== null ? (prev - 1 + photos.length) % photos.length : 0))}
+                          className="p-2.5 bg-black/40 border border-neutral-800 hover:bg-neutral-900/60 text-white rounded-full transition-all cursor-pointer shadow-md shrink-0"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+
+                        {/* Photo Image Card */}
+                        <div className="relative flex-1 h-full flex items-center justify-center overflow-hidden">
+                          <img
+                            src={photos[activePhotoIndex]}
+                            alt={`Photo ${activePhotoIndex + 1}`}
+                            className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200"
+                          />
+                        </div>
+
+                        {/* Right Next Button */}
+                        <button
+                          onClick={() => setActivePhotoIndex(prev => (prev !== null ? (prev + 1) % photos.length : 0))}
+                          className="p-2.5 bg-black/40 border border-neutral-800 hover:bg-neutral-900/60 text-white rounded-full transition-all cursor-pointer shadow-md shrink-0"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+                        
+                      </div>
+
+                      {/* Page Counter Indicator */}
+                      <div className="absolute bottom-6 z-10 text-[10px] font-mono font-bold text-neutral-400 bg-neutral-950/80 border border-neutral-850 px-3 py-1.5 rounded-full uppercase tracking-wider shadow-md">
+                        Photo {activePhotoIndex + 1} of {photos.length}
+                      </div>
+
+                    </div>
+                  );
+                })()}
+
               </div>
 
             </div>
-          )
 
           {showPrintModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -2099,7 +2042,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
               ✕
             </button>
           </div>
-        </div>
+            </div>
       )}
 
     </div>

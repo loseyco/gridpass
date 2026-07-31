@@ -15,6 +15,8 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
 
 ## 4. Local Testing & Verification Guardrails
 *   **Local Dev Server**: All changes must be run and verified locally on the development server (`npm run dev`) first.
+*   **Localhost First & User Verification**: Build, iterate, and verify all feature additions and UI changes strictly on `localhost` (`http://localhost:3000`). NEVER push changes to production or live hosting until the user has personally tested, verified, and approved the local implementation.
+*   **STRICT ZERO FAKE DATA RULE**: NEVER pre-populate production views, admin tables, or state hooks with hardcoded fake seed data or dummy rows (e.g. fake staff arrays, mock clients, static dummy entries). All arrays must initialize clean (`[]`). If a Firestore collection is empty, render a clean empty state (`"No records found. Click '+ Add ...' to create your first entry"`) rather than auto-injecting seed objects. Hardcoded presets are strictly restricted to isolated Playwright test mocks and the sales pitch simulator.
 *   **E2E Validation**: Run the Playwright test suite (`node run-tests.js`) to guarantee that all tests pass 100% before declaring a phase complete. Use the `/browser` command or browser tool options to manually verify complex UI flows.
 *   **GitHub Deployments**: Always track progress by committing code changes locally and pushing updates to GitHub.
 *   **Production Deployment Freeze**: **NEVER run live production builds or deployments (e.g., `firebase deploy`) without the USER's explicit written approval.**
@@ -41,5 +43,9 @@ Before completing any roadmap phase or pushing code updates live, the following 
 *   **Charcoal Text & Bold Typography**: Use high-contrast charcoal black (`#1c1c1e`) text. Headings and labels should be uppercase, bold, and use clean, tight spacing to match the physical business invitation cards.
 *   **Crimson/Red Accents**: Primary action buttons, active tab indicators, and status highlights must use bright system red (`#ff3b30` / `#bd2925`).
 *   **Simple Vertical Rows**: Avoid complex glowing card grids. Lay lists out in clean, vertically scrollable compact rows (`bg-neutral-50` with thin `border-neutral-200` borders) that scale gracefully without clipping on small viewports.
+*   **Mobile-First Desktop-Optimized**: All UI views must prioritize mobile touch simplicity first. When viewed on desktop, wrap main content in clean, centered mobile-app card containers (e.g. `max-w-md` or `max-w-lg` centered with clean borders or subtle grey desktop framing) or responsive multi-column layouts so desktop users get a polished, app-like desk experience without breaking mobile simplicity.
 *   **"Join" Terminology**: Drop the word "Register" in user-facing texts, forms, buttons, and landing paths. Always use the term **"Join"** (or "Join Gridpass") to match physical printed materials.
 *   **Online Identity Resume Profiles**: Public driver profiles (`/u/[id]`) must act strictly as the driver's online card/resume. Hide vehicles, businesses, and event sections on public views unless executing in Playwright E2E mock suites.
+
+## 8. Firestore Security Rules Synchronization Invariant
+Whenever introducing a new Cloud Firestore collection (e.g. `products`, `proposals`, `crm_deals`, `client_feedback`), you MUST immediately append the corresponding collection permission match rule in [firestore.rules](file:///c:/_Projects/Gridpass-v4/firestore.rules). Never leave new collections out of `firestore.rules` to prevent `FirebaseError: Missing or insufficient permissions` console warnings.
