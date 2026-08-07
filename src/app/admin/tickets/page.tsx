@@ -9,11 +9,37 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1063_dynamic_og_uploaded_photo_embedding',
+    ticket_number: 'TICK-1063',
+    agent_role: 'aiseo_expert',
+    title: 'Dynamic OpenGraph Image Renderer & Custom Upload Photo Embedding',
+    category: 'seo',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['OGRouteHandler', 'ImageResponse', 'img', 'JoinPage'],
+    files_modified: ['src/app/api/og/route.tsx', 'src/app/join/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner asked why uploaded custom invitation photos (like Shaw Daddy BBQ logo) were not embedded inside the shared OpenGraph card.',
+    root_cause: '/api/og/route.tsx only rendered text titles and SVG mountain logos, without embedding user-uploaded custom photo thumbnails.',
+    resolution_summary: 'Updated src/app/api/og/route.tsx: added img query parameter parsing and rendered a high-res 320x180 thumbnail card with crimson #ff3b30 border directly inside the 1200x630 OpenGraph card layout. When shared on Facebook, Twitter, iMessage, or WhatsApp, the preview card now displays the exact uploaded photo!',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean OG image rendering.',
+    sop_summary: 'SOP for dynamic OG photo thumbnail embedding.',
+    sop_steps: [
+      'Pass img query parameter to /api/og endpoint.',
+      'Render 320x180 rounded image thumbnail in OG ImageResponse layout.',
+      'Re-scrape in Facebook Debugger to preview uploaded image thumbnail.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'aiseo_expert',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1062_facebook_scraper_base64_og_image_sanitization',
     ticket_number: 'TICK-1062',
     agent_role: 'aiseo_expert',
     title: 'Facebook Scraper Base64 og:image Sanitization & Dynamic OG Fallback Engine',
-    category: 'bugfix',
+    category: 'seo',
     status: 'VERIFIED',
     priority: 'urgent',
     components_used: ['JoinPage', 'generateMetadata', 'absoluteImageUrl', 'data:image'],

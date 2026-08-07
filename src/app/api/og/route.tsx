@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const title = searchParams.get('title') || 'GRIDPASS';
     const description = searchParams.get('desc') || 'Whether you race it, show it, cook it, or capture it — Gridpass brings your world together.';
     const badge = searchParams.get('badge') || 'Gridpass Engine Online';
+    const img = searchParams.get('img');
 
     return new ImageResponse(
       (
@@ -135,6 +136,22 @@ export async function GET(request: NextRequest) {
                 GRID<span style={{ color: '#bd2925' }}>PASS</span>
               </div>
             </div>
+
+            {/* Custom Uploaded Image Thumbnail if provided */}
+            {img && (
+              <img
+                src={img}
+                alt={title}
+                style={{
+                  width: '320px',
+                  height: '180px',
+                  objectFit: 'cover',
+                  borderRadius: '20px',
+                  border: '3px solid #ff3b30',
+                  marginTop: '10px',
+                }}
+              />
+            )}
 
             {/* Custom dynamic title */}
             {title !== 'GRIDPASS' && (
