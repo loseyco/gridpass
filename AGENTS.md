@@ -67,6 +67,27 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     *   **`tester`**: Automated Playwright E2E visual browser testing (`npm run test:headed`) & auth session persistence (`tests/.auth/user.json`).
     *   **`firebase_expert`**: Firebase Cloud Deployments, Cloud Functions, Firestore Security Rules (`firestore.rules`), and Strict Zero Auto-Deploy Invariant.
 
+*   **SUPER ADMIN AUTH GATE GUARD INVARIANT (`/admin/layout.tsx`)**:
+    1. All `/admin` layout wrappers MUST evaluate `useAuth()` state BEFORE mounting child pages or attaching real-time Firestore `onSnapshot` listeners.
+    2. Unauthenticated visitors MUST be rendered an Apple-native **"🔑 Super Admin Access Required"** gate screen with a direct link to `/login?redirect=/admin`, preventing unauthenticated console permission errors.
+
+*   **MANDATORY MEMBER FEEDBACK INTAKE & TRIAGE INVARIANT (`/admin/feedback`)**:
+    1. Raw member feedback submitted via the universal floating badge lands in `user_feedback` as `⏳ PENDING_REVIEW`.
+    2. Raw member submissions MUST NOT directly enter the AI subagent work queue (`agent_tickets`) until reviewed by Super Admin in Member Ideas & Triage HQ (`/admin/feedback`).
+    3. Super Admin clicks `[ 🚀 Approve & Create Subagent Ticket ]` to promote approved feedback into active `TICK-xxxx` execution tickets, attaching custom Super Admin Directive notes directly into subagent SOP steps!
+
+*   **LOCALHOST LOG SUPPRESSION INVARIANT (`/admin/logs` & `/admin/command`)**:
+    1. Master telemetry activity streams on `/admin/logs` and `/admin/command` MUST default to hiding local dev testing telemetry (`🛡️ Localhost: HIDDEN`).
+    2. Displays clean production member traffic by default, while providing an instant top-header toggle pill (`[ 🛡️ Localhost Logs: HIDDEN ]` / `[ 🌐 Localhost Logs: VISIBLE ]`) so admins can view local testing metrics whenever desired.
+
+*   **SINGLE-SCREEN EXECUTIVE COMMAND CENTER INVARIANT (`/admin/command`)**:
+    1. The Owner Command HQ (`/admin/command`) MUST adhere to a zero-scroll, zero-zoom 6-quadrant fixed flex layout with Immersive TV Mode (`[ 📺 TV Mode ]`).
+    2. Scaled to fit cleanly inside 1920x1080 desktop displays, iPad landscape, or 4K 1/4 split windows without triggering page scrollbars.
+
+*   **MINIMIZABLE FLOATING FEEDBACK BADGE INVARIANT (`FloatingFeedbackDrawer.tsx`)**:
+    1. Universal feedback trigger (`FloatingFeedbackDrawer.tsx`) MUST anchor at bottom-right (`bottom-20 right-4`) away from inline table action buttons (`VIEW`, `EDIT`).
+    2. Features a one-tap `⎯` minimize toggle allowing users to collapse the badge into a tiny 36px `💬` icon bubble.
+
 *   **MANDATORY AUTOMATIC EXECUTION TICKET & SOP LOGGING INVARIANT**:
     1. EVERY task, feature request, bug fix, layout adjustment, or architectural refactor discussed between PJ Losey and GM MUST generate an official Execution Ticket (`TICK-...`) logged to `agent_tickets` in Firestore AND added to `DEFAULT_AGENT_TICKETS` in `src/app/admin/tickets/page.tsx`.
     2. Subagents MUST document problem statement (`issue_description`), root cause analysis (`root_cause`), resolution summary (`resolution_summary`), verification proof (`verification_proof`), and step-by-step SOP steps before completing any task.
