@@ -103,6 +103,8 @@ export default function AdminLogsPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedLog, setSelectedLog] = useState<SystemLogEntry | null>(null);
 
+  const [hideLocalhost, setHideLocalhost] = useState(true);
+
   useEffect(() => {
     const unsub = onSnapshot(
       query(collection(db, 'system_logs'), orderBy('timestamp', 'desc'), limit(100)),
@@ -129,6 +131,17 @@ export default function AdminLogsPage() {
 
   // Filtered Logs
   const filteredLogs = logs.filter((log) => {
+    // 1. Localhost suppression filter (defaults to TRUE to hide local dev spam)
+    if (hideLocalhost) {
+      const isLocal =
+        (log as any).is_localhost === true ||
+        (log as any).environment === 'development' ||
+        (log.actor || '').includes('Localhost') ||
+        (log.details || '').includes('Localhost');
+      if (isLocal) return false;
+    }
+
+    // 2. Category filter
     if (activeCategory === 'all') return true;
     return log.category === activeCategory;
   });
@@ -245,6 +258,19 @@ export default function AdminLogsPage() {
             Real-time audit stream capturing subagent task dispatches, user page views, vehicle mutations, database edits, and security events.
           </p>
         </div>
+        
+        {/* Localhost Filter Toggle */}
+        <button
+          onClick={() => setHideLocalhost(!hideLocalhost)}
+          className={`px-3.5 py-2 rounded-xl border text-xs font-black uppercase tracking-wider transition active:scale-95 flex items-center gap-2 shrink-0 ${
+            hideLocalhost
+              ? 'bg-amber-950/80 border-amber-800 text-amber-400 hover:bg-amber-900/80'
+              : 'bg-emerald-950/80 border-emerald-800 text-emerald-400 hover:bg-emerald-900/80'
+          }`}
+          title="Toggle visibility of local development testing page views"
+        >
+          <span>{hideLocalhost ? '🛡️ Localhost Logs: HIDDEN (Default)' : '🌐 Localhost Logs: VISIBLE'}</span>
+        </button>
       </div>
 
       {/* KPI Summary Cards */}
