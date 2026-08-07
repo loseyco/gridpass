@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1050_touch_target_and_zero_fake_data_audit_fix',
+    ticket_number: 'TICK-1050',
+    agent_role: 'site_auditor',
+    title: 'Touch Target Ergonomic Polish & Zero Fake Data Compliance Audit',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['JoinClient', 'site_auditor', 'min-h-[44px]'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'site_auditor subagent audit identified hardcoded synthetic vehicle fallbacks (1969 Chevrolet Camaro SS) and sub-44px touch target heights on Auth Mode switcher buttons.',
+    root_cause: 'JoinClient.tsx had legacy synthetic string defaults for year/make/model and py-2.5 padding on switcher tabs.',
+    resolution_summary: 'Updated JoinClient.tsx: replaced hardcoded fallbacks with null to enforce zero fake data policy, and updated Auth Mode switcher buttons to py-3 min-h-[44px] for 100% Apple-native mobile ergonomics.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and passed site_auditor audit report.',
+    sop_summary: 'SOP for touch target ergonomics and zero fake data compliance.',
+    sop_steps: [
+      'Audit all interactive buttons and inputs to guarantee >= 44px vertical touch target heights.',
+      'Eliminate all hardcoded synthetic string fallbacks in database setDoc or updateDoc calls.',
+      'Run site_auditor subagent sweeps before milestone commits.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1049_google_oauth_one_tap_join_engine',
     ticket_number: 'TICK-1049',
     agent_role: 'gm',

@@ -384,10 +384,10 @@ function JoinPageContent() {
             id: vehicleId,
             owner_email: email,
             owner_name: fullName || 'Verified Member',
-            year: Number(editYear) || 1969,
-            make: editMake || 'Chevrolet',
-            model: editModel || 'Camaro',
-            trim: editTrim || 'SS',
+            year: Number(editYear) || null,
+            make: editMake || null,
+            model: editModel || null,
+            trim: editTrim || null,
             photo_url: tagRecord?.custom_spotted_photo_url || null,
             status: 'claimed',
             is_unclaimed: false,
@@ -516,10 +516,10 @@ function JoinPageContent() {
         {
           id: newUnclaimedVehId,
           owner_id: null,
-          year: Number(editYear) || 1969,
-          make: editMake || 'Chevrolet',
-          model: editModel || 'Camaro',
-          trim: editTrim || 'SS',
+          year: Number(editYear) || null,
+          make: editMake || null,
+          model: editModel || null,
+          trim: editTrim || null,
           photo_url: editSpottedPhoto || null,
           status: 'unclaimed',
           is_unclaimed: true,
@@ -844,7 +844,7 @@ function JoinPageContent() {
                 <button
                   type="button"
                   onClick={() => setAuthMode('signup')}
-                  className={`flex-1 py-2.5 rounded-lg transition text-[11px] ${
+                  className={`flex-1 py-3 min-h-[44px] rounded-lg transition text-[11px] flex items-center justify-center ${
                     authMode === 'signup'
                       ? 'bg-neutral-900 text-white shadow-xs'
                       : 'text-neutral-600 hover:text-neutral-900'
@@ -855,7 +855,7 @@ function JoinPageContent() {
                 <button
                   type="button"
                   onClick={() => setAuthMode('signin')}
-                  className={`flex-1 py-2.5 rounded-lg transition text-[11px] ${
+                  className={`flex-1 py-3 min-h-[44px] rounded-lg transition text-[11px] flex items-center justify-center ${
                     authMode === 'signin'
                       ? 'bg-neutral-900 text-white shadow-xs'
                       : 'text-neutral-600 hover:text-neutral-900'
