@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, addDoc, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Copy, Link as LinkIcon, Building2, Calendar, UserCheck, PlusCircle, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
@@ -49,6 +49,7 @@ function JoinPageContent() {
   const [loading, setLoading] = useState(!!rawTagId);
   const [tagRecord, setTagRecord] = useState<any | null>(null);
   const [showAdminWizard, setShowAdminWizard] = useState(false);
+  const [referrerDisplayName, setReferrerDisplayName] = useState<string | null>(null);
 
   // Real Database Entity Lists for Admin Selector
   const [dbVehicles, setDbVehicles] = useState<any[]>([]);
@@ -236,6 +237,32 @@ function JoinPageContent() {
     resolvePhysicalTag();
     return () => { isMounted = false; };
   }, [rawTagId, user, router, isAdmin]);
+
+  // Dynamically resolve referrer's current live display name from Firestore (handles name changes)
+  useEffect(() => {
+    const refParam = searchParams.get('ref') || searchParams.get('referrer');
+    const refUid = tagRecord?.referrer_id || (refParam && (refParam.startsWith('usr_') || refParam.length >= 20) ? refParam : null);
+
+    if (refUid) {
+      getDoc(doc(db, 'users', refUid))
+        .then((userSnap) => {
+          if (userSnap.exists()) {
+            const uData = userSnap.data();
+            const liveName = uData.full_name || uData.display_name || uData.name || uData.email?.split('@')[0];
+            if (liveName) {
+              setReferrerDisplayName(liveName);
+              return;
+            }
+          }
+          setReferrerDisplayName(tagRecord?.referrer_name || refParam || null);
+        })
+        .catch(() => {
+          setReferrerDisplayName(tagRecord?.referrer_name || refParam || null);
+        });
+    } else {
+      setReferrerDisplayName(tagRecord?.referrer_name || refParam || null);
+    }
+  }, [tagRecord, searchParams]);
 
   // Handle Native Mobile Camera Capture / File Pick
   const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -474,7 +501,8 @@ function JoinPageContent() {
 
       if (!rawTagId) {
         // Virtual VIP share link created on raw /join — copy link to clipboard!
-        const shareUrl = `${window.location.origin}/join?tag=${effectiveTagId}&ref=${encodeURIComponent(memberName)}`;
+        const refCode = user?.uid || encodeURIComponent(memberName);
+        const shareUrl = `${window.location.origin}/join?tag=${effectiveTagId}&ref=${refCode}`;
         navigator.clipboard.writeText(shareUrl);
         showToast({
           title: 'CUSTOM VIP SHARE LINK CREATED & COPIED! 📋',
@@ -556,7 +584,7 @@ function JoinPageContent() {
 
           {/* Derived Referrer & Target Mode Customization */}
           {(() => {
-            const referrerName = tagRecord?.referrer_name || searchParams.get('ref') || searchParams.get('referrer') || null;
+            const referrerName = referrerDisplayName || tagRecord?.referrer_name || searchParams.get('ref') || searchParams.get('referrer') || null;
             const isBiz = tagRecord?.target_type === 'business';
             const isPerson = tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person';
             const isVeh = tagRecord?.target_type === 'vehicle' || tagRecord?.custom_spotted_photo_url;

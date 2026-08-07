@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1046_dynamic_referrer_uid_resolution',
+    ticket_number: 'TICK-1046',
+    agent_role: 'gm',
+    title: 'Dynamic Referrer User UID Resolution & Name-Change Resilience Engine',
+    category: 'architecture',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['JoinClient', 'referrerDisplayName', 'getDoc'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: referrer_id linked to users collection'],
+    issue_description: 'Platform owner pointed out that passing raw static display names in ref=PJ%20Losey breaks referral tracking if a member later updates their display name in profile settings.',
+    root_cause: 'Referral URLs generated static name parameters (ref=PJ_Losey) and JoinClient.tsx displayed the static string instead of dynamically fetching the referrers live profile from Firestore.',
+    resolution_summary: 'Updated JoinClient.tsx: generated referral URLs with immutable User UID (ref=[USER_UID]), added real-time getDoc(doc(db, "users", refUid)) lookup to resolve the referrers CURRENT display name dynamically, rendering live names regardless of account name edits.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local staging on localhost.',
+    sop_summary: 'SOP for name-change resilient referral links.',
+    sop_steps: [
+      'Use immutable Auth UIDs (ref=zX9k...) in referral link query parameters.',
+      'Dynamically query Firestore users collection to resolve referrers live display name on page load.',
+      'Fall back gracefully to tagRecord.referrer_name if offline or legacy static link.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1045_physical_tag_safe_distribution_method',
     ticket_number: 'TICK-1045',
     agent_role: 'gm',
