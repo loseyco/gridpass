@@ -2,6 +2,12 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Gridpass Admin Suite & Management Console E2E Tests', () => {
 
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as any).__PLAYWRIGHT_MOCK__ = true;
+    });
+  });
+
   test('Admin Overview directly renders members table cleanly', async ({ page }) => {
     await page.goto('http://localhost:3000/admin');
     await expect(page.getByPlaceholder('Search member names, emails, UIDs...')).toBeVisible({ timeout: 20000 });

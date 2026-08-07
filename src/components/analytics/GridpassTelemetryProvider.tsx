@@ -43,9 +43,6 @@ export function GridpassTelemetryProvider({ children }: GridpassTelemetryProvide
     if (typeof window === 'undefined') return;
 
     const isLocalhost = checkIsLocalhost();
-    if (isLocalhost && !(window as any).__ENABLE_LOCAL_TELEMETRY__) {
-      return;
-    }
 
     // Reset scroll depths on route change
     loggedScrollDepthsRef.current.clear();
@@ -61,6 +58,12 @@ export function GridpassTelemetryProvider({ children }: GridpassTelemetryProvide
     const referrer = document.referrer || 'direct';
 
     const pageViewData = {
+      category: 'USER',
+      action: 'PAGE_VIEW',
+      actor: isLocalhost ? 'Localhost Developer / Admin' : 'Visitor Member',
+      actor_role: 'member',
+      target_path: pathname,
+      details: `Viewed route ${pathname} on ${deviceCategory} viewport (${width}x${height}).`,
       type: 'page_view',
       session_id: sessionIdRef.current,
       path: pathname,
@@ -75,7 +78,9 @@ export function GridpassTelemetryProvider({ children }: GridpassTelemetryProvide
       timestamp: new Date().toISOString(),
     };
 
-    addDoc(collection(db, 'system_logs'), pageViewData).catch(() => {});
+    addDoc(collection(db, 'system_logs'), pageViewData).catch((err) => {
+      console.warn('Telemetry page view write fallback:', err);
+    });
   }, [pathname]);
 
   // 2. Click Stream & Clarity Rage Click Tracking

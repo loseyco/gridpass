@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import { FloatingFeedbackDrawer } from '@/components/FloatingFeedbackDrawer';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -202,6 +203,9 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
         </nav>
       )}
+
+      {/* Universal Floating Feedback & Ticket Intake Drawer */}
+      <FloatingFeedbackDrawer />
 
     </div>
   );
