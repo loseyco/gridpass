@@ -2,10 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Centralized Logging Rules: Public write/anonymous creation, strictly restricted reading
+    // Centralized Logging Rules: Public write & telemetry analytics reading
     match /system_logs/{logId} {
-      allow create: if true; // Public telemetry pipeline
-      allow read, update, delete: if request.auth != null;
+      allow read, write: if true;
     }
     
     // Issue and Feedback Dispatch Queue Rules: Public write, strictly restricted reading
@@ -41,6 +40,20 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Event Ownership Claim Requests, GPS Radar Pins & Community News Links
+    match /event_claims/{id} {
+      allow read, write: if true;
+    }
+    match /event_pins/{id} {
+      allow read, write: if true;
+    }
+    match /event_news/{id} {
+      allow read, write: if true;
+    }
+    match /event_discussions/{id} {
+      allow read, write: if true;
+    }
+
     // Users collection
     match /users/{userId} {
       allow read, write: if true;
@@ -48,6 +61,11 @@ service cloud.firestore {
 
     // Features collection
     match /features/{featureId} {
+      allow read, write: if true;
+    }
+
+    // System Settings & Global Configs
+    match /system_settings/{settingId} {
       allow read, write: if true;
     }
 
@@ -85,6 +103,15 @@ service cloud.firestore {
     match /staff/{id} {
       allow read, write: if true;
     }
+
+    // Platform Changelogs Rules
+    match /changelogs/{id} {
+      allow read, write: if true;
+    }
+
+    // System Settings & Membership Tiers Rules
+    match /system_settings/{id} { allow read, write: if true; }
+    match /membership_tiers/{id} { allow read, write: if true; }
 
     // Voyage AI Adventure Cockpit Rules
     match /voyage_trips/{id} { allow read, write: if true; }
@@ -128,9 +155,39 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Gamification & Rewards Rules Engine
+    match /reward_rules/{id} {
+      allow read, write: if true;
+    }
+    match /rewards_catalog/{id} {
+      allow read, write: if true;
+    }
+    match /points_logs/{id} {
+      allow read, write: if true;
+    }
+
+    // System Release Changelogs
+    match /changelogs/{id} {
+      allow read, write: if true;
+    }
+
+    // Checkins & Venue Scans
+    match /venue_checkins/{id} { allow read, write: if true; }
+    match /checkins/{id} { allow read, write: if true; }
+    match /orders/{id} { allow read, write: if true; }
+
+    // Second Life Sim & Club Management SaaS Collections
+    match /sl_avatars/{id} { allow read, write: if true; }
+    match /sl_venues/{id} { allow read, write: if true; }
+    match /sl_venues/{id}/{document=**} { allow read, write: if true; }
+    match /sl_telemetry/{id} { allow read, write: if true; }
+    match /sl_sessions/{id} { allow read, write: if true; }
+
     // Dynamic views count increment exception for analytics
     match /{collection}/{document} {
       allow update: if true;
     }
   }
 }
+
+

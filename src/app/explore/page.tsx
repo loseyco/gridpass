@@ -8,7 +8,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { 
   Search, Car, User, Building2, Compass, ShieldCheck, 
-  MapPin, Loader2 
+  MapPin, Loader2, Calendar 
 } from 'lucide-react';
 import { SEEDED_VENUES } from '@/lib/data/venues';
 
@@ -51,14 +51,80 @@ interface ExploreVenue {
   location?: string;
 }
 
+interface ExploreEvent {
+  id: string;
+  title: string;
+  location?: string;
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+  created_at?: string;
+  is_rescheduled?: boolean;
+  rescheduled_date?: string;
+  reschedule_notice?: string;
+  cover_photo_url?: string;
+  description?: string;
+  type?: string;
+}
+
+function formatEventBadgeDate(dateStr?: string): string {
+  if (!dateStr) return '';
+  if (dateStr.includes('Aug 7') || dateStr.includes('August 7')) return 'Fri, Aug 7, 2026';
+  try {
+    const cleaned = dateStr.replace(/\sat\s/i, ' ').trim();
+    const d = new Date(cleaned);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+}
+
+function parseEventTime(dateStr?: string): number | null {
+  if (!dateStr) return null;
+  const cleaned = dateStr.replace(/\sat\s/i, ' ').trim();
+  const parsed = new Date(cleaned).getTime();
+  if (!isNaN(parsed)) return parsed;
+
+  const match = dateStr.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})/i);
+  if (match) {
+    const fallbackTime = new Date(`${match[1]} ${match[2]}, ${match[3]}`).getTime();
+    if (!isNaN(fallbackTime)) return fallbackTime;
+  }
+  return null;
+}
+
+function isEventActive(e: ExploreEvent): boolean {
+  const now = Date.now();
+  const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
+
+  // 1. Rescheduled date precedence if rescheduled
+  const effectiveDateStr = (e.is_rescheduled && e.rescheduled_date)
+    ? e.rescheduled_date
+    : (e.end_date || e.start_date || e.date || e.created_at);
+
+  if (!effectiveDateStr) return true;
+
+  const eventTime = parseEventTime(effectiveDateStr);
+  if (eventTime === null) return true;
+
+  // 2. Upcoming or Future Event: ALWAYS ACTIVE
+  if (eventTime >= now) return true;
+
+  // 3. Up to 48 hours post event end date: STILL ACTIVE
+  return (now - eventTime) <= FORTY_EIGHT_HOURS_MS;
+}
+
 export default function ExplorePage() {
-  const [activeTab, setActiveTab] = useState<'vehicles' | 'people' | 'businesses' | 'venues'>('vehicles');
+  const [activeTab, setActiveTab] = useState<'vehicles' | 'people' | 'businesses' | 'venues' | 'events'>('vehicles');
+  const [eventViewMode, setEventViewMode] = useState<'active' | 'archived'>('active');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [vehicles, setVehicles] = useState<ExploreVehicle[]>([]);
   const [people, setPeople] = useState<ExploreUser[]>([]);
   const [businesses, setBusinesses] = useState<ExploreBusiness[]>([]);
   const [venues, setVenues] = useState<ExploreVenue[]>([]);
+  const [events, setEvents] = useState<ExploreEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
@@ -153,11 +219,31 @@ export default function ExplorePage() {
           location: v.location
         }));
 
+        const mockEvents: ExploreEvent[] = [
+          {
+            id: 'mock-evt-1',
+            title: 'Midwest Watercraft & Powerboat Rally',
+            location: 'Grass Lake / Blarney Island, IL',
+            date: 'Saturday, 10:00 AM',
+            description: 'Annual gathering of powerboats, PWC, and enthusiasts on Grass Lake.',
+            type: 'Waterway Meet'
+          },
+          {
+            id: 'mock-evt-2',
+            title: 'Chain O Lakes Night Cruise',
+            location: 'Antioch, IL',
+            date: 'Friday, 7:00 PM',
+            description: 'Sunset cruise and social meet at local venues.',
+            type: 'Car & Boat Meet'
+          }
+        ];
+
         if (isMounted) {
           setVehicles(mockVehicles);
           setPeople(mockPeople);
           setBusinesses(mockBusinesses);
           setVenues(mockVenues);
+          setEvents(mockEvents);
           setLoading(false);
         }
         return;
@@ -222,6 +308,26 @@ export default function ExplorePage() {
           } as ExploreBusiness;
         });
 
+        const eSnap = await getDocs(collection(db, 'events'));
+        const eList = eSnap.docs.map(docSnap => {
+          const eData = docSnap.data();
+          return {
+            id: docSnap.id,
+            title: eData.title || eData.name || 'Untitled Event',
+            location: eData.location || eData.venue || eData.location_name || '',
+            date: eData.date || eData.eventDate || eData.start_date || '',
+            start_date: eData.start_date || eData.date || '',
+            end_date: eData.end_date || eData.endDate || eData.start_date || eData.date || '',
+            created_at: eData.created_at || eData.createdAt || '',
+            is_rescheduled: eData.is_rescheduled === true,
+            rescheduled_date: eData.rescheduled_date || eData.rescheduledDate || '',
+            reschedule_notice: eData.reschedule_notice || eData.rescheduleNotice || '',
+            cover_photo_url: eData.cover_photo_url || eData.coverPhotoUrl || eData.exampleImageUrl || eData.photo_url || '',
+            description: eData.description || '',
+            type: eData.type || 'Gathering'
+          } as ExploreEvent;
+        });
+
         const finalVenues = SEEDED_VENUES.map(v => ({
           id: v.id,
           name: v.name,
@@ -229,11 +335,32 @@ export default function ExplorePage() {
           location: v.location
         }));
 
+        const mapleCityEvent: ExploreEvent = {
+          id: 'maple-city-cruise',
+          title: '26TH ANNUAL MONMOUTH CRUISE NIGHT (MAPLE CITY STREET MACHINES)',
+          date: '2026-08-07T16:00:00.000Z',
+          start_date: '2026-08-07T16:00:00.000Z',
+          location: 'Monmouth Public Square & Main Street',
+          cover_photo_url: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80',
+          description: 'Annual gathering of custom street machines, classic cars, muscle builds, food trucks, and live music on Monmouth Public Square!',
+          type: 'Gathering'
+        };
+
+        // Filter out junk test/placeholder events and deduplicate
+        const cleanEList = eList.filter(e => 
+          e.id !== 'maple-city-cruise' &&
+          !e.title.toUpperCase().includes('AUTUMN SHOOTOUT') && 
+          !e.title.toUpperCase().includes('UNTITLED')
+        );
+
+        const finalEvents = [mapleCityEvent, ...cleanEList];
+
         if (isMounted) {
           setVehicles(vList);
           setPeople(uList);
           setBusinesses(bList);
           setVenues(finalVenues);
+          setEvents(finalEvents);
           setLoading(false);
         }
       } catch (err) {
@@ -245,6 +372,14 @@ export default function ExplorePage() {
             type: v.type === 'waterway' ? 'Waterway' : v.type === 'racetrack' ? 'Racetrack' : v.type === 'offroad_park' ? 'Offroad Park' : 'Event Center',
             location: v.location
           })));
+          setEvents([
+            {
+              id: 'maple-city-cruise',
+              title: '26TH ANNUAL MONMOUTH CRUISE NIGHT (MAPLE CITY STREET MACHINES)',
+              date: 'Fri, Aug 7, 2026',
+              location: 'Monmouth Public Square & Main Street'
+            }
+          ]);
           setLoading(false);
         }
       }
@@ -305,64 +440,39 @@ export default function ExplorePage() {
     );
   });
 
+  const filteredEvents = events.filter(e => {
+    const term = searchQuery.toLowerCase();
+    const activeStatus = isEventActive(e);
+
+    if (eventViewMode === 'active' && !activeStatus) return false;
+    if (eventViewMode === 'archived' && activeStatus) return false;
+
+    return (
+      (e.title || '').toLowerCase().includes(term) ||
+      (e.location || '').toLowerCase().includes(term) ||
+      (e.type || '').toLowerCase().includes(term) ||
+      (e.description || '').toLowerCase().includes(term)
+    );
+  });
+
   return (
     <main className="min-h-screen bg-white text-neutral-900 font-sans relative flex flex-col">
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 pt-24 pb-16 w-full flex-1 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 pt-16 pb-16 w-full flex-1 space-y-6">
         
-        {/* Title Block */}
-        <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-2xl space-y-3 text-left">
-          <span className="text-[10px] font-mono font-bold text-[#ff3b30] uppercase bg-[#ff3b30]/5 border border-[#ff3b30]/15 px-3 py-1 rounded-full inline-flex items-center gap-1">
-            <Compass className="w-3.5 h-3.5" /> Registry Directory
-          </span>
-          <h1 className="text-3xl md:text-4xl font-black text-neutral-900 uppercase tracking-tight leading-none">
-            Explore Gridpass
-          </h1>
-          <p className="text-sm text-neutral-500 max-w-xl">
-            Browse and search public passports for vehicles, registered drivers, verified B2B local partner businesses, and active geofenced venues.
-          </p>
-        </div>
-
-        {/* Search & Tabs Controls */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-neutral-200 pb-6">
-          {/* Tabs */}
-          <div className="flex gap-6 overflow-x-auto no-scrollbar">
-            <button 
-              onClick={() => { setActiveTab('vehicles'); setSearchQuery(''); }}
-              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeTab === 'vehicles' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-500 hover:text-neutral-850'
-              }`}
-            >
-              <Car className="w-4 h-4" /> Vehicles ({filteredVehicles.length})
-            </button>
-            <button 
-              onClick={() => { setActiveTab('people'); setSearchQuery(''); }}
-              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeTab === 'people' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-500 hover:text-neutral-850'
-              }`}
-            >
-              <User className="w-4 h-4" /> People ({filteredPeople.length})
-            </button>
-            <button 
-              onClick={() => { setActiveTab('businesses'); setSearchQuery(''); }}
-              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeTab === 'businesses' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-500 hover:text-neutral-850'
-              }`}
-            >
-              <Building2 className="w-4 h-4" /> Businesses ({filteredBusinesses.length})
-            </button>
-            <button 
-              onClick={() => { setActiveTab('venues'); setSearchQuery(''); }}
-              className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeTab === 'venues' ? 'border-[#ff3b30] text-[#ff3b30] font-black' : 'border-transparent text-neutral-500 hover:text-neutral-850'
-              }`}
-            >
-              <Compass className="w-4 h-4" /> Venues ({filteredVenues.length})
-            </button>
+        {/* Compact Top Header & Universal Search Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left border-b border-neutral-200 pb-4">
+          <div>
+            <h1 className="text-xl font-black text-neutral-900 uppercase tracking-tight flex items-center gap-1.5">
+              <Compass className="w-5 h-5 text-[#ff3b30]" /> Explore Gridpass
+            </h1>
+            <p className="text-xs text-neutral-500 font-medium">
+              Search all vehicles, driver profiles, upcoming events, partner shops, and venues.
+            </p>
           </div>
 
-          {/* Search Box */}
-          <div className="relative max-w-sm w-full">
+          {/* Universal Search Box */}
+          <div className="relative max-w-sm w-full shrink-0">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
               <Search className="w-4 h-4" />
             </span>
@@ -370,184 +480,309 @@ export default function ExplorePage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search ${activeTab}...`}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-neutral-55 border border-neutral-205 text-xs font-bold text-neutral-900 placeholder-neutral-450 focus:outline-none focus:border-[#ff3b30] transition-colors"
+              placeholder="Search vehicles, members, events, shops..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-bold text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#ff3b30] transition-colors shadow-2xs"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-neutral-400 hover:text-neutral-700 bg-neutral-200 rounded-full w-4 h-4 flex items-center justify-center cursor-pointer"
+              >
+                ×
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Results Container */}
-        {loading ? (
-          <div className="py-24 flex justify-center">
-            <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+        {/* MODE A: UNCLUTTERED LAUNCHER MENU (Shown when Search Box is empty) */}
+        {searchQuery.trim() === '' ? (
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest">
+                Directory Categories
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <Link
+                href="/vehicles"
+                className="p-4 bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] rounded-2xl transition-all shadow-2xs hover:shadow-md group flex items-center justify-between gap-3"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 text-neutral-900 group-hover:text-[#ff3b30]">
+                    <Car className="w-5 h-5 text-[#ff3b30] shrink-0" />
+                    <h2 className="text-sm font-black uppercase tracking-wider truncate">Vehicles Registry</h2>
+                  </div>
+                  <p className="text-xs text-neutral-500 font-medium truncate">
+                    Browse public vehicle passports, specs &amp; modifications.
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-black text-neutral-400 group-hover:text-[#ff3b30] shrink-0 bg-white border border-neutral-200 group-hover:border-[#ff3b30] px-2.5 py-1 rounded-xl">
+                  {vehicles.length} →
+                </span>
+              </Link>
+
+              <Link
+                href="/members"
+                className="p-4 bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] rounded-2xl transition-all shadow-2xs hover:shadow-md group flex items-center justify-between gap-3"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 text-neutral-900 group-hover:text-[#ff3b30]">
+                    <User className="w-5 h-5 text-[#ff3b30] shrink-0" />
+                    <h2 className="text-sm font-black uppercase tracking-wider truncate">Members Directory</h2>
+                  </div>
+                  <p className="text-xs text-neutral-500 font-medium truncate">
+                    Explore active member drivers, supporters &amp; hometowns.
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-black text-neutral-400 group-hover:text-[#ff3b30] shrink-0 bg-white border border-neutral-200 group-hover:border-[#ff3b30] px-2.5 py-1 rounded-xl">
+                  {people.length} →
+                </span>
+              </Link>
+
+              <Link
+                href="/events"
+                className="p-4 bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] rounded-2xl transition-all shadow-2xs hover:shadow-md group flex items-center justify-between gap-3"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 text-neutral-900 group-hover:text-[#ff3b30]">
+                    <Calendar className="w-5 h-5 text-[#ff3b30] shrink-0" />
+                    <h2 className="text-sm font-black uppercase tracking-wider truncate">Events &amp; Meets</h2>
+                  </div>
+                  <p className="text-xs text-neutral-500 font-medium truncate">
+                    Cruise nights, track days, water rallies &amp; gatherings.
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-black text-neutral-400 group-hover:text-[#ff3b30] shrink-0 bg-white border border-neutral-200 group-hover:border-[#ff3b30] px-2.5 py-1 rounded-xl">
+                  {events.length} →
+                </span>
+              </Link>
+
+              <Link
+                href="/businesses"
+                className="p-4 bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-blue-500 rounded-2xl transition-all shadow-2xs hover:shadow-md group flex items-center justify-between gap-3"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 text-neutral-900 group-hover:text-blue-600">
+                    <Building2 className="w-5 h-5 text-blue-600 shrink-0" />
+                    <h2 className="text-sm font-black uppercase tracking-wider truncate">Businesses &amp; Tracks</h2>
+                  </div>
+                  <p className="text-xs text-neutral-500 font-medium truncate">
+                    Garages, dealerships, tracks &amp; vendors.
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-black text-neutral-400 group-hover:text-blue-600 shrink-0 bg-white border border-neutral-200 group-hover:border-blue-500 px-2.5 py-1 rounded-xl">
+                  {businesses.length} →
+                </span>
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-            
-            {/* Vehicles Render */}
-            {activeTab === 'vehicles' && (
-              filteredVehicles.length > 0 ? (
-                filteredVehicles.map(v => (
-                  <div key={v.id} className="bg-neutral-50 border border-neutral-200 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-[#ff3b30] hover:bg-[#ff3b30]/5 transition-all">
-                    <div className="space-y-3">
-                      {v.photo_url ? (
-                        <div className="w-full h-36 rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100">
-                          <img src={v.photo_url} alt={v.model} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="w-full h-36 rounded-xl border border-neutral-200 bg-white flex items-center justify-center">
-                          <Car className="w-10 h-10 text-neutral-300" />
-                        </div>
-                      )}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-mono font-bold text-[#ff3b30] uppercase bg-[#ff3b30]/5 border border-[#ff3b30]/10 px-2 py-0.5 rounded">
-                            {v.tag_id}
-                          </span>
-                          {v.co_owners && (
-                            <span className="text-[9px] font-mono font-bold text-blue-650 uppercase bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
-                              Shared {v.ownership_split || 'Split'}
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-black text-neutral-900 uppercase mt-2">{v.year} {v.make} {v.model}</h3>
-                        {v.specs?.engine && (
-                          <p className="text-[11px] text-neutral-500 font-bold uppercase mt-1">Engine: {v.specs.engine}</p>
-                        )}
-                        {v.co_owners && (
-                          <p className="text-[10px] text-neutral-500 mt-2">Owners: <span className="font-bold text-neutral-700">{Array.isArray(v.co_owners) ? v.co_owners.join(' & ') : v.co_owners}</span></p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <Link
-                      href={`/v/${v.id}`}
-                      className="w-full py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[40px]"
-                    >
-                      View Vehicle Passport
-                    </Link>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full py-16 text-center text-neutral-500">No vehicles match your search.</div>
-              )
-            )}
+          /* MODE B: UNIVERSAL SEARCH RESULTS (Across Vehicles, People, Events, Shops, Venues) */
+          <div className="space-y-6 text-left">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+              <span className="text-xs font-mono font-bold text-neutral-500 uppercase">
+                Search Results for &ldquo;{searchQuery}&rdquo;
+              </span>
+              <span className="text-[10px] font-mono font-bold text-[#ff3b30] uppercase">
+                {filteredVehicles.length + filteredPeople.length + filteredEvents.length + filteredBusinesses.length + filteredVenues.length} Matches Found
+              </span>
+            </div>
 
-            {/* People Render */}
-            {activeTab === 'people' && (
-              filteredPeople.length > 0 ? (
-                filteredPeople.map(p => (
-                  <div key={p.id} className="bg-neutral-50 border border-neutral-200 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-[#ff3b30] hover:bg-[#ff3b30]/5 transition-all">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-full p-0.5 shrink-0 ${
-                          p.is_supporter ? 'bg-gradient-to-tr from-[#ffe066] to-[#ff9900] gold-glow-ring' : 'bg-neutral-205'
-                        }`}>
-                          <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border border-neutral-100">
-                            {p.avatar_url ? (
-                              <img src={p.avatar_url} alt={p.display_name} className="w-full h-full object-cover" />
+            {loading ? (
+              <div className="py-16 flex justify-center">
+                <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+              </div>
+            ) : (filteredVehicles.length + filteredPeople.length + filteredEvents.length + filteredBusinesses.length + filteredVenues.length) === 0 ? (
+              <div className="py-16 text-center text-neutral-500 font-mono text-xs uppercase bg-neutral-50 border border-neutral-200 rounded-2xl p-8">
+                No matches found across Gridpass for &ldquo;{searchQuery}&rdquo;.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                
+                {/* 1. Vehicles Search Matches */}
+                {filteredVehicles.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-black text-neutral-800 uppercase">
+                      <span className="flex items-center gap-1.5"><Car className="w-3.5 h-3.5 text-[#ff3b30]" /> Vehicles ({filteredVehicles.length})</span>
+                      <Link href="/vehicles" className="text-[10px] text-[#ff3b30] hover:underline">View All Vehicles →</Link>
+                    </div>
+                    <div className="space-y-2">
+                      {filteredVehicles.map(v => (
+                        <Link
+                          key={v.id}
+                          href={`/v/${v.id}`}
+                          className="bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-2xs hover:shadow-md group"
+                        >
+                          <div className="w-16 h-14 rounded-xl bg-neutral-200 border border-neutral-300 overflow-hidden shrink-0">
+                            {v.photo_url ? (
+                              <img src={v.photo_url} alt={v.model} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                             ) : (
-                              <User className="w-5 h-5 text-neutral-300" />
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Car className="w-5 h-5 text-neutral-400" />
+                              </div>
                             )}
                           </div>
-                        </div>
-                        <div>
-                          <h3 className="text-base font-black text-neutral-900 uppercase flex items-center gap-1.5">
-                            {p.display_name}
-                            {p.is_supporter && (
-                              <span className="text-[8px] bg-yellow-400 text-black font-black uppercase px-1.5 py-0.5 rounded shadow-sm">Supporter</span>
+
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <h3 className="text-xs font-black text-neutral-900 uppercase truncate group-hover:text-[#ff3b30] transition-colors">
+                              {v.year} {v.make} {v.model}
+                            </h3>
+                            {v.specs?.engine && (
+                              <p className="text-[10px] text-neutral-500 font-mono font-bold truncate">
+                                Engine: {v.specs.engine}
+                              </p>
                             )}
-                          </h3>
-                          {p.location && (
-                            <p className="text-[10px] text-neutral-500 font-mono font-bold flex items-center gap-0.5 mt-0.5"><MapPin className="w-3 h-3 text-[#ff3b30]" /> {p.location}</p>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-xs text-neutral-600 font-medium leading-relaxed mt-2">{p.bio || 'No bio provided.'}</p>
-                    </div>
+                          </div>
 
-                    <Link
-                      href={`/u/${p.id}`}
-                      className="w-full py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[40px]"
-                    >
-                      View Driver Profile
-                    </Link>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full py-16 text-center text-neutral-500">No members match your search.</div>
-              )
-            )}
-
-            {/* Businesses Render */}
-            {activeTab === 'businesses' && (
-              filteredBusinesses.length > 0 ? (
-                filteredBusinesses.map(b => (
-                  <div key={b.id} className="bg-neutral-50 border border-neutral-200 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-[#ff3b30] hover:bg-[#ff3b30]/5 transition-all">
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-mono font-bold text-[#ff3b30] uppercase bg-[#ff3b30]/5 border border-[#ff3b30]/10 px-2 py-0.5 rounded">
-                            {b.type}
+                          <span className="py-1 px-2.5 bg-neutral-900 group-hover:bg-[#ff3b30] text-white text-[9px] font-mono font-bold uppercase rounded-lg transition-colors shrink-0">
+                            Passport
                           </span>
-                          {b.is_pro && (
-                            <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded flex items-center gap-0.5">
-                              <ShieldCheck className="w-3 h-3" /> Verified Partner
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. People Search Matches */}
+                {filteredPeople.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-black text-neutral-800 uppercase">
+                      <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-[#ff3b30]" /> People &amp; Drivers ({filteredPeople.length})</span>
+                      <Link href="/members" className="text-[10px] text-[#ff3b30] hover:underline">View All Members →</Link>
+                    </div>
+                    <div className="space-y-2">
+                      {filteredPeople.map(p => (
+                        <Link
+                          key={p.id}
+                          href={`/u/${p.id}`}
+                          className="bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-2xs hover:shadow-md group"
+                        >
+                          <div className={`w-12 h-12 rounded-full p-0.5 shrink-0 ${p.is_supporter ? 'bg-gradient-to-tr from-[#ffe066] to-[#ff9900]' : 'bg-neutral-200'}`}>
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden border border-neutral-100">
+                              {p.avatar_url ? (
+                                <img src={p.avatar_url} alt={p.display_name} className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-4 h-4 text-neutral-400" />
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="text-xs font-black text-neutral-900 uppercase truncate group-hover:text-[#ff3b30] transition-colors">
+                                {p.display_name}
+                              </h3>
+                              {p.is_supporter && (
+                                <span className="text-[8px] bg-yellow-400 text-black font-black uppercase px-1.5 py-0.2 rounded">Supporter</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-neutral-500 font-mono font-bold truncate flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-[#ff3b30] shrink-0" />
+                              {p.location || 'Location Unspecified'}
+                            </p>
+                          </div>
+
+                          <span className="py-1 px-2.5 bg-neutral-900 group-hover:bg-[#ff3b30] text-white text-[9px] font-mono font-bold uppercase rounded-lg transition-colors shrink-0">
+                            Profile
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Events Search Matches */}
+                {filteredEvents.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-black text-neutral-800 uppercase">
+                      <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#ff3b30]" /> Events &amp; Meets ({filteredEvents.length})</span>
+                      <Link href="/events" className="text-[10px] text-[#ff3b30] hover:underline">View All Events →</Link>
+                    </div>
+                    <div className="space-y-2">
+                      {filteredEvents.map(e => {
+                        const coverImg = e.cover_photo_url || 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=400&q=80';
+                        const formattedDate = formatEventBadgeDate(e.is_rescheduled && e.rescheduled_date ? e.rescheduled_date : e.date || e.start_date);
+
+                        return (
+                          <Link
+                            key={e.id}
+                            href={`/events/${e.id}`}
+                            className="bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-2xs hover:shadow-md group"
+                          >
+                            <div className="w-16 h-14 rounded-xl bg-neutral-200 border border-neutral-300 overflow-hidden shrink-0">
+                              <img src={coverImg} alt={e.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            </div>
+
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {formattedDate && (
+                                  <span className="text-[9px] font-mono font-extrabold text-neutral-800 bg-neutral-100 border border-neutral-200 px-1.5 py-0.2 rounded">
+                                    {formattedDate}
+                                  </span>
+                                )}
+                              </div>
+                              <h3 className="text-xs font-black text-neutral-900 uppercase truncate group-hover:text-[#ff3b30] transition-colors">
+                                {e.title}
+                              </h3>
+                              {e.location && (
+                                <p className="text-[10px] text-neutral-500 font-mono font-bold truncate flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-[#ff3b30] shrink-0" /> {e.location}
+                                </p>
+                              )}
+                            </div>
+
+                            <span className="py-1 px-2.5 bg-[#ff3b30] group-hover:bg-[#bd2925] text-white text-[9px] font-mono font-bold uppercase rounded-lg transition-colors shrink-0">
+                              View Event
                             </span>
-                          )}
-                        </div>
-                        <h3 className="text-lg font-black text-neutral-900 uppercase mt-2">{b.name}</h3>
-                        {b.location && (
-                          <p className="text-[10px] text-neutral-500 font-mono font-bold flex items-center gap-0.5 mt-1"><MapPin className="w-3 h-3 text-[#ff3b30]" /> {b.location}</p>
-                        )}
-                      </div>
+                          </Link>
+                        );
+                      })}
                     </div>
-
-                    <Link
-                      href={`/b/${b.id}`}
-                      className="w-full py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[40px]"
-                    >
-                      View Storefront
-                    </Link>
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full py-16 text-center text-neutral-500">No partners match your search.</div>
-              )
-            )}
+                )}
 
-            {/* Venues Render */}
-            {activeTab === 'venues' && (
-              filteredVenues.length > 0 ? (
-                filteredVenues.map(v => (
-                  <div key={v.id} className="bg-neutral-50 border border-neutral-200 p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:border-[#ff3b30] hover:bg-[#ff3b30]/5 transition-all">
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-mono font-bold text-cyan-600 bg-cyan-50 border border-cyan-100 px-2 py-0.5 rounded">
-                            {v.type}
+                {/* 4. Shops Search Matches */}
+                {filteredBusinesses.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono font-black text-neutral-800 uppercase">
+                      <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5 text-blue-600" /> Partner Shops &amp; Dealerships ({filteredBusinesses.length})</span>
+                      <Link href="/businesses" className="text-[10px] text-blue-600 hover:underline">View All Shops →</Link>
+                    </div>
+                    <div className="space-y-2">
+                      {filteredBusinesses.map(b => (
+                        <Link
+                          key={b.id}
+                          href={`/b/${b.id}`}
+                          className="bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-blue-500 p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-2xs hover:shadow-md group"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+                            <Building2 className="w-5 h-5 text-blue-600" />
+                          </div>
+
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <h3 className="text-xs font-black text-neutral-900 uppercase truncate group-hover:text-blue-600 transition-colors">
+                              {b.name}
+                            </h3>
+                            {b.location && (
+                              <p className="text-[10px] text-neutral-500 font-mono font-bold truncate">
+                                {b.location}
+                              </p>
+                            )}
+                          </div>
+
+                          <span className="py-1 px-2.5 bg-blue-600 group-hover:bg-blue-700 text-white text-[9px] font-mono font-bold uppercase rounded-lg transition-colors shrink-0">
+                            Storefront
                           </span>
-                        </div>
-                        <h3 className="text-lg font-black text-neutral-900 uppercase mt-2">{v.name}</h3>
-                        {v.location && (
-                          <p className="text-[10px] text-neutral-500 font-mono font-bold flex items-center gap-0.5 mt-1"><MapPin className="w-3 h-3 text-[#ff3b30]" /> {v.location}</p>
-                        )}
-                      </div>
+                        </Link>
+                      ))}
                     </div>
-
-                    <Link
-                      href={`/venue/${v.id}`}
-                      className="w-full py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 min-h-[40px]"
-                    >
-                      Enter Venue Portal
-                    </Link>
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full py-16 text-center text-neutral-500">No venues match your search.</div>
-              )
-            )}
+                )}
 
+              </div>
+            )}
           </div>
         )}
 

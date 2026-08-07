@@ -42,7 +42,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.log("[AuthProvider] Mounting listener...");
+
+        // Safety timeout for mobile/slow IP network initialization
+        const safetyTimeout = setTimeout(() => {
+            console.warn("[AuthProvider] Auth listener safety timeout reached (2s). Forcing loading: false.");
+            setLoading(false);
+        }, 2000);
+
         const unsubscribe = onIdTokenChanged(auth, async (user) => {
+            clearTimeout(safetyTimeout);
             console.log("[AuthProvider] onIdTokenChanged fired. User:", user ? "EXISTS" : "NULL");
             if (!user) {
                 console.log("[AuthProvider] Setting user to NULL");
@@ -55,6 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     console.log("[AuthProvider] Token fetched successfully, length:", token.length);
                     setUser(user)
                     nookies.set(undefined, 'token', token, { path: '/' })
+
+                    // Automatically sync & link profile, admin status, and vehicles
+                    import('@/lib/auth-linker').then(({ syncAndLinkUserAccount }) => {
+                        syncAndLinkUserAccount(user);
+                    });
+
                 } catch (err) {
                     console.error("[AuthProvider] Failed to fetch token:", err);
                 }
@@ -64,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
 
         return () => {
+            clearTimeout(safetyTimeout);
             console.log("[AuthProvider] Unmounting listener...");
             unsubscribe();
         }

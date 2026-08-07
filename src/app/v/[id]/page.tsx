@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { VehicleProfileClient } from './VehicleProfileClient';
+import CreateVehiclePage from '../create/page';
 
 interface SpecItem {
   engine?: string;
@@ -128,11 +129,13 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const vehicle = await getVehicleData(resolvedParams.id);
-  
+  const canonicalUrl = `https://gridpass.app/v/${resolvedParams.id}`;
+
   if (!vehicle) {
     return {
       title: "Vehicle Passport Not Found | Gridpass",
-      description: "This Gridpass digital vehicle passport registry does not exist or has been moved."
+      description: "This Gridpass digital vehicle passport registry does not exist or has been moved.",
+      alternates: { canonical: canonicalUrl },
     };
   }
 
@@ -141,33 +144,73 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? `Verified Gridpass Vehicle Passport for ${vehicle.year} ${vehicle.make} ${vehicle.model}: "${vehicle.story}"`
     : `Check out this verified ${vehicle.year} ${vehicle.make} ${vehicle.model} on Gridpass. Specs, modifications, maintenance logs, and digital registry details.`;
 
-  const ogImages = vehicle.photo_url ? [{ url: vehicle.photo_url }] : [];
+  const fallbackOgImage = `https://gridpass.app/api/og?title=${encodeURIComponent(`${vehicle.year} ${vehicle.make} ${vehicle.model}`)}&desc=${encodeURIComponent('Digital Vehicle Passport on Gridpass')}&badge=Vehicle%20Passport`;
+  const ogImageUrl = vehicle.photo_url || fallbackOgImage;
 
   return {
     title,
     description,
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title,
       description,
-      url: `https://gridpass.app/v/${resolvedParams.id}`,
+      url: canonicalUrl,
       siteName: "Gridpass",
       type: "website",
-      images: ogImages
+      images: [{ url: ogImageUrl, alt: `${vehicle.year} ${vehicle.make} ${vehicle.model}` }]
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: vehicle.photo_url ? [vehicle.photo_url] : []
+      images: [ogImageUrl]
     }
   };
 }
 
 export default async function Page({ params }: PageProps) {
   const resolvedParams = await params;
+  if (resolvedParams.id === 'new' || resolvedParams.id === 'create') {
+    return <CreateVehiclePage />;
+  }
   const vehicle = await getVehicleData(resolvedParams.id);
 
+  const vehicleJsonLd = vehicle ? {
+    '@context': 'https://schema.org',
+    '@type': 'Vehicle',
+    '@id': `https://gridpass.app/v/${resolvedParams.id}#vehicle`,
+    name: `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim ? ` ${vehicle.trim}` : ''}`,
+    vehicleModel: vehicle.model,
+    manufacturer: { '@type': 'Organization', name: vehicle.make },
+    modelDate: String(vehicle.year),
+    vehicleIdentificationNumber: vehicle.vin || undefined,
+    description: vehicle.story || `Verified Digital Vehicle Passport for ${vehicle.year} ${vehicle.make} ${vehicle.model} on Gridpass.`,
+    image: vehicle.photo_url || undefined,
+    identifier: vehicle.tag_id || vehicle.id,
+    category: 'Automotive Digital Vehicle Passport',
+    vehicleEngine: vehicle.specs?.engine ? { '@type': 'EngineSpecification', name: vehicle.specs.engine } : undefined,
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock'
+    },
+    provider: {
+      '@type': 'Organization',
+      name: 'Gridpass',
+      url: 'https://gridpass.app'
+    }
+  } : null;
+
   return (
-    <VehicleProfileClient initialVehicle={vehicle} vehicleId={resolvedParams.id} />
+    <>
+      {vehicleJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(vehicleJsonLd) }}
+        />
+      )}
+      <VehicleProfileClient initialVehicle={vehicle} vehicleId={resolvedParams.id} />
+    </>
   );
 }

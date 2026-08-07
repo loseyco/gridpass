@@ -262,7 +262,7 @@ export default function VenueSpotMapper({ venue }: VenueSpotMapperProps) {
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5">
               <Compass className="w-4.5 h-4.5 text-cyan-400 animate-spin-slow" /> 
-              {venue.type === 'waterway' ? 'Float-illa Friend Radar' : 'Venue Live Map'}
+              {venue.type === 'waterway' ? 'Float-illa Live Friend Map' : 'Venue Live Map'}
             </h3>
             <p className="text-[10px] text-neutral-400 font-medium">Real-time GPS coordination and crowdsourced POIs</p>
           </div>

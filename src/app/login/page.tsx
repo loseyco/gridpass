@@ -91,7 +91,26 @@ function LoginContent() {
           created_at: new Date().toISOString()
         });
 
+        // Auto-award 250 Grid Credits Join Welcome Bonus ($2.50 value)
+        try {
+          const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
+          await addDoc(collection(db, 'points_logs'), {
+            userId: registeredUser.uid,
+            userName: displayName.trim().toUpperCase(),
+            userEmail: email,
+            actionKey: 'achievement_join_gridpass',
+            ruleTitle: '🏆 Achievement: Join Gridpass (Welcome Bonus)',
+            pointsAwarded: 250,
+            status: 'approved',
+            notes: 'Automatic welcome bonus upon joining Gridpass',
+            timestamp: serverTimestamp(),
+          });
+        } catch (pointsErr) {
+          console.warn('Error awarding join bonus:', pointsErr);
+        }
+
         router.push(redirectUrl);
+
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error("Registration Error:", err);

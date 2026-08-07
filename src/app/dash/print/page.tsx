@@ -12,6 +12,7 @@ import {
   Loader2, Printer, Download, Sparkles, AlertTriangle, ShieldCheck, 
   ArrowLeft, Check, CheckCircle2, Lock, Tag, Heart, Eye
 } from 'lucide-react';
+import GridpassQRCode from '@/components/qr/GridpassQRCode';
 
 interface VehicleDetails {
   id?: string;
@@ -588,11 +589,11 @@ function PrintPageContent() {
                   <div className="relative z-10 flex flex-col items-center justify-center h-full">
                     <span className="text-xs font-black text-white tracking-widest uppercase">GRIDPASS</span>
                     {/* QR code */}
-                    <div className="w-28 h-28 my-3 bg-white p-1 rounded shadow-md flex items-center justify-center">
-                      <img src={qrCodeImgSrc} alt="QR Code" className="w-full h-full" />
+                    <div className="my-2 flex items-center justify-center">
+                      <GridpassQRCode value={qrRedirectUrl} size={110} logoSize={28} />
                     </div>
                     <span className="text-xs font-mono font-bold text-neutral-400 uppercase tracking-wider">{tagId}</span>
-                    <span className="text-[8px] font-bold mt-1 uppercase tracking-widest" style={{ color: accentColor }}>Scan for spec sheet</span>
+                    <span className="text-[8px] font-bold mt-1 uppercase tracking-widest" style={{ color: accentColor }}>Scan for build passport</span>
                   </div>
                 </div>
               )}
@@ -608,8 +609,8 @@ function PrintPageContent() {
                     style={{ borderColor: accentColor }}
                   />
                   <span className="text-sm font-black text-white tracking-widest uppercase relative z-10">GRIDPASS DECAL</span>
-                  <div className="w-28 h-28 bg-white p-1 rounded shadow-md flex items-center justify-center relative z-10">
-                    <img src={qrCodeImgSrc} alt="QR Code" className="w-full h-full" />
+                  <div className="flex items-center justify-center relative z-10">
+                    <GridpassQRCode value={qrRedirectUrl} size={115} logoSize={30} />
                   </div>
                   <div className="relative z-10">
                     <h4 className="text-xs font-black text-white uppercase">{vehicle.year} {vehicle.make} {vehicle.model}</h4>
@@ -624,8 +625,8 @@ function PrintPageContent() {
                   className={`w-80 h-40 rounded-2xl border-4 bg-neutral-950 flex items-center p-5 relative print-sheet-card ${getBorderClasses()}`}
                   style={{ borderColor: borderTheme !== 'gold' ? getBorderColorHex() : undefined }}
                 >
-                  <div className="w-24 h-24 bg-white p-1 rounded shadow-md flex items-center justify-center shrink-0">
-                    <img src={qrCodeImgSrc} alt="QR Code" className="w-full h-full" />
+                  <div className="shrink-0">
+                    <GridpassQRCode value={qrRedirectUrl} size={95} logoSize={24} />
                   </div>
                   <div className="ml-5 flex-1 flex flex-col justify-center space-y-1">
                     <span className="text-xs font-black text-white tracking-widest uppercase">GRIDPASS</span>

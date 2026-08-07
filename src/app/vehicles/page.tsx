@@ -118,6 +118,22 @@ export default function VehiclesPage() {
     );
   });
 
+  // Safe helper to format co_owners array, object, or string
+  const formatOwnerNames = (co_owners: any): string => {
+    if (!co_owners) return '';
+    if (typeof co_owners === 'string') return co_owners;
+    if (Array.isArray(co_owners)) {
+      return co_owners
+        .map(o => (typeof o === 'object' && o !== null ? (o.name || o.display_name || o.id || '') : String(o)))
+        .filter(Boolean)
+        .join(' & ');
+    }
+    if (typeof co_owners === 'object' && co_owners !== null) {
+      return co_owners.name || co_owners.display_name || co_owners.owner || '';
+    }
+    return String(co_owners);
+  };
+
   if (loading) {
     return (
       <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center min-h-[400px]">
@@ -127,86 +143,87 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full p-4 space-y-6">
+    <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full px-3 sm:px-6 pt-16 pb-12 space-y-4">
       
-      {/* Title block */}
-      <div className="bg-neutral-50 border border-neutral-200 p-6 rounded-3xl space-y-2 text-left">
-        <span className="text-[10px] font-mono font-bold text-[#ff3b30] uppercase tracking-widest bg-[#ff3b30]/5 border border-[#ff3b30]/15 px-3 py-1 rounded-full inline-flex items-center gap-1">
-          <Compass className="w-3.5 h-3.5" /> Registry Directory
-        </span>
-        <h1 className="text-2xl font-black text-neutral-900 uppercase tracking-tight leading-none">
-          Explore Vehicles
-        </h1>
-        <p className="text-[11px] text-neutral-500 max-w-xl">
-          Browse and search public profile records for registered vehicles.
-        </p>
+      {/* Top Header & Search Control Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-left border-b border-neutral-200 pb-3">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/explore"
+            className="py-1 px-3 bg-neutral-900 hover:bg-[#ff3b30] text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-colors inline-flex items-center gap-1 shrink-0 shadow-2xs"
+          >
+            ← Explore
+          </Link>
+          <div>
+            <h1 className="text-lg sm:text-xl font-black text-neutral-900 uppercase tracking-tight leading-none">
+              Vehicles Registry
+            </h1>
+            <span className="text-[10px] text-neutral-500 font-mono font-semibold">
+              {filteredVehicles.length} Verified Passports
+            </span>
+          </div>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-xs">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+            <Search className="w-3.5 h-3.5" />
+          </span>
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search make, model, year, tag ID..."
+            className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-bold text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#ff3b30] transition-colors"
+          />
+        </div>
       </div>
 
-      {/* Search Input */}
-      <div className="relative w-full">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
-          <Search className="w-4 h-4" />
-        </span>
-        <input 
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search vehicles by make, model, year, or QR tag ID..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs font-bold text-neutral-900 placeholder-neutral-400"
-        />
-      </div>
-
-      {/* Grid of Vehicles */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {/* High-Density Compact Horizontal List Rows */}
+      <div className="space-y-2 text-left">
         {filteredVehicles.length > 0 ? (
-          filteredVehicles.map((v) => (
-            <div 
-              key={v.id} 
-              className="bg-neutral-50 border border-neutral-200 p-5 rounded-3xl flex flex-col justify-between space-y-4 text-left"
-            >
-              <div className="space-y-3">
-                {v.photo_url ? (
-                  <div className="w-full h-36 rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-100">
-                    <img src={v.photo_url} alt={v.model} className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-full h-36 rounded-2xl border border-neutral-200 bg-neutral-100/50 flex items-center justify-center">
-                    <Car className="w-8 h-8 text-neutral-350" />
-                  </div>
-                )}
-                
-                <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase bg-[#ff3b30]/5 border border-[#ff3b30]/15 px-2 py-0.5 rounded">
-                      {v.tag_id}
-                    </span>
-                    {v.co_owners && (
-                      <span className="text-[8px] font-mono font-bold text-blue-500 uppercase bg-blue-50 border border-blue-150 px-2 py-0.5 rounded">
-                        Shared {v.ownership_split || 'Split'}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-sm font-black text-neutral-900 uppercase mt-2 leading-tight">
-                    {v.year} {v.make} {v.model} {v.trim}
-                  </h3>
-                  {v.co_owners && (
-                    <p className="text-[9px] text-neutral-500 mt-2 leading-none font-semibold">
-                      Owner(s): <span className="text-neutral-700 font-bold">{Array.isArray(v.co_owners) ? v.co_owners.join(' & ') : v.co_owners}</span>
-                    </p>
+          filteredVehicles.map((v) => {
+            const ownerStr = formatOwnerNames(v.co_owners);
+
+            return (
+              <Link 
+                key={v.id}
+                href={`/v/${v.id}`}
+                className="bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-[#ff3b30] p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-2xs hover:shadow-md group"
+              >
+                {/* Left Thumbnail Photo */}
+                <div className="w-20 h-16 rounded-xl bg-neutral-200 border border-neutral-300 overflow-hidden shrink-0">
+                  {v.photo_url ? (
+                    <img src={v.photo_url} alt={v.model} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Car className="w-6 h-6 text-neutral-400" />
+                    </div>
                   )}
                 </div>
-              </div>
 
-              <Link
-                href={`/v/${v.id}`}
-                className="w-full py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[9px] font-black uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center"
-              >
-                View Vehicle Profile
+                {/* Center Details */}
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <h3 className="text-sm font-black text-neutral-900 uppercase truncate group-hover:text-[#ff3b30] transition-colors">
+                    {v.year} {v.make} {v.model} {v.trim || ''}
+                  </h3>
+
+                  <p className="text-[10px] text-neutral-500 font-mono font-bold truncate">
+                    {v.specs?.engine ? `Engine: ${v.specs.engine}${v.specs.hp ? ` (${v.specs.hp} HP)` : ''}` : 'Build Specs & Passport'}
+                  </p>
+                </div>
+
+                {/* Right Action Button */}
+                <div className="shrink-0">
+                  <span className="py-1 px-3 bg-neutral-900 group-hover:bg-[#ff3b30] text-white text-[9px] font-mono font-bold uppercase rounded-xl transition-colors inline-block shadow-2xs">
+                    Passport →
+                  </span>
+                </div>
               </Link>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="col-span-full py-12 text-center text-[10px] font-mono font-bold text-neutral-400 uppercase">
+          <div className="py-16 text-center text-neutral-400 font-mono text-xs uppercase bg-neutral-50 border border-neutral-200 rounded-2xl">
             No vehicles match your search
           </div>
         )}

@@ -3,6 +3,21 @@ import { db } from '@/lib/firebase/config';
 import { GridpassEvent } from '../types/events';
 
 /**
+ * Calculates distance in miles between two GPS coordinates using Haversine formula.
+ */
+export function calculateDistanceMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3958.8; // Earth radius in miles
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
  * Publishes a new motorsport event or updates an existing one.
  */
 export async function publishEvent(eventData: Omit<GridpassEvent, 'id'> & { id?: string }): Promise<string> {
@@ -18,10 +33,12 @@ export async function publishEvent(eventData: Omit<GridpassEvent, 'id'> & { id?:
     eventId = ref.id;
   }
 
-  // Clean undefined keys before saving to avoid Firestore exceptions
+  const nowIso = new Date().toISOString();
   const cleanData: any = {
     ...eventData,
-    id: eventId
+    id: eventId,
+    updatedAt: nowIso,
+    createdAt: eventData.createdAt || nowIso
   };
   
   for (const key of Object.keys(cleanData)) {
@@ -41,7 +58,10 @@ export async function getEvent(id: string): Promise<GridpassEvent | null> {
   const ref = doc(db, 'events', id);
   const snap = await getDoc(ref);
   if (snap.exists()) {
-    return snap.data() as GridpassEvent;
+    return {
+      id: snap.id,
+      ...snap.data()
+    } as GridpassEvent;
   }
   return null;
 }
@@ -55,7 +75,10 @@ export async function getEventsByHost(hostUid: string): Promise<GridpassEvent[]>
   const snap = await getDocs(q);
   const list: GridpassEvent[] = [];
   snap.forEach(docSnap => {
-    list.push(docSnap.data() as GridpassEvent);
+    list.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    } as GridpassEvent);
   });
   return list;
 }
@@ -69,7 +92,10 @@ export async function getEventsByBusiness(businessId: string): Promise<GridpassE
   const snap = await getDocs(q);
   const list: GridpassEvent[] = [];
   snap.forEach(docSnap => {
-    list.push(docSnap.data() as GridpassEvent);
+    list.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    } as GridpassEvent);
   });
   return list;
 }
@@ -91,14 +117,10 @@ export async function registerVehicleToEvent(
   }
 ): Promise<void> {
   const ref = doc(db, 'events', eventId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    throw new Error('Event does not exist.');
-  }
 
-  const entrantKey = `entrants.${vehicleId}`;
   const newEntrantData = {
     vehicle_id: vehicleId,
+    owner_uid: driverUid,
     make: vehicleData.make,
     model: vehicleData.model,
     year: vehicleData.year,
@@ -109,7 +131,9 @@ export async function registerVehicleToEvent(
     registered_at: new Date().toISOString()
   };
 
-  await updateDoc(ref, {
-    [entrantKey]: newEntrantData
-  });
+  await setDoc(ref, {
+    entrants: {
+      [vehicleId]: newEntrantData
+    }
+  }, { merge: true });
 }

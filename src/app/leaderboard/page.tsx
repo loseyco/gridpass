@@ -2,448 +2,459 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase/config';
-import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 import { 
   Trophy, Medal, ArrowLeft, Loader2, Award, 
-  Car, Camera, Building2, Flame, Sparkles 
+  Car, Camera, Flame, Sparkles, User, Zap, Search
 } from 'lucide-react';
 
-interface BuildLeaderboardItem {
-  id?: string;
-  rank: number;
-  tag_id: string;
-  vehicle_info: string;
-  owner_name: string;
-  score: number;
-  is_supporter: boolean;
-}
-
-interface SpotterLeaderboardItem {
-  id?: string;
-  rank: number;
+interface DriverLeaderboardEntry {
+  uid: string;
   display_name: string;
-  email: string;
-  score: number;
-  is_supporter: boolean;
-}
-
-interface PartnerLeaderboardItem {
-  id?: string;
-  rank: number;
-  name: string;
-  type: string;
-  score: number;
-  is_pro: boolean;
+  username: string;
+  avatar_url?: string;
+  is_supporter?: boolean;
+  total_credits: number;
+  usd_value: string;
+  achievements_count: number;
+  vehicles_count: number;
+  spots_count: number;
+  rank?: number;
 }
 
 export default function LeaderboardPage() {
   const { loading: authLoading } = useAuth();
   
-  // Tabs
-  const [activeTab, setActiveTab] = useState<'builds' | 'spotters' | 'partners'>('builds');
-  
-  // Data states
-  const [builds, setBuilds] = useState<BuildLeaderboardItem[]>([]);
-  const [spotters, setSpotters] = useState<SpotterLeaderboardItem[]>([]);
-  const [partners, setPartners] = useState<PartnerLeaderboardItem[]>([]);
+  // Tabs: 'credits' | 'achievements' | 'vehicles' | 'spots'
+  const [activeTab, setActiveTab] = useState<'credits' | 'achievements' | 'vehicles' | 'spots'>('credits');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [drivers, setDrivers] = useState<DriverLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
 
-  // Load Leaderboard Scores
   useEffect(() => {
     if (authLoading) return;
 
     let isMounted = true;
 
-    async function loadLeaderboards() {
+    async function loadLeaderboardData() {
       if (isMock) {
-        await new Promise(r => setTimeout(r, 100));
-        
-        const mockBuilds: BuildLeaderboardItem[] = [
-          { id: 'mock-v1', rank: 1, tag_id: 'GP-MARCUS-GT', vehicle_info: '2024 Ford Mustang GT', owner_name: 'Marcus Mustang', score: 48, is_supporter: true },
-          { id: 'mock-v2', rank: 2, tag_id: 'GP-FERRARI', vehicle_info: '2020 Ferrari 488 Pista', owner_name: 'Mike Mechanic', score: 36, is_supporter: false },
-          { id: 'mock-v3', rank: 3, tag_id: 'GP-BILLY-RIG', vehicle_info: '2020 Chevrolet Silverado', owner_name: 'Billy BigRig', score: 24, is_supporter: false },
-          { id: 'mock-v4', rank: 4, tag_id: 'GP-SARAH-CAR', vehicle_info: '2022 Subaru BRZ', owner_name: 'Sarah Spotter', score: 12, is_supporter: false }
+        await new Promise((r) => setTimeout(r, 100));
+        const mockData: DriverLeaderboardEntry[] = [
+          {
+            uid: 'YOYN2HDCwqXc3OYsHd8mdJIwr9K2',
+            display_name: 'PJ LOSEY',
+            username: 'pjlosey',
+            avatar_url: 'https://lh3.googleusercontent.com/a/ACg8ocITjk-UWkYaGm1YXNsQYZSKw7TRD4gt1zU7QX79t4VL2zOmGKFhtA=s96-c',
+            is_supporter: true,
+            total_credits: 500,
+            usd_value: '$5.00',
+            achievements_count: 3,
+            vehicles_count: 8,
+            spots_count: 12,
+          },
+          {
+            uid: 'Ac1Y9KusNhQMry0cLpukXdKxAg13',
+            display_name: 'KRIS_TIN_A',
+            username: 'kristina',
+            avatar_url: '',
+            is_supporter: true,
+            total_credits: 250,
+            usd_value: '$2.50',
+            achievements_count: 1,
+            vehicles_count: 0,
+            spots_count: 4,
+          },
         ];
-
-        const mockSpotters: SpotterLeaderboardItem[] = [
-          { id: 'user-marcus-123', rank: 1, display_name: 'Sarah Spotter', email: 'sarah@spotter.com', score: 96, is_supporter: false },
-          { id: 'user-marcus-123', rank: 2, display_name: 'Ranger Dave', email: 'dave@badlandspark.com', score: 64, is_supporter: true },
-          { id: 'user-mike-789', rank: 3, display_name: 'Mike Mechanic', email: 'mike@performancetuning.com', score: 32, is_supporter: false },
-          { id: 'user-marcus-123', rank: 4, display_name: 'Marcus Mustang', email: 'marcus@enthusiast.com', score: 16, is_supporter: true }
-        ].map((item, idx) => ({ ...item, rank: idx + 1 }));
-
-        const mockPartners: PartnerLeaderboardItem[] = [
-          { id: 'monmouth-marine-demo', rank: 1, name: 'Monmouth Marine Ford & Boats', type: 'Dealership', score: 150, is_pro: true },
-          { id: 'performance-tuning-demo', rank: 2, name: 'Performance Tuning Shop', type: 'Service Center', score: 95, is_pro: true },
-          { id: 'badlands-offroad-demo', rank: 3, name: 'Badlands Offroad Park', type: 'Racetrack', score: 80, is_pro: true },
-          { id: 'englishtown-raceway-demo', rank: 4, name: 'Englishtown Raceway', type: 'Racetrack', score: 45, is_pro: false }
-        ];
-
         if (isMounted) {
-          setBuilds(mockBuilds);
-          setSpotters(mockSpotters);
-          setPartners(mockPartners);
+          setDrivers(mockData);
           setLoading(false);
         }
         return;
       }
 
-      // Real query for firebase if not mock
       try {
-        // Query vehicles sorted by vibe check / spots count (vibe checks acts as build scoring index)
-        const vSnap = await getDocs(query(collection(db, 'vehicles'), orderBy('vibe_checks', 'desc'), limit(10)));
-        const buildList = vSnap.docs.map((docSnap, index) => {
-          const d = docSnap.data();
-          return {
-            id: docSnap.id,
-            rank: index + 1,
-            tag_id: d.tag_id || 'GP-TAG',
-            vehicle_info: `${d.year || 2024} ${d.make || ''} ${d.model || ''}`,
-            owner_name: d.owner_name || d.owner_email?.split('@')[0] || 'Original Driver',
-            score: d.vibe_checks || 0,
-            is_supporter: d.is_supporter === true
-          } as BuildLeaderboardItem;
+        // Fetch all users, vehicles, and points_logs to calculate live leaderboard
+        const [usersSnap, vehiclesSnap, pointsSnap] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'vehicles')),
+          getDocs(collection(db, 'points_logs')),
+        ]);
+
+        const vehiclesByOwner: Record<string, number> = {};
+        vehiclesSnap.docs.forEach((doc) => {
+          const owner = doc.data().owner_id || doc.data().owner_uid;
+          if (owner) {
+            vehiclesByOwner[owner] = (vehiclesByOwner[owner] || 0) + 1;
+          }
         });
 
-        // Query users sorted by spotting count
-        const uSnap = await getDocs(query(collection(db, 'users'), orderBy('spots_submitted', 'desc'), limit(10)));
-        const spotterList = uSnap.docs.map((docSnap, index) => {
-          const d = docSnap.data();
-          return {
-            id: docSnap.id,
-            rank: index + 1,
-            display_name: d.display_name || d.name || 'Spotter',
-            email: d.email || '',
-            score: d.spots_submitted || 0,
-            is_supporter: d.is_supporter === true
-          } as SpotterLeaderboardItem;
+        const creditsByUser: Record<string, number> = {};
+        const achievementsByUser: Record<string, number> = {};
+
+        pointsSnap.docs.forEach((doc) => {
+          const d = doc.data();
+          if (d.status === 'approved' && d.userId) {
+            creditsByUser[d.userId] = (creditsByUser[d.userId] || 0) + (d.pointsAwarded || 0);
+            if (d.actionKey?.startsWith('achievement_')) {
+              achievementsByUser[d.userId] = (achievementsByUser[d.userId] || 0) + 1;
+            }
+          }
         });
 
-        // Query businesses sorted by partner leads/activity
-        const bSnap = await getDocs(query(collection(db, 'businesses'), limit(10)));
-        const partnerList = bSnap.docs.map((docSnap, index) => {
-          const d = docSnap.data();
-          return {
-            id: docSnap.id,
-            rank: index + 1,
-            name: d.name || 'Partner',
-            type: d.type || 'dealership',
-            score: d.leads_captured || Math.floor(Math.random() * 50) + 10,
-            is_pro: d.is_pro === true
-          } as PartnerLeaderboardItem;
-        }).sort((a, b) => b.score - a.score).map((item, idx) => ({ ...item, rank: idx + 1 }));
+        const driverList: DriverLeaderboardEntry[] = usersSnap.docs
+          .map((uDoc) => {
+            const data = uDoc.data();
+            const uid = uDoc.id;
+            const credits = creditsByUser[uid] || 0;
+
+            return {
+              uid: uid,
+              display_name: data.display_name || data.displayName || data.name || 'Anonymous Driver',
+              username: data.username || uid.slice(0, 8),
+              avatar_url: data.avatar_url || data.photoUrl || '',
+              is_supporter: data.is_supporter === true || data.is_gold === true,
+              total_credits: credits,
+              usd_value: `$${(credits / 100).toFixed(2)}`,
+              achievements_count: achievementsByUser[uid] || 0,
+              vehicles_count: vehiclesByOwner[uid] || 0,
+              spots_count: data.spots_submitted || 0,
+              _is_test: (
+                uid.startsWith('staff_inv_test') ||
+                uid.startsWith('GPTestUser') ||
+                (data.display_name && data.display_name.toLowerCase().includes('gptestuser')) ||
+                (data.display_name && data.display_name.toLowerCase().includes('test user')) ||
+                (data.display_name && data.display_name.toLowerCase().includes('sales rep')) ||
+                (data.email && data.email.toLowerCase().includes('salesrep@gridpass.app'))
+              )
+            };
+          })
+          .filter(d => !d._is_test);
 
         if (isMounted) {
-          setBuilds(buildList);
-          setSpotters(spotterList);
-          setPartners(partnerList);
+          setDrivers(driverList);
         }
       } catch (err) {
-        console.error("Failed to load leaderboards:", err);
+        console.error('Failed to load leaderboard data:', err);
       } finally {
         if (isMounted) setLoading(false);
       }
     }
 
-    loadLeaderboards();
-    return () => { isMounted = false; };
+    loadLeaderboardData();
+    return () => {
+      isMounted = false;
+    };
   }, [authLoading, isMock]);
+
+  // Sort drivers based on active tab
+  const sortedDrivers = [...drivers].sort((a, b) => {
+    if (activeTab === 'credits') return b.total_credits - a.total_credits;
+    if (activeTab === 'achievements') return b.achievements_count - a.achievements_count;
+    if (activeTab === 'vehicles') return b.vehicles_count - a.vehicles_count;
+    if (activeTab === 'spots') return b.spots_count - a.spots_count;
+    return 0;
+  }).map((d, index) => ({ ...d, rank: index + 1 }));
+
+  // Search filter
+  const filteredDrivers = sortedDrivers.filter((d) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return d.display_name.toLowerCase().includes(q) || d.username.toLowerCase().includes(q);
+  });
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-[#060608] text-[#f4f4f7] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+      <div className="min-h-screen bg-white text-neutral-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#060608] text-[#f4f4f7] font-sans relative flex flex-col">
-      <div className="mesh-glow" />
-
-      <Navbar />
-
-      <div className="max-w-4xl mx-auto px-6 pt-28 pb-16 w-full flex-1 relative z-10 space-y-8">
+    <div className="min-h-screen bg-[#ffffff] text-[#1c1c1e] flex flex-col font-sans">
+      <div className="max-w-4xl mx-auto px-4 py-8 w-full space-y-6">
         
-        {/* Breadcrumb Header */}
+        {/* Header Breadcrumb */}
         <div className="flex items-center justify-between">
-          <Link href="/dash" className="text-xs font-mono text-neutral-400 hover:text-white flex items-center gap-1.5 uppercase font-bold transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Dashboard
+          <Link
+            href="/dash"
+            className="text-xs font-bold text-neutral-500 hover:text-neutral-900 uppercase flex items-center gap-1 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#ff3b30]" /> Back to Dash
           </Link>
-
-          <span className="text-[10px] font-mono font-bold bg-neutral-900 border border-neutral-850 text-neutral-400 px-3 py-1 rounded-full uppercase tracking-wider">
-            Ecosystem Scoreboards
-          </span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dash/achievements"
+              className="text-xs font-black uppercase text-[#ff3b30] hover:underline"
+            >
+              Achievements HQ →
+            </Link>
+          </div>
         </div>
 
-        {/* Title banner */}
-        <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/40 space-y-2">
-          <span className="text-[10px] font-mono font-bold text-red-500 uppercase tracking-widest bg-red-950/20 border border-red-900/30 px-2.5 py-0.5 rounded-full inline-block">
-            Leaderboards
-          </span>
-          <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight leading-none pt-1">
-            Ecosystem Leaderboards
-          </h1>
-          <p className="text-xs text-neutral-400 font-medium flex items-center gap-1.5">
-            <Trophy className="w-3.5 h-3.5 text-yellow-500 animate-bounce" /> Compete for top spotted builds, active spotter hunts, and B2B partner ranks.
-          </p>
+        {/* Page Banner */}
+        <div className="bg-neutral-900 text-white p-6 rounded-3xl border border-neutral-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-amber-400" />
+              <h1 className="text-xl md:text-2xl font-black uppercase tracking-tight text-white">
+                Gridpass Driver Leaderboard
+              </h1>
+            </div>
+            <p className="text-xs text-neutral-400 font-medium">
+              Compete for top Grid Credits earnings, completed Feats of Strength, and active garage builds.
+            </p>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-center shrink-0">
+            <span className="text-[10px] font-mono font-bold uppercase text-neutral-300 block">Economy Peg</span>
+            <span className="text-xs font-black text-amber-400">100 Credits = $1.00 USD</span>
+          </div>
         </div>
 
-        {/* Tab Selection */}
-        <div className="border-b border-neutral-900 flex gap-6 overflow-x-auto no-scrollbar">
-          <button 
-            onClick={() => setActiveTab('builds')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'builds' ? 'border-red-500 text-white font-black' : 'border-transparent text-neutral-500 hover:text-neutral-300'
-            }`}
-          >
-            <Car className="w-4 h-4" /> Top Spotted Builds
-          </button>
-          <button 
-            onClick={() => setActiveTab('spotters')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'spotters' ? 'border-red-500 text-white font-black' : 'border-transparent text-neutral-500 hover:text-neutral-300'
-            }`}
-          >
-            <Camera className="w-4 h-4" /> Active Spotters
-          </button>
-          <button 
-            onClick={() => setActiveTab('partners')}
-            className={`pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'partners' ? 'border-red-500 text-white font-black' : 'border-transparent text-neutral-500 hover:text-neutral-300'
-            }`}
-          >
-            <Building2 className="w-4 h-4" /> Pro Partner score
-          </button>
+        {/* Tab Selection & Search */}
+        <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 text-xs font-bold">
+            <button
+              onClick={() => setActiveTab('credits')}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === 'credits'
+                  ? 'bg-[#ff3b30] text-white font-black'
+                  : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5" /> Grid Credits
+            </button>
+            <button
+              onClick={() => setActiveTab('achievements')}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === 'achievements'
+                  ? 'bg-[#ff3b30] text-white font-black'
+                  : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5" /> Feats Unlocked
+            </button>
+            <button
+              onClick={() => setActiveTab('vehicles')}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === 'vehicles'
+                  ? 'bg-[#ff3b30] text-white font-black'
+                  : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+              }`}
+            >
+              <Car className="w-3.5 h-3.5" /> Garage Collector
+            </button>
+            <button
+              onClick={() => setActiveTab('spots')}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === 'spots'
+                  ? 'bg-[#ff3b30] text-white font-black'
+                  : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+              }`}
+            >
+              <Camera className="w-3.5 h-3.5" /> Spotters
+            </button>
+          </div>
+
+          <div className="relative flex items-center">
+            <Search className="w-3.5 h-3.5 absolute left-3 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search driver name or handle..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full sm:w-56 text-xs font-bold pl-8 pr-3 py-1.5 bg-white border border-neutral-200 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+            />
+          </div>
         </div>
 
-        {/* Podium Top 3 layout */}
-        {activeTab === 'builds' && (
-          <div className="space-y-8">
-            {/* Podium grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {builds.slice(0, 3).map((item) => (
-                <div 
-                  key={item.tag_id}
-                  className={`glass-card p-6 rounded-[2rem] relative border text-center space-y-4 ${
-                    item.rank === 1 
-                      ? 'border-yellow-500 bg-yellow-950/5 ring-2 ring-yellow-500/25 md:-translate-y-2' 
-                      : item.rank === 2 
-                        ? 'border-slate-400 bg-slate-900/10' 
-                        : 'border-amber-700 bg-amber-950/5'
+        {/* Podium Top 3 Cards */}
+        {filteredDrivers.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {filteredDrivers.slice(0, 3).map((driver) => {
+              const isFirst = driver.rank === 1;
+              const isSecond = driver.rank === 2;
+              const isThird = driver.rank === 3;
+
+              return (
+                <div
+                  key={driver.uid}
+                  className={`bg-neutral-50 border rounded-3xl p-5 text-center relative flex flex-col items-center justify-between space-y-4 transition-transform hover:-translate-y-0.5 ${
+                    isFirst
+                      ? 'border-amber-400 bg-amber-50/30 ring-2 ring-amber-400/40'
+                      : isSecond
+                      ? 'border-neutral-300 bg-neutral-100/40'
+                      : 'border-amber-700/30 bg-amber-900/5'
                   }`}
                 >
-                  {/* Rank badge */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto border text-sm font-black font-mono ${
-                    item.rank === 1 
-                      ? 'bg-yellow-500 border-yellow-400 text-black shadow-md' 
-                      : item.rank === 2 
-                        ? 'bg-slate-400 border-slate-350 text-black' 
-                        : 'bg-amber-700 border-amber-600 text-white'
-                  }`}>
-                    {item.rank}
+                  {/* Rank Badge */}
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-mono font-black text-xs border shadow-xs ${
+                      isFirst
+                        ? 'bg-amber-400 border-amber-300 text-neutral-950'
+                        : isSecond
+                        ? 'bg-neutral-300 border-neutral-200 text-neutral-900'
+                        : 'bg-amber-800 border-amber-700 text-white'
+                    }`}
+                  >
+                    #{driver.rank}
                   </div>
 
-                  <div className="space-y-1">
-                    <Link href={`/v/${item.id || 'mock-v1'}`} className="hover:text-red-500 transition-colors">
-                      <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase tracking-widest block">{item.tag_id}</span>
-                      <h3 className="text-base font-black text-white uppercase tracking-tight">{item.vehicle_info}</h3>
+                  {/* Avatar */}
+                  <div className="relative">
+                    <div
+                      className={`w-16 h-16 rounded-full overflow-hidden border-2 bg-white flex items-center justify-center ${
+                        driver.is_supporter ? 'border-amber-400 gold-glow-ring' : 'border-neutral-200'
+                      }`}
+                    >
+                      {driver.avatar_url ? (
+                        <img src={driver.avatar_url} alt={driver.display_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-8 h-8 text-neutral-400" />
+                      )}
+                    </div>
+                    {driver.is_supporter && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-amber-400 text-neutral-950 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                        GOLD
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Driver Info */}
+                  <div className="space-y-0.5 min-w-0 w-full">
+                    <Link
+                      href={`/u/${driver.username || driver.uid}`}
+                      className="font-black text-sm uppercase text-neutral-900 hover:text-[#ff3b30] transition truncate block"
+                    >
+                      {driver.display_name}
                     </Link>
-                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Owner: {item.owner_name}</p>
+                    <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
+                      @{driver.username}
+                    </span>
                   </div>
 
-                  <div className="inline-block px-3 py-1 bg-neutral-900 border border-neutral-850 rounded-full text-xs font-mono font-bold text-white">
-                    🔥 {item.score} spots
+                  {/* Primary Metric Pill */}
+                  <div className="bg-neutral-900 text-white px-3 py-1.5 rounded-xl font-mono text-xs font-black w-full flex items-center justify-center gap-1.5">
+                    {activeTab === 'credits' && (
+                      <>
+                        <Zap className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{driver.total_credits} Pts</span>
+                        <span className="text-[10px] text-neutral-400">({driver.usd_value})</span>
+                      </>
+                    )}
+                    {activeTab === 'achievements' && (
+                      <>
+                        <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{driver.achievements_count} Feats</span>
+                      </>
+                    )}
+                    {activeTab === 'vehicles' && (
+                      <>
+                        <Car className="w-3.5 h-3.5 text-[#ff3b30]" />
+                        <span>{driver.vehicles_count} Vehicles</span>
+                      </>
+                    )}
+                    {activeTab === 'spots' && (
+                      <>
+                        <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{driver.spots_count} Spots</span>
+                      </>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* List for Rank 4+ */}
-            {builds.length > 3 && (
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/20">
-                <div className="overflow-x-auto no-scrollbar">
-                  <table className="w-full text-left text-xs font-medium text-neutral-400">
-                    <thead>
-                      <tr className="border-b border-neutral-900 text-[10px] font-mono text-neutral-500 uppercase tracking-widest pb-3">
-                        <th className="pb-3 pr-4">Rank</th>
-                        <th className="pb-3 px-4">Tag ID</th>
-                        <th className="pb-3 px-4">Vehicle Build Info</th>
-                        <th className="pb-3 px-4">Owner Name</th>
-                        <th className="pb-3 pl-4 text-right">Score</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-900">
-                      {builds.slice(3).map((item) => (
-                        <tr key={item.tag_id} className="hover:bg-neutral-900/10 transition-colors">
-                          <td className="py-4 pr-4 font-mono font-black text-neutral-550">#{item.rank}</td>
-                          <td className="py-4 px-4 font-mono font-bold text-red-400">
-                            <Link href={`/v/${item.id || 'mock-v1'}`} className="hover:underline">{item.tag_id}</Link>
-                          </td>
-                          <td className="py-4 px-4 font-bold text-white uppercase">
-                            <Link href={`/v/${item.id || 'mock-v1'}`} className="hover:underline">{item.vehicle_info}</Link>
-                          </td>
-                          <td className="py-4 px-4 uppercase text-neutral-400 font-semibold">{item.owner_name}</td>
-                          <td className="py-4 pl-4 text-right font-mono font-black text-white">{item.score} spots</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+              );
+            })}
           </div>
         )}
 
-        {/* Podium Active Spotters */}
-        {activeTab === 'spotters' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {spotters.slice(0, 3).map((item) => (
-                <div 
-                  key={item.email}
-                  className={`glass-card p-6 rounded-[2rem] relative border text-center space-y-4 ${
-                    item.rank === 1 
-                      ? 'border-yellow-500 bg-yellow-950/5 ring-2 ring-yellow-500/25 md:-translate-y-2' 
-                      : item.rank === 2 
-                        ? 'border-slate-400 bg-slate-900/10' 
-                        : 'border-amber-700 bg-amber-950/5'
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto border text-sm font-black font-mono ${
-                    item.rank === 1 
-                      ? 'bg-yellow-500 border-yellow-400 text-black shadow-md' 
-                      : item.rank === 2 
-                        ? 'bg-slate-400 border-slate-350 text-black' 
-                        : 'bg-amber-700 border-amber-600 text-white'
-                  }`}>
-                    {item.rank}
-                  </div>
+        {/* Full Table View for Drivers */}
+        <div className="bg-white border border-neutral-200 rounded-3xl overflow-hidden shadow-sm space-y-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left font-mono text-xs">
+              <thead>
+                <tr className="bg-neutral-900 text-white text-[10px] font-black uppercase tracking-wider border-b border-neutral-800">
+                  <th className="p-3 w-12 text-center">RANK</th>
+                  <th className="p-3">DRIVER NAME</th>
+                  <th className="p-3">HANDLE</th>
+                  <th className="p-3 text-center">CREDITS (USD)</th>
+                  <th className="p-3 text-center">FEATS</th>
+                  <th className="p-3 text-center">GARAGE</th>
+                  <th className="p-3 text-right">PASSPORT</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {filteredDrivers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-xs font-bold text-neutral-400 uppercase font-sans">
+                      No drivers match your search query.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDrivers.map((driver, idx) => (
+                    <tr
+                      key={driver.uid}
+                      className={`transition ${
+                        idx % 2 === 0 ? 'bg-white hover:bg-neutral-50' : 'bg-neutral-50/50 hover:bg-neutral-100/80'
+                      }`}
+                    >
+                      <td className="p-3 text-center font-black text-neutral-900 font-mono">
+                        #{driver.rank}
+                      </td>
 
-                  <div className="space-y-1">
-                    <Link href={`/u/${item.id || 'user-marcus-123'}`} className="hover:text-red-500 transition-colors">
-                      <h3 className="text-base font-black text-white uppercase tracking-tight">{item.display_name}</h3>
-                    </Link>
-                    <p className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">{item.email}</p>
-                  </div>
+                      <td className="p-3 font-extrabold text-neutral-900 whitespace-nowrap">
+                        <Link
+                          href={`/u/${driver.username || driver.uid}`}
+                          className="hover:text-[#ff3b30] flex items-center gap-2"
+                        >
+                          {driver.display_name}
+                          {driver.is_supporter && (
+                            <span className="bg-amber-400 text-neutral-950 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase">
+                              GOLD
+                            </span>
+                          )}
+                        </Link>
+                      </td>
 
-                  <div className="inline-block px-3 py-1 bg-neutral-900 border border-neutral-850 rounded-full text-xs font-mono font-bold text-white">
-                    🎯 {item.score} hunts
-                  </div>
-                </div>
-              ))}
-            </div>
+                      <td className="p-3 text-neutral-500 font-bold text-[11px] whitespace-nowrap">
+                        @{driver.username}
+                      </td>
 
-            {spotters.length > 3 && (
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/20">
-                <div className="overflow-x-auto no-scrollbar">
-                  <table className="w-full text-left text-xs font-medium text-neutral-400">
-                    <thead>
-                      <tr className="border-b border-neutral-900 text-[10px] font-mono text-neutral-500 uppercase tracking-widest pb-3">
-                        <th className="pb-3 pr-4">Rank</th>
-                        <th className="pb-3 px-4">Spotter Name</th>
-                        <th className="pb-3 px-4">Email Handle</th>
-                        <th className="pb-3 pl-4 text-right">Hunts Submitted</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-900">
-                      {spotters.slice(3).map((item) => (
-                        <tr key={item.email} className="hover:bg-neutral-900/10 transition-colors">
-                          <td className="py-4 pr-4 font-mono font-black text-neutral-550">#{item.rank}</td>
-                          <td className="py-4 px-4 font-bold text-white uppercase">
-                            <Link href={`/u/${item.id || 'user-marcus-123'}`} className="hover:underline">{item.display_name}</Link>
-                          </td>
-                          <td className="py-4 px-4 font-mono text-neutral-500 font-semibold">{item.email}</td>
-                          <td className="py-4 pl-4 text-right font-mono font-black text-white">{item.score} spots</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+                      <td className="p-3 text-center whitespace-nowrap">
+                        <span className="bg-amber-50 border border-amber-200 text-amber-900 font-black px-2 py-0.5 rounded-full text-[11px]">
+                          ⚡ {driver.total_credits} ({driver.usd_value})
+                        </span>
+                      </td>
+
+                      <td className="p-3 text-center font-bold text-neutral-800">
+                        {driver.achievements_count}
+                      </td>
+
+                      <td className="p-3 text-center font-bold text-neutral-800">
+                        {driver.vehicles_count}
+                      </td>
+
+                      <td className="p-3 text-right">
+                        <Link
+                          href={`/u/${driver.username || driver.uid}`}
+                          className="text-[10px] font-extrabold uppercase bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-2.5 py-1 rounded-lg border border-neutral-200 transition"
+                        >
+                          Profile ↗
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* Podium Pro Partners */}
-        {activeTab === 'partners' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {partners.slice(0, 3).map((item) => (
-                <div 
-                  key={item.name}
-                  className={`glass-card p-6 rounded-[2rem] relative border text-center space-y-4 ${
-                    item.rank === 1 
-                      ? 'border-yellow-500 bg-yellow-950/5 ring-2 ring-yellow-500/25 md:-translate-y-2' 
-                      : item.rank === 2 
-                        ? 'border-slate-400 bg-slate-900/10' 
-                        : 'border-amber-700 bg-amber-950/5'
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto border text-sm font-black font-mono ${
-                    item.rank === 1 
-                      ? 'bg-yellow-500 border-yellow-400 text-black shadow-md' 
-                      : item.rank === 2 
-                        ? 'bg-slate-400 border-slate-350 text-black' 
-                        : 'bg-amber-700 border-amber-600 text-white'
-                  }`}>
-                    {item.rank}
-                  </div>
-
-                  <div className="space-y-1">
-                    <Link href={`/b/${item.id || 'performance-tuning-demo'}`} className="hover:text-red-500 transition-colors">
-                      <h3 className="text-base font-black text-white uppercase tracking-tight leading-tight">{item.name}</h3>
-                    </Link>
-                    <p className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest">{item.type}</p>
-                  </div>
-
-                  <div className="inline-block px-3 py-1 bg-neutral-900 border border-neutral-850 rounded-full text-xs font-mono font-bold text-white">
-                    📈 {item.score} units
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {partners.length > 3 && (
-              <div className="glass-card p-6 md:p-8 rounded-[2rem] border-neutral-900 bg-neutral-950/20">
-                <div className="overflow-x-auto no-scrollbar">
-                  <table className="w-full text-left text-xs font-medium text-neutral-400">
-                    <thead>
-                      <tr className="border-b border-neutral-900 text-[10px] font-mono text-neutral-500 uppercase tracking-widest pb-3">
-                        <th className="pb-3 pr-4">Rank</th>
-                        <th className="pb-3 px-4">Partner Brand</th>
-                        <th className="pb-3 px-4">Category</th>
-                        <th className="pb-3 pl-4 text-right">Lead Activity</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-900">
-                      {partners.slice(3).map((item) => (
-                        <tr key={item.name} className="hover:bg-neutral-900/10 transition-colors">
-                          <td className="py-4 pr-4 font-mono font-black text-neutral-550">#{item.rank}</td>
-                          <td className="py-4 px-4 font-bold text-white uppercase">
-                            <Link href={`/b/${item.id || 'performance-tuning-demo'}`} className="hover:underline">{item.name}</Link>
-                          </td>
-                          <td className="py-4 px-4 font-mono text-neutral-500 font-semibold">{item.type}</td>
-                          <td className="py-4 pl-4 text-right font-mono font-black text-white">{item.score} units</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
 
       </div>
-
-      <Footer />
-    </main>
+    </div>
   );
 }

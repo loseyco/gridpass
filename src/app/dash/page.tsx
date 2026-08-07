@@ -149,7 +149,7 @@ export default function Dashboard() {
         setProfile(snap.data() as UserProfile);
       } else {
         setProfile({
-          display_name: user.email?.split('@')[0].toUpperCase() || 'DRIVER',
+          display_name: user.email?.split('@')[0].toUpperCase() || 'MEMBER',
           bio: 'Welcome to Gridpass! Add your bio here.',
           is_supporter: false,
           location: 'USA'
@@ -297,7 +297,7 @@ export default function Dashboard() {
 
         <div className="space-y-1.5 min-w-0 flex-1 text-left">
           <h1 className="text-base font-extrabold uppercase text-neutral-900 truncate">
-            {profile?.display_name || user?.displayName || 'DRIVER'}
+            {profile?.display_name || user?.displayName || 'MEMBER'}
           </h1>
           <div className="text-[9px] font-mono font-bold text-[#ff3b30] flex gap-3 items-center">
             <Link 
@@ -314,14 +314,74 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Grid Credits & WoW-Style Achievements + Leaderboard Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <Link
+          href="/dash/achievements"
+          className="bg-neutral-900 text-white p-4 rounded-2xl border border-neutral-800 shadow-md flex items-center justify-between hover:bg-black transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#ff3b30] text-white flex items-center justify-center text-xl font-black shrink-0">
+              🏆
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-black text-xs uppercase text-white tracking-wider">
+                  Achievements & Credits HQ
+                </h3>
+                <span className="text-[8px] font-black uppercase bg-[#ff3b30] text-white px-1.5 py-0.2 rounded-full">
+                  HQ
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">
+                Earn Grid Credits (100 = $1.00 USD), unlock Feats & claim Perks!
+              </p>
+            </div>
+          </div>
+
+          <span className="text-xs font-black text-[#ff3b30] group-hover:translate-x-1 transition-transform shrink-0">
+            HQ →
+          </span>
+        </Link>
+
+        <Link
+          href="/leaderboard"
+          className="bg-neutral-900 text-white p-4 rounded-2xl border border-neutral-800 shadow-md flex items-center justify-between hover:bg-black transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-neutral-950 flex items-center justify-center text-xl font-black shrink-0">
+              🥇
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-black text-xs uppercase text-white tracking-wider">
+                  Member Leaderboard
+                </h3>
+                <span className="text-[8px] font-black uppercase bg-amber-500 text-neutral-950 px-1.5 py-0.2 rounded-full">
+                  Ranks
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">
+                Compare Grid Credits, top Feats, and Garage builds!
+              </p>
+            </div>
+          </div>
+
+          <span className="text-xs font-black text-amber-400 group-hover:translate-x-1 transition-transform shrink-0">
+            View →
+          </span>
+        </Link>
+      </div>
+
+
       {/* Digital Garage Section */}
-      <div className="space-y-3 text-left">
+      <section className="space-y-3 text-left">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
             Digital Garage
           </h2>
           <button 
-            onClick={() => router.push('/dash/vehicles/edit')}
+            onClick={() => router.push('/v/create')}
             className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
             <Plus className="w-3 h-3" /> Add Vehicle
@@ -333,7 +393,7 @@ export default function Dashboard() {
             <Car className="w-8 h-8 text-neutral-400 mx-auto" />
             <h3 className="text-xs font-bold text-neutral-900 uppercase">Your garage is empty</h3>
             <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
-              Register vehicles to configure digital mod catalogs and generate printable decals.
+              Add vehicles to configure digital mod catalogs and generate printable decals.
             </p>
           </div>
         ) : (
@@ -386,28 +446,29 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* My Businesses Section */}
-      <div className="space-y-3 text-left">
+      {/* Business Section */}
+      <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
+          <h2 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-[#ff3b30]" />
             My Businesses
           </h2>
           <button 
-            onClick={() => router.push('/dash/businesses/edit?id=new')}
+            onClick={() => router.push('/b/create')}
             className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
           >
-            <Plus className="w-3 h-3" /> Register Business
+            <Plus className="w-3 h-3" /> Add Business
           </button>
         </div>
 
         {businesses.length === 0 ? (
           <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-xl text-center space-y-3">
             <Building2 className="w-8 h-8 text-neutral-400 mx-auto" />
-            <h3 className="text-xs font-bold text-neutral-900 uppercase">No businesses registered</h3>
+            <h3 className="text-xs font-bold text-neutral-900 uppercase">No businesses added</h3>
             <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
-              Register powersport dealerships, service shops, or tracks to start hosting digital event staging.
+              Add powersport dealerships, service shops, or tracks to start hosting digital event staging.
             </p>
           </div>
         ) : (
@@ -456,7 +517,7 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {/* My Hosted Events Section */}
       <div className="space-y-3 text-left">
@@ -574,8 +635,8 @@ export default function Dashboard() {
           {/* Invite row */}
           <div className="p-3.5 flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide block">Invite Driver</span>
-              <p className="text-[9px] text-neutral-500 truncate">Share your invite link with other drivers</p>
+              <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide block">Invite Member</span>
+              <p className="text-[9px] text-neutral-500 truncate">Share your invite link with other members</p>
             </div>
             <button 
               onClick={handleCopyInviteLink}

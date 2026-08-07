@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { QrCode, Loader2, ShieldCheck, CarFront, LogIn, Sun, AlertCircle } from 'lucide-react';
+import { QrCode, Loader2, ShieldCheck, CarFront, LogIn, Sun, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ClaimTagForm } from '@/components/qr/ClaimTagForm';
 import { logEvent } from '@/lib/logger';
@@ -14,6 +14,7 @@ import Logo from '@/components/Logo';
 function JoinPageContent() {
     const searchParams = useSearchParams();
     const tagId = searchParams.get('id') || '';
+    const refCode = searchParams.get('ref') || searchParams.get('referral') || '';
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
 
@@ -518,6 +519,21 @@ function JoinPageContent() {
                     <>
                         {!user ? (
                             <div className="space-y-6">
+                                {refCode && (
+                                    <div className="p-5 bg-[#1c1c1e] border-2 border-red-500/40 rounded-3xl text-left space-y-2 shadow-xl animate-in fade-in duration-300">
+                                        <div className="flex items-center gap-2 text-xs font-black uppercase text-[#ff3b30] tracking-wider">
+                                            <Sparkles className="w-4 h-4 text-[#ff3b30]" />
+                                            <span>YOU ARE INVITED BY MEMBER @{refCode.toUpperCase()}</span>
+                                        </div>
+                                        <h4 className="text-sm font-extrabold text-white uppercase tracking-tight">
+                                            VEHICLES • PHOTOS • EVENTS • VENDORS • VENUES • MORE
+                                        </h4>
+                                        <p className="text-xs text-neutral-300 leading-relaxed font-medium">
+                                            Whether you race it, show it, cook it, or capture it — Gridpass brings your world together. Create your free account today to connect with the people behind the machines, meals, and memories!
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="bg-[#1c1c1e] p-8 rounded-3xl text-center space-y-6 border border-[#2c2c2e]">
                                     <div className="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center text-[#007aff] mx-auto">
                                         <QrCode className="w-6 h-6" />
@@ -533,7 +549,7 @@ function JoinPageContent() {
                                             href={`/login?redirect=/join?id=${tagId}`}
                                             className="w-full py-4 bg-[#007aff] hover:bg-[#0a84ff] text-white font-bold rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
                                         >
-                                            <LogIn className="w-4 h-4" /> Sign In / Register
+                                            <LogIn className="w-4 h-4" /> Sign In / Join Gridpass
                                         </Link>
                                         <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
                                             Requires a free Gridpass account

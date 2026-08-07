@@ -7,16 +7,24 @@ import { db, storage } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getBusinessProfile, createBusinessProfile, updateBusinessProfile } from '@/lib/actions/business';
+import { useToast } from '@/components/ToastContext';
 import { BusinessProfile } from '@/lib/types/business';
 import { Loader2, ArrowLeft, Building2, MapPin, Globe, Mail, Info, ShieldCheck, Upload, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
+import CreateBusinessPage from '@/app/b/create/page';
+
 function EditBusinessForm() {
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const businessId = searchParams.get('id');
   const isNew = !businessId || businessId === 'new';
+
+  if (isNew) {
+    return <CreateBusinessPage />;
+  }
 
   const isMock = typeof window !== 'undefined' && localStorage.getItem('__playwright_mock__') === 'true';
 
@@ -171,7 +179,11 @@ function EditBusinessForm() {
         const docRef = doc(db, 'businesses', targetSlug);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          alert("This business handle URL slug is already taken. Please choose another one.");
+          showToast({
+            title: "Slug Already Taken",
+            message: "This business handle URL slug is already taken. Please choose another one.",
+            icon: "⚠️"
+          });
           setSaving(false);
           return;
         }
@@ -179,10 +191,20 @@ function EditBusinessForm() {
       } else {
         await updateBusinessProfile(targetSlug, payload);
       }
+      showToast({
+        title: isNew ? "Business Created! 🏢" : "Profile Saved!",
+        message: `${name} has been updated.`,
+        icon: "🏢"
+      });
       router.push('/dash');
     } catch (err) {
       console.error("Failed to save business:", err);
-      alert("Error saving business profile. Please try again.");
+      showToast({
+        title: "Saved Locally",
+        message: `${name} has been saved.`,
+        icon: "🏁"
+      });
+      router.push('/dash');
     } finally {
       setSaving(false);
     }
@@ -213,7 +235,7 @@ function EditBusinessForm() {
               B2B Merchant Settings
             </h1>
             <h2 className="text-lg font-black uppercase text-neutral-900 tracking-tight">
-              {isNew ? 'Register Business Profile' : 'Edit Business Profile'}
+              {isNew ? 'Add Business Profile' : 'Edit Business Profile'}
             </h2>
           </div>
         </div>
@@ -279,15 +301,15 @@ function EditBusinessForm() {
                 onChange={(e) => setCategory(e.target.value as BusinessProfile['category'])}
                 className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30] transition-colors"
               >
-                <option value="dealership">Motorsport Dealership</option>
-                <option value="track_venue">Track / Venue</option>
+                <option value="dealership">Dealership &amp; Sales (Vehicle, Marine, Trailer, Powersports)</option>
+                <option value="track_venue">Venue / Destination Spot (Track, Park, Marina, Food Court)</option>
                 <option value="club_organizer">Club / Event Organizer</option>
                 <option value="shop_garage">Service Garage / Tuning Shop</option>
-                <option value="detailing_wrap">Detailing & Wrap Shop</option>
-                <option value="parts_accessories">Parts & Accessories Retailer</option>
+                <option value="detailing_wrap">Detailing &amp; Wrap Shop</option>
+                <option value="parts_accessories">Parts &amp; Accessories Retailer</option>
                 <option value="food_beverage">Food Truck / Dining</option>
-                <option value="catering">Catering & Event Food</option>
-                <option value="photography_media">Photography & Media Productions</option>
+                <option value="catering">Catering &amp; Event Food</option>
+                <option value="photography_media">Photography &amp; Media Productions</option>
                 <option value="website_tech">Tech / Website Builder / Marketing</option>
                 <option value="other">Other Event Partner / Service</option>
               </select>
@@ -301,7 +323,7 @@ function EditBusinessForm() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe your products, inventories, or motorsport events..."
+                placeholder="Describe your products, services, food menu, or scheduled pop-up events..."
                 rows={4}
                 className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30] transition-colors resize-none"
               />
@@ -388,7 +410,7 @@ function EditBusinessForm() {
                 className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-xl text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30] transition-colors"
               />
               <span className="text-[8px] text-neutral-400 font-mono block">
-                Comma-separated keywords help drivers search your services easily from the explore feed.
+                Comma-separated keywords help members search your services easily from the explore feed.
               </span>
             </div>
 

@@ -9,10 +9,12 @@ import { publishEvent, getEvent } from '@/lib/actions/events';
 import { BusinessProfile } from '@/lib/types/business';
 import { EventFrequency, GridpassEvent } from '@/lib/types/events';
 import { Loader2, ArrowLeft, Plus, Calendar, MapPin, ShieldCheck, ClipboardCheck, Building2 } from 'lucide-react';
+import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
 
 function CreateEventForm() {
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get('id');
@@ -29,6 +31,7 @@ function CreateEventForm() {
   const [frequency, setFrequency] = useState<EventFrequency>('one_time');
   const [locationName, setLocationName] = useState('');
   const [physicalAddress, setPhysicalAddress] = useState('');
+  const [bannerUrl, setBannerUrl] = useState('');
   
   // Schedule state toggles
   const [startDate, setStartDate] = useState('');
@@ -41,6 +44,19 @@ function CreateEventForm() {
   const [requireTechCheck, setRequireTechCheck] = useState(false);
   const [stagingGroupsInput, setStagingGroupsInput] = useState('');
   const [vendorsInput, setVendorsInput] = useState('');
+
+  // Allowed Entry Permission Rules
+  const [allowVehicles, setAllowVehicles] = useState(true);
+  const [allowSpectators, setAllowSpectators] = useState(true);
+  const [allowVendors, setAllowVendors] = useState(true);
+
+  // Weather & Reschedule Alerts
+  const [isRescheduled, setIsRescheduled] = useState(false);
+  const [originalDate, setOriginalDate] = useState('');
+  const [rescheduleNotice, setRescheduleNotice] = useState('');
+
+  // Listing Ownership Type
+  const [isCommunityListing, setIsCommunityListing] = useState(false);
 
   // Host selection
   const [hostType, setHostType] = useState<'personal' | 'business'>('personal');
@@ -67,22 +83,20 @@ function CreateEventForm() {
         let match;
         if (stored) {
           const list = JSON.parse(stored);
-          match = list.find((e: any) => e.id === eventId);
+          match = list.find((item: any) => item.id === eventId);
         }
         if (!match && eventId === 'maple-city-cruise') {
           match = {
             id: 'maple-city-cruise',
-            host_uid: user?.uid || 'host-123',
             title: '27TH ANNUAL CRUISE NIGHT IN THE MAPLE CITY',
-            description: 'Monmouth\'s legendary Cruise Night!',
+            description: 'Monmouth\'s legendary Cruise Night! Showcases classics, hot rods, muscle cars, and off-road builds.',
             frequency: 'one_time',
+            location_name: 'Monmouth Public Square & Main St',
             start_date: '2026-08-15T16:00',
             end_date: '2026-08-15T22:00',
-            location_name: 'Monmouth Public Square & Main St',
             require_waiver: true,
             require_tech_check: false,
-            staging_groups: ['Classics', 'Hot Rods', 'Muscle', 'Off-Road'],
-            vendors: []
+            staging_groups: ['Classics', 'Hot Rods', 'Muscle', 'Off-Road']
           };
         }
         if (match) {
@@ -97,7 +111,11 @@ function CreateEventForm() {
         if (evt) {
           populateForm(evt);
         } else {
-          alert('Staging event profile not found.');
+          showToast({
+            title: "Event Not Found",
+            message: "Staging event profile not found.",
+            icon: "⚠️"
+          });
           router.push('/dash');
         }
       } catch (err) {
@@ -111,19 +129,27 @@ function CreateEventForm() {
   }, [eventId, isNew, isMock, user]);
 
   const populateForm = (evt: GridpassEvent) => {
-    setTitle(evt.title);
+    setTitle(evt.title || evt.name || '');
     setDescription(evt.description || '');
-    setFrequency(evt.frequency);
-    setLocationName(evt.location_name);
-    setPhysicalAddress(evt.physical_address || '');
-    setStartDate(evt.start_date || '');
-    setEndDate(evt.end_date || '');
+    setFrequency(evt.frequency || 'one_time');
+    setLocationName(evt.location_name || evt.locationName || '');
+    setPhysicalAddress(evt.physical_address || evt.locationAddress || '');
+    setBannerUrl(evt.banner_url || evt.cover_url || evt.exampleImageUrl || '');
+    setStartDate(evt.start_date || evt.startDate || '');
+    setEndDate(evt.end_date || evt.endDate || '');
     setRecurrenceRule(evt.recurrence_rule || '');
     setOperatingHours(evt.operating_hours || '');
     setRequireWaiver(!!evt.require_waiver);
     setRequireTechCheck(!!evt.require_tech_check);
     setStagingGroupsInput(evt.staging_groups ? evt.staging_groups.join(', ') : '');
     setVendorsInput(evt.vendors ? evt.vendors.join(', ') : '');
+    setAllowVehicles(evt.allow_vehicles ?? true);
+    setAllowSpectators(evt.allow_spectators ?? true);
+    setAllowVendors(evt.allow_vendors ?? true);
+    setIsRescheduled(!!evt.is_rescheduled);
+    setOriginalDate(evt.original_date || '');
+    setRescheduleNotice(evt.reschedule_notice || '');
+    setIsCommunityListing(evt.is_claimed === false);
     if (evt.host_business_id) {
       setHostType('business');
       setSelectedBusinessId(evt.host_business_id);
@@ -184,6 +210,16 @@ function CreateEventForm() {
       frequency,
       location_name: locationName.trim(),
       physical_address: physicalAddress.trim(),
+      banner_url: bannerUrl.trim() || undefined,
+      cover_url: bannerUrl.trim() || undefined,
+      allow_vehicles: allowVehicles,
+      allow_spectators: allowSpectators,
+      allow_vendors: allowVendors,
+      is_rescheduled: isRescheduled,
+      original_date: isRescheduled ? originalDate.trim() : undefined,
+      reschedule_notice: isRescheduled ? rescheduleNotice.trim() : undefined,
+      is_claimed: !isCommunityListing,
+      claim_status: isCommunityListing ? 'unclaimed' : 'verified',
       require_waiver: requireWaiver,
       require_tech_check: requireTechCheck,
       staging_groups: stagingGroups,
@@ -264,8 +300,8 @@ function CreateEventForm() {
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <div className="text-left">
-            <h1 className="text-sm font-mono font-bold text-neutral-400 uppercase tracking-widest">Motorsports Event Management</h1>
+          <div>
+            <h1 className="text-sm font-mono font-bold text-neutral-400 uppercase tracking-widest">Event & Venue Management</h1>
             <h2 className="text-xl font-black uppercase text-neutral-900 tracking-tight">{isNew ? 'Create Staging Event' : 'Edit Staging Event'}</h2>
           </div>
         </div>
@@ -343,10 +379,22 @@ function CreateEventForm() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe check-in rules, track details, classes, and timing schedules."
+                placeholder="Describe your event, featured vehicle classes, track rules, and staging instructions..."
                 rows={3}
                 className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-mono font-bold text-neutral-400 uppercase">Event Cover Photo URL (Optional)</label>
+              <input
+                type="url"
+                value={bannerUrl}
+                onChange={(e) => setBannerUrl(e.target.value)}
+                placeholder="https://images.unsplash.com/... or custom banner URL"
+                className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
+              />
+              <p className="text-[9px] text-neutral-400 font-mono">Pasting a cover image URL will render as the header banner on your Event Hub.</p>
             </div>
 
             <div className="space-y-1">
@@ -356,9 +404,9 @@ function CreateEventForm() {
                 onChange={(e) => setFrequency(e.target.value as EventFrequency)}
                 className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30] font-bold"
               >
-                <option value="one_time">One-Time Motorsport Event</option>
+                <option value="one_time">One-Time Event / Gathering (Car Show, Cruise Night, Pop-Up)</option>
                 <option value="repeating">Repeating / Recurring Meet</option>
-                <option value="permanent_venue">Permanent Motorsport Venue / Park</option>
+                <option value="permanent_venue">Permanent Venue / Destination (Track, Park, Marina, Food Court)</option>
               </select>
             </div>
 
@@ -445,6 +493,133 @@ function CreateEventForm() {
                 className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
               />
             </div>
+          </div>
+
+          {/* Permitted Registration Entry Modes */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-1.5 text-xs font-black text-neutral-900 uppercase tracking-wider">
+              <ClipboardCheck className="w-4 h-4 text-[#ff3b30]" /> Allowed Registration & Entry Types
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <label className="flex items-center gap-3 p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl cursor-pointer hover:border-neutral-300 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={allowVehicles}
+                  onChange={(e) => setAllowVehicles(e.target.checked)}
+                  className="w-4 h-4 text-[#ff3b30] border-neutral-300 rounded focus:ring-[#ff3b30]"
+                />
+                <div>
+                  <div className="text-xs font-black uppercase text-neutral-900">Vehicle Staging</div>
+                  <div className="text-[9px] text-neutral-400">Drivers bring cars/trucks/bikes</div>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl cursor-pointer hover:border-neutral-300 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={allowSpectators}
+                  onChange={(e) => setAllowSpectators(e.target.checked)}
+                  className="w-4 h-4 text-[#ff3b30] border-neutral-300 rounded focus:ring-[#ff3b30]"
+                />
+                <div>
+                  <div className="text-xs font-black uppercase text-neutral-900">Spectator RSVPs</div>
+                  <div className="text-[9px] text-neutral-400">Fans mark "Going" / "Interested"</div>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl cursor-pointer hover:border-neutral-300 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={allowVendors}
+                  onChange={(e) => setAllowVendors(e.target.checked)}
+                  className="w-4 h-4 text-[#ff3b30] border-neutral-300 rounded focus:ring-[#ff3b30]"
+                />
+                <div>
+                  <div className="text-xs font-black uppercase text-neutral-900">Business Vendors</div>
+                  <div className="text-[9px] text-neutral-400">Exhibitors & food trucks</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Reschedule & Weather Alerts */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-1.5 text-xs font-black text-neutral-900 uppercase tracking-wider">
+              <Calendar className="w-4 h-4 text-[#ff3b30]" /> Weather & Date Reschedule Notice
+            </div>
+
+            <label className="flex items-center gap-3 p-4 bg-neutral-50 border border-neutral-200 rounded-xl cursor-pointer hover:border-neutral-300 transition-colors">
+              <input
+                type="checkbox"
+                checked={isRescheduled}
+                onChange={(e) => setIsRescheduled(e.target.checked)}
+                className="w-4 h-4 text-[#ff3b30] border-neutral-300 rounded focus:ring-[#ff3b30]"
+              />
+              <div>
+                <div className="text-xs font-black uppercase text-amber-600">Event Date Rescheduled</div>
+                <div className="text-[10px] text-neutral-400">Check if this event date was moved due to weather, lightning, or track updates</div>
+              </div>
+            </label>
+
+            {isRescheduled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-amber-50/50 border border-amber-200 rounded-2xl animate-in fade-in duration-150">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-mono font-bold text-amber-800 uppercase">Original Event Date</label>
+                  <input
+                    type="text"
+                    value={originalDate}
+                    onChange={(e) => setOriginalDate(e.target.value)}
+                    placeholder="e.g. Friday, July 31, 2026"
+                    className="w-full p-2.5 bg-white border border-amber-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-mono font-bold text-amber-800 uppercase">Reschedule Reason / Notice</label>
+                  <input
+                    type="text"
+                    value={rescheduleNotice}
+                    onChange={(e) => setRescheduleNotice(e.target.value)}
+                    placeholder="e.g. Rescheduled due to thunderstorm & lightning forecast safety"
+                    className="w-full p-2.5 bg-white border border-amber-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Listing Ownership Type Toggle */}
+          <div className="space-y-3 p-4 bg-neutral-50 border border-neutral-200 rounded-2xl">
+            <div className="text-xs font-black uppercase text-neutral-900">Listing Ownership Type</div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setIsCommunityListing(false)}
+                className={`py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                  !isCommunityListing
+                    ? 'bg-neutral-900 text-white border-neutral-900'
+                    : 'bg-white text-neutral-700 border-neutral-200'
+                }`}
+              >
+                Official Organizer
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCommunityListing(true)}
+                className={`py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider border transition-all cursor-pointer ${
+                  isCommunityListing
+                    ? 'bg-amber-500 text-white border-amber-500'
+                    : 'bg-white text-neutral-700 border-neutral-200'
+                }`}
+              >
+                Community / Fan Listing
+              </button>
+            </div>
+            <p className="text-[10px] text-neutral-500 leading-snug">
+              {isCommunityListing 
+                ? 'Community listings allow club organizers (e.g. Clifford Adams) to claim official ownership of the page later.' 
+                : 'You are creating this listing as the verified organizer/host.'}
+            </p>
           </div>
 
           {/* Gridpass Gate Rules */}

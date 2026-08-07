@@ -100,7 +100,7 @@ test.describe('Sticker Customizer & Claims Onboarding E2E Suite', () => {
     await expect(page.locator('text=Wi-Fi sign-in browser detected')).toBeVisible();
 
     // Since mock user is logged in automatically, verify they see the claim options
-    await expect(page.locator('text=My Driver Profile')).toBeVisible();
+    await expect(page.locator('text=My Member Profile')).toBeVisible();
     await expect(page.locator('text=Register New Vehicle')).toBeVisible();
   });
 

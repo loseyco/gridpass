@@ -20,10 +20,15 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 let auth: ReturnType<typeof getAuth>;
 if (typeof window !== "undefined") {
-    auth = initializeAuth(app, {
-        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-        popupRedirectResolver: browserPopupRedirectResolver,
-    });
+    try {
+        auth = initializeAuth(app, {
+            persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+            popupRedirectResolver: browserPopupRedirectResolver,
+        });
+    } catch (err) {
+        console.warn("[Firebase] initializeAuth error fallback to getAuth:", err);
+        auth = getAuth(app);
+    }
 } else {
     auth = getAuth(app);
 }

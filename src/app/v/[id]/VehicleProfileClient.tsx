@@ -400,7 +400,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
             accident_history: '0 Incidents Reported',
             theft_records: 'No Active Theft Alerts',
             recall_status: '0 Active Recalls',
-            database_registry: 'Registered with Gridpass Ledger',
+            database_registry: 'Verified with Gridpass Ledger',
             audited_at: new Date().toLocaleDateString()
           },
           thumbs_up: 18,
@@ -845,7 +845,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
       accident_history: '0 Incidents Reported',
       theft_records: 'No Active Theft Alerts',
       recall_status: '0 Active Recalls',
-      database_registry: 'Registered with Gridpass Ledger',
+      database_registry: 'Verified with Gridpass Ledger',
       audited_at: new Date().toLocaleDateString()
     };
 

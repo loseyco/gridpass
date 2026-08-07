@@ -9,6 +9,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Loader2, ArrowLeft, Camera, Trash2, Plus, Image, User, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { compressImage } from '@/lib/utils/imageCompressor';
+import { getGlobalVehicleClasses, inferVehicleCategory, VehicleClassItem } from '@/lib/actions/stagingClasses';
 
 interface ModItem {
   category?: string;
@@ -18,12 +19,20 @@ interface ModItem {
   install_date?: string;
 }
 
-export default function EditVehiclePage() {
+import { Suspense } from 'react';
+
+import CreateVehiclePage from '@/app/v/create/page';
+
+function EditVehicleForm() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const vehicleId = searchParams.get('id');
   const isNew = !vehicleId || vehicleId === 'new';
+
+  if (isNew) {
+    return <CreateVehiclePage />;
+  }
 
   const isMock = typeof window !== 'undefined' && !!(window as any).__PLAYWRIGHT_MOCK__;
 
@@ -35,6 +44,8 @@ export default function EditVehiclePage() {
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
   const [trim, setTrim] = useState('');
+  const [vehicleClass, setVehicleClass] = useState('Muscle');
+  const [globalClasses, setGlobalClasses] = useState<VehicleClassItem[]>([]);
   const [photoUrl, setPhotoUrl] = useState('');
   const [vin, setVin] = useState('');
 
@@ -78,6 +89,12 @@ export default function EditVehiclePage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
+    getGlobalVehicleClasses().then(classes => {
+      setGlobalClasses(classes.filter(c => c.active));
+    });
+  }, []);
+
+  useEffect(() => {
     if (isNew) return;
 
     if (isMock) {
@@ -119,6 +136,7 @@ export default function EditVehiclePage() {
     setMake(data.make || '');
     setModel(data.model || '');
     setTrim(data.trim || '');
+    setVehicleClass(data.category || data.vehicle_class || data.class || inferVehicleCategory(data.year, data.make, data.model));
     setPhotoUrl(data.photo_url || data.imageUrl || data.image_url || data.photoUrl || (data.images && data.images[0]) || '');
     setVin(data.vin || '');
 
@@ -308,13 +326,13 @@ export default function EditVehiclePage() {
       
       if (isMock) {
         const mockMembers = [
-          { uid: 'm1', display_name: 'MARCUS VANE', username: 'marcus' },
-          { uid: 'm2', display_name: 'SARAH JENKINS', username: 'sarah' },
-          { uid: 'm3', display_name: 'RANGER DAVE', username: 'rangerdave' },
-          { uid: 'm4', display_name: 'STEVE COLLINS', username: 'steve' },
-          { uid: 'm5', display_name: 'BILLY BOSTON', username: 'billy' },
-          { uid: 'm6', display_name: 'RICHARD GATES', username: 'rich' },
-          { uid: 'm7', display_name: 'CHLOE MILLER', username: 'chloe' },
+          { uid: 'm1', display_name: 'GPTestUser_Marcus', username: 'marcus' },
+          { uid: 'm2', display_name: 'GPTestUser_Sarah', username: 'sarah' },
+          { uid: 'm3', display_name: 'GPTestUser_Dave', username: 'rangerdave' },
+          { uid: 'm4', display_name: 'GPTestUser_Steve', username: 'steve' },
+          { uid: 'm5', display_name: 'GPTestUser_Billy', username: 'billy' },
+          { uid: 'm6', display_name: 'GPTestUser_Rich', username: 'rich' },
+          { uid: 'm7', display_name: 'GPTestUser_Chloe', username: 'chloe' },
         ];
         const match = mockMembers.filter(m => 
           m.display_name.toLowerCase().includes(coOwnerSearch.toLowerCase()) ||
@@ -446,6 +464,8 @@ export default function EditVehiclePage() {
       make: make.trim(),
       model: model.trim(),
       trim: trim.trim(),
+      category: vehicleClass,
+      vehicle_class: vehicleClass,
       photo_url: photoUrl.trim(),
       imageUrl: photoUrl.trim(),
       vin: vin.trim(),
@@ -547,7 +567,7 @@ export default function EditVehiclePage() {
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
         <h1 className="text-xs font-black text-neutral-900 uppercase tracking-widest">
-          {isNew ? 'Register New Vehicle' : 'Edit Vehicle Passport'}
+          {isNew ? 'Add New Vehicle' : 'Edit Vehicle Passport'}
         </h1>
       </div>
 
@@ -603,6 +623,40 @@ export default function EditVehiclePage() {
                 className="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
               />
             </div>
+          </div>
+
+          {/* Vehicle Category / Staging Class */}
+          <div className="space-y-1">
+            <label className="text-[9px] font-mono font-bold text-neutral-400 uppercase">
+              Vehicle Category / Class
+            </label>
+            <select
+              value={vehicleClass}
+              onChange={(e) => setVehicleClass(e.target.value)}
+              className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] cursor-pointer"
+            >
+              {(globalClasses.length > 0 ? globalClasses : [
+                { id: 'classics', name: 'Classics', icon: '🚗' },
+                { id: 'hot-rods', name: 'Hot Rods', icon: '🔥' },
+                { id: 'muscle', name: 'Muscle', icon: '⚡' },
+                { id: 'off-road', name: 'Off-Road / Trucks', icon: '🛻' },
+                { id: 'imports', name: 'Imports', icon: '🎌' },
+                { id: 'motorcycles', name: 'Motorcycles', icon: '🏍️' },
+                { id: 'exotics', name: 'Exotics & Supercars', icon: '🏎️' },
+                { id: 'pwc', name: 'PWC / Marine', icon: '🚤' },
+                { id: 'ev-modern', name: 'EV & Modern', icon: '🔋' },
+                { id: 'bicycles', name: 'Bicycles & E-Bikes', icon: '🚲' },
+                { id: 'pevs', name: 'Onewheels & PEVs', icon: '🛹' },
+                { id: 'aviation', name: 'Aviation & Aircraft', icon: '🛩️' },
+                { id: 'commercial-fleets', name: 'Commercial & Service Fleets', icon: '🚛' },
+                { id: 'construction', name: 'Construction & Heavy Equipment', icon: '🏗️' },
+                { id: 'trailers', name: 'Trailers & Utility Rigs', icon: '🚚' }
+              ]).map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.icon || '🚘'} {c.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="space-y-2">
@@ -1114,5 +1168,17 @@ export default function EditVehiclePage() {
 
       </form>
     </div>
+  );
+}
+
+export default function EditVehiclePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center p-8">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+      </div>
+    }>
+      <EditVehicleForm />
+    </Suspense>
   );
 }

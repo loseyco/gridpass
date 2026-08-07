@@ -16,7 +16,11 @@ interface DriverProfile {
   uid: string;
   email: string;
   display_name: string;
+  username?: string;
   bio?: string;
+  website?: string;
+  website_url?: string;
+
   avatar_url?: string;
   is_supporter?: boolean;
   socials?: {
@@ -34,6 +38,7 @@ interface DriverProfile {
   social_facebook?: string;
   social_twitter?: string;
 }
+
 
 interface Vehicle {
   id: string;
@@ -60,7 +65,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [shareText, setShareText] = useState('Share Profile');
 
-  const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
+  const isMock = (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock');
 
   const renderSocialIcon = (
     platform: string, 
@@ -314,6 +319,9 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             uid: uDoc.id,
             email: uData.email || '',
             display_name: uData.display_name || uData.name || 'Anonymous Member',
+            username: uData.username || '',
+            website: uData.website || uData.website_url || '',
+            website_url: uData.website_url || uData.website || '',
             bio: uData.bio,
             avatar_url: uData.avatar_url,
             is_supporter: uData.is_supporter === true,
@@ -324,6 +332,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               facebook: uData.social_facebook || uData.socials?.facebook || '',
               twitter: uData.social_twitter || uData.socials?.twitter || ''
             },
+
             tagId: uData.tagId || uData.tag_id || `GP-DRV-${uDoc.id.slice(0, 6).toUpperCase()}`,
             badges: uData.badges || [],
             home_town: uData.home_town || '',
@@ -428,8 +437,11 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
 
           <div className="space-y-1">
             <h2 className="text-xl font-black text-neutral-900 uppercase tracking-tight">{profile.display_name}</h2>
-            <span className="text-[10px] font-mono font-bold text-neutral-455 uppercase tracking-widest block">{profile.email}</span>
+            <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">
+              {profile.email || `@${profile.username || userId || 'member'}`}
+            </span>
           </div>
+
 
           {profile.bio && (
             <p className="text-xs text-neutral-600 leading-relaxed font-semibold italic max-w-md mx-auto pt-3 border-t border-neutral-100">
@@ -437,8 +449,20 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             </p>
           )}
 
-          {/* Social Channels */}
-          <div className="flex justify-center gap-3">
+          {/* Social Channels & Website Link */}
+          <div className="flex justify-center flex-wrap gap-3">
+            {(profile.website || profile.website_url) && (
+              <a
+                href={profile.website || profile.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 h-10 rounded-xl bg-neutral-900 hover:bg-black text-white font-black text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                title={`Visit Official Website: ${profile.website || profile.website_url}`}
+              >
+                <Globe className="w-4 h-4 text-[#ff3b30]" />
+                <span>{profile.website?.replace('https://', '').replace('http://', '') || 'Website'}</span>
+              </a>
+            )}
             {renderSocialIcon('Instagram', profile.socials?.instagram, `https://instagram.com/${profile.socials?.instagram}`, Instagram)}
             {renderSocialIcon('YouTube', profile.socials?.youtube, `https://youtube.com/@${profile.socials?.youtube}`, Youtube)}
             {renderSocialIcon('TikTok', profile.socials?.tiktok, `https://tiktok.com/@${profile.socials?.tiktok}`, Globe)}
@@ -450,6 +474,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             )}
             {renderSocialIcon('Twitter', profile.socials?.twitter, `https://twitter.com/${profile.socials?.twitter}`, Twitter)}
           </div>
+
 
         </div>
 
@@ -495,7 +520,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </div>
         )}
 
-        {/* Temporarily hidden Achievements and Share Driver Identity blocks
+        {/* Temporarily hidden Achievements and Share Member Identity blocks
         <div className="bg-neutral-50 border border-neutral-200 p-5 rounded-3xl space-y-3.5">
           <h4 className="text-[10px] font-mono font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 justify-center">
             <ShieldCheck className="w-4 h-4 text-[#ff3b30]" /> Unlocked Achievements
@@ -529,7 +554,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
 
         <div className="bg-neutral-50 border border-neutral-200 p-5 rounded-3xl text-center space-y-3">
           <h4 className="text-[10px] font-mono font-bold text-neutral-900 uppercase tracking-wider flex items-center justify-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-yellow-500" /> Share Driver Identity
+            <Sparkles className="w-4 h-4 text-yellow-500" /> Share Member Identity
           </h4>
           <p className="text-[10px] text-neutral-500 leading-normal max-w-xs mx-auto">
             Generate your personal Gridpass QR Badge to display on decals or link on external bio cards.

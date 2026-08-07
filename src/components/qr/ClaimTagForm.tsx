@@ -201,7 +201,7 @@ export function ClaimTagForm({ tagId }: { tagId: string }) {
             <div className="bg-[#1c1c1e] border border-[#2c2c2e] rounded-2xl p-4 space-y-3">
                 <div className="pb-2 border-b border-[#2c2c2e]">
                     <h3 className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
-                        <UserCircle className="w-4 h-4 text-[#007aff]" /> Driver Identity
+                        <UserCircle className="w-4 h-4 text-[#007aff]" /> Member Identity
                     </h3>
                 </div>
                 <button
@@ -210,7 +210,7 @@ export function ClaimTagForm({ tagId }: { tagId: string }) {
                     className="w-full flex items-center justify-between p-3.5 bg-[#2c2c2e] hover:bg-[#3a3a3c] rounded-xl transition-all group disabled:opacity-50 text-left"
                 >
                     <div>
-                        <p className="font-semibold text-white">Link to My Driver Profile</p>
+                        <p className="font-semibold text-white">Link to My Member Profile</p>
                         <p className="text-xs text-neutral-400">Set this tag as your personal profile pass</p>
                     </div>
                     <div className="w-7 h-7 rounded-full bg-[#007aff]/10 text-[#007aff] flex items-center justify-center group-hover:bg-[#007aff] group-hover:text-white transition-all shrink-0">

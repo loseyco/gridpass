@@ -96,7 +96,7 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (!user) return;
     const uid = user.uid;
-    const fallbackName = user.displayName || user.email?.split('@')[0].toUpperCase() || 'DRIVER';
+    const fallbackName = user.displayName || user.email?.split('@')[0].toUpperCase() || 'MEMBER';
     const fallbackUser = user.email?.split('@')[0] || '';
 
     async function loadProfile() {
@@ -240,11 +240,20 @@ export default function EditProfilePage() {
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadUrl = await getDownloadURL(uploadResult.ref);
       setAvatarUrl(downloadUrl);
+
+      // Auto-persist avatar_url & photoUrl to Firestore user document
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        avatar_url: downloadUrl,
+        photoUrl: downloadUrl,
+        updated_at: new Date().toISOString(),
+      });
     } catch (err) {
       console.error("Firebase storage upload failed, keeping base64 preview:", err);
     } finally {
       setUploadingImage(false);
     }
+
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -550,7 +559,7 @@ export default function EditProfilePage() {
           <div className="space-y-4 pt-4 border-t border-neutral-100">
             <h4 className="text-[10px] font-extrabold uppercase text-neutral-900 tracking-wider">Security & Account</h4>
             <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 space-y-2">
-              <span className="text-[8px] font-mono font-bold text-neutral-400 uppercase tracking-wider block">Registered Email</span>
+              <span className="text-[8px] font-mono font-bold text-neutral-400 uppercase tracking-wider block">Account Email</span>
               <span className="text-xs font-bold text-neutral-950 block select-all">{user?.email || 'N/A'}</span>
               
               <div className="pt-1 flex items-center justify-between">

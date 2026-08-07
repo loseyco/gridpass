@@ -26,6 +26,17 @@ export const metadata: Metadata = {
   }
 };
 
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
+
 export default function JoinPage() {
-  return <JoinClient />;
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center p-8">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+      </div>
+    }>
+      <JoinClient />
+    </Suspense>
+  );
 }

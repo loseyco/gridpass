@@ -132,86 +132,102 @@ export default function BusinessesDirectoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        
-        {/* Directory Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="space-y-1 text-left">
-            <span className="text-[9px] font-mono font-bold text-neutral-400 uppercase tracking-widest block">Gridpass Partner Network</span>
-            <h1 className="text-xl md:text-2xl font-black uppercase text-neutral-900 tracking-tight leading-none">Dealerships & Venues</h1>
+    <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full px-3 sm:px-6 pt-16 pb-12 space-y-4">
+      
+      {/* Top Header & Search Control Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-left border-b border-neutral-200 pb-3">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/explore"
+            className="py-1 px-3 bg-neutral-900 hover:bg-[#ff3b30] text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-colors inline-flex items-center gap-1 shrink-0 shadow-2xs"
+          >
+            ← Explore
+          </Link>
+          <div>
+            <h1 className="text-lg sm:text-xl font-black text-neutral-900 uppercase tracking-tight leading-none">
+              Businesses &amp; Tracks
+            </h1>
+            <span className="text-[10px] text-neutral-500 font-mono font-semibold">
+              {filteredBusinesses.length} Listed Garages &amp; Venues
+            </span>
+          </div>
+        </div>
+
+        {/* Search & Add Action */}
+        <div className="flex items-center gap-2 max-w-sm w-full">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+              <Search className="w-3.5 h-3.5" />
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search name, category, city..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-bold text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#ff3b30] transition-colors"
+            />
           </div>
 
           <Link
-            href="/dash/businesses/edit?id=new"
-            className="py-2.5 px-5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
+            href="/b/create"
+            className="py-1.5 px-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-colors inline-flex items-center gap-1 shrink-0 shadow-2xs"
           >
-            Add Your Business
+            + Add
           </Link>
         </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search partners by name, category, or city..."
-            className="w-full pl-9 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-950 placeholder-neutral-450 focus:outline-none focus:border-[#ff3b30] transition-colors"
-          />
-        </div>
-
-        {/* Directory Rows */}
-        <div className="space-y-3">
-          {filteredBusinesses.length > 0 ? (
-            filteredBusinesses.map((biz) => (
-              <Link
-                key={biz.id}
-                href={`/b/${biz.id}`}
-                className="p-4 bg-neutral-50 border border-neutral-200 hover:border-[#ff3b30] hover:shadow-sm rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all group cursor-pointer text-left"
-              >
-                <div className="space-y-2 min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-neutral-200 text-neutral-600 uppercase tracking-widest">
-                      {categoryLabels[biz.category] || 'Partner'}
-                    </span>
-                    <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-emerald-600 uppercase tracking-wider flex items-center gap-0.5">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Verified
-                    </span>
-                  </div>
-
-                  <h3 className="text-sm font-black uppercase text-neutral-900 group-hover:text-[#ff3b30] transition-colors truncate tracking-tight">
-                    {biz.name}
-                  </h3>
-
-                  <p className="text-xs text-neutral-550 leading-relaxed font-medium line-clamp-2 max-w-2xl">
-                    {biz.description}
-                  </p>
-
-                  <div className="text-[9px] font-mono font-bold text-neutral-450 uppercase flex flex-col sm:flex-row sm:gap-4 gap-1 pt-1">
-                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-neutral-450" /> {biz.location_name}</span>
-                    {biz.website_url && (
-                      <span className="flex items-center gap-1"><Globe className="w-3.5 h-3.5 text-neutral-450" /> {biz.website_url.replace(/(^\w+:|^)\/\//, '')}</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 text-[9px] font-black text-red-500 uppercase tracking-wider self-end md:self-center shrink-0 group-hover:translate-x-1 transition-transform">
-                  View Profile <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-
-              </Link>
-            ))
-          ) : (
-            <div className="text-center py-16 border border-dashed border-neutral-200 rounded-2xl text-neutral-400 space-y-2 bg-neutral-50/50">
-              <Building2 className="w-10 h-10 mx-auto opacity-30" />
-              <p className="text-xs uppercase font-mono font-bold">No registered businesses found matching search criteria.</p>
-            </div>
-          )}
-        </div>
-
       </div>
+
+      {/* High-Density Compact Horizontal List Rows */}
+      <div className="space-y-2 text-left">
+        {filteredBusinesses.length > 0 ? (
+          filteredBusinesses.map((biz) => (
+            <Link
+              key={biz.id}
+              href={`/b/${biz.id}`}
+              className="bg-neutral-50 hover:bg-white border border-neutral-200 hover:border-blue-500 p-3 rounded-2xl flex items-center gap-3 transition-all cursor-pointer shadow-2xs hover:shadow-md group"
+            >
+              {/* Icon / Thumbnail */}
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+                <Building2 className="w-5 h-5 text-blue-600" />
+              </div>
+
+              {/* Center Details */}
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[9px] font-mono font-bold text-blue-600 uppercase bg-blue-50 border border-blue-100 px-1.5 py-0.2 rounded">
+                    {categoryLabels[biz.category] || 'Business'}
+                  </span>
+                  <span className="text-[8px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 border border-emerald-100 text-emerald-600 uppercase tracking-wider inline-flex items-center gap-0.5">
+                    <ShieldCheck className="w-3 h-3" /> Verified
+                  </span>
+                </div>
+
+                <h3 className="text-sm font-black text-neutral-900 uppercase truncate group-hover:text-blue-600 transition-colors">
+                  {biz.name}
+                </h3>
+
+                {biz.location_name && (
+                  <p className="text-[10px] text-neutral-500 font-mono font-bold truncate flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-neutral-400 shrink-0" /> {biz.location_name}
+                  </p>
+                )}
+              </div>
+
+              {/* Right Action Pill */}
+              <div className="shrink-0">
+                <span className="py-1 px-3 bg-blue-600 group-hover:bg-blue-700 text-white text-[9px] font-mono font-bold uppercase rounded-xl transition-colors inline-block shadow-2xs">
+                  Storefront →
+                </span>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <div className="py-16 text-center text-neutral-400 font-mono text-xs uppercase bg-neutral-50 border border-neutral-200 rounded-2xl">
+            No businesses match your search criteria.
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

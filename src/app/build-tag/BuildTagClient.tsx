@@ -212,7 +212,7 @@ export default function BuildTagClient() {
               id: 'pjlosey',
               name: 'PJ LOSEY',
               type: 'person',
-              details: 'Primary Driver Passport',
+              details: 'Primary Member Passport',
               rawData: {
                 name: 'PJ LOSEY',
                 bio: 'Time-attack competitor. Track days enthusiast.',
@@ -270,7 +270,7 @@ export default function BuildTagClient() {
               id: user!.uid,
               name: name,
               type: 'person',
-              details: 'Primary Driver Passport',
+              details: 'Primary Member Passport',
               rawData: rawData
             });
           }
@@ -346,9 +346,9 @@ export default function BuildTagClient() {
       return vehicleMake ? `${vehicleYear} ${vehicleMake}` : '2024 Chevrolet';
     } else if (destType === 'person') {
       if (activeData) {
-        return activeData.display_name || activeData.name || 'DRIVER IDENTITY';
+        return activeData.display_name || activeData.name || 'MEMBER IDENTITY';
       }
-      return personName ? personName : 'DRIVER IDENTITY';
+      return personName ? personName : 'MEMBER IDENTITY';
     } else {
       if (activeData) {
         return activeData.name || 'PARTNER SERVICES';
@@ -365,7 +365,7 @@ export default function BuildTagClient() {
       }
       return vehicleModel ? vehicleModel : 'Corvette Z06';
     } else if (destType === 'person') {
-      return 'DRIVER PROFILE';
+      return 'MEMBER PROFILE';
     } else {
       if (activeData) {
         return activeData.services || 'Auto Shop & Racetrack';
@@ -397,7 +397,7 @@ export default function BuildTagClient() {
     : (businessServices || 'N/A');
 
   const resolvedBusinessLocation = activeData
-    ? (activeData.location || 'N/A')
+    ? (typeof activeData.location === 'string' ? activeData.location : activeData.location_name || 'N/A')
     : (businessLocation || 'N/A');
 
   const resolvedModsString = activeData
@@ -473,7 +473,7 @@ export default function BuildTagClient() {
            <text x="80" y="355" fill="#737373" font-family="sans-serif" font-size="14">Output Power:</text>
            <text x="240" y="355" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedVehicleHp ? `${resolvedVehicleHp} HP` : 'N/A'}</text>`
         : destType === 'person'
-        ? `<text x="80" y="320" fill="#737373" font-family="sans-serif" font-size="14">Driver Bio:</text>
+        ? `<text x="80" y="320" fill="#737373" font-family="sans-serif" font-size="14">Member Bio:</text>
            <text x="240" y="320" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedPersonBio}</text>
            <text x="80" y="355" fill="#737373" font-family="sans-serif" font-size="14">Instagram:</text>
            <text x="240" y="355" fill="#1c1c1f" font-family="sans-serif" font-size="14" font-weight="bold">${resolvedPersonInstagram}</text>`
@@ -823,7 +823,7 @@ export default function BuildTagClient() {
                   <span className="text-[10px] font-mono font-bold text-rose-500 uppercase tracking-widest block">Step 02 / Registry Link</span>
                   <h1 className="text-3xl font-black text-white uppercase tracking-tight">Configure Destination</h1>
                   <p className="text-xs text-neutral-400 leading-relaxed font-medium">
-                    What should people see when they scan your physical QR tag? Choose whether it links to a vehicle, a driver profile, or a local business.
+                    What should people see when they scan your physical QR tag? Choose whether it links to a vehicle, a member profile, or a local business.
                   </p>
                 </div>
 
@@ -833,7 +833,7 @@ export default function BuildTagClient() {
                   <div className="grid grid-cols-3 gap-2 p-1 bg-neutral-950/80 border border-neutral-900 rounded-xl">
                     {[
                       { id: 'vehicle', label: 'Vehicle', icon: Car },
-                      { id: 'person', label: 'Driver', icon: User },
+                      { id: 'person', label: 'Member', icon: User },
                       { id: 'business', label: 'Business', icon: Building2 }
                     ].map((item) => {
                       const Icon = item.icon;
@@ -892,7 +892,7 @@ export default function BuildTagClient() {
                         </div>
                       ) : profileOptions.length === 0 ? (
                         <div className="p-4 border border-neutral-900 rounded-2xl text-center text-xs text-neutral-500">
-                          No profiles found. Select "Create New Profile" to register one.
+                          No profiles found. Select &quot;Create New Profile&quot; to create one.
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -1013,7 +1013,7 @@ export default function BuildTagClient() {
                       {destType === 'person' && (
                         <div className="space-y-3">
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Driver Name</label>
+                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Member Name</label>
                             <input 
                               type="text" 
                               value={personName} 
@@ -1025,7 +1025,7 @@ export default function BuildTagClient() {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Driver Short Bio</label>
+                            <label className="text-[9px] font-mono font-bold text-neutral-505 uppercase">Member Short Bio</label>
                             <textarea 
                               value={personBio} 
                               onChange={(e) => setPersonBio(e.target.value)}
@@ -1148,7 +1148,7 @@ export default function BuildTagClient() {
                         {user ? (
                           <li>Your active profile will be instantly linked to this tag upon completion.</li>
                         ) : (
-                          <li>Register a free account at the next step to activate and link your digital passport.</li>
+                          <li>Join with a free account at the next step to activate and link your digital passport.</li>
                         )}
                       </ul>
                     </div>
@@ -1198,7 +1198,7 @@ export default function BuildTagClient() {
                   <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 mx-auto mb-4 animate-bounce">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest block">Tag Registered</span>
+                  <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest block">Tag Activated</span>
                   <h1 className="text-3xl font-black text-white uppercase tracking-tight">Tag Setup Complete</h1>
                   <p className="text-xs text-neutral-400 leading-relaxed font-medium">
                     Your QR tag design was saved and linked to your digital destination!
@@ -1243,7 +1243,7 @@ export default function BuildTagClient() {
                   ) : (
                     <div className="space-y-3 pt-2">
                       <p className="text-xs text-neutral-400 font-medium">
-                        Your tag is successfully registered on your digital garage dashboard.
+                        Your tag is successfully linked to your digital garage dashboard.
                       </p>
                       <Link
                         href="/dash"
@@ -1390,7 +1390,7 @@ export default function BuildTagClient() {
                         </>
                       ) : destType === 'person' ? (
                         <>
-                          <span className="text-neutral-500">Driver Bio</span>
+                          <span className="text-neutral-500">Member Bio</span>
                           <span className="col-span-2 text-white font-bold">{resolvedPersonBio}</span>
                           <span className="text-neutral-500">Instagram</span>
                           <span className="col-span-2 text-white font-bold">{resolvedPersonInstagram}</span>
@@ -1426,12 +1426,12 @@ export default function BuildTagClient() {
                           ) : destType === 'person' ? (
                             <li className="flex items-start gap-1.5">
                               <span className="text-neutral-500">•</span>
-                              <span>Driver Profile active on Gridpass.</span>
+                              <span>Member Profile active on Gridpass.</span>
                             </li>
                           ) : (
                             <li className="flex items-start gap-1.5">
                               <span className="text-neutral-500">•</span>
-                              <span>Registered performance partner.</span>
+                              <span>Verified performance partner.</span>
                             </li>
                           )}
                         </ul>

@@ -110,7 +110,7 @@ export default function StyleguidePage() {
                     <Car className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-white">Registered Garage</p>
+                    <p className="text-xs font-semibold text-white">Verified Garage</p>
                     <p className="text-[10px] text-neutral-500">Manage vehicles and specs</p>
                   </div>
                 </div>
@@ -214,7 +214,7 @@ export default function StyleguidePage() {
               <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Success Message Banner</span>
               <div className="bg-[#34c759]/10 border border-[#34c759]/20 p-3 rounded-xl text-center flex items-center justify-center gap-2 text-[#30b351] text-xs font-bold uppercase">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Vehicle Registered Successfully</span>
+                <span>Vehicle Added Successfully</span>
               </div>
             </div>
 
