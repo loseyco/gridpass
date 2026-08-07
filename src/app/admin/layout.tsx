@@ -24,6 +24,7 @@ export default function AdminLayout({
       title: 'Global System Tools',
       items: [
         { label: 'System Analytics', path: '/admin/analytics', icon: '📈' },
+        { label: 'AI Agent Staff', path: '/admin/agents', icon: '🤖' },
         { label: 'Subagent Ticket HQ', path: '/admin/tickets', icon: '🎟️' },
         { label: 'Platform & AI SOPs', path: '/admin/sop', icon: '📚' },
         { label: 'Database Inspector', path: '/admin/db', icon: '🗄️' },
@@ -49,8 +50,8 @@ export default function AdminLayout({
         <div className="space-y-3 md:space-y-4">
           {/* Brand Header with Mobile Hamburger Toggle */}
           <div className="flex items-center justify-between border-b md:border-b border-neutral-800 pb-2 md:pb-3">
-            <Link href="/admin" className="flex items-center gap-2">
-              <span className="font-black text-base md:text-lg text-white uppercase tracking-tight">
+            <Link href="/admin" className="flex items-center gap-2 shrink-0">
+              <span className="font-black text-sm sm:text-base md:text-lg text-white uppercase tracking-tight whitespace-nowrap">
                 GRIDPASS<span className="text-[#ff3b30]">.ADMIN</span>
               </span>
             </Link>
