@@ -26,6 +26,7 @@ export default function AdminLayout({
       title: 'Global System Tools',
       items: [
         { label: 'System Analytics', path: '/admin/analytics', icon: '📈' },
+        { label: 'System Activity Logs', path: '/admin/logs', icon: '📡' },
         { label: 'AI Agent Staff', path: '/admin/agents', icon: '🤖' },
         { label: 'Subagent Ticket HQ', path: '/admin/tickets', icon: '🎟️' },
         { label: 'Platform & AI SOPs', path: '/admin/sop', icon: '📚' },

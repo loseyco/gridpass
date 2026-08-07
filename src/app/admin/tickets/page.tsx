@@ -9,6 +9,33 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1014)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1016_system_logs_hq',
+    ticket_number: 'TICK-1016',
+    agent_role: 'traffic_expert',
+    title: 'System Activity & Telemetry Audit HQ (/admin/logs) Development',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['AdminLogsPage', 'ExcelWorksheetTable', 'system_logs', 'Firestore'],
+    files_modified: ['src/app/admin/logs/page.tsx', 'src/app/admin/layout.tsx'],
+    schema_changes: ['system_logs collection'],
+    issue_description: 'Super admins and AI subagent teams lacked a dedicated, real-time audit stream capturing site-wide activity across subagent executions, user page views, vehicle mutations, business edits, and security events.',
+    root_cause: 'Telemetry events were logged to Firestore system_logs without a high-density ExcelWorksheetTable dashboard for category filtering, payload inspection, or CSV export.',
+    resolution_summary: 'Built System Activity & Telemetry Audit HQ at /admin/logs with 6 category filters (Agent Actions, User Activity, Vehicle Mutations, Business & Sales, Security & Rules), real-time Firestore sync (system_logs), slide-out payload drawer, and sidebar link registration.',
+    verification_proof: 'Verified 0 TypeScript compilation errors (npx tsc --noEmit) and verified real-time stream subscription.',
+    sop_summary: 'SOP for building site-wide activity logging dashboards and inspecting system telemetry payloads.',
+    sop_steps: [
+      'Create src/app/admin/logs/page.tsx with ExcelWorksheetTable subscribed to real-time system_logs Firestore collection.',
+      'Configure 6 category filter badges: All Logs, Agent Actions, User Activity, Vehicle Mutations, Business & Sales, Security & Rules.',
+      'Implement slide-out Inspection Drawer for reviewing raw JSON metadata payloads, IP/device metrics, and target document IDs.',
+      'Register 📡 System Activity Logs (/admin/logs) under Global System Tools in src/app/admin/layout.tsx.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'TRAFFIC_EXPERT',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1015_vercel_webhook_audit',
     ticket_number: 'TICK-1015',
     agent_role: 'firebase_expert',
