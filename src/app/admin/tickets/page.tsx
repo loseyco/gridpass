@@ -9,6 +9,33 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1014)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1021_feedback_triage_hq',
+    ticket_number: 'TICK-1021',
+    agent_role: 'architect',
+    title: 'Member Ideas & Feature Request Triage HQ (/admin/feedback) & 1-Click Ticket Promotion Engine',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['AdminFeedbackTriagePage', 'ExcelWorksheetTable', 'user_feedback', 'agent_tickets'],
+    files_modified: ['src/app/admin/feedback/page.tsx', 'src/app/admin/layout.tsx'],
+    schema_changes: ['user_feedback status schema: PENDING_REVIEW, APPROVED_FOR_DEV, ROADMAP_IDEA, DECLINED'],
+    issue_description: 'Platform owner required an explicit triage gate to review incoming member feedback, bug reports, and feature requests before promoting approved items into official AI subagent execution tickets.',
+    root_cause: 'Raw member submissions should not directly pollute active subagent work queues without owner triage, approval, and feature prioritization.',
+    resolution_summary: 'Built Member Ideas & Feature Request Triage HQ at /admin/feedback with 1-click Approve & Create Subagent Ticket action button, status filters (Pending Triage, Approved for Dev, Roadmap Ideas, Archived), and detail drawer for inspecting raw user context.',
+    verification_proof: 'Verified TypeScript static compilation (npx tsc --noEmit) and verified 1-click ticket promotion engine.',
+    sop_summary: 'SOP for member feedback intake triage, feature promotion workflow, and roadmap wishlist management.',
+    sop_steps: [
+      'Create src/app/admin/feedback/page.tsx with ExcelWorksheetTable fed by Firestore user_feedback collection.',
+      'Configure triage status badges: PENDING_REVIEW, APPROVED_FOR_DEV, ROADMAP_IDEA, DECLINED.',
+      'Implement 1-Click action button: [🚀 Approve & Create Ticket] to promote approved feedback into active TICK-xxxx execution tickets.',
+      'Register 💡 Member Ideas & Triage (/admin/feedback) under Global System Tools in src/app/admin/layout.tsx.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'ARCHITECT',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1020_pre_push_qa_protocol',
     ticket_number: 'TICK-1020',
     agent_role: 'tester',
