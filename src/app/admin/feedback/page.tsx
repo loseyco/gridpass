@@ -106,9 +106,12 @@ export default function AdminFeedbackTriagePage() {
     return true;
   });
 
+  const [adminNote, setAdminNote] = useState('');
+
   // Promote User Feedback to Active TODO Execution Ticket in agent_tickets
-  const promoteToSubagentTicket = async (item: UserFeedbackItem) => {
+  const promoteToSubagentTicket = async (item: UserFeedbackItem, customNote?: string) => {
     const ticketNum = `TICK-${Math.floor(2000 + Math.random() * 8000)}`;
+    const noteText = customNote || adminNote;
     
     try {
       // 1. Log ticket in agent_tickets
@@ -121,13 +124,14 @@ export default function AdminFeedbackTriagePage() {
         status: 'TODO',
         components_used: ['UserFeedbackTriage', item.page_route],
         files_modified: [item.page_route],
-        issue_description: `User Feedback from ${item.submitted_by_email} on page ${item.page_route}: ${item.description}`,
+        issue_description: `User Feedback from ${item.submitted_by_email} on page ${item.page_route}: ${item.description}${noteText ? `\n\n✍️ SUPER ADMIN DIRECTIVE (PJ Losey): "${noteText}"` : ''}`,
         root_cause: `Promoted from Member Feedback Triage HQ by Super Admin.`,
         resolution_summary: 'Approved by Super Admin for AI Subagent development and backlog execution.',
         verification_proof: 'Pending subagent development and visual E2E verification.',
         sop_summary: `Approved user feature request/bug fix for ${item.title}.`,
         sop_steps: [
           `Inspect user feedback payload ${item.id} on route ${item.page_route}.`,
+          ...(noteText ? [`Adhere strictly to Super Admin Directive: "${noteText}"`] : []),
           `Implement architectural changes or bug fix requested by member ${item.submitted_by_email}.`,
           `Run npx tsc --noEmit and npm run test:headed to verify clean implementation.`,
           `Update ticket status to VERIFIED.`
@@ -139,6 +143,7 @@ export default function AdminFeedbackTriagePage() {
         await updateDoc(doc(db, 'user_feedback', item.id), {
           status: 'APPROVED_FOR_DEV',
           promoted_ticket_number: ticketNum,
+          ...(noteText ? { admin_notes: noteText } : {}),
         });
       } catch (e) {
         console.warn('Update user_feedback doc fallback:', e);
@@ -152,6 +157,7 @@ export default function AdminFeedbackTriagePage() {
       );
 
       setActionSuccess(`🚀 Promoted to Active Subagent Ticket ${ticketNum}!`);
+      setAdminNote('');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to promote ticket:', err);
@@ -159,11 +165,16 @@ export default function AdminFeedbackTriagePage() {
   };
 
   // Mark Feedback as Roadmap Idea
-  const markAsRoadmap = async (item: UserFeedbackItem) => {
+  const markAsRoadmap = async (item: UserFeedbackItem, customNote?: string) => {
+    const noteText = customNote || adminNote;
     try {
-      await updateDoc(doc(db, 'user_feedback', item.id), { status: 'ROADMAP_IDEA' }).catch(() => {});
+      await updateDoc(doc(db, 'user_feedback', item.id), {
+        status: 'ROADMAP_IDEA',
+        ...(noteText ? { admin_notes: noteText } : {}),
+      }).catch(() => {});
       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: 'ROADMAP_IDEA' } : i)));
       setActionSuccess('💡 Saved to Roadmap Wishlist!');
+      setAdminNote('');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to mark roadmap:', err);
@@ -171,11 +182,16 @@ export default function AdminFeedbackTriagePage() {
   };
 
   // Decline / Archive Feedback
-  const declineFeedback = async (item: UserFeedbackItem) => {
+  const declineFeedback = async (item: UserFeedbackItem, customNote?: string) => {
+    const noteText = customNote || adminNote;
     try {
-      await updateDoc(doc(db, 'user_feedback', item.id), { status: 'DECLINED' }).catch(() => {});
+      await updateDoc(doc(db, 'user_feedback', item.id), {
+        status: 'DECLINED',
+        ...(noteText ? { admin_notes: noteText } : {}),
+      }).catch(() => {});
       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: 'DECLINED' } : i)));
       setActionSuccess('❌ Archived feedback submission.');
+      setAdminNote('');
       setTimeout(() => setActionSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to decline feedback:', err);
@@ -386,13 +402,30 @@ export default function AdminFeedbackTriagePage() {
                 </p>
               </div>
 
+              {/* Super Admin Notes & Directives Input */}
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-wider text-amber-950 block flex items-center gap-1.5">
+                  <span>✍️</span> Super Admin Directive & Subagent Instructions (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Ensure mobile viewports use full-screen modals, prioritize for iOS Safari..."
+                  value={adminNote}
+                  onChange={(e) => setAdminNote(e.target.value)}
+                  className="w-full text-xs font-medium p-2.5 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff3b30] bg-white text-neutral-900"
+                />
+                <p className="text-[10px] text-amber-800 font-mono">
+                  Notes typed here will attach directly to the generated subagent execution ticket (TICK-xxxx) & SOP blueprint.
+                </p>
+              </div>
+
               {/* Action Buttons inside Drawer */}
               <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3">
                 <span className="text-[10px] font-black uppercase tracking-wider text-neutral-700 block">Triage Actions</span>
                 <div className="space-y-2">
                   <button
                     onClick={() => {
-                      promoteToSubagentTicket(selectedItem);
+                      promoteToSubagentTicket(selectedItem, adminNote);
                       setSelectedItem(null);
                     }}
                     className="w-full py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition active:scale-95 flex items-center justify-center gap-2"
@@ -401,7 +434,7 @@ export default function AdminFeedbackTriagePage() {
                   </button>
                   <button
                     onClick={() => {
-                      markAsRoadmap(selectedItem);
+                      markAsRoadmap(selectedItem, adminNote);
                       setSelectedItem(null);
                     }}
                     className="w-full py-2.5 bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
@@ -410,7 +443,7 @@ export default function AdminFeedbackTriagePage() {
                   </button>
                   <button
                     onClick={() => {
-                      declineFeedback(selectedItem);
+                      declineFeedback(selectedItem, adminNote);
                       setSelectedItem(null);
                     }}
                     className="w-full py-2.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 flex items-center justify-center"
