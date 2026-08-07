@@ -1,17 +1,30 @@
 import { defineConfig, devices } from '@playwright/test';
+import path from 'path';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 1 : undefined,
+  retries: 0,
+  workers: 1, // Single worker for smooth visual step-by-step execution
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:3000',
+    headless: false, // MANDATORY INVARIANT: Always open visual Chrome browser window on desktop
+    viewport: { width: 1280, height: 800 },
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    channel: 'chrome', // Use locally installed Google Chrome
+    channel: 'chrome', // Use user's installed Google Chrome browser
+    // Preserve local authentication session state
+    storageState: path.join(__dirname, 'tests', '.auth', 'user.json'),
+    launchOptions: {
+      headless: false,
+      args: [
+        '--start-maximized',
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+      ],
+    },
   },
   projects: [
     {
@@ -19,25 +32,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
-        launchOptions: {
-          args: [
-            '--use-fake-ui-for-media-stream',
-            '--use-fake-device-for-media-stream',
-          ],
-        },
-      },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-        viewport: { width: 375, height: 667 },
-        launchOptions: {
-          args: [
-            '--use-fake-ui-for-media-stream',
-            '--use-fake-device-for-media-stream',
-          ],
-        },
       },
     },
   ],

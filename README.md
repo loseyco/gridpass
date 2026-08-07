@@ -1,4 +1,4 @@
-# 🏎️ Gridpass — Universal Vehicle Network & Modular Business Engine
+# 🏁 Gridpass — One Tag for Everything (Vehicles, Events, Vendors & Venues)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.6-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)

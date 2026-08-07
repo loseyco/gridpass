@@ -1,0 +1,28 @@
+name: Gridpass Independent App Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-web:
+    name: Deploy Main Web Portal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx turbo run build --filter=@gridpass/web
+
+  deploy-secondlife:
+    name: Deploy Second Life Control Center
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx turbo run build --filter=@gridpass/secondlife

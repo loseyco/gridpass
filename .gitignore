@@ -46,4 +46,12 @@ next-env.d.ts
 # test results
 test-results/
 tests/screenshots/
+tests/.auth/
+
+# scratch and local debug scripts
+scratch/
+*.mjs
+focus-chrome.ps1
+list-windows.js
+
 
