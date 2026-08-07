@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1034_member_referral_engine_and_clean_welcome_card',
+    ticket_number: 'TICK-1034',
+    agent_role: 'gm',
+    title: 'Universal Member Referral Link Engine & Streamlined Logged-In Welcome Card',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['JoinClient', 'createAndCopyShareableLink', 'referrerName'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: referrer_name, referrer_id'],
+    issue_description: 'Platform owner required streamlining the logged-in /join welcome card (dropping extra buttons) and opening the Create & Copy VIP Referral Link button to ALL logged-in members with personalized friend invite banners.',
+    root_cause: 'Logged-in view contained redundant action buttons, while referral link creation was restricted strictly to Super Admin.',
+    resolution_summary: 'Refactored JoinClient.tsx: unlocked createAndCopyShareableLink for all authenticated members, generating personalized referral links (/join?tag=VIP-XXXXX&ref=PJ_Losey) with dynamic "⚡ PJ LOSEY INVITED YOU TO JOIN GRIDPASS!" friend banners.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified referral flow on localhost.',
+    sop_summary: 'SOP for member referral link generation and personalized friend onboarding.',
+    sop_steps: [
+      'Enable VIP referral link generation for all authenticated members.',
+      'Append referrer name to VIP share links and store referrer metadata in physical_tags.',
+      'Display high-energy personalized invite header when friends open referral links.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1033_dynamic_card_rebinding_cleanup',
     ticket_number: 'TICK-1033',
     agent_role: 'gm',

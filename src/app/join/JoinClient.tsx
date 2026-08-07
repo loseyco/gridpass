@@ -230,18 +230,19 @@ function JoinPageContent() {
     reader.readAsDataURL(file);
   };
 
-  // 1-Tap Create & Copy Virtual Shareable VIP Link (for Facebook / SMS / Instagram DMs)
+  // 1-Tap Create & Copy Member Referral VIP Link (for Facebook / SMS / Instagram DMs)
   const createAndCopyShareableLink = async () => {
-    // Generates a 100% collision-free unique virtual share tag ID (e.g. VIP-88A9)
-    const uniqueShareId = rawTagId || `VIP-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-    const url = `${window.location.origin}/join?tag=${uniqueShareId}`;
+    const memberName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Gridpass Member');
+    const uniqueShareId = `VIP-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const url = `${window.location.origin}/join?tag=${uniqueShareId}&ref=${encodeURIComponent(memberName)}`;
 
-    // Auto-register virtual share tag in Firestore physical_tags collection
     await setDoc(
       doc(db, 'physical_tags', `tag_${uniqueShareId}`),
       {
         tag_id: uniqueShareId,
-        title: `Virtual Social Media Share Link (${uniqueShareId})`,
+        title: `VIP Invitation from ${memberName}`,
+        referrer_name: memberName,
+        referrer_id: user?.uid || null,
         distribution_method: 'handout',
         target_type: 'intake_join',
         target_destination: '/join',
@@ -255,8 +256,8 @@ function JoinPageContent() {
 
     navigator.clipboard.writeText(url);
     showToast({
-      title: 'UNIQUE VIRTUAL VIP LINK COPIED! 📋',
-      message: `Collision-free link (${url}) copied to clipboard. Send on Facebook, SMS, or Instagram!`,
+      title: 'VIP REFERRAL LINK COPIED! 📋',
+      message: `Personal invitation link copied to clipboard. Share with friends on Facebook, SMS, or Instagram!`,
       icon: '📋',
     });
   };
@@ -474,26 +475,36 @@ function JoinPageContent() {
             </span>
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
-              {tagRecord?.custom_spotted_photo_url
-                ? `🏎️ YOU ARE INVITED! CLAIM PASSPORT FOR YOUR ${tagRecord.custom_spotted_title || 'MACHINE'}`
-                : rawTagId
-                ? `⚡ YOU SCANNED INVITATION CARD #${rawTagId}`
-                : '⚡ YOU ARE INVITED TO JOIN GRIDPASS'}
-            </h1>
-            <p className="text-xs text-neutral-300 font-medium leading-relaxed">
-              Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.
-            </p>
-          </div>
+          {/* Derived Referrer Name */}
+          {(() => {
+            const referrerName = tagRecord?.referrer_name || searchParams.get('ref') || searchParams.get('referrer') || null;
+            return (
+              <div className="space-y-2">
+                <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
+                  {tagRecord?.custom_spotted_photo_url
+                    ? `🏎️ YOU ARE INVITED! CLAIM PASSPORT FOR YOUR ${tagRecord.custom_spotted_title || 'MACHINE'}`
+                    : referrerName
+                    ? `⚡ ${referrerName.toUpperCase()} INVITED YOU TO JOIN GRIDPASS!`
+                    : rawTagId
+                    ? `⚡ YOU SCANNED INVITATION CARD #${rawTagId}`
+                    : '⚡ YOU ARE INVITED TO JOIN GRIDPASS'}
+                </h1>
+                <p className="text-xs text-neutral-300 font-medium leading-relaxed">
+                  {referrerName
+                    ? `Your friend ${referrerName} invited you to claim your vehicle passport, register your business, or join the roster on Gridpass!`
+                    : 'Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.'}
+                </p>
+              </div>
+            );
+          })()}
 
-          {/* Admin Controller Tools */}
-          {isAdmin && (
+          {/* Member & Admin Controller Tools */}
+          {(isAdmin || user) && (
             <div className="pt-2 border-t border-neutral-800 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1">
                   <Zap className="w-3 h-3 fill-current" />
-                  SUPER ADMIN CONTROLLER
+                  {isAdmin ? 'SUPER ADMIN CONTROLLER' : 'MEMBER REFERRAL ENGINE'}
                 </span>
                 <span className="text-[9px] font-mono text-neutral-400">
                   {rawTagId ? `Card #${rawTagId}` : 'Virtual Mode'}
@@ -501,7 +512,7 @@ function JoinPageContent() {
               </div>
 
               <div className="grid grid-cols-1 gap-2">
-                {rawTagId ? (
+                {rawTagId && isAdmin ? (
                   <button
                     onClick={() => setShowAdminWizard(true)}
                     className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
@@ -515,7 +526,7 @@ function JoinPageContent() {
                     className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
                   >
                     <Copy className="w-3.5 h-3.5" />
-                    <span>📋 Create & Copy Shareable VIP Link</span>
+                    <span>📋 Create & Copy Member VIP Referral Link</span>
                   </button>
                 )}
               </div>
@@ -574,22 +585,6 @@ function JoinPageContent() {
               >
                 <span>🏎️ GO TO DRIVER DASHBOARD & GARAGE</span>
                 <ArrowRight className="w-4 h-4 text-emerald-400" />
-              </Link>
-
-              <Link
-                href="/dash"
-                className="w-full py-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-between px-4"
-              >
-                <span>➕ REGISTER / CLAIM VEHICLE PASSPORT</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <Link
-                href="/partner"
-                className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl border border-neutral-300 transition flex items-center justify-between px-4"
-              >
-                <span>🏢 REGISTER BUSINESS OR AUTO SHOP</span>
-                <ArrowRight className="w-4 h-4 text-neutral-500" />
               </Link>
             </div>
           </div>
