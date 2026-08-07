@@ -211,6 +211,20 @@ function JoinPageContent() {
           };
         } else if (!snap.empty) {
           rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
+          if (rec.unclaimed_business_id || rec.target_type === 'business') {
+            const bizId = rec.unclaimed_business_id || rec.tag_id;
+            const bSnap = await getDoc(doc(db, 'businesses', bizId)).catch(() => null);
+            if (bSnap && bSnap.exists()) {
+              const bData = bSnap.data();
+              rec = {
+                ...rec,
+                location_name: rec.location_name || bData.location_name || '',
+                category: rec.category || bData.category || 'shop_garage',
+                custom_spotted_photo_url: rec.custom_spotted_photo_url || bData.photo_url || '',
+                custom_spotted_title: rec.custom_spotted_title || bData.name || '',
+              };
+            }
+          }
         } else {
           // Check if tagIdStr matches a staged business ID in businesses collection!
           const bizSnap = await getDoc(doc(db, 'businesses', tagIdStr)).catch(() => null);
@@ -226,6 +240,9 @@ function JoinPageContent() {
               target_destination: `/b/${tagIdStr}`,
               unclaimed_business_id: tagIdStr,
               custom_spotted_title: formatBizName,
+              location_name: bData.location_name || '',
+              category: bData.category || 'shop_garage',
+              custom_spotted_photo_url: bData.photo_url || '',
               status: 'active',
             };
           } else {
@@ -706,6 +723,8 @@ function JoinPageContent() {
       custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : (isBusinessMode ? (editBusinessName || null) : (isPersonMode ? (editPersonName || null) : null)),
       custom_spotted_note: editSpottedNote || null,
       recipient_name: isPersonMode ? (editPersonName || null) : null,
+      location_name: isBusinessMode ? (editBusinessLocation || null) : null,
+      category: isBusinessMode ? (editBusinessCategory || null) : null,
       referrer_name: memberName,
       referrer_id: user?.uid || null,
       unclaimed_vehicle_id: newUnclaimedVehId,

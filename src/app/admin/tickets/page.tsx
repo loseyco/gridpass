@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1056_business_location_and_note_full_persistence',
+    ticket_number: 'TICK-1056',
+    agent_role: 'site_auditor',
+    title: 'Business City/Region & Personal Note Full Persistence Engine',
+    category: 'architecture',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'resolvePhysicalTag', 'location_name'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: location_name & category fields persisted'],
+    issue_description: 'Platform owner reported that entering City/Region (e.g. Grayslake, IL) in the business invite wizard was not persisting upon page reload.',
+    root_cause: 'JoinClient.tsx saved location_name to businesses collection but did not persist location_name to physical_tags or merge businesses collection data during resolvePhysicalTag().',
+    resolution_summary: 'Updated JoinClient.tsx: saved location_name and category to physical_tags collection, added automatic businesses collection getDoc merge in resolvePhysicalTag(), ensuring City/Region, Personal Notes, Category, and Storefront Photo persist 100% reliably across page reloads.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean field persistence when reloading /join?id=monarch-defender.',
+    sop_summary: 'SOP for business location and note persistence.',
+    sop_steps: [
+      'Enter City/Region (e.g. Grayslake, IL) and Personal Note in Setup Wizard.',
+      'Save configuration to write location_name & category to both businesses and physical_tags.',
+      'Reload page to verify resolvePhysicalTag merges businesses data and populates City/Region.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1055_unclaimed_vehicle_passport_banner_fix',
     ticket_number: 'TICK-1055',
     agent_role: 'site_auditor',
