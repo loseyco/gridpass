@@ -56,6 +56,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     }
   }
 
+  // Base64 data URIs (data:image/...) are rejected by Facebook/Twitter scrapers for og:image.
+  // Fall back to dynamic OG card generator (/api/og) if image is a base64 string or missing.
+  if (!imageUrl || imageUrl.startsWith('data:')) {
+    imageUrl = `/api/og?title=${encodeURIComponent(title)}&desc=${encodeURIComponent(description)}`;
+  }
+
   // Ensure absolute URL for social scrapers (Facebook, Twitter, iMessage)
   const absoluteImageUrl = imageUrl.startsWith('http')
     ? imageUrl

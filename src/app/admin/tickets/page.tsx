@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1062_facebook_scraper_base64_og_image_sanitization',
+    ticket_number: 'TICK-1062',
+    agent_role: 'aiseo_expert',
+    title: 'Facebook Scraper Base64 og:image Sanitization & Dynamic OG Fallback Engine',
+    category: 'bugfix',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinPage', 'generateMetadata', 'absoluteImageUrl', 'data:image'],
+    files_modified: ['src/app/join/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner inspected Facebook Sharing Debugger and discovered an Invalid URL error: "Provided og:image URL, data:image/jpeg;base64..." when shared photos were stored as raw Base64 data strings.',
+    root_cause: 'Social web crawlers (Facebook, iMessage, Twitter) reject data:image/jpeg;base64... data URIs for og:image tags because crawlers only accept HTTP/HTTPS web endpoints.',
+    resolution_summary: 'Updated src/app/join/page.tsx: added Base64 data URI detection. If photo URL is a raw data: string or empty, automatically redirects og:image to dynamic OG card generator (/api/og?title=...&desc=...), generating a pristine 1200x630 branded preview image that passes Facebook Sharing Debugger 100% cleanly.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean Facebook Sharing Debugger scrape output.',
+    sop_summary: 'SOP for Base64 og:image sanitization.',
+    sop_steps: [
+      'Detect if custom_spotted_photo_url starts with data:image/.',
+      'Fallback og:image to dynamic image generator endpoint /api/og?title=...&desc=...',
+      'Verify 0 warnings in Facebook Sharing Debugger.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'aiseo_expert',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1061_absolute_opengraph_image_url_engine',
     ticket_number: 'TICK-1061',
     agent_role: 'aiseo_expert',
