@@ -9,6 +9,44 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets & SOP Manuals (Ordered Newest First)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1007_crm_intake',
+    ticket_number: 'TICK-1007',
+    agent_role: 'architect',
+    title: 'UpfittersOS Sales CRM Intake Engine & Lead Conversion Pipeline',
+    category: 'feature',
+    status: 'TODO',
+    priority: 'urgent',
+    components_used: ['SalesIntakeForm', 'LeadTable', 'Firestore'],
+    files_modified: ['src/app/admin/sales/page.tsx', 'src/lib/types/sales.ts'],
+    schema_changes: ['sales_leads collection', 'lead_status', 'assigned_rep'],
+    sop_summary: 'Active ticket for building dual-worksheet CRM lead capture engine and automated quote pipeline.',
+    sop_steps: [
+      'Implement /admin/sales intake dashboard with lead capture forms.',
+      'Configure automatic lead routing to designated sales reps.',
+      'Set up instant SMS/email notification hooks upon new submission.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'tick_1006_dual_worksheet_sop',
+    ticket_number: 'TICK-1006',
+    agent_role: 'git_expert',
+    title: 'Dual-Worksheet Active TODO Tickets & Completed SOP Log HQ',
+    category: 'architecture',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['ExcelWorksheetTable', 'AdminSOPKnowledgeBasePage'],
+    files_modified: ['src/app/admin/sop/page.tsx', 'src/lib/types/admin.ts'],
+    schema_changes: ['AgentTicket.status union includes TODO'],
+    sop_summary: 'Dual worksheet table layout separating pending subagent TODO execution tickets from verified historical SOP manuals.',
+    sop_steps: [
+      'Audit /admin/sop active state and separate TODO/IN_PROGRESS queue from VERIFIED/COMPLETED log.',
+      'Render two independent ExcelWorksheetTable components on Tab 1 with status badge color codes.',
+      'Ensure drawer preview, search filtering, and live Firestore sync function seamlessly across both tables.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
     id: 'tick_1005_sticky_actions',
     ticket_number: 'TICK-1005',
     agent_role: 'site_auditor',
@@ -293,11 +331,20 @@ export default function AdminSOPKnowledgeBasePage() {
     {
       key: 'status',
       label: 'STATUS',
-      render: (row) => (
-        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-          ✓ {row.status || 'VERIFIED'}
-        </span>
-      ),
+      render: (row) => {
+        const s = row.status || 'VERIFIED';
+        if (s === 'TODO') {
+          return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">⏳ TODO</span>;
+        }
+        if (s === 'IN_PROGRESS') {
+          return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-300">🔄 IN PROGRESS</span>;
+        }
+        return (
+          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+            ✓ {s}
+          </span>
+        );
+      },
     },
     {
       key: 'created_at',
@@ -305,6 +352,9 @@ export default function AdminSOPKnowledgeBasePage() {
       render: (row) => <span className="text-[11px] font-mono text-neutral-500">{(row.created_at || '').split('T')[0]}</span>,
     },
   ];
+
+  const todoTickets = filteredTickets.filter((t) => t.status === 'TODO' || t.status === 'IN_PROGRESS');
+  const completedTickets = filteredTickets.filter((t) => t.status === 'COMPLETED' || t.status === 'VERIFIED' || !t.status);
 
   return (
     <div className="w-full max-w-full 2xl:max-w-[1800px] 4k:max-w-[3400px] mx-auto space-y-5 font-sans pb-24 sm:pb-0">
@@ -326,7 +376,7 @@ export default function AdminSOPKnowledgeBasePage() {
         {/* View Tabs */}
         <div className="flex items-center gap-2 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
           {[
-            { id: 'tickets', label: '🎟️ Agent Tickets' },
+            { id: 'tickets', label: '🎟️ Agent Worksheets' },
             { id: 'sops', label: '📚 SOP Manuals' },
             { id: 'telemetry', label: '📡 Site Telemetry' },
           ].map((tb) => (
@@ -345,25 +395,60 @@ export default function AdminSOPKnowledgeBasePage() {
         </div>
       </div>
 
-      {/* TAB 1: AGENT TICKETS WORKSHEET */}
+      {/* TAB 1: AGENT TICKETS DUAL WORKSHEETS */}
       {activeTab === 'tickets' && (
-        <div className="space-y-4">
-          <ExcelWorksheetTable
-            title="Subagent Execution Tickets & SOP Log"
-            data={filteredTickets}
-            columns={columns}
-            idKey="id"
-            searchPlaceholder="Search tickets, components, schemas, SOPs..."
-            loading={loading}
-            actionRenderer={(row) => (
-              <button
-                onClick={() => setSelectedTicket(row)}
-                className="text-[10px] font-black uppercase bg-[#ff3b30] hover:bg-[#bd2925] text-white px-3 py-1 rounded shadow-xs transition active:scale-95"
-              >
-                Read SOP 📖
-              </button>
-            )}
-          />
+        <div className="space-y-8">
+          {/* Worksheet 1: Active TODO Execution Queue */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+              <h2 className="text-sm font-black uppercase tracking-tight text-neutral-900">
+                1. Active Agent TODO Execution Queue ({todoTickets.length})
+              </h2>
+            </div>
+            <ExcelWorksheetTable
+              title="Active Subagent TODO Execution Queue"
+              data={todoTickets}
+              columns={columns}
+              idKey="id"
+              searchPlaceholder="Search active TODO execution tickets..."
+              loading={loading}
+              actionRenderer={(row) => (
+                <button
+                  onClick={() => setSelectedTicket(row)}
+                  className="text-[10px] font-black uppercase bg-neutral-900 hover:bg-black text-white px-3 py-1 rounded shadow-xs transition active:scale-95"
+                >
+                  View Details 📋
+                </button>
+              )}
+            />
+          </div>
+
+          {/* Worksheet 2: Verified & Completed SOP Log */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <h2 className="text-sm font-black uppercase tracking-tight text-neutral-900">
+                2. Verified & Completed Subagent SOP Log ({completedTickets.length})
+              </h2>
+            </div>
+            <ExcelWorksheetTable
+              title="Verified Subagent SOP Log & Architecture Manuals"
+              data={completedTickets}
+              columns={columns}
+              idKey="id"
+              searchPlaceholder="Search completed SOP manuals..."
+              loading={loading}
+              actionRenderer={(row) => (
+                <button
+                  onClick={() => setSelectedTicket(row)}
+                  className="text-[10px] font-black uppercase bg-[#ff3b30] hover:bg-[#bd2925] text-white px-3 py-1 rounded shadow-xs transition active:scale-95"
+                >
+                  Read SOP 📖
+                </button>
+              )}
+            />
+          </div>
         </div>
       )}
 

@@ -22,7 +22,7 @@ export interface AgentTicket {
   agent_role: 'architect' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'aiseo_expert' | 'gm';
   title: string;
   category: 'architecture' | 'ui_design' | 'mobile_touch' | 'seo' | 'security' | 'testing' | 'feature' | 'database';
-  status: 'COMPLETED' | 'VERIFIED' | 'IN_PROGRESS';
+  status: 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED';
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   components_used: string[];
   files_modified: string[];
