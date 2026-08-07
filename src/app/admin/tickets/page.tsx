@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1065_public_landing_page_and_mobile_nav_rearchitecture',
+    ticket_number: 'TICK-1065',
+    agent_role: 'site_auditor',
+    title: 'Public Landing Page & Mobile Navigation UX Re-Architecture',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['AppShell', 'HomePage', 'MobileDrawer', 'ExploreCTA', 'ShowcaseGrid'],
+    files_modified: ['src/components/AppShell.tsx', 'src/app/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported landing page (gridpass.app) was uninviting, trapped unauthenticated mobile visitors without navigation controls, and lacked public exploration pathways.',
+    root_cause: 'AppShell bottom tab bar was hard-gated behind user auth state, AppShell header lacked a mobile hamburger menu button, and landing page hero rendered non-interactive text pills and unclickable stat counters.',
+    resolution_summary: 'Re-architected AppShell.tsx and page.tsx: 1. Added mobile hamburger menu button and slide-down navigation drawer to AppShell for all visitors. 2. Unlocked bottom navigation tab bar for unauthenticated guests (Explore, Vehicles, Events, Businesses, Sign In). 3. Converted landing page hero pills to interactive links, added primary "Explore Platform (Guest)" CTA, made stat counters clickable, and added a 4-card Network Showcase Grid.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean mobile navigation drawer.',
+    sop_summary: 'SOP for public mobile navigation & landing page architecture.',
+    sop_steps: [
+      'Render mobile hamburger menu button and slide-down drawer in AppShell for unauthenticated users.',
+      'Provide public bottom tab bar links for unauthenticated guests.',
+      'Convert static hero pills and stat counters into interactive links.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1064_official_gridpass_logo_emblem_integration',
     ticket_number: 'TICK-1064',
     agent_role: 'site_auditor',
