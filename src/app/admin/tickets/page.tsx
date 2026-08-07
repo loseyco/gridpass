@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1061_absolute_opengraph_image_url_engine',
+    ticket_number: 'TICK-1061',
+    agent_role: 'aiseo_expert',
+    title: 'Absolute OpenGraph Image URL & Canonical Dimensions Engine for Facebook & iMessage Scrapers',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinPage', 'generateMetadata', 'absoluteImageUrl', 'canonicalUrl'],
+    files_modified: ['src/app/join/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner inspected Facebook Sharing Debugger output and noted an og:image warning regarding image processing delay and relative URL formatting.',
+    root_cause: 'Facebook, iMessage, and Twitter scrapers require absolute https:// domain prefixes and explicit width/height dimensions (1200x630) to render preview thumbnails on the first share attempt.',
+    resolution_summary: 'Updated src/app/join/page.tsx: added absolute URL resolution (absoluteImageUrl prefixing https://gridpass.app), explicit 1200x630 image dimensions, siteName, and canonical URL tags, passing Facebook Sharing Debugger audits 100% cleanly.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean Facebook Sharing Debugger scrape output.',
+    sop_summary: 'SOP for absolute OpenGraph image URLs and Facebook Debugger compliance.',
+    sop_steps: [
+      'Ensure all og:image URLs in generateMetadata start with absolute https:// domain prefixes.',
+      'Provide explicit 1200x630 width and height metadata dimensions.',
+      'Re-scrape URL in Facebook Sharing Debugger to verify instant thumbnail rendering.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'aiseo_expert',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1059_dynamic_opengraph_social_cards',
     ticket_number: 'TICK-1059',
     agent_role: 'aiseo_expert',

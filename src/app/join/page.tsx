@@ -56,17 +56,29 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     }
   }
 
+  // Ensure absolute URL for social scrapers (Facebook, Twitter, iMessage)
+  const absoluteImageUrl = imageUrl.startsWith('http')
+    ? imageUrl
+    : `https://gridpass.app${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+
+  const canonicalUrl = `https://gridpass.app/join${tagId ? `?tag=${tagId}` : ''}`;
+
   return {
     title,
     description,
     keywords: ['scan qr code', 'claim tag', 'vehicle registration', 'gridpass tag', 'business passport', 'motorsports gate pass'],
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title,
       description,
+      url: canonicalUrl,
+      siteName: 'Gridpass',
       type: 'website',
       images: [
         {
-          url: imageUrl,
+          url: absoluteImageUrl,
           width: 1200,
           height: 630,
           alt: title,
@@ -77,7 +89,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       card: 'summary_large_image',
       title,
       description,
-      images: [imageUrl],
+      images: [absoluteImageUrl],
     }
   };
 }
