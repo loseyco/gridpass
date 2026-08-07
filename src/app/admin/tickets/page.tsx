@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1054_setup_wizard_auto_default_and_prepopulate',
+    ticket_number: 'TICK-1054',
+    agent_role: 'site_auditor',
+    title: 'Setup Wizard Default Target Mode Auto-Selection & Pre-Population Engine',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'openAdminWizard', 'isBiz'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported that opening the setup wizard on a business invitation card (#MONARCH-DEFENDER) defaulted to "Invite Vehicle" and did not pre-populate existing staged business information.',
+    root_cause: 'JoinClient.tsx defaulted editTargetType state to vehicle and lacked openAdminWizard pre-population hook when re-opening the wizard modal.',
+    resolution_summary: 'Updated JoinClient.tsx: added openAdminWizard helper function that auto-detects card target mode (Business, Person, Vehicle, Custom URL), auto-selects the correct button tab, and pre-populates all inputs from existing Firestore tag and business records.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean auto-selection when opening /join?id=monarch-defender.',
+    sop_summary: 'SOP for setup wizard target mode auto-selection.',
+    sop_steps: [
+      'Click [⚡ Configure Card] on an existing staged card.',
+      'openAdminWizard evaluates tagRecord.target_type and isBiz.',
+      'Setup wizard automatically selects [Invite Business] tab and pre-fills Business Name, Category, Location, Personal Note, and Storefront Photo.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1053_unclaimed_passport_asset_transfer_redirect',
     ticket_number: 'TICK-1053',
     agent_role: 'architect',

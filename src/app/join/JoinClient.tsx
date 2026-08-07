@@ -95,6 +95,12 @@ function JoinPageContent() {
   // Person / Member Invite Fields
   const [editPersonName, setEditPersonName] = useState('');
 
+  // Derived helper properties
+  const isBiz = tagRecord?.target_type === 'business' || tagRecord?.unclaimed_business_id || searchParams.has('biz') || searchParams.has('business') || (rawTagId && rawTagId.includes('-'));
+  const isPerson = tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person' || searchParams.has('person') || searchParams.has('driver');
+  const bizName = tagRecord?.custom_spotted_title || (rawTagId && rawTagId.includes('-') ? rawTagId.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'BUSINESS');
+  const personName = tagRecord?.recipient_name || tagRecord?.custom_spotted_title || searchParams.get('person') || searchParams.get('driver') || '';
+
   // Is Current User Admin?
   const isAdmin = user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com');
 
@@ -155,7 +161,11 @@ function JoinPageContent() {
 
         // Special E2E Mock Tag Handling
         if (tagIdStr === 'GP-MOCK-CLAIMED' && searchParams.get('spectator') === 'true') {
-          router.push('/v/mock-v1');
+          if (typeof window !== 'undefined') {
+            window.location.href = '/v/mock-v1';
+          } else {
+            router.push('/v/mock-v1');
+          }
           return;
         }
 
@@ -236,9 +246,15 @@ function JoinPageContent() {
 
         if (isMounted) {
           setTagRecord(rec);
-          setEditTargetType(rec.target_type || 'vehicle');
-          setEditTargetDest(rec.target_destination || '/join');
-          setEditMethod(rec.distribution_method || 'car_drop');
+          const autoType = (rec.target_type === 'business' || rec.unclaimed_business_id || rawTagId?.includes('-'))
+            ? 'business'
+            : (rec.target_type === 'driver' || rec.target_type === 'person')
+            ? 'driver'
+            : (rec.target_type || 'vehicle');
+
+          setEditTargetType(autoType);
+          setEditTargetDest(rec.target_destination || (autoType === 'business' ? `/b/${rec.unclaimed_business_id || rawTagId}` : '/join'));
+          setEditMethod(rec.distribution_method || 'handout');
           setEditSpottedPhoto(rec.custom_spotted_photo_url || '');
           setEditSpottedTitle(rec.custom_spotted_title || '');
           setEditSpottedNote(rec.custom_spotted_note || '');
@@ -246,8 +262,8 @@ function JoinPageContent() {
           setEditMake(rec.unclaimed_make || '');
           setEditModel(rec.unclaimed_model || '');
           setEditTrim(rec.unclaimed_trim || '');
-          setEditBusinessId(rec.unclaimed_business_id || '');
-          setEditBusinessName(rec.custom_spotted_title || '');
+          setEditBusinessId(rec.unclaimed_business_id || (autoType === 'business' ? rawTagId : ''));
+          setEditBusinessName(rec.custom_spotted_title || rec.title?.replace('🏢 ', '') || '');
           setEditPersonName(rec.recipient_name || rec.custom_spotted_title || '');
 
           // If unbound physical tag scanned by admin, open setup wizard automatically!
@@ -572,6 +588,40 @@ function JoinPageContent() {
     }
   };
 
+  // Helper to open setup wizard with auto-detected defaults & pre-populated fields
+  const openAdminWizard = () => {
+    const autoType = tagRecord?.target_type === 'business' || tagRecord?.unclaimed_business_id || isBiz
+      ? 'business'
+      : tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person' || isPerson
+      ? 'driver'
+      : tagRecord?.target_type === 'custom_url'
+      ? 'custom_url'
+      : tagRecord?.target_type || 'vehicle';
+
+    setEditTargetType(autoType);
+
+    if (tagRecord) {
+      setEditTargetDest(tagRecord.target_destination || (autoType === 'business' ? `/b/${tagRecord.unclaimed_business_id || rawTagId}` : '/join'));
+      setEditMethod(tagRecord.distribution_method || 'handout');
+      setEditSpottedPhoto(tagRecord.custom_spotted_photo_url || '');
+      setEditSpottedTitle(tagRecord.custom_spotted_title || '');
+      setEditSpottedNote(tagRecord.custom_spotted_note || '');
+      setEditYear(tagRecord.unclaimed_year || '');
+      setEditMake(tagRecord.unclaimed_make || '');
+      setEditModel(tagRecord.unclaimed_model || '');
+      setEditTrim(tagRecord.unclaimed_trim || '');
+      setEditBusinessId(tagRecord.unclaimed_business_id || (autoType === 'business' ? rawTagId : ''));
+      setEditBusinessName(tagRecord.custom_spotted_title || tagRecord.title?.replace('🏢 ', '') || (isBiz ? bizName : ''));
+      setEditPersonName(tagRecord.recipient_name || tagRecord.custom_spotted_title || '');
+    } else if (isBiz) {
+      setEditBusinessId(rawTagId || '');
+      setEditBusinessName(bizName || '');
+      setEditTargetDest(`/b/${rawTagId}`);
+    }
+
+    setShowAdminWizard(true);
+  };
+
   // Save Dynamic Tag Binding or Virtual VIP Share Link
   const handleAdminSaveTarget = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -820,8 +870,8 @@ function JoinPageContent() {
               <div className={`grid grid-cols-1 ${rawTagId && isAdmin ? 'sm:grid-cols-2' : ''} gap-2`}>
                 {/* Configure & Create Share Link via Setup Wizard */}
                 <button
-                  onClick={() => setShowAdminWizard(true)}
-                  className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
+                  onClick={openAdminWizard}
+                  className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                 >
                   <Copy className="w-3.5 h-3.5" />
                   <span>📋 Configure & Create VIP Share Link</span>
@@ -830,8 +880,8 @@ function JoinPageContent() {
                 {/* Admin Card Binding Controller (Super Admin Role on Real Scanned Card) */}
                 {isAdmin && rawTagId && (
                   <button
-                    onClick={() => setShowAdminWizard(true)}
-                    className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
+                    onClick={openAdminWizard}
+                    className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-95"
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
                     <span>⚡ Configure Card #{rawTagId}</span>
