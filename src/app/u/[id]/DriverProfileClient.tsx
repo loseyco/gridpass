@@ -89,7 +89,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [shareText, setShareText] = useState('Share Passport');
-  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
+  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('garage');
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
 
   const isMock = (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock');
@@ -221,6 +221,44 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             uDoc = snapUsername.docs[0];
             uData = uDoc.data() || null;
           }
+        }
+
+        if (!uData && (isMock || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock'))) {
+          const mockDriverProfile: DriverProfile = {
+            uid: 'user-marcus-123',
+            email: 'marcus@enthusiast.com',
+            display_name: 'Marcus Mustang',
+            username: 'pjlosey-mock',
+            bio: 'Track day enthusiast, weekend racer, and Ford Mustang collector.',
+            avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+            cover_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1200&q=80',
+            is_supporter: true,
+            role: 'SUPER ADMIN & FOUNDER',
+            tagId: 'GP-DRV-MARCUS',
+            home_town: 'Monmouth Beach, NJ',
+            socials: {
+              instagram: 'marcus_mustang',
+              youtube: 'marcusracing',
+              twitter: 'marcus_gt'
+            }
+          };
+          const mockDriverVehicles: Vehicle[] = [
+            {
+              id: 'mock-v1',
+              tag_id: 'GP-MUSTANG-2024',
+              year: 2024,
+              make: 'Ford',
+              model: 'Mustang GT',
+              trim: '5.0 V8 Performance Pack',
+              photo_url: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80',
+              respects_count: 42
+            }
+          ];
+          if (isMounted) {
+            setProfile(mockDriverProfile);
+            setVehicles(mockDriverVehicles);
+          }
+          return;
         }
 
         if (uDoc && uData) {
@@ -415,6 +453,12 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs font-mono font-bold text-neutral-500">
                 <span>@{profile.username || (profile.email ? profile.email.split('@')[0] : 'member')}</span>
+                {profile.email && (
+                  <>
+                    <span>•</span>
+                    <span className="text-neutral-700">{profile.email}</span>
+                  </>
+                )}
                 {profile.home_town && (
                   <>
                     <span>•</span>
@@ -564,7 +608,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                           href={`/v/${v.id}`}
                           className="py-1.5 px-3 bg-neutral-900 hover:bg-black text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all flex items-center gap-1"
                         >
-                          View Build Passport
+                          View Passport Details
                         </Link>
                       </div>
                     </div>
