@@ -49,6 +49,7 @@ function JoinPageContent() {
   const [loading, setLoading] = useState(!!rawTagId);
   const [tagRecord, setTagRecord] = useState<any | null>(null);
   const [showAdminWizard, setShowAdminWizard] = useState(false);
+  const [showMissionModal, setShowMissionModal] = useState(false);
   const [referrerDisplayName, setReferrerDisplayName] = useState<string | null>(null);
   const [createdShareUrl, setCreatedShareUrl] = useState<string | null>(null);
 
@@ -542,6 +543,7 @@ function JoinPageContent() {
             name: editBusinessName,
             category: editBusinessCategory || 'shop_garage',
             location_name: editBusinessLocation || 'Local Region',
+            photo_url: editSpottedPhoto || null,
             is_unclaimed: true,
             status: 'unclaimed',
             created_by: user?.email || 'loseyp@gmail.com',
@@ -567,7 +569,7 @@ function JoinPageContent() {
       distribution_method: editMethod || 'handout',
       target_type: editTargetType,
       target_destination: targetDest,
-      custom_spotted_photo_url: isVehicleMode ? (editSpottedPhoto || null) : null,
+      custom_spotted_photo_url: editSpottedPhoto || null,
       custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : (isBusinessMode ? (editBusinessName || null) : (isPersonMode ? (editPersonName || null) : null)),
       custom_spotted_note: editSpottedNote || null,
       recipient_name: isPersonMode ? (editPersonName || null) : null,
@@ -712,6 +714,16 @@ function JoinPageContent() {
                     'Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.'
                   )}
                 </p>
+
+                {/* Tell Me About Gridpass Mission Trigger Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowMissionModal(true)}
+                  className="w-full py-2.5 bg-neutral-800/80 hover:bg-neutral-800 text-amber-300 border border-amber-500/30 font-mono font-bold text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 mt-2"
+                >
+                  <Sparkles className="w-3.5 h-3.5 fill-current text-amber-400" />
+                  <span>💡 Tell Me About Gridpass</span>
+                </button>
               </div>
             );
           })()}
@@ -1327,6 +1339,45 @@ function JoinPageContent() {
                     <span>🏢 Configure Business Passport</span>
                   </span>
 
+                  {/* Business Storefront / Logo Photo Snap & Upload */}
+                  <div className="bg-white p-2.5 rounded-xl border border-neutral-200 space-y-2">
+                    <span className="block text-[9px] font-black uppercase text-blue-600 flex items-center gap-1">
+                      <CameraIcon className="w-3.5 h-3.5" />
+                      <span>📸 Snap Storefront / Logo Photo & Stage Passport</span>
+                    </span>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      id="business-photo-capture"
+                      className="hidden"
+                      onChange={handleCameraCapture}
+                    />
+
+                    {editSpottedPhoto ? (
+                      <div className="relative rounded-xl overflow-hidden border border-neutral-200 group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={editSpottedPhoto} alt="Staged Business Storefront" className="w-full h-32 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setEditSpottedPhoto('')}
+                          className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-1 rounded-full uppercase font-mono font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor="business-photo-capture"
+                        className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 text-white font-mono font-bold text-xs uppercase rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95"
+                      >
+                        <CameraIcon className="w-4 h-4 text-blue-400" />
+                        <span>📸 Snap Photo / Upload Logo</span>
+                      </label>
+                    )}
+                  </div>
+
                   {/* Dropdown Selector of Live Firestore Businesses */}
                   <div>
                     <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">
@@ -1479,6 +1530,96 @@ function JoinPageContent() {
             </form>
           </div>
         )}
+          </div>
+        </div>
+      )}
+
+      {/* TELL ME ABOUT GRIDPASS MISSION MODAL */}
+      {showMissionModal && (
+        <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+          <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl font-sans max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 bg-[#ff3b30] text-white rounded-full flex items-center justify-center font-black text-sm">
+                  ⚡
+                </span>
+                <div>
+                  <h2 className="font-black text-base uppercase text-neutral-900 tracking-tight">
+                    WHAT IS GRIDPASS?
+                  </h2>
+                  <p className="text-[10px] text-neutral-500 font-mono font-bold uppercase">
+                    OUR MISSION & PLATFORM OVERVIEW
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMissionModal(false)}
+                className="text-neutral-400 font-bold hover:text-neutral-900 text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-neutral-700 font-medium leading-relaxed">
+              <div className="bg-neutral-900 text-white p-4 rounded-2xl border border-neutral-800 space-y-2">
+                <span className="text-[10px] font-mono text-[#ff3b30] font-black uppercase tracking-wider block">
+                  🏁 THE GRIDPASS MISSION
+                </span>
+                <p className="text-xs font-bold leading-relaxed">
+                  Gridpass is the unified digital passport & physical QR intake ecosystem connecting drivers, race teams, local shops, food vendors, pilots, and spectators into one live network.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                  <div className="p-2 bg-red-100 text-[#ff3b30] rounded-lg">
+                    <Car className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-xs uppercase text-neutral-900">1. Digital Machine Passports</h4>
+                    <p className="text-[11px] text-neutral-600 font-bold">
+                      Build your vehicle profile, document modifications, link pit crews, and display your digital gate pass at events.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                  <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-xs uppercase text-neutral-900">2. Business & Partner Hub</h4>
+                    <p className="text-[11px] text-neutral-600 font-bold">
+                      Shops, tuning garages, food trucks, and track venues claim their business passport, list products, and capture active driver leads.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                  <div className="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-xs uppercase text-neutral-900">3. Physical QR Intake</h4>
+                    <p className="text-[11px] text-neutral-600 font-bold">
+                      Physical QR decals & invitation cards allow instant 1-tap intake at windshields, shop counters, and event gates.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-neutral-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowMissionModal(false)}
+                className="w-full py-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 min-h-[44px]"
+              >
+                <span>🚀 Got It! Join Roster Now ➔</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}
