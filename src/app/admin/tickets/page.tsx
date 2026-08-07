@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1058_dynamic_intake_header_resolution',
+    ticket_number: 'TICK-1058',
+    agent_role: 'site_auditor',
+    title: 'Dynamic Intake Header Resolution for Business, Vehicle & Member Passports',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'formHeaderTitle', 'isBizTarget'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner noticed that inviting a business (e.g. Shaw Daddy BBQ) displayed "CLAIM THIS VEHICLE PASSPORT" on the white form header instead of "CLAIM THIS BUSINESS PASSPORT".',
+    root_cause: 'JoinClient.tsx evaluated custom_spotted_photo_url instead of checking target_type === business or unclaimed_business_id.',
+    resolution_summary: 'Updated JoinClient.tsx: added dynamic target evaluation. For business invitations, renders "CLAIM THIS BUSINESS PASSPORT" ("Claim your pre-staged business passport & manage your partner hub."); for vehicles, renders "CLAIM THIS VEHICLE PASSPORT"; for members, renders "CLAIM YOUR MEMBER PASSPORT".',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified rendering on localhost/join?id=VIP-F7JEP.',
+    sop_summary: 'SOP for dynamic intake header resolution.',
+    sop_steps: [
+      'Evaluate target_type and unclaimed_business_id in JoinClient.tsx.',
+      'Render "CLAIM THIS BUSINESS PASSPORT" for business targets.',
+      'Render "CLAIM THIS VEHICLE PASSPORT" for vehicle targets.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1057_pre_push_multi_agent_audit_polish',
     ticket_number: 'TICK-1057',
     agent_role: 'gm',

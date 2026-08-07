@@ -1047,10 +1047,22 @@ function JoinPageContent() {
             <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
-                  {tagRecord?.custom_spotted_photo_url ? 'CLAIM THIS VEHICLE PASSPORT' : 'JOIN THE ROSTER'}
+                  {tagRecord?.target_type === 'business' || tagRecord?.unclaimed_business_id || isBiz
+                    ? 'CLAIM THIS BUSINESS PASSPORT'
+                    : tagRecord?.unclaimed_vehicle_id || tagRecord?.target_type === 'vehicle'
+                    ? 'CLAIM THIS VEHICLE PASSPORT'
+                    : tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person' || isPerson
+                    ? 'CLAIM YOUR MEMBER PASSPORT'
+                    : 'JOIN THE ROSTER'}
                 </h2>
                 <p className="text-xs text-neutral-500 font-bold">
-                  {tagRecord?.custom_spotted_photo_url ? 'Claim your pre-staged passport & transfer vehicle to your garage.' : 'Free instant membership for drivers, vendors, pilots & fans.'}
+                  {tagRecord?.target_type === 'business' || tagRecord?.unclaimed_business_id || isBiz
+                    ? 'Claim your pre-staged business passport & manage your partner hub.'
+                    : tagRecord?.unclaimed_vehicle_id || tagRecord?.target_type === 'vehicle'
+                    ? 'Claim your pre-staged machine passport & transfer vehicle to your garage.'
+                    : tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person' || isPerson
+                    ? 'Claim your VIP membership pass & join the Gridpass roster.'
+                    : 'Free instant membership for drivers, vendors, pilots & fans.'}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-[#ff3b30] text-white flex items-center justify-center shadow-md">
