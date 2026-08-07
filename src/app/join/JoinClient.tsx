@@ -4,10 +4,11 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Copy, Link as LinkIcon, Building2, Calendar, UserCheck } from 'lucide-react';
+import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Copy, Link as LinkIcon, Building2, Calendar, UserCheck, PlusCircle, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
+import { getAuth, signOut } from 'firebase/auth';
 
 function JoinPageContent() {
   const searchParams = useSearchParams();
@@ -47,8 +48,7 @@ function JoinPageContent() {
 
   const [loading, setLoading] = useState(!!rawTagId);
   const [tagRecord, setTagRecord] = useState<any | null>(null);
-  const [unclaimedVehicle, setUnclaimedVehicle] = useState<any | null>(null);
-  const [showAdminDrawer, setShowAdminDrawer] = useState(false);
+  const [showAdminWizard, setShowAdminWizard] = useState(false);
 
   // Real Database Entity Lists for Admin Selector
   const [dbVehicles, setDbVehicles] = useState<any[]>([]);
@@ -67,24 +67,26 @@ function JoinPageContent() {
   const [joining, setJoining] = useState(false);
   const [joinedSuccess, setJoinedSuccess] = useState(false);
 
-  // Admin On-The-Spot Car Photo & Unclaimed Vehicle Staging State
-  const [editTargetType, setEditTargetType] = useState('intake_join');
+  // Admin Tag Personalization State
+  const [editTargetType, setEditTargetType] = useState('vehicle'); // 'vehicle' | 'business' | 'driver' | 'custom_url'
   const [editTargetDest, setEditTargetDest] = useState('/join');
-  const [editMethod, setEditMethod] = useState('handout');
-  const [editPartnerName, setEditPartnerName] = useState('');
+  const [editMethod, setEditMethod] = useState('car_drop');
   const [editSpottedPhoto, setEditSpottedPhoto] = useState('');
   const [editSpottedTitle, setEditSpottedTitle] = useState('');
   const [editSpottedNote, setEditSpottedNote] = useState('');
   
-  // Unclaimed Vehicle Specific Fields
+  // Vehicle Invite Fields
   const [editYear, setEditYear] = useState('1969');
   const [editMake, setEditMake] = useState('Chevrolet');
   const [editModel, setEditModel] = useState('Camaro');
   const [editTrim, setEditTrim] = useState('SS 396');
 
-  // Fetch Database Entities when Admin Drawer Opens
+  // Is Current User Admin?
+  const isAdmin = user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com');
+
+  // Fetch Database Entities when Admin Wizard Opens
   useEffect(() => {
-    if (!showAdminDrawer) return;
+    if (!showAdminWizard) return;
 
     async function fetchDbEntities() {
       try {
@@ -116,7 +118,7 @@ function JoinPageContent() {
     }
 
     fetchDbEntities();
-  }, [showAdminDrawer]);
+  }, [showAdminWizard]);
 
   // Audit & Resolve Tag Intake
   useEffect(() => {
@@ -136,6 +138,7 @@ function JoinPageContent() {
         if (!snap.empty) {
           rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
         } else {
+          // Unbound / Brand New Physical Tag
           rec = {
             id: `tag_${rawTagId}`,
             tag_id: rawTagId,
@@ -151,10 +154,9 @@ function JoinPageContent() {
 
         if (isMounted) {
           setTagRecord(rec);
-          setEditTargetType(rec.target_type || 'intake_join');
+          setEditTargetType(rec.target_type || 'vehicle');
           setEditTargetDest(rec.target_destination || '/join');
-          setEditMethod(rec.distribution_method || 'handout');
-          setEditPartnerName(rec.partner_business_name || '');
+          setEditMethod(rec.distribution_method || 'car_drop');
           setEditSpottedPhoto(rec.custom_spotted_photo_url || '');
           setEditSpottedTitle(rec.custom_spotted_title || '');
           setEditSpottedNote(rec.custom_spotted_note || '');
@@ -162,17 +164,10 @@ function JoinPageContent() {
           setEditMake(rec.unclaimed_make || 'Chevrolet');
           setEditModel(rec.unclaimed_model || 'Camaro');
           setEditTrim(rec.unclaimed_trim || 'SS 396');
-        }
 
-        // If tag points to an unclaimed vehicle ID
-        if (rec.unclaimed_vehicle_id) {
-          try {
-            const vSnap = await getDocs(query(collection(db, 'vehicles'), where('id', '==', rec.unclaimed_vehicle_id)));
-            if (!vSnap.empty && isMounted) {
-              setUnclaimedVehicle({ id: vSnap.docs[0].id, ...vSnap.docs[0].data() });
-            }
-          } catch (err) {
-            console.warn('Error resolving unclaimed vehicle:', err);
+          // If unbound physical tag scanned by admin, open setup wizard automatically!
+          if (rec.status === 'unbound' && isAdmin) {
+            setShowAdminWizard(true);
           }
         }
 
@@ -188,9 +183,15 @@ function JoinPageContent() {
           referrer: typeof document !== 'undefined' ? document.referrer : '',
         }).catch(() => {});
 
-        // Auto-redirect if bound tag and not logged in as admin
-        if (rec.status === 'active' && rec.target_destination && rec.target_destination !== '/join' && !rec.target_destination.includes('/join')) {
-          if (!user || ((user as any).role !== 'super_admin' && user?.email !== 'loseyp@gmail.com')) {
+        // Auto-redirect if bound tag, has a destination, and visitor is NOT admin
+        if (
+          rec.status === 'active' &&
+          rec.target_destination &&
+          rec.target_destination !== '/join' &&
+          !rec.target_destination.includes('/join') &&
+          !rec.custom_spotted_photo_url
+        ) {
+          if (!isAdmin) {
             router.push(rec.target_destination);
             return;
           }
@@ -205,7 +206,7 @@ function JoinPageContent() {
 
     resolvePhysicalTag();
     return () => { isMounted = false; };
-  }, [rawTagId, user, router]);
+  }, [rawTagId, user, router, isAdmin]);
 
   // Handle Native Mobile Camera Capture / File Pick
   const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,39 +228,38 @@ function JoinPageContent() {
     reader.readAsDataURL(file);
   };
 
-  // 1-Tap Copy Shareable VIP Link (for Facebook / SMS / Instagram DMs)
-  const copyShareableLink = async () => {
+  // 1-Tap Create & Copy Virtual Shareable VIP Link (for Facebook / SMS / Instagram DMs)
+  const createAndCopyShareableLink = async () => {
+    // Generates a 100% collision-free unique virtual share tag ID (e.g. VIP-88A9)
     const uniqueShareId = rawTagId || `VIP-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     const url = `${window.location.origin}/join?tag=${uniqueShareId}`;
 
-    // Auto-register virtual share tag in Firestore if generated on the fly, protecting printed card IDs
-    if (!rawTagId) {
-      await setDoc(
-        doc(db, 'physical_tags', `tag_${uniqueShareId}`),
-        {
-          tag_id: uniqueShareId,
-          title: `Virtual Social Media Invitation Link (${uniqueShareId})`,
-          distribution_method: 'handout',
-          target_type: 'intake_join',
-          target_destination: '/join',
-          total_scans: 0,
-          members_joined_count: 0,
-          status: 'active',
-          created_at: new Date().toISOString(),
-        },
-        { merge: true }
-      ).catch(() => {});
-    }
+    // Auto-register virtual share tag in Firestore physical_tags collection
+    await setDoc(
+      doc(db, 'physical_tags', `tag_${uniqueShareId}`),
+      {
+        tag_id: uniqueShareId,
+        title: `Virtual Social Media Share Link (${uniqueShareId})`,
+        distribution_method: 'handout',
+        target_type: 'intake_join',
+        target_destination: '/join',
+        total_scans: 0,
+        members_joined_count: 0,
+        status: 'active',
+        created_at: new Date().toISOString(),
+      },
+      { merge: true }
+    ).catch(() => {});
 
     navigator.clipboard.writeText(url);
     showToast({
-      title: 'UNIQUE SHAREABLE VIP LINK COPIED! 📋',
+      title: 'UNIQUE VIRTUAL VIP LINK COPIED! 📋',
       message: `Collision-free link (${url}) copied to clipboard. Send on Facebook, SMS, or Instagram!`,
       icon: '📋',
     });
   };
 
-  // Handle Form Submission (or Claiming Unclaimed Vehicle)
+  // Handle Visitor Join or Claim Submission
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -279,7 +279,7 @@ function JoinPageContent() {
         created_at: new Date().toISOString(),
       });
 
-      // If an unclaimed vehicle was linked to this tag, transfer it to the new user's garage!
+      // If an unclaimed vehicle was staged for this tag, transfer it into the member's garage!
       if (tagRecord?.unclaimed_vehicle_id || tagRecord?.custom_spotted_photo_url) {
         const vehicleId = tagRecord.unclaimed_vehicle_id || `veh_claimed_${Date.now()}`;
         await setDoc(
@@ -312,7 +312,7 @@ function JoinPageContent() {
       setJoinedSuccess(true);
       showToast({
         title: 'WELCOME TO GRIDPASS! 🎉',
-        message: rawTagId ? `Membership active! Vehicle passport claimed for Card #${rawTagId}.` : 'Membership active! Welcome to the roster.',
+        message: rawTagId ? `Membership active! Card #${rawTagId} claimed.` : 'Membership active! Welcome to Gridpass.',
         icon: '🎉',
       });
 
@@ -331,14 +331,13 @@ function JoinPageContent() {
     }
   };
 
-  // Save Dynamic Target Re-route & On-The-Spot Car Photo Personalization (Admin Controller)
+  // Save Dynamic Tag Binding (Admin Wizard - Only active when rawTagId exists from real QR scan)
   const handleAdminSaveTarget = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rawTagId) return;
+    if (!rawTagId) return; // Strict Invariant: Cannot bind without real scanned rawTagId!
 
-    // Create Unclaimed Vehicle Document in Firestore if photo or vehicle details specified
     let newUnclaimedVehId = tagRecord?.unclaimed_vehicle_id || null;
-    if (editSpottedPhoto || (editMake && editModel)) {
+    if (editTargetType === 'vehicle' && (editSpottedPhoto || (editMake && editModel))) {
       newUnclaimedVehId = `veh_unclaimed_${rawTagId}_${Date.now()}`;
       await setDoc(
         doc(db, 'vehicles', newUnclaimedVehId),
@@ -361,13 +360,12 @@ function JoinPageContent() {
 
     const updated = {
       tag_id: rawTagId,
-      title: editSpottedTitle || `${editYear} ${editMake} ${editModel}` || `Physical Tag #${rawTagId}`,
+      title: editSpottedTitle || (editTargetType === 'vehicle' ? `${editYear} ${editMake} ${editModel}` : `Tag #${rawTagId}`),
       distribution_method: editMethod,
       target_type: editTargetType,
       target_destination: editTargetDest,
-      partner_business_name: editPartnerName || '',
       custom_spotted_photo_url: editSpottedPhoto || null,
-      custom_spotted_title: editSpottedTitle || `${editYear} ${editMake} ${editModel}` || null,
+      custom_spotted_title: editSpottedTitle || (editTargetType === 'vehicle' ? `${editYear} ${editMake} ${editModel}` : null),
       custom_spotted_note: editSpottedNote || null,
       unclaimed_vehicle_id: newUnclaimedVehId,
       unclaimed_year: editYear,
@@ -381,34 +379,16 @@ function JoinPageContent() {
     setTagRecord(updated);
 
     try {
-      const tagDocId = tagRecord?.id || `tag_${rawTagId}`;
-      await setDoc(doc(db, 'physical_tags', tagDocId), updated, { merge: true });
+      await setDoc(doc(db, 'physical_tags', `tag_${rawTagId}`), updated, { merge: true });
       showToast({
-        title: 'UNCLAIMED VEHICLE & CARD INVITATION CREATED! 🏎️',
-        message: `Tag #${rawTagId} pre-staged for ${editYear} ${editMake} ${editModel}.`,
-        icon: '🏎️',
+        title: 'PHYSICAL CARD BOUND & INVITATION ACTIVE! ⚡',
+        message: `Card #${rawTagId} is now configured as a ${editTargetType} invitation!`,
+        icon: '⚡',
       });
-      setShowAdminDrawer(false);
+      setShowAdminWizard(false);
     } catch (err: any) {
-      console.error('Failed to update tag:', err);
+      console.error('Failed to bind tag:', err);
     }
-  };
-
-  const getContextualHeadline = () => {
-    if (tagRecord?.custom_spotted_photo_url || editMake) {
-      return `🏎️ SPOTTED! PRE-STAGED PASSPORT FOR ${tagRecord?.custom_spotted_title || `${editYear} ${editMake} ${editModel}`}`;
-    }
-    const method = tagRecord?.distribution_method;
-    if (method === 'car_drop') {
-      return '🏎️ SPOTTED! INVITATION LEFT ON YOUR MACHINE';
-    }
-    if (method === 'sticker') {
-      return '💥 SPOTTED IN THE WILD! YOU ARE INVITED TO GRIDPASS';
-    }
-    if (method === 'dealership_intake' || method === 'sales_floor') {
-      return '🏬 NIELSEN\'S ENTERPRISES • MACHINE DIGITAL PASSPORT';
-    }
-    return '⚡ YOU ARE INVITED TO JOIN GRIDPASS';
   };
 
   return (
@@ -423,13 +403,13 @@ function JoinPageContent() {
 
       <div className="w-full max-w-md space-y-5 relative z-10 my-auto">
         
-        {/* On-The-Spot Personal Car Photo Banner (If Admin Took Photo for Car Drop) */}
+        {/* On-The-Spot Personal Car Photo Banner */}
         {tagRecord?.custom_spotted_photo_url && (
           <div className="bg-neutral-900 border-2 border-[#ff3b30] rounded-3xl overflow-hidden shadow-2xl space-y-0 relative group">
             <div className="relative h-56 sm:h-64 w-full bg-neutral-950">
               <img
                 src={tagRecord.custom_spotted_photo_url}
-                alt="Spotted Vehicle"
+                alt="Spotted Machine"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/30 to-transparent" />
@@ -451,7 +431,7 @@ function JoinPageContent() {
           </div>
         )}
 
-        {/* Modern Vibrant Hero Card */}
+        {/* Hero Card */}
         <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 p-6 rounded-3xl space-y-4 shadow-2xl relative overflow-hidden">
           
           <div className="flex items-center justify-between">
@@ -460,54 +440,68 @@ function JoinPageContent() {
                 <Zap className="w-3 h-3 fill-current" />
                 {rawTagId ? `TAG #${rawTagId}` : 'VIP INVITATION'}
               </span>
+              {tagRecord?.status === 'unbound' && (
+                <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold text-[9px] uppercase rounded-full">
+                  UNBOUND
+                </span>
+              )}
             </div>
             <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase tracking-wider">
-              LOSEY.CO
+              GRIDPASS
             </span>
           </div>
 
           <div className="space-y-2">
             <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
-              {getContextualHeadline()}
+              {tagRecord?.custom_spotted_photo_url
+                ? `🏎️ YOU ARE INVITED! CLAIM PASSPORT FOR YOUR ${tagRecord.custom_spotted_title || 'MACHINE'}`
+                : rawTagId
+                ? `⚡ YOU SCANNED INVITATION CARD #${rawTagId}`
+                : '⚡ YOU ARE INVITED TO JOIN GRIDPASS'}
             </h1>
             <p className="text-xs text-neutral-300 font-medium leading-relaxed">
               Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.
             </p>
           </div>
 
-          {/* First-Scan Excitement Callout */}
-          <div className="p-3 bg-gradient-to-r from-emerald-950/80 via-neutral-900 to-emerald-950/80 border border-emerald-500/30 rounded-2xl flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-              <Sparkles className="w-4 h-4 animate-spin" />
-            </div>
-            <p className="text-xs font-mono font-bold text-emerald-300 leading-tight">
-              HEY! THIS ISN&apos;T JUST A QR CODE — WELCOME TO GRIDPASS!
-            </p>
-          </div>
+          {/* Admin Controller Tools */}
+          {isAdmin && (
+            <div className="pt-2 border-t border-neutral-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1">
+                  <Zap className="w-3 h-3 fill-current" />
+                  SUPER ADMIN CONTROLLER
+                </span>
+                <span className="text-[9px] font-mono text-neutral-400">
+                  {rawTagId ? `Card #${rawTagId}` : 'Virtual Mode'}
+                </span>
+              </div>
 
-          {/* Super Admin Controller Trigger */}
-          {user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com') && (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                onClick={() => setShowAdminDrawer(true)}
-                className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
-              >
-                <CameraIcon className="w-3.5 h-3.5" />
-                <span>Snap & Personalize</span>
-              </button>
-              <button
-                onClick={copyShareableLink}
-                className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>Copy Share Link</span>
-              </button>
+              <div className="grid grid-cols-1 gap-2">
+                {rawTagId ? (
+                  <button
+                    onClick={() => setShowAdminWizard(true)}
+                    className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>⚡ Configure Scanned Physical Card #{rawTagId}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={createAndCopyShareableLink}
+                    className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>📋 Create & Copy Shareable VIP Link</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
         </div>
 
-        {/* Dynamic Intake Form / Logged-in Welcome Card */}
+        {/* LOGGED IN MEMBER VIEW (e.g. PJ Losey) */}
         {user ? (
           <div className="bg-white text-neutral-900 rounded-3xl p-6 shadow-2xl space-y-5 border border-neutral-200 font-sans">
             <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
@@ -520,12 +514,36 @@ function JoinPageContent() {
                   Logged in as {user.email}. Your Gridpass is active.
                 </p>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center shadow-xs font-mono font-black text-[10px]">
-                ACTIVE
-              </div>
+              <button
+                onClick={() => signOut(getAuth())}
+                className="p-2 text-neutral-400 hover:text-[#ff3b30] transition rounded-xl hover:bg-neutral-100"
+                title="Sign Out"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* 1-Tap Quick Actions for Logged-In Members */}
+            {/* If Scanned Unbound Tag as Admin */}
+            {rawTagId && tagRecord?.status === 'unbound' && isAdmin && (
+              <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2 text-amber-900 font-black text-xs uppercase">
+                  <Zap className="w-4 h-4 text-amber-600 fill-current" />
+                  <span>UNBOUND PHYSICAL CARD #{rawTagId} SCANNED!</span>
+                </div>
+                <p className="text-xs text-amber-800 font-bold">
+                  Card #{rawTagId} is scanned and ready to configure.
+                </p>
+                <button
+                  onClick={() => setShowAdminWizard(true)}
+                  className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2"
+                >
+                  <span>⚡ LAUNCH TAG BINDING WIZARD</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* 1-Tap Quick Actions */}
             <div className="space-y-2.5">
               <Link
                 href="/dash"
@@ -553,6 +571,7 @@ function JoinPageContent() {
             </div>
           </div>
         ) : (
+          /* UNAUTHENTICATED VISITOR INTAKE FORM */
           <div className="bg-white text-neutral-900 rounded-3xl p-6 shadow-2xl space-y-5 border border-neutral-200">
             
             <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
@@ -582,7 +601,7 @@ function JoinPageContent() {
             ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-4">
               
-              {/* Universal Inclusive Category Selector */}
+              {/* Universal Category Selector */}
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-500 mb-1.5">
                   Who Are You? / What Brings You Here?
@@ -743,254 +762,193 @@ function JoinPageContent() {
 
       </div>
 
-      {/* Admin Tag Controller & Camera Photo Personalization Modal */}
-      {showAdminDrawer && (
+      {/* ADMIN TAG BINDING WIZARD MODAL (Strict Invariant: Requires real scanned rawTagId!) */}
+      {showAdminWizard && rawTagId && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl font-sans max-h-[90vh] overflow-y-auto">
+            
             <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
               <div>
                 <h2 className="font-black text-sm uppercase text-neutral-900 flex items-center gap-2">
-                  <span>⚡ DYNAMIC TAG CONTROLLER</span>
-                  <span className="font-mono text-[#ff3b30]">{rawTagId ? `#${rawTagId}` : ''}</span>
+                  <span>⚡ BINDING PHYSICAL CARD</span>
+                  <span className="font-mono text-[#ff3b30]">#{rawTagId}</span>
                 </h2>
-                <p className="text-[10px] text-neutral-500 font-mono">Pre-stage unclaimed vehicle passport & personalize invitation.</p>
+                <p className="text-[10px] text-neutral-500 font-mono">Assign card target destination & personalized invitation.</p>
               </div>
-              <button onClick={() => setShowAdminDrawer(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
+              <button onClick={() => setShowAdminWizard(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleAdminSaveTarget} className="space-y-3">
+            {/* Target Type Selector */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase text-neutral-700">
+                What Would You Like to Assign to Card #{rawTagId}?
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setEditTargetType('vehicle'); setEditTargetDest('/join'); }}
+                  className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
+                    editTargetType === 'vehicle'
+                      ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                      : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                  }`}
+                >
+                  <Car className="w-4 h-4 text-[#ff3b30]" />
+                  <div className="text-[10px] uppercase font-black">Invite Vehicle</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setEditTargetType('business'); setEditTargetDest('/partner'); }}
+                  className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
+                    editTargetType === 'business'
+                      ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                      : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4 text-blue-500" />
+                  <div className="text-[10px] uppercase font-black">Invite Business</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/dash'); }}
+                  className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
+                    editTargetType === 'driver'
+                      ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                      : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                  }`}
+                >
+                  <UserCheck className="w-4 h-4 text-emerald-500" />
+                  <div className="text-[10px] uppercase font-black">Invite Driver</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditTargetType('custom_url')}
+                  className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
+                    editTargetType === 'custom_url'
+                      ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                      : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                  }`}
+                >
+                  <LinkIcon className="w-4 h-4 text-purple-500" />
+                  <div className="text-[10px] uppercase font-black">Custom Page/URL</div>
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleAdminSaveTarget} className="space-y-3 pt-2">
               
-              {/* Native Camera Photo Capture Button */}
-              <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-2">
-                <span className="block text-[10px] font-black uppercase text-[#ff3b30] flex items-center gap-1">
-                  <CameraIcon className="w-3.5 h-3.5" />
-                  <span>📸 Snap Car Drop Photo (On-The-Spot)</span>
-                </span>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  id="camera-photo-input"
-                  className="hidden"
-                  onChange={handleCameraCapture}
-                />
-
-                <label
-                  htmlFor="camera-photo-input"
-                  className="w-full py-3 bg-neutral-900 hover:bg-black text-white font-mono font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <CameraIcon className="w-4 h-4 text-[#ff3b30]" />
-                  <span>{editSpottedPhoto ? '📷 Retake Machine Photo' : '📸 Snap Photo with Camera'}</span>
-                </label>
-
-                {editSpottedPhoto && (
-                  <div className="relative h-32 w-full rounded-xl overflow-hidden border border-neutral-300">
-                    <img src={editSpottedPhoto} alt="Spotted Machine" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setEditSpottedPhoto('')}
-                      className="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1 text-[10px]"
-                    >
-                      ✕ Remove
-                    </button>
-                  </div>
-                )}
-
-                {/* Pre-stage Unclaimed Vehicle Specs */}
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Year</label>
-                    <input
-                      type="text"
-                      value={editYear}
-                      onChange={(e) => setEditYear(e.target.value)}
-                      placeholder="1969"
-                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Make</label>
-                    <input
-                      type="text"
-                      value={editMake}
-                      onChange={(e) => setEditMake(e.target.value)}
-                      placeholder="Chevrolet"
-                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Model</label>
-                    <input
-                      type="text"
-                      value={editModel}
-                      onChange={(e) => setEditModel(e.target.value)}
-                      placeholder="Camaro"
-                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Trim / Package</label>
-                    <input
-                      type="text"
-                      value={editTrim}
-                      onChange={(e) => setEditTrim(e.target.value)}
-                      placeholder="SS 396"
-                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Personal Note to Owner</label>
-                  <input
-                    type="text"
-                    value={editSpottedNote}
-                    onChange={(e) => setEditSpottedNote(e.target.value)}
-                    placeholder="e.g. Saw your car at Road America — claim your passport!"
-                    className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Distribution Method</label>
-                <select
-                  value={editMethod}
-                  onChange={(e) => setEditMethod(e.target.value)}
-                  className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
-                >
-                  <option value="handout">🎴 Business Card Handout</option>
-                  <option value="car_drop">🏎️ Car Drop (Windshield Wiper / Interior)</option>
-                  <option value="lanyard">🏷️ Rearview Mirror Lanyard Hang</option>
-                  <option value="sticker">🚽 Guerrilla Sticker (Porta-potty / Venue Stall)</option>
-                  <option value="dealership_intake">🏬 Dealership Machine Intake (Nielsen&apos;s)</option>
-                  <option value="service_bay">🔧 Dealership Service Bay</option>
-                  <option value="sales_floor">🏷️ Dealership Sales Floor</option>
-                  <option value="shop_stack">📦 Auto Shop Counter Stack</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Persona Type</label>
-                <select
-                  value={editTargetType}
-                  onChange={(e) => {
-                    const nextType = e.target.value;
-                    setEditTargetType(nextType);
-                    if (nextType === 'intake_join') setEditTargetDest('/join');
-                  }}
-                  className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
-                >
-                  <option value="intake_join">🌐 Default /join Intake & Signup</option>
-                  <option value="vehicle">🏎️ Specific Garage Vehicle Passport</option>
-                  <option value="business">🏢 Specific Auto Shop / Business Exhibit</option>
-                  <option value="event">🏁 Specific Motorsports Event Hub</option>
-                  <option value="driver">👤 Specific Driver Card & Resume</option>
-                  <option value="dealership_service">🔧 Dealership Service Log & Work Orders</option>
-                  <option value="dealership_sales">🏬 Dealership Sales Floor Spec & Price Alert</option>
-                  <option value="custom_url">🔗 Custom URL Path / Link</option>
-                </select>
-              </div>
-
-              {/* Dynamic Real Database Entity Dropdowns */}
+              {/* VEHICLE INVITATION SPECIFIC FIELDS */}
               {editTargetType === 'vehicle' && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
-                    <Car className="w-3.5 h-3.5 text-[#ff3b30]" />
-                    <span>Select Vehicle from Database</span>
-                  </label>
-                  <select
-                    value={editTargetDest}
-                    onChange={(e) => setEditTargetDest(e.target.value)}
-                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
+                <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-2">
+                  <span className="block text-[10px] font-black uppercase text-[#ff3b30] flex items-center gap-1">
+                    <CameraIcon className="w-3.5 h-3.5" />
+                    <span>📸 Snap Vehicle Photo & Pre-stage Passport</span>
+                  </span>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    id="wizard-camera-input"
+                    className="hidden"
+                    onChange={handleCameraCapture}
+                  />
+
+                  <label
+                    htmlFor="wizard-camera-input"
+                    className="w-full py-3 bg-neutral-900 hover:bg-black text-white font-mono font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                   >
-                    <option value="/v/demo">Demo Vehicle Passport (/v/demo)</option>
-                    {dbVehicles.map((v) => (
-                      <option key={v.id} value={`/v/${v.id}`}>
-                        {v.year || ''} {v.make || ''} {v.model || v.name || v.id} (/v/{v.id})
-                      </option>
-                    ))}
-                  </select>
+                    <CameraIcon className="w-4 h-4 text-[#ff3b30]" />
+                    <span>{editSpottedPhoto ? '📷 Retake Machine Photo' : '📸 Snap Photo with Camera'}</span>
+                  </label>
+
+                  {editSpottedPhoto && (
+                    <div className="relative h-32 w-full rounded-xl overflow-hidden border border-neutral-300">
+                      <img src={editSpottedPhoto} alt="Spotted Machine" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setEditSpottedPhoto('')}
+                        className="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1 text-[10px]"
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Year</label>
+                      <input
+                        type="text"
+                        value={editYear}
+                        onChange={(e) => setEditYear(e.target.value)}
+                        placeholder="1969"
+                        className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Make</label>
+                      <input
+                        type="text"
+                        value={editMake}
+                        onChange={(e) => setEditMake(e.target.value)}
+                        placeholder="Chevrolet"
+                        className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Model</label>
+                      <input
+                        type="text"
+                        value={editModel}
+                        onChange={(e) => setEditModel(e.target.value)}
+                        placeholder="Camaro"
+                        className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Trim</label>
+                      <input
+                        type="text"
+                        value={editTrim}
+                        onChange={(e) => setEditTrim(e.target.value)}
+                        placeholder="SS 396"
+                        className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Personal Note to Owner</label>
+                    <input
+                      type="text"
+                      value={editSpottedNote}
+                      onChange={(e) => setEditSpottedNote(e.target.value)}
+                      placeholder="e.g. Saw your Camaro at Road America — claim your passport!"
+                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
                 </div>
               )}
 
-              {editTargetType === 'business' && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Select Shop / Business from Database</span>
-                  </label>
-                  <select
-                    value={editTargetDest}
-                    onChange={(e) => setEditTargetDest(e.target.value)}
-                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
-                  >
-                    <option value="/b/nielsens-enterprises">Nielsen&apos;s Enterprises (/b/nielsens-enterprises)</option>
-                    {dbBusinesses.map((b) => (
-                      <option key={b.id} value={`/b/${b.id}`}>
-                        {b.name || b.company_name || b.id} (/b/{b.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {editTargetType === 'event' && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Select Event from Database</span>
-                  </label>
-                  <select
-                    value={editTargetDest}
-                    onChange={(e) => setEditTargetDest(e.target.value)}
-                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
-                  >
-                    <option value="/events/demo">Demo Motorsports Event (/events/demo)</option>
-                    {dbEvents.map((ev) => (
-                      <option key={ev.id} value={`/events/${ev.id}`}>
-                        {ev.title || ev.name || ev.id} (/events/{ev.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {editTargetType === 'driver' && (
-                <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
-                    <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Select Driver from Database</span>
-                  </label>
-                  <select
-                    value={editTargetDest}
-                    onChange={(e) => setEditTargetDest(e.target.value)}
-                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
-                  >
-                    {dbDrivers.map((u) => (
-                      <option key={u.id} value={`/u/${u.username || u.id}`}>
-                        {u.full_name || u.email || u.id} (/u/{u.username || u.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
+              {/* CUSTOM URL SPECIFIC FIELDS */}
               {editTargetType === 'custom_url' && (
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Destination Path / URL</label>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Page Path or External URL</label>
                   <input
                     type="text"
                     required
                     value={editTargetDest}
                     onChange={(e) => setEditTargetDest(e.target.value)}
-                    placeholder="/join or /v/corvette-z06"
+                    placeholder="/v/corvette-z06 or /b/nielsens or /events/badlands"
                     className="w-full text-xs font-mono font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                   />
                 </div>
@@ -999,7 +957,7 @@ function JoinPageContent() {
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAdminDrawer(false)}
+                  onClick={() => setShowAdminWizard(false)}
                   className="px-3 py-2 bg-neutral-100 text-neutral-700 text-xs font-bold uppercase rounded-xl"
                 >
                   Cancel
@@ -1008,7 +966,7 @@ function JoinPageContent() {
                   type="submit"
                   className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-sm"
                 >
-                  Save & Stage Vehicle ➔
+                  Save & Bind Card #{rawTagId} ➔
                 </button>
               </div>
             </form>

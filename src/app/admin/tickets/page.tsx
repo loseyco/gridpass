@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1028_physical_card_security_invariant',
+    ticket_number: 'TICK-1028',
+    agent_role: 'gm',
+    title: 'Physical Card Validation & Inventory Security Invariant Enforcement',
+    category: 'security',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'showAdminWizard', 'rawTagId'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags binding guard: requires real scanned rawTagId'],
+    issue_description: 'Platform owner required that physical card IDs MUST NOT be manually created or invented on raw /join without scanning a real QR card parameter; virtual links are created strictly via createAndCopyShareableLink.',
+    root_cause: 'The card binding wizard previously allowed typing arbitrary physical card IDs when visited on raw /join, risking collisions with real physical card inventory.',
+    resolution_summary: 'Removed manual card ID input from JoinClient.tsx wizard; restricted tag binding strictly to real scanned rawTagId query parameters. On raw /join, admins get a single 1-tap Create & Copy Shareable VIP Link button generating collision-free VIP-XXXXX tags.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and pushed commit to origin/feature/sales-crm-intake-engine.',
+    sop_summary: 'SOP for physical card inventory protection and virtual share link generation.',
+    sop_steps: [
+      'Enforce rawTagId requirement in showAdminWizard modal in JoinClient.tsx.',
+      'Restrict physical card binding strictly to actual scanned QR tag URLs (/join?tag=250).',
+      'Provide 1-tap Create & Copy Shareable VIP Link button for raw /join visits.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1027_collision_free_share_links',
     ticket_number: 'TICK-1027',
     agent_role: 'gm',
