@@ -61,6 +61,8 @@ interface VehicleData {
   tag_id: string;
   owner_id: string | null;
   owner_email?: string;
+  status?: string;
+  is_unclaimed?: boolean;
   year: number;
   make: string;
   model: string;
@@ -1663,6 +1665,39 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   return (
     <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full p-4 md:p-8 space-y-8">
       
+      {/* UNCLAIMED VEHICLE PASSPORT CLAIM CALLOUT BANNER */}
+      {(!vehicle.owner_id || vehicle.status === 'unclaimed' || (vehicle as any).is_unclaimed) && (
+        <div className="bg-gradient-to-r from-red-900 via-[#ff3b30] to-red-600 text-white p-5 rounded-[2rem] shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 border-2 border-red-500">
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-12 h-12 bg-white text-[#ff3b30] rounded-2xl flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              🏎️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 text-white text-[9px] font-mono font-black uppercase px-2 py-0.5 rounded-full">
+                  UNCLAIMED PASSPORT
+                </span>
+                <span className="text-[10px] font-mono text-amber-200 font-bold uppercase">
+                  {vehicle.tag_id ? `TAG #${vehicle.tag_id}` : 'STAGED PASSPORT'}
+                </span>
+              </div>
+              <h3 className="text-base font-black uppercase tracking-tight text-white mt-1">
+                ARE YOU THE OWNER OF THIS {vehicle.year} {vehicle.make} {vehicle.model}?
+              </h3>
+              <p className="text-xs text-red-100 font-medium">
+                Claim your official machine passport now to add mods, service records, awards, and manage ownership!
+              </p>
+            </div>
+          </div>
+          <Link
+            href={`/join?id=${vehicle.tag_id || vehicle.id}`}
+            className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-neutral-100 text-[#ff3b30] font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg active:scale-95 text-center shrink-0 flex items-center justify-center gap-1.5 min-h-[44px]"
+          >
+            <span>🚀 CLAIM THIS VEHICLE ➔</span>
+          </Link>
+        </div>
+      )}
+
       {/* Breadcrumb Header */}
       <div className="flex items-center justify-between">
         <Link href="/vehicles" className="text-xs font-mono text-neutral-500 hover:text-neutral-900 flex items-center gap-1.5 uppercase font-bold transition-colors">

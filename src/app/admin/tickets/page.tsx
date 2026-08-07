@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1055_unclaimed_vehicle_passport_banner_fix',
+    ticket_number: 'TICK-1055',
+    agent_role: 'site_auditor',
+    title: 'Unclaimed Machine Passport Callout Banner & Clean Business Pre-Population',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['VehicleProfileClient', 'JoinClient', 'is_unclaimed', 'openAdminWizard'],
+    files_modified: ['src/app/v/[id]/VehicleProfileClient.tsx', 'src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported that unclaimed vehicles (/v/veh_unclaimed_...) were missing the "CLAIM THIS VEHICLE" callout banner, and the business setup wizard pre-filled raw title strings.',
+    root_cause: 'VehicleProfileClient.tsx lacked an explicit unclaimed banner for vehicles with status === unclaimed or !owner_id, and JoinClient.tsx did not strip "Business Invitation" prefix.',
+    resolution_summary: 'Updated VehicleProfileClient.tsx: added crimson UNCLAIMED MACHINE PASSPORT banner with 🚀 CLAIM THIS VEHICLE ➔ CTA linking to /join?id=[TAG_ID]. Updated JoinClient.tsx: cleaned business name string derivation and pre-populated location_name and category.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean rendering on localhost/v/veh_unclaimed_... and localhost/join?id=monarch-defender.',
+    sop_summary: 'SOP for unclaimed vehicle banners and business pre-population.',
+    sop_steps: [
+      'Render crimson UNCLAIMED PASSPORT banner at the top of /v/[id] whenever status === unclaimed or owner_id === null.',
+      'Click [🚀 CLAIM THIS VEHICLE ➔] to launch /join intake portal.',
+      'Auto-clean business title strings in setup wizard modal.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1054_setup_wizard_auto_default_and_prepopulate',
     ticket_number: 'TICK-1054',
     agent_role: 'site_auditor',

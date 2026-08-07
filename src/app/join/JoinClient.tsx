@@ -611,7 +611,14 @@ function JoinPageContent() {
       setEditModel(tagRecord.unclaimed_model || '');
       setEditTrim(tagRecord.unclaimed_trim || '');
       setEditBusinessId(tagRecord.unclaimed_business_id || (autoType === 'business' ? rawTagId : ''));
-      setEditBusinessName(tagRecord.custom_spotted_title || tagRecord.title?.replace('🏢 ', '') || (isBiz ? bizName : ''));
+      
+      let cleanBizName = tagRecord.custom_spotted_title || (isBiz ? bizName : '');
+      if (!cleanBizName || cleanBizName.toLowerCase().startsWith('business invitation')) {
+        cleanBizName = isBiz ? bizName : '';
+      }
+      setEditBusinessName(cleanBizName);
+      setEditBusinessCategory(tagRecord.category || 'shop_garage');
+      setEditBusinessLocation(tagRecord.location_name || '');
       setEditPersonName(tagRecord.recipient_name || tagRecord.custom_spotted_title || '');
     } else if (isBiz) {
       setEditBusinessId(rawTagId || '');
