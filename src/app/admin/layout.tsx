@@ -36,6 +36,7 @@ export default function AdminLayout({
         { label: 'System Changelog', path: '/admin/changelog', icon: '📝' },
         { label: 'Feature Registry', path: '/admin/features', icon: '🚀' },
         { label: 'Master Sitemap & Audit', path: '/admin/sitemap', icon: '🗺️' },
+        { label: 'Physical QR Tags & Referrals', path: '/admin/tags', icon: '🏷️' },
       ],
     },
     {

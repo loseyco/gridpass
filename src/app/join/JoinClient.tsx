@@ -3,590 +3,453 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc } from 'firebase/firestore';
-import { QrCode, Loader2, ShieldCheck, CarFront, LogIn, Sun, AlertCircle, Sparkles } from 'lucide-react';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { QrCode, Loader2, ShieldCheck, CarFront, LogIn, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { ClaimTagForm } from '@/components/qr/ClaimTagForm';
-import { logEvent } from '@/lib/logger';
+import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
 
 function JoinPageContent() {
-    const searchParams = useSearchParams();
-    const tagId = searchParams.get('id') || '';
-    const refCode = searchParams.get('ref') || searchParams.get('referral') || '';
-    const router = useRouter();
-    const { user, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const rawTagId = searchParams.get('tag') || searchParams.get('id') || searchParams.get('ref') || searchParams.get('referral') || '';
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
 
-    const [loading, setLoading] = useState(!!tagId);
-    const [lookupState, setLookupState] = useState('Checking code...');
-    const [tagFound, setTagFound] = useState(false);
-    const [tagInput, setTagInput] = useState('');
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [unclaimedVehicle, setUnclaimedVehicle] = useState<any | null>(null);
-    const [clearanceVehicle, setClearanceVehicle] = useState<any | null>(null);
-    const [claimingPreRegistered, setClaimingPreRegistered] = useState(false);
-    const [showAlternativeClaim, setShowAlternativeClaim] = useState(false);
+  const [loading, setLoading] = useState(!!rawTagId);
+  const [tagRecord, setTagRecord] = useState<any | null>(null);
+  const [tagInput, setTagInput] = useState(rawTagId);
+  const [showAdminDrawer, setShowAdminDrawer] = useState(false);
 
-    useEffect(() => {
-        if (!tagId) {
+  // Form State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [vehicleMakeModel, setVehicleMakeModel] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [joinedSuccess, setJoinedSuccess] = useState(false);
+
+  // Admin Tag Controller State
+  const [editTargetType, setEditTargetType] = useState('intake_join');
+  const [editTargetDest, setEditTargetDest] = useState('/join');
+  const [editMethod, setEditMethod] = useState('handout');
+  const [editPartnerName, setEditPartnerName] = useState('');
+
+  // 1. Audit & Resolve Tag Intake
+  useEffect(() => {
+    if (!rawTagId) {
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function resolvePhysicalTag() {
+      try {
+        // Query physical_tags collection
+        const q = query(collection(db, 'physical_tags'), where('tag_id', '==', rawTagId));
+        const snap = await getDocs(q);
+
+        let rec: any = null;
+        if (!snap.empty) {
+          rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        } else {
+          // Default unbound physical card record matching user's printed card box
+          rec = {
+            id: `tag_${rawTagId}`,
+            tag_id: rawTagId,
+            title: `Invitation Card #${rawTagId}`,
+            distribution_method: 'handout',
+            target_type: 'intake_join',
+            target_destination: '/join',
+            total_scans: 1,
+            members_joined_count: 0,
+            status: 'unbound',
+          };
+        }
+
+        if (isMounted) {
+          setTagRecord(rec);
+          setEditTargetType(rec.target_type || 'intake_join');
+          setEditTargetDest(rec.target_destination || '/join');
+          setEditMethod(rec.distribution_method || 'handout');
+          setEditPartnerName(rec.partner_business_name || '');
+        }
+
+        // Log scan event telemetry
+        await addDoc(collection(db, 'tag_scans'), {
+          tag_id: rawTagId,
+          scanned_at: new Date().toISOString(),
+          distribution_method: rec.distribution_method || 'handout',
+          user_id: user?.uid || null,
+          user_email: user?.email || null,
+          target_destination: rec.target_destination || '/join',
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+          referrer: typeof document !== 'undefined' ? document.referrer : '',
+        }).catch(() => {});
+
+        // If tag is bound to a specific destination (e.g. vehicle, event, business) AND not default intake
+        if (rec.status === 'active' && rec.target_destination && rec.target_destination !== '/join' && !rec.target_destination.includes('/join')) {
+          if (!user || ((user as any).role !== 'super_admin' && user?.email !== 'loseyp@gmail.com')) {
+            router.push(rec.target_destination);
             return;
+          }
         }
 
-        let isMounted = true;
+        if (isMounted) setLoading(false);
+      } catch (err) {
+        console.error('Failed to resolve physical tag:', err);
+        if (isMounted) setLoading(false);
+      }
+    }
 
-        async function resolveTag() {
-            if (!isMounted) return;
+    resolvePhysicalTag();
+    return () => { isMounted = false; };
+  }, [rawTagId, user, router]);
 
-            const logScanAndRedirect = async (targetType: string, targetId: string, redirectPath: string) => {
-                const triggerNativeLog = async (lat?: number, lng?: number, accuracy?: number) => {
-                    try {
-                        const payload = {
-                            tagId,
-                            scannedAt: new Date().toISOString(),
-                            targetType,
-                            targetId,
-                            userAgent: navigator.userAgent,
-                            ...(lat && lng ? { location: { lat, lng, accuracy } } : {})
-                        };
+  // Handle Form Submission
+  const handleJoinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
 
-                        await addDoc(collection(db, 'tag_scans'), payload);
+    setJoining(true);
+    try {
+      // Create user profile in Firestore
+      const userRef = doc(collection(db, 'users'));
+      await setDoc(userRef, {
+        email,
+        full_name: fullName || 'Gridpass Member',
+        vehicle_make_model: vehicleMakeModel || 'Staged Machine',
+        referred_by_tag_id: rawTagId || null,
+        role: 'member',
+        starting_credits: 100,
+        created_at: new Date().toISOString(),
+      });
 
-                        await logEvent(
-                            'info',
-                            'scan',
-                            `Gridpass QR tag [${tagId}] scanned. Resolved to ${targetType} (${targetId}).`,
-                            payload
-                        );
-                    } catch (err) {
-                        console.error("[Resolver] Failed to write scan event:", err);
-                    }
-                };
+      // Update physical tag joined count if tag exists
+      if (rawTagId && tagRecord?.id) {
+        await updateDoc(doc(db, 'physical_tags', tagRecord.id), {
+          members_joined_count: (tagRecord.members_joined_count || 0) + 1,
+          last_scanned_at: new Date().toISOString(),
+        }).catch(() => {});
+      }
 
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            triggerNativeLog(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-                        },
-                        (err) => {
-                            triggerNativeLog();
-                        },
-                        { timeout: 3500 }
-                    );
-                } else {
-                    await triggerNativeLog();
-                }
-            };
+      setJoinedSuccess(true);
+      showToast({
+        title: 'WELCOME TO GRIDPASS! 🎉',
+        message: `Your membership card is active! Referred by Card #${rawTagId || '250'}.`,
+        icon: '🎉',
+      });
+      setTimeout(() => {
+        router.push('/dash');
+      }, 1500);
+    } catch (err: any) {
+      console.error('Failed to join:', err);
+      showToast({
+        title: 'JOIN ERROR',
+        message: err.message || 'Failed to complete registration.',
+        icon: '⚠️',
+      });
+    } finally {
+      setJoining(false);
+    }
+  };
 
-            const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
+  // Save Dynamic Target Re-route (Admin Controller)
+  const handleAdminSaveTarget = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rawTagId) return;
 
-            if (isMock) {
-                setLookupState('Finding vehicle passport...');
-                await new Promise(r => setTimeout(r, 100));
-                
-                if (tagId === 'GP-MOCK-CLAIMED') {
-                    if (isMounted) {
-                        const isSpectator = searchParams.get('spectator') === 'true';
-                        const isMarshall = !isSpectator && (
-                            (user && (user as any).role === 'marshall') || 
-                            searchParams.get('role') === 'marshall' || 
-                            searchParams.get('scannerType') === 'marshall' ||
-                            user?.email === 'dave@badlandspark.com' ||
-                            (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ && tagId === 'GP-MOCK-CLAIMED')
-                        );
-                        if (isMarshall) {
-                            setClearanceVehicle({
-                                id: 'mock-v1',
-                                year: 2023,
-                                make: 'Chevrolet',
-                                model: 'Corvette Z06',
-                                owner_id: 'pjlosey-mock',
-                                tag_id: tagId,
-                                specs: { engine: '5.5L V8', hp: 670 },
-                                mods: 'Carbon fiber wing, Cold air intake'
-                            });
-                            setTagFound(true);
-                            setLoading(false);
-                        } else {
-                            setTagFound(true);
-                            setLoading(false);
-                            router.replace(`/v/mock-v1`);
-                        }
-                    }
-                } else if (tagId === 'GP-MOCK-UNCLAIMED') {
-                    if (isMounted) {
-                        setUnclaimedVehicle({
-                            id: 'mock-unclaimed-v1',
-                            year: 2021,
-                            make: 'Porsche',
-                            model: '911 GT3 RS',
-                            partner_dealer: 'Porsche Redwood City'
-                        });
-                        setLoading(false);
-                    }
-                } else {
-                    setLookupState('Tag is unclaimed.');
-                    setLoading(false);
-                }
-                return;
-            }
-
-            try {
-                setLookupState('Finding vehicle passport...');
-                const vQuery = query(collection(db, 'vehicles'), where('tag_id', '==', tagId));
-                const vSnap = await getDocs(vQuery);
-                if (!vSnap.empty) {
-                    const matchedVehicle = vSnap.docs[0];
-                    const vData = matchedVehicle.data();
-                    
-                    if (vData.owner_id) {
-                        if (isMounted) {
-                            const isMarshall = (user && (user as any).role === 'marshall') || 
-                                               searchParams.get('role') === 'marshall' || 
-                                               searchParams.get('scannerType') === 'marshall' ||
-                                               user?.email === 'dave@badlandspark.com' ||
-                                               (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ && tagId === 'GP-MOCK-CLAIMED' && !searchParams.get('spectator'));
-                            if (isMarshall) {
-                                setClearanceVehicle({
-                                    id: matchedVehicle.id,
-                                    year: vData.year,
-                                    make: vData.make,
-                                    model: vData.model,
-                                    owner_id: vData.owner_id,
-                                    tag_id: vData.tag_id,
-                                    specs: vData.specs,
-                                    mods: vData.mods || ''
-                                });
-                                setTagFound(true);
-                                setLoading(false);
-                                await logScanAndRedirect('vehicle', matchedVehicle.id, `/v/${matchedVehicle.id}`);
-                            } else {
-                                setTagFound(true);
-                                setLoading(false);
-                                await logScanAndRedirect('vehicle', matchedVehicle.id, `/v/${matchedVehicle.id}`);
-                                router.replace(`/v/${matchedVehicle.id}`);
-                            }
-                        }
-                        return;
-                    } else {
-                        if (isMounted) {
-                            setUnclaimedVehicle({
-                                id: matchedVehicle.id,
-                                year: vData.year,
-                                make: vData.make,
-                                model: vData.model,
-                                partner_dealer: vData.partner_dealer || vData.dealer || ''
-                            });
-                            setLoading(false);
-                        }
-                        return;
-                    }
-                }
-
-                if (!isMounted) return;
-                setLookupState('Checking local shop listings...');
-                const bQuery = query(collection(db, 'businesses'), where('tag_id', '==', tagId));
-                const bSnap = await getDocs(bQuery);
-                if (!bSnap.empty) {
-                    const matchedBusiness = bSnap.docs[0];
-                    if (isMounted) setTagFound(true);
-                    router.replace(`/b/${matchedBusiness.id}`);
-                    await logScanAndRedirect('business', matchedBusiness.id, `/b/${matchedBusiness.id}`);
-                    return;
-                }
-
-                if (!isMounted) return;
-                setLookupState('Finding owner details...');
-                const uQuery = query(collection(db, 'users'), where('tag_id', '==', tagId));
-                const uSnap = await getDocs(uQuery);
-                if (!uSnap.empty) {
-                    const matchedUser = uSnap.docs[0];
-                    if (isMounted) setTagFound(true);
-                    router.replace(`/u/${matchedUser.id}`);
-                    await logScanAndRedirect('user', matchedUser.id, `/u/${matchedUser.id}`);
-                    return;
-                }
-
-                if (isMounted) {
-                    setLookupState('Tag is unclaimed.');
-                    setLoading(false);
-                    await logEvent(
-                        'warn',
-                        'scan',
-                        `Unclaimed physical Gridpass QR tag hit: "${tagId}"`,
-                        { tagId }
-                    );
-                }
-
-            } catch (err) {
-                console.error("Resolver error:", err);
-                if (isMounted) {
-                    setErrorMsg("Could not connect to the registry.");
-                    setLoading(false);
-                }
-            }
-        }
-
-        resolveTag();
-
-        return () => { isMounted = false; };
-    }, [tagId, router, user, searchParams]);
-
-    const handleManualSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!tagInput.trim()) return;
-        router.push(`/join?id=${encodeURIComponent(tagInput.trim())}`);
+    const updated = {
+      tag_id: rawTagId,
+      title: tagRecord?.title || `Physical Card #${rawTagId}`,
+      distribution_method: editMethod,
+      target_type: editTargetType,
+      target_destination: editTargetDest,
+      partner_business_name: editPartnerName || '',
+      status: 'active',
+      last_scanned_at: new Date().toISOString(),
     };
 
-    const handleClaimPreRegistered = async () => {
-        if (!user || !unclaimedVehicle) return;
-        setClaimingPreRegistered(true);
+    setTagRecord(updated);
 
-        const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
+    try {
+      const tagDocId = tagRecord?.id || `tag_${rawTagId}`;
+      await setDoc(doc(db, 'physical_tags', tagDocId), updated, { merge: true });
+      showToast({
+        title: 'PHYSICAL TAG RE-ROUTED! ⚡',
+        message: `Card #${rawTagId} now points to ${editTargetDest}.`,
+        icon: '⚡',
+      });
+      setShowAdminDrawer(false);
+    } catch (err: any) {
+      console.error('Failed to update tag:', err);
+      showToast({
+        title: 'TAG UPDATE ERROR',
+        message: err.message || 'Failed to update tag.',
+        icon: '⚠️',
+      });
+    }
+  };
 
-        try {
-            if (isMock) {
-                await new Promise(r => setTimeout(r, 100));
-            } else {
-                const vRef = doc(db, 'vehicles', unclaimedVehicle.id);
-                await updateDoc(vRef, {
-                    owner_id: user.uid,
-                    owner_email: user.email
-                });
-            }
+  const getContextualHeadline = () => {
+    const method = tagRecord?.distribution_method;
+    if (method === 'car_drop') {
+      return { headline: '🏎️ SPOTTED! YOU GOT A GRIDPASS CARD ON YOUR MACHINE!', bg: 'from-amber-950/90 to-neutral-900' };
+    }
+    if (method === 'sticker') {
+      return { headline: '💥 SPOTTED IN THE WILD! YOU ARE INVITED TO JOIN GRIDPASS!', bg: 'from-rose-950/90 to-neutral-900' };
+    }
+    if (method === 'dealership_intake' || method === 'sales_floor') {
+      return { headline: '🏬 DEALERSHIP MACHINE PASSPORT • NIELSEN\'S ENTERPRISES', bg: 'from-emerald-950/90 to-neutral-900' };
+    }
+    return { headline: '🎴 YOU ARE INVITED TO GRIDPASS', bg: 'from-neutral-900 to-black' };
+  };
 
-            await logEvent(
-                'success',
-                'scan',
-                `Claimed pre-registered vehicle ${unclaimedVehicle.year} ${unclaimedVehicle.make} ${unclaimedVehicle.model} (${unclaimedVehicle.id})`,
-                { tagId, vehicleId: unclaimedVehicle.id, userEmail: user.email }
-            );
+  const contextHeader = getContextualHeadline();
 
-            router.push(`/dash`);
-        } catch (error) {
-            console.error("Failed to claim pre-registered vehicle:", error);
-            alert("Failed to claim vehicle. Please try again.");
-            setClaimingPreRegistered(false);
-        }
-    };
-
-    const qrRedirectUrl = typeof window !== 'undefined'
-      ? `${window.location.origin}/qr/${tagId}`
-      : `https://gridpass.app/qr/${tagId}`;
-    const qrCodeImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrRedirectUrl)}`;
-
-    if (clearanceVehicle) {
-      return (
-        <main className="min-h-screen bg-black text-white py-12 px-4 flex flex-col justify-center items-center">
-          <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes border-flash {
-              0%, 100% { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
-              50% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
-            }
-            .animate-border-flash {
-              animation: border-flash 1.5s infinite ease-in-out;
-            }
-          `}} />
-          <div className="w-full max-w-md space-y-6">
-            
-            {/* Gate Pass Card */}
-            <div className="bg-[#1c1c1e] p-6 rounded-3xl border-4 border-emerald-500/40 bg-neutral-950/90 animate-border-flash space-y-6 text-center">
-              
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono font-bold text-[#007aff] tracking-widest uppercase">GATE SCAN PASS</span>
-                <div className="h-[1px] bg-[#2c2c2e] my-2" />
-                <h2 className="text-2xl font-extrabold text-white uppercase tracking-tight">CLEARED — PASS ACTIVE</h2>
-              </div>
-
-              {/* QR Code Block */}
-              <div className="bg-white p-4 rounded-2xl inline-block mx-auto shadow-xl">
-                <img src={qrCodeImgSrc} alt="Gate Pass QR" className="w-40 h-40" />
-                <div className="text-[10px] font-mono text-black font-bold tracking-widest mt-2">{clearanceVehicle.tag_id}</div>
-              </div>
-
-              {/* Brightness Prompt */}
-              <div className="bg-[#2c2c2e] border border-[#3a3a3c] p-4 rounded-2xl text-left space-y-1">
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase">
-                  <Sun className="w-4 h-4 text-[#ffd60a]" />
-                  <span>For Instant Scanning</span>
-                </div>
-                <p className="text-[11px] text-neutral-405 leading-normal">
-                  Please manually turn your screen brightness to maximum and angle your display directly toward the marshal's scanner.
-                </p>
-              </div>
-
-              {/* Vehicle Specs */}
-              <div className="bg-[#2c2c2e]/50 border border-[#2c2c2e] p-4 rounded-2xl text-left space-y-3">
-                <div className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">Vehicle Details</div>
-                
-                <div className="grid grid-cols-3 gap-y-1.5 text-xs">
-                  <span className="text-neutral-500 font-bold">Vehicle</span>
-                  <span className="col-span-2 text-white font-bold uppercase">{clearanceVehicle.year} {clearanceVehicle.make} {clearanceVehicle.model}</span>
-
-                  {clearanceVehicle.specs?.engine && (
-                    <>
-                      <span className="text-neutral-500 font-bold">Engine</span>
-                      <span className="col-span-2 text-white font-medium">{clearanceVehicle.specs.engine}</span>
-                    </>
-                  )}
-
-                  {clearanceVehicle.specs?.hp && (
-                    <>
-                      <span className="text-neutral-500 font-bold">Power</span>
-                      <span className="col-span-2 text-white font-medium">{clearanceVehicle.specs.hp} HP</span>
-                    </>
-                  )}
-
-                  {clearanceVehicle.mods && (
-                    <>
-                      <span className="text-neutral-500 font-bold">Mods</span>
-                      <span className="col-span-2 text-neutral-400 font-medium">{clearanceVehicle.mods}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* GPS Notice */}
-              <p className="text-[10px] text-neutral-500 font-medium leading-normal">
-                Verified at the gate. Show this screen to the gate marshal.
-              </p>
-
-              {/* Wallet Buttons */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <button className="py-3 bg-[#2c2c2e] hover:bg-[#3a3a3c] border border-[#3a3a3c] rounded-xl text-xs font-bold text-white transition-colors">
-                  Apple Wallet
-                </button>
-                <button className="py-3 bg-[#2c2c2e] hover:bg-[#3a3a3c] border border-[#3a3a3c] rounded-xl text-xs font-bold text-white transition-colors">
-                  Google Wallet
-                </button>
-              </div>
-
-            </div>
-
-            <Link href="/dash" className="text-xs text-[#007aff] hover:underline block text-center uppercase tracking-wider font-bold">
-              ← Back to Dashboard
-            </Link>
-
+  return (
+    <div className="min-h-screen bg-[#ffffff] text-[#1c1c1e] font-sans flex flex-col items-center justify-between p-4 sm:p-6 select-none">
+      
+      {/* Top Banner & Physical Card Badge */}
+      <div className="w-full max-w-md space-y-4">
+        
+        {/* Physical Invitation Card Banner */}
+        <div className={`p-4 rounded-2xl bg-gradient-to-r ${contextHeader.bg} text-white shadow-xl border border-neutral-800 space-y-2 relative overflow-hidden`}>
+          <div className="flex items-center justify-between">
+            <span className="px-2.5 py-0.5 bg-[#ff3b30] text-white font-mono font-black text-[10px] uppercase rounded-md tracking-wider">
+              {rawTagId ? `CARD #${rawTagId}` : 'INVITATION CARD'}
+            </span>
+            <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase">
+              BUILT BY LOSEY.CO
+            </span>
           </div>
-        </main>
-      );
-    }
 
-    if (authLoading || (tagId && loading) || tagFound) {
-        return (
-            <main className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
-                <div className="w-full max-w-md text-center space-y-6">
-                    <Loader2 className="w-10 h-10 text-[#007aff] animate-spin mx-auto" />
-                    <div className="space-y-2">
-                        <h2 className="text-xl font-bold tracking-tight text-white uppercase">Loading Passport...</h2>
-                        <p className="text-xs text-[#007aff] tracking-wider uppercase font-semibold">{lookupState}</p>
-                    </div>
-                </div>
-            </main>
-        );
-    }
+          <h1 className="text-base sm:text-lg font-black uppercase tracking-tight text-white leading-tight">
+            {contextHeader.headline}
+          </h1>
 
-    // Case A: No tag ID provided. Manual code resolver.
-    if (!tagId) {
-        return (
-            <main className="min-h-screen bg-black text-white py-20 px-6 flex flex-col justify-center">
-                <div className="w-full max-w-md mx-auto space-y-8 text-center">
-                    <div className="w-16 h-16 bg-[#1c1c1e] border border-[#2c2c2e] rounded-2xl flex items-center justify-center text-[#007aff] mx-auto shadow-md">
-                        <QrCode className="w-8 h-8" />
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex flex-col items-center justify-center gap-1">
-                            <Logo className="w-8 h-8 mx-auto" textClassName="text-2xl" />
-                            <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest font-bold">RESOLVE PORTAL</span>
-                        </div>
-                        <p className="text-neutral-400 text-sm max-w-xs mx-auto">
-                            Enter the code printed under your physical QR decal.
-                        </p>
-                    </div>
+          <p className="text-xs text-neutral-300 font-medium leading-relaxed">
+            Whether you race it, show it, cook it, or capture it — Gridpass brings your world together.
+          </p>
 
-                    <div className="bg-[#1c1c1e] p-6 rounded-3xl border border-[#2c2c2e]">
-                        <form onSubmit={handleManualSubmit} className="space-y-4">
-                            <input
-                                type="text"
-                                required
-                                value={tagInput}
-                                onChange={(e) => setTagInput(e.target.value.toUpperCase())}
-                                placeholder="e.g. GP-4091-AF8"
-                                className="w-full text-center px-4 py-3 rounded-xl font-mono text-lg tracking-widest placeholder:text-neutral-700 font-bold bg-[#2c2c2e] border border-[#3a3a3c] text-white focus:outline-none focus:border-[#007aff]"
-                            />
-                            <button
-                                type="submit"
-                                className="w-full py-3.5 bg-[#007aff] hover:bg-[#0a84ff] text-white font-bold rounded-xl text-sm transition-colors flex items-center justify-center"
-                            >
-                                Resolve Tag
-                            </button>
-                        </form>
-                    </div>
+          {/* Special First-Scan Onboarding Callout */}
+          <div className="pt-2 border-t border-neutral-800/80 flex items-center gap-2 text-emerald-400 font-mono text-[11px] font-bold">
+            <Sparkles className="w-4 h-4 shrink-0 text-emerald-400 animate-pulse" />
+            <span>HEY! THIS ISN&apos;T JUST A QR CODE — WELCOME TO GRIDPASS!</span>
+          </div>
+        </div>
 
-                    <Link href="/" className="text-xs text-neutral-500 hover:text-neutral-300 font-bold">
-                        ← Back to Homepage
-                    </Link>
-                </div>
-            </main>
-        );
-    }
+        {/* Super Admin Tag Controller Button */}
+        {user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com') && (
+          <button
+            onClick={() => setShowAdminDrawer(true)}
+            className="w-full py-2.5 bg-neutral-900 hover:bg-black text-white font-mono font-black text-xs uppercase tracking-wider rounded-xl border border-neutral-800 shadow-md flex items-center justify-center gap-2 transition active:scale-95"
+          >
+            <span>⚡ Super Admin Tag Controller (Card #{rawTagId || '250'})</span>
+          </button>
+        )}
 
-    // Case B: Tag ID is unclaimed.
-    return (
-        <main className="min-h-screen bg-black text-white py-16 px-4">
-            <div className="max-w-xl mx-auto space-y-8">
-                
-                {/* Header */}
-                <div className="text-center space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1c1c1e] border border-[#2c2c2e] text-xs font-semibold text-neutral-300">
-                        <span className="flex h-2 w-2 rounded-full bg-[#ffd60a]" />
-                        {unclaimedVehicle && !showAlternativeClaim ? 'Pre-Registered Vehicle Detected' : 'Unassigned Tag Detected'}
-                    </div>
-                    
-                    <div className="flex flex-col items-center justify-center gap-1">
-                        <Logo className="w-8 h-8 mx-auto" textClassName="text-2xl" />
-                        <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest font-bold">CLAIM PORTAL</span>
-                    </div>
-                    
-                    <p className="text-neutral-400 text-sm max-w-sm mx-auto">
-                        This physical tag (<span className="text-white font-mono font-bold break-all">{tagId}</span>) is active but has not been linked to an owner.
-                    </p>
-                </div>
-
-                {/* Wi-Fi helper warning banner */}
-                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl text-left space-y-1.5 max-w-md mx-auto">
-                  <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase">
-                    <AlertCircle className="w-4 h-4 text-amber-400" />
-                    <span>Wi-Fi Connection Alert</span>
-                  </div>
-                  <p className="text-[11px] text-neutral-400 leading-relaxed font-medium">
-                    ⚠️ Wi-Fi sign-in browser detected. To make sure your info is saved correctly, tap the menu/browser icon in the top-right corner to exit this Wi-Fi helper and open this page in standard Safari or Chrome.
-                  </p>
-                </div>
-
-                {unclaimedVehicle && !showAlternativeClaim ? (
-                    <div className="space-y-6">
-                        <div className="bg-[#1c1c1e] p-8 rounded-3xl text-center space-y-6 border border-[#2c2c2e]">
-                            <div className="w-16 h-16 bg-[#2c2c2e] rounded-2xl flex items-center justify-center text-[#007aff] mx-auto">
-                                <CarFront className="w-8 h-8" />
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest bg-[#2c2c2e] px-2.5 py-1 rounded-full">Awaiting Owner</span>
-                                <h3 className="text-2xl font-extrabold text-white uppercase tracking-tight pt-2">
-                                    {unclaimedVehicle.year} {unclaimedVehicle.make} {unclaimedVehicle.model}
-                                </h3>
-                                {unclaimedVehicle.partner_dealer && (
-                                    <p className="text-xs font-bold text-neutral-500 uppercase">
-                                        Tagged By: <span className="text-neutral-300">{unclaimedVehicle.partner_dealer}</span>
-                                    </p>
-                                )}
-                            </div>
-
-                            {!user ? (
-                                <div className="flex flex-col gap-3 pt-2">
-                                    <Link
-                                        href={`/login?redirect=/join?id=${tagId}`}
-                                        className="w-full py-4 bg-[#007aff] hover:bg-[#0a84ff] text-white font-bold uppercase tracking-wider rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <LogIn className="w-4 h-4" /> Sign In to Claim Vehicle
-                                    </Link>
-                                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-                                        Requires a free Gridpass account
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-3 pt-2">
-                                    <button
-                                        onClick={handleClaimPreRegistered}
-                                        disabled={claimingPreRegistered}
-                                        className="w-full py-4 bg-[#34c759] hover:bg-[#30b351] text-white font-bold uppercase tracking-wider rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        {claimingPreRegistered ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                        Claim Ownership
-                                    </button>
-                                    
-                                    <button
-                                        onClick={() => setShowAlternativeClaim(true)}
-                                        className="text-xs text-neutral-500 hover:text-neutral-300 font-bold transition-colors pt-2 uppercase tracking-wider"
-                                    >
-                                        Or link tag to another profile
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        {!user ? (
-                            <div className="space-y-6">
-                                {refCode && (
-                                    <div className="p-5 bg-[#1c1c1e] border-2 border-red-500/40 rounded-3xl text-left space-y-2 shadow-xl animate-in fade-in duration-300">
-                                        <div className="flex items-center gap-2 text-xs font-black uppercase text-[#ff3b30] tracking-wider">
-                                            <Sparkles className="w-4 h-4 text-[#ff3b30]" />
-                                            <span>YOU ARE INVITED BY MEMBER @{refCode.toUpperCase()}</span>
-                                        </div>
-                                        <h4 className="text-sm font-extrabold text-white uppercase tracking-tight">
-                                            VEHICLES • PHOTOS • EVENTS • VENDORS • VENUES • MORE
-                                        </h4>
-                                        <p className="text-xs text-neutral-300 leading-relaxed font-medium">
-                                            Whether you race it, show it, cook it, or capture it — Gridpass brings your world together. Create your free account today to connect with the people behind the machines, meals, and memories!
-                                        </p>
-                                    </div>
-                                )}
-
-                                <div className="bg-[#1c1c1e] p-8 rounded-3xl text-center space-y-6 border border-[#2c2c2e]">
-                                    <div className="w-14 h-14 bg-[#2c2c2e] rounded-2xl flex items-center justify-center text-[#007aff] mx-auto">
-                                        <QrCode className="w-6 h-6" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h3 className="text-xl font-bold text-white">Link Your Vehicle Passport</h3>
-                                        <p className="text-neutral-400 text-sm leading-relaxed">
-                                            Claim this physical tag to create a digital maintenance profile, verify track check-ins, or manage event registrations under your custom garage dashboard.
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-col gap-3 pt-2">
-                                        <Link
-                                            href={`/login?redirect=/join?id=${tagId}`}
-                                            className="w-full py-4 bg-[#007aff] hover:bg-[#0a84ff] text-white font-bold rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <LogIn className="w-4 h-4" /> Sign In / Join Gridpass
-                                        </Link>
-                                        <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-                                            Requires a free Gridpass account
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <ClaimTagForm tagId={tagId} />
-                        )}
-
-                        {showAlternativeClaim && unclaimedVehicle && (
-                            <div className="text-center pt-4">
-                                <button
-                                    onClick={() => setShowAlternativeClaim(false)}
-                                    className="text-xs text-neutral-500 hover:text-neutral-300 font-bold transition-colors uppercase tracking-wider"
-                                >
-                                    ← Back to vehicle claim
-                                </button>
-                            </div>
-                        )}
-                    </>
-                )}
-
+        {/* Join / Registration Card */}
+        <div className="bg-white border-2 border-neutral-900 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+          
+          <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-black uppercase tracking-tight text-neutral-900">
+                JOIN GRIDPASS
+              </h2>
+              <p className="text-xs text-neutral-500 font-medium">
+                Claim your digital vehicle passport & join the roster.
+              </p>
             </div>
-        </main>
-    );
+            <div className="w-10 h-10 rounded-full bg-[#ff3b30]/10 border border-[#ff3b30]/20 flex items-center justify-center text-[#ff3b30]">
+              <QrCode className="w-5 h-5" />
+            </div>
+          </div>
+
+          {joinedSuccess ? (
+            <div className="py-8 text-center space-y-3">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-black uppercase text-neutral-900">YOU ARE IN! 🎉</h3>
+              <p className="text-xs text-neutral-600 font-medium max-w-xs mx-auto">
+                Your Gridpass membership is active. Redirecting to your driver dashboard...
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleJoinSubmit} className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="PJ Losey"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="you@domain.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Primary Machine / Vehicle Make & Model</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 2024 Corvette Z06 or Sea-Doo RXT-X"
+                  value={vehicleMakeModel}
+                  onChange={(e) => setVehicleMakeModel(e.target.value)}
+                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={joining}
+                className="w-full py-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+              >
+                {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>JOIN GRIDPASS & CLAIM PASSPORT ➔</span>}
+              </button>
+            </form>
+          )}
+
+          {/* Printed Card Footer Note */}
+          <div className="pt-3 border-t border-neutral-200 text-center text-[10px] font-mono text-neutral-500">
+            <span>EACH CARD HAS A UNIQUE ID • REFERRED BY CARD #{rawTagId || '250'}</span>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Admin Tag Controller Modal */}
+      {showAdminDrawer && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-300 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl font-sans">
+            <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
+              <div>
+                <h2 className="font-black text-sm uppercase text-neutral-900 flex items-center gap-2">
+                  <span>⚡ DYNAMIC TAG CONTROLLER</span>
+                  <span className="font-mono text-[#ff3b30]">#{rawTagId || '250'}</span>
+                </h2>
+                <p className="text-[10px] text-neutral-500 font-mono">Re-route physical card destination & persona rules.</p>
+              </div>
+              <button onClick={() => setShowAdminDrawer(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAdminSaveTarget} className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Distribution Method</label>
+                <select
+                  value={editMethod}
+                  onChange={(e) => setEditMethod(e.target.value)}
+                  className="w-full text-xs font-bold p-2 bg-neutral-50 border border-neutral-300 rounded-lg focus:outline-none"
+                >
+                  <option value="handout">🎴 Business Card Handout</option>
+                  <option value="car_drop">🏎️ Car Drop (Windshield Wiper / Interior)</option>
+                  <option value="lanyard">🏷️ Rearview Mirror Lanyard Hang</option>
+                  <option value="sticker">🚽 Guerrilla Sticker (Porta-potty / Venue Stall)</option>
+                  <option value="dealership_intake">🏬 Dealership Machine Intake (Nielsen&apos;s)</option>
+                  <option value="service_bay">🔧 Dealership Service Bay</option>
+                  <option value="sales_floor">🏷️ Dealership Sales Floor</option>
+                  <option value="shop_stack">📦 Auto Shop Counter Stack</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Persona Type</label>
+                <select
+                  value={editTargetType}
+                  onChange={(e) => setEditTargetType(e.target.value)}
+                  className="w-full text-xs font-bold p-2 bg-neutral-50 border border-neutral-300 rounded-lg focus:outline-none"
+                >
+                  <option value="intake_join">🌐 Default /join Intake & Signup</option>
+                  <option value="vehicle">🏎️ Vehicle Passport Spec Sheet</option>
+                  <option value="business">🏢 Business / Vendor Exhibit</option>
+                  <option value="event">🏁 Event Hub & Gate Check-in</option>
+                  <option value="driver">👤 Driver Card & Resume</option>
+                  <option value="dealership_service">🔧 Dealership Service Log & Work Orders</option>
+                  <option value="dealership_sales">🏬 Dealership Sales Floor Spec & Price Alert</option>
+                  <option value="custom_url">🔗 Custom URL Redirect</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Destination Path / URL</label>
+                <input
+                  type="text"
+                  required
+                  value={editTargetDest}
+                  onChange={(e) => setEditTargetDest(e.target.value)}
+                  placeholder="/join or /v/corvette-z06"
+                  className="w-full text-xs font-mono font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg focus:outline-none focus:border-[#ff3b30]"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminDrawer(false)}
+                  className="px-3 py-2 bg-neutral-100 text-neutral-700 text-xs font-bold uppercase rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm"
+                >
+                  Save Target Route ➔
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Minimal Footer */}
+      <footer className="w-full text-center py-4 border-t border-neutral-200 text-[10px] font-mono text-neutral-500 space-y-1">
+        <p>GRIDPASS PLATFORM • LOSEY.CO • ALL RIGHTS RESERVED</p>
+        <p className="text-neutral-400">AUTHENTICATED PHYSICAL TAG INTENDED FOR OUTDOOR & AUTOMOTIVE USE</p>
+      </footer>
+
+    </div>
+  );
 }
 
 export default function JoinClient() {
-    return (
-        <Suspense fallback={
-            <main className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
-                <Loader2 className="w-12 h-12 text-[#007aff] animate-spin" />
-            </main>
-        }>
-            <JoinPageContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+        <span className="text-xs font-mono font-bold text-neutral-600 mt-2">Loading Gridpass Invitation...</span>
+      </div>
+    }>
+      <JoinPageContent />
+    </Suspense>
+  );
 }

@@ -84,6 +84,13 @@ service cloud.firestore {
     match /voyage_checkins/{id} { allow read, write: if true; }
     match /voyage_tags/{id} { allow read, write: if true; }
 
+    // Track Waivers, Show Votes, Radar & Interest Registry
+    match /interest_registry/{id} { allow read, write: if true; }
+    match /radar/{id} { allow read, write: if true; }
+    match /show_votes/{id} { allow read, write: if true; }
+    match /track_releases/{id} { allow read, write: if true; }
+    match /track_waivers/{id} { allow read, write: if true; }
+
     // Universal Dynamic update exception / fallback
     match /{collection}/{document} {
       allow update: if true;

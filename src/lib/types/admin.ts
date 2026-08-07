@@ -118,6 +118,61 @@ export interface AdminSystemStats {
   total_scans: number;
 }
 
+export type DistributionMethod =
+  | 'car_drop'
+  | 'handout'
+  | 'lanyard'
+  | 'sticker'
+  | 'dealership_intake'
+  | 'service_bay'
+  | 'sales_floor'
+  | 'shop_stack'
+  | 'general';
+
+export type TagTargetType =
+  | 'intake_join'
+  | 'vehicle'
+  | 'business'
+  | 'event'
+  | 'driver'
+  | 'dealership_service'
+  | 'dealership_sales'
+  | 'custom_url';
+
+export interface PhysicalTagRecord {
+  id: string;
+  tag_id: string; // e.g. '250', '002', 'Nielsen_088'
+  title?: string;
+  distribution_method: DistributionMethod;
+  target_type: TagTargetType;
+  target_destination: string; // e.g. '/v/corvette-z06', '/b/nielsens-enterprises'
+  partner_business_id?: string; // e.g. 'nielsens_enterprises'
+  partner_business_name?: string; // e.g. 'Nielsen\'s Enterprises (Lake Villa, IL)'
+  total_scans: number;
+  members_joined_count: number;
+  assigned_owner_email?: string;
+  status: 'active' | 'unbound' | 'archived';
+  created_at: string;
+  last_scanned_at?: string;
+}
+
+export interface TagScanEvent {
+  id: string;
+  tag_id: string;
+  scanned_at: string;
+  distribution_method?: DistributionMethod;
+  user_id?: string;
+  user_email?: string;
+  user_role?: 'visitor' | 'member' | 'salesperson' | 'service_tech' | 'floor_manager' | 'owner' | 'admin';
+  target_destination: string;
+  referrer_url?: string;
+  user_agent?: string;
+  device_category?: 'mobile' | 'desktop' | 'tablet';
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
 export type FeatureStatus = 'idea' | 'planned' | 'in_progress' | 'alpha' | 'beta' | 'live' | 'deprecated';
 export type FeatureCategory = 'core' | 'auto_shop' | 'race_team' | 'food_truck' | 'track_venue';
 export type FeatureAccessLevel = 'public' | 'members' | 'gold' | 'business_owners' | 'admins_only';

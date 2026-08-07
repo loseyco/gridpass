@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/config';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 import { logAgentExecutionTicket } from '@/lib/agent-logger';
 
@@ -20,6 +20,7 @@ export interface UserFeedbackItem {
   created_at: string;
   promoted_ticket_number?: string;
   user_agent?: string;
+  source_collection?: string;
 }
 
 const DEFAULT_FEEDBACK_ITEMS: UserFeedbackItem[] = [
@@ -65,6 +66,53 @@ const DEFAULT_FEEDBACK_ITEMS: UserFeedbackItem[] = [
   },
 ];
 
+const normalizeFeedbackDoc = (id: string, data: any): UserFeedbackItem => {
+  let pageUrl = data.page_url || data.metadata?.path || data.metadata?.url || 'http://localhost:3000/feedback';
+  let pageRoute = data.page_route || '/feedback';
+  if (pageUrl.startsWith('http')) {
+    try {
+      pageRoute = new URL(pageUrl).pathname;
+    } catch (e) {
+      pageRoute = '/feedback';
+    }
+  } else if (pageUrl.startsWith('/')) {
+    pageRoute = pageUrl;
+  }
+
+  let status: UserFeedbackItem['status'] = 'PENDING_REVIEW';
+  if (
+    data.status === 'APPROVED_FOR_DEV' ||
+    data.status === 'ROADMAP_IDEA' ||
+    data.status === 'DECLINED' ||
+    data.status === 'RESOLVED'
+  ) {
+    status = data.status;
+  } else if (data.status === 'PENDING_REVIEW' || data.status === 'PENDING_AGENT_REVIEW' || !data.status) {
+    status = 'PENDING_REVIEW';
+  }
+
+  return {
+    id,
+    category: data.category || 'bug',
+    priority: data.priority || 'medium',
+    title: data.title || 'User Feedback',
+    description: data.description || '',
+    submitted_by_email: data.submitted_by_email || data.userEmail || 'loseyp@gmail.com',
+    submitted_by_name:
+      data.submitted_by_name ||
+      (data.submitted_by_email === 'loseyp@gmail.com' || data.userEmail === 'loseyp@gmail.com'
+        ? 'PJ Losey'
+        : 'Member'),
+    page_url: pageUrl,
+    page_route: pageRoute,
+    status,
+    created_at: data.created_at || data.createdAt || new Date().toISOString(),
+    promoted_ticket_number: data.promoted_ticket_number,
+    user_agent: data.user_agent || data.metadata?.userAgent,
+    source_collection: data.source_collection || 'user_feedback',
+  };
+};
+
 export default function AdminFeedbackTriagePage() {
   const [items, setItems] = useState<UserFeedbackItem[]>(DEFAULT_FEEDBACK_ITEMS);
   const [loading, setLoading] = useState(true);
@@ -73,27 +121,73 @@ export default function AdminFeedbackTriagePage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsub = onSnapshot(
+    let userFeedbackList: UserFeedbackItem[] = [];
+    let feedbackQueueList: UserFeedbackItem[] = [];
+    let loadedUserFeedback = false;
+    let loadedFeedbackQueue = false;
+
+    const updateCombinedItems = () => {
+      const map = new Map<string, UserFeedbackItem>();
+
+      // Add items from feedback_queue
+      feedbackQueueList.forEach((item) => {
+        map.set(item.id, item);
+      });
+
+      // Add items from user_feedback (takes precedence on duplicate ID)
+      userFeedbackList.forEach((item) => {
+        map.set(item.id, item);
+      });
+
+      const combined = Array.from(map.values()).sort(
+        (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      );
+
+      if (combined.length > 0) {
+        setItems(combined);
+      } else if (loadedUserFeedback && loadedFeedbackQueue) {
+        setItems(DEFAULT_FEEDBACK_ITEMS);
+      }
+
+      if (loadedUserFeedback || loadedFeedbackQueue) {
+        setLoading(false);
+      }
+    };
+
+    const unsubUserFeedback = onSnapshot(
       query(collection(db, 'user_feedback'), orderBy('created_at', 'desc')),
       (snapshot) => {
-        if (!snapshot.empty) {
-          const list: UserFeedbackItem[] = [];
-          snapshot.forEach((d) => {
-            list.push({ id: d.id, ...d.data() } as UserFeedbackItem);
-          });
-          setItems(list);
-        } else {
-          setItems(DEFAULT_FEEDBACK_ITEMS);
-        }
-        setLoading(false);
+        loadedUserFeedback = true;
+        userFeedbackList = snapshot.docs.map((d) => normalizeFeedbackDoc(d.id, d.data()));
+        updateCombinedItems();
       },
       (err) => {
         console.warn('user_feedback listener fallback:', err);
-        setLoading(false);
+        loadedUserFeedback = true;
+        updateCombinedItems();
       }
     );
 
-    return () => unsub();
+    const unsubFeedbackQueue = onSnapshot(
+      collection(db, 'feedback_queue'),
+      (snapshot) => {
+        loadedFeedbackQueue = true;
+        feedbackQueueList = snapshot.docs.map((d) =>
+          normalizeFeedbackDoc(d.id, { ...d.data(), source_collection: 'feedback_queue' })
+        );
+        updateCombinedItems();
+      },
+      (err) => {
+        console.warn('feedback_queue listener fallback:', err);
+        loadedFeedbackQueue = true;
+        updateCombinedItems();
+      }
+    );
+
+    return () => {
+      unsubUserFeedback();
+      unsubFeedbackQueue();
+    };
   }, []);
 
   // Filter items based on activeTab
@@ -112,7 +206,7 @@ export default function AdminFeedbackTriagePage() {
   const promoteToSubagentTicket = async (item: UserFeedbackItem, customNote?: string) => {
     const ticketNum = `TICK-${Math.floor(2000 + Math.random() * 8000)}`;
     const noteText = customNote || adminNote;
-    
+
     try {
       // 1. Log ticket in agent_tickets
       await logAgentExecutionTicket({
@@ -134,19 +228,29 @@ export default function AdminFeedbackTriagePage() {
           ...(noteText ? [`Adhere strictly to Super Admin Directive: "${noteText}"`] : []),
           `Implement architectural changes or bug fix requested by member ${item.submitted_by_email}.`,
           `Run npx tsc --noEmit and npm run test:headed to verify clean implementation.`,
-          `Update ticket status to VERIFIED.`
+          `Update ticket status to VERIFIED.`,
         ],
       });
 
-      // 2. Update status in user_feedback Firestore document
+      // 2. Update status in user_feedback and feedback_queue Firestore documents
       try {
-        await updateDoc(doc(db, 'user_feedback', item.id), {
+        await setDoc(
+          doc(db, 'user_feedback', item.id),
+          {
+            ...item,
+            status: 'APPROVED_FOR_DEV',
+            promoted_ticket_number: ticketNum,
+            ...(noteText ? { admin_notes: noteText } : {}),
+          },
+          { merge: true }
+        );
+        updateDoc(doc(db, 'feedback_queue', item.id), {
           status: 'APPROVED_FOR_DEV',
           promoted_ticket_number: ticketNum,
           ...(noteText ? { admin_notes: noteText } : {}),
-        });
+        }).catch(() => {});
       } catch (e) {
-        console.warn('Update user_feedback doc fallback:', e);
+        console.warn('Update feedback doc fallback:', e);
       }
 
       // 3. Update local state
@@ -168,7 +272,16 @@ export default function AdminFeedbackTriagePage() {
   const markAsRoadmap = async (item: UserFeedbackItem, customNote?: string) => {
     const noteText = customNote || adminNote;
     try {
-      await updateDoc(doc(db, 'user_feedback', item.id), {
+      await setDoc(
+        doc(db, 'user_feedback', item.id),
+        {
+          ...item,
+          status: 'ROADMAP_IDEA',
+          ...(noteText ? { admin_notes: noteText } : {}),
+        },
+        { merge: true }
+      ).catch(() => {});
+      updateDoc(doc(db, 'feedback_queue', item.id), {
         status: 'ROADMAP_IDEA',
         ...(noteText ? { admin_notes: noteText } : {}),
       }).catch(() => {});
@@ -185,7 +298,16 @@ export default function AdminFeedbackTriagePage() {
   const declineFeedback = async (item: UserFeedbackItem, customNote?: string) => {
     const noteText = customNote || adminNote;
     try {
-      await updateDoc(doc(db, 'user_feedback', item.id), {
+      await setDoc(
+        doc(db, 'user_feedback', item.id),
+        {
+          ...item,
+          status: 'DECLINED',
+          ...(noteText ? { admin_notes: noteText } : {}),
+        },
+        { merge: true }
+      ).catch(() => {});
+      updateDoc(doc(db, 'feedback_queue', item.id), {
         status: 'DECLINED',
         ...(noteText ? { admin_notes: noteText } : {}),
       }).catch(() => {});
