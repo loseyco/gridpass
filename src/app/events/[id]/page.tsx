@@ -2711,7 +2711,7 @@ export default function EventHubPage() {
             <button
               type="button"
               onClick={() => setActiveEventTab('hub')}
-              className={`py-1.5 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full ${
+              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full touch-manipulation active:scale-95 ${
                 activeEventTab === 'hub' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
               }`}
             >
@@ -2721,7 +2721,7 @@ export default function EventHubPage() {
             <button
               type="button"
               onClick={() => setActiveEventTab('map')}
-              className={`py-1.5 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative ${
+              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
                 activeEventTab === 'map' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
               }`}
             >
@@ -2731,7 +2731,7 @@ export default function EventHubPage() {
             <button
               type="button"
               onClick={() => setActiveEventTab('passes')}
-              className={`py-1.5 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative ${
+              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
                 activeEventTab === 'passes' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
               }`}
             >
@@ -2741,7 +2741,7 @@ export default function EventHubPage() {
             <button
               type="button"
               onClick={() => setActiveEventTab('entrants')}
-              className={`py-1.5 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative ${
+              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
                 activeEventTab === 'entrants' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
               }`}
             >
@@ -2751,7 +2751,7 @@ export default function EventHubPage() {
             <button
               type="button"
               onClick={() => setActiveEventTab('discussion')}
-              className={`py-1.5 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative ${
+              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
                 activeEventTab === 'discussion' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
               }`}
             >
