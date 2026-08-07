@@ -49,6 +49,41 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     telemetry_verified: true,
   },
   {
+    id: 'tick_1013_firebase_expert_agent',
+    ticket_number: 'TICK-1013',
+    agent_role: 'firebase_expert',
+    title: 'Firebase Deployments & Security Rules Subagent (firebase_expert) Registration & Invariant Enforcement',
+    category: 'security',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['AgentStaff', 'AdminAgentsPage', 'AdminTicketsPage', 'firestore.rules', 'firebase.json'],
+    files_modified: [
+      'src/lib/types/admin.ts',
+      'src/app/admin/agents/page.tsx',
+      '.agents/agents/firebase_expert/agent.md',
+      'src/app/admin/tickets/page.tsx'
+    ],
+    schema_changes: [
+      'AgentStaff.role_code union addition: firebase_expert',
+      'AgentTicket.agent_role union addition: firebase_expert'
+    ],
+    issue_description: 'Gridpass infrastructure required a dedicated subagent specialist for managing Firebase Hosting, Cloud Functions, firestore.rules security permissions, and enforcing the strict zero auto-deploy invariant.',
+    root_cause: 'Firebase configuration and security rule validation lacked a designated subagent persona in the AgentStaff roster and system type declarations.',
+    resolution_summary: 'Registered firebase_expert in AgentStaff and AgentTicket union types, added agent entry to DEFAULT_AGENTS in /admin/agents, created .agents/agents/firebase_expert/agent.md system prompt guide, and logged TICK-1013 verification audit.',
+    verification_proof: 'Verified 0 TypeScript compilation errors (npx tsc --noEmit) and verified system roster update in Admin UI.',
+    sop_summary: 'Creation and registration protocol for the firebase_expert subagent, enforcing zero auto-deploy invariants and firestore.rules security synchronization.',
+    sop_steps: [
+      'Add firebase_expert to AgentStaff role_code and AgentTicket agent_role union types in src/lib/types/admin.ts.',
+      'Add firebase_expert to DEFAULT_AGENTS in src/app/admin/agents/page.tsx with icon 🔥 and title Firebase Deployments & Security Rules Specialist.',
+      'Create .agents/agents/firebase_expert/agent.md defining system prompt guidelines for Firebase Hosting, Cloud Functions, firestore.rules, and zero auto-deploy invariant.',
+      'Log execution ticket TICK-1013 in src/app/admin/tickets/page.tsx and verify with npx tsc --noEmit.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'FIREBASE_EXPERT',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1012_agent_staff_sidebar_fix',
     ticket_number: 'TICK-1012',
     agent_role: 'site_auditor',

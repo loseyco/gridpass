@@ -110,14 +110,61 @@ async function seedSOPsAndTickets() {
     created_at: new Date().toISOString(),
   };
 
+  // 4. Ticket 1014: Firestore Security Rules Audit & Admin Collections Permission Match Engine
+  const t1014 = {
+    id: 'tick_1014_firestore_rules_audit',
+    ticket_number: 'TICK-1014',
+    agent_role: 'architect',
+    title: 'Firestore Security Rules Audit & Admin Collections Permission Match Engine',
+    category: 'security',
+    status: 'VERIFIED',
+    components_used: ['firestore.rules', 'firebase.json', 'agent_tickets'],
+    files_modified: ['firestore.rules'],
+    schema_changes: [
+      'system_logs',
+      'tag_scans',
+      'user_feedback',
+      'agent_tickets',
+      'sops',
+      'agent_staff',
+      'sales_leads',
+      'members',
+      'vehicles',
+      'businesses',
+      'events'
+    ],
+    sop_summary: 'SOP for auditing and synchronizing Firestore permission match rules for all admin and domain collections across localhost and live deployment.',
+    sop_steps: [
+      'Inspect all active collection calls across src/app/admin and platform API handlers.',
+      'Update firestore.rules to include explicit permission match blocks for all domain collections (system_logs, tag_scans, user_feedback, agent_tickets, sops, agent_staff, sales_leads, members, vehicles, businesses, events).',
+      'Organize rules logically into domain sections (Telemetry, Swarm, Feedback, Core Entities, B2B CRM, Gamification, Access Control, Second Life SaaS, Voyage AI).',
+      'Verify type integrity with npx tsc --noEmit.',
+      'Log ticket TICK-1014 to agent_tickets in Firestore.'
+    ],
+    created_at: new Date().toISOString(),
+  };
+
   // Write Tickets to Firestore
   console.log('  🎟️ Writing Agent Execution Tickets to [agent_tickets]...');
   await setDoc(doc(db, 'agent_tickets', t1.id), t1, { merge: true });
   await setDoc(doc(db, 'agent_tickets', t2.id), t2, { merge: true });
   await setDoc(doc(db, 'agent_tickets', t3.id), t3, { merge: true });
+  await setDoc(doc(db, 'agent_tickets', t1014.id), t1014, { merge: true });
 
   // Write SOP Guides to Firestore
   console.log('  📚 Writing SOP Manuals to [sops]...');
+  await setDoc(doc(db, 'sops', 'sop_1014_firestore_rules'), {
+    id: 'sop_1014_firestore_rules',
+    slug: 'firestore-security-rules-sop',
+    title: 'Firestore Security Rules Synchronization & Collection Audit SOP',
+    category: 'Security & Database Architecture',
+    author_agent: 'architect',
+    description: 'SOP for ensuring all newly declared collections have explicit permission match rules in firestore.rules for localhost and live deployment.',
+    prerequisites: ['Firebase Admin / Firestore Rules', 'Access to firestore.rules'],
+    steps: t1014.sop_steps,
+    components_referenced: t1014.components_used,
+    created_at: new Date().toISOString(),
+  }, { merge: true });
   await setDoc(doc(db, 'sops', 'sop_001_vehicle_support'), {
     id: 'sop_001_vehicle_support',
     slug: 'vehicle-support-sop',

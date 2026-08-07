@@ -63,6 +63,11 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     *   **`traffic_expert`**: Real-time traffic flows, entry/exit paths, physical QR scan velocity, 390px–430px mobile viewport distributions, rage clicks.
     *   **`git_expert`**: Git version control, staging, clean conventional commits, release tagging, and GitHub repository synchronization (`origin main`).
     *   **`tester`**: Automated Playwright E2E visual browser testing (`npm run test:headed`) & auth session persistence (`tests/.auth/user.json`).
+    *   **`firebase_expert`**: Firebase Cloud Deployments, Cloud Functions, Firestore Security Rules (`firestore.rules`), and Strict Zero Auto-Deploy Invariant.
+
+*   **MANDATORY AUTOMATIC EXECUTION TICKET & SOP LOGGING INVARIANT**:
+    1. EVERY task, feature request, bug fix, layout adjustment, or architectural refactor discussed between PJ Losey and GM MUST generate an official Execution Ticket (`TICK-...`) logged to `agent_tickets` in Firestore AND added to `DEFAULT_AGENT_TICKETS` in `src/app/admin/tickets/page.tsx`.
+    2. Subagents MUST document problem statement (`issue_description`), root cause analysis (`root_cause`), resolution summary (`resolution_summary`), verification proof (`verification_proof`), and step-by-step SOP steps before completing any task.
 
 ## 6. Mandatory Pre-Push & Phase-Completion Auditing Process
 Before completing any roadmap phase or pushing code updates live, the following agent workflow MUST be executed:
