@@ -143,26 +143,47 @@ function JoinPageContent() {
     let isMounted = true;
 
     async function resolvePhysicalTag() {
+      if (!rawTagId) return;
+      const tagIdStr = rawTagId;
+
       try {
-        const q = query(collection(db, 'physical_tags'), where('tag_id', '==', rawTagId));
+        const q = query(collection(db, 'physical_tags'), where('tag_id', '==', tagIdStr));
         const snap = await getDocs(q);
 
         let rec: any = null;
         if (!snap.empty) {
           rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
         } else {
-          // Unbound / Brand New Physical Tag
-          rec = {
-            id: `tag_${rawTagId}`,
-            tag_id: rawTagId,
-            title: `Invitation Tag #${rawTagId}`,
-            distribution_method: 'handout',
-            target_type: 'intake_join',
-            target_destination: '/join',
-            total_scans: 1,
-            members_joined_count: 0,
-            status: 'unbound',
-          };
+          // Check if tagIdStr matches a staged business ID in businesses collection!
+          const bizSnap = await getDoc(doc(db, 'businesses', tagIdStr)).catch(() => null);
+          if (bizSnap && bizSnap.exists()) {
+            const bData = bizSnap.data();
+            const formatBizName = bData.name || tagIdStr.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            rec = {
+              id: `tag_${tagIdStr}`,
+              tag_id: tagIdStr,
+              title: `🏢 ${formatBizName}`,
+              distribution_method: 'handout',
+              target_type: 'business',
+              target_destination: `/b/${tagIdStr}`,
+              unclaimed_business_id: tagIdStr,
+              custom_spotted_title: formatBizName,
+              status: 'active',
+            };
+          } else {
+            // Unbound / Brand New Physical Tag
+            rec = {
+              id: `tag_${tagIdStr}`,
+              tag_id: tagIdStr,
+              title: `Invitation Tag #${tagIdStr}`,
+              distribution_method: 'handout',
+              target_type: 'intake_join',
+              target_destination: '/join',
+              total_scans: 1,
+              members_joined_count: 0,
+              status: 'unbound',
+            };
+          }
         }
 
         if (isMounted) {
@@ -587,10 +608,11 @@ function JoinPageContent() {
           {/* Derived Referrer & Target Mode Customization */}
           {(() => {
             const referrerName = referrerDisplayName || tagRecord?.referrer_name || searchParams.get('ref') || searchParams.get('referrer') || null;
-            const isBiz = tagRecord?.target_type === 'business';
+            const isBiz = tagRecord?.target_type === 'business' || tagRecord?.unclaimed_business_id || searchParams.has('biz') || searchParams.has('business') || (rawTagId && rawTagId.includes('-'));
             const isPerson = tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person';
             const isVeh = tagRecord?.target_type === 'vehicle' || tagRecord?.custom_spotted_photo_url;
-            const bizName = tagRecord?.custom_spotted_title || 'BUSINESS';
+            const rawBizName = tagRecord?.custom_spotted_title || tagRecord?.unclaimed_business_id || rawTagId || 'BUSINESS';
+            const bizName = rawBizName.replace(/^biz_/, '').split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             const personName = tagRecord?.recipient_name || tagRecord?.custom_spotted_title;
 
             return (

@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1048_universal_business_id_intake_hero_fix',
+    ticket_number: 'TICK-1048',
+    agent_role: 'gm',
+    title: 'Universal Business ID Resolution & Business Passport Intake Hero Card',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'resolvePhysicalTag', 'isBiz', 'businesses'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported that opening /join?id=monarch-defender rendered a generic "YOU SCANNED INVITATION CARD #MONARCH-DEFENDER" header instead of the business passport invitation screen.',
+    root_cause: 'JoinClient.tsx only looked up physical_tags collection by tag_id and did not check if the ID matched a staged business slug in the businesses collection, nor did isBiz evaluate raw business slug parameters.',
+    resolution_summary: 'Updated JoinClient.tsx: added automatic getDoc lookup in businesses collection for unmatched intake IDs, derived formatted business names (e.g. Monarch Defender), and rendered business hero cards (🏢 YOU ARE INVITED! CLAIM PASSPORT FOR MONARCH DEFENDER).',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local rendering on localhost/join?id=monarch-defender.',
+    sop_summary: 'SOP for business intake passport rendering.',
+    sop_steps: [
+      'Query both physical_tags and businesses collections during intake ID resolution on /join.',
+      'Auto-detect staged business IDs (monarch-defender, nielsens) and set target_type to business.',
+      'Render high-impact business passport hero banner: 🏢 YOU ARE INVITED! CLAIM PASSPORT FOR [BIZ_NAME].'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1047_vip_share_link_success_studio',
     ticket_number: 'TICK-1047',
     agent_role: 'gm',
