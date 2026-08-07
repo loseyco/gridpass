@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Upload, Building2, Calendar, UserCheck } from 'lucide-react';
+import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Copy, Link as LinkIcon, Building2, Calendar, UserCheck } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
@@ -18,6 +18,7 @@ function JoinPageContent() {
 
   const [loading, setLoading] = useState(!!rawTagId);
   const [tagRecord, setTagRecord] = useState<any | null>(null);
+  const [unclaimedVehicle, setUnclaimedVehicle] = useState<any | null>(null);
   const [showAdminDrawer, setShowAdminDrawer] = useState(false);
 
   // Real Database Entity Lists for Admin Selector
@@ -37,7 +38,7 @@ function JoinPageContent() {
   const [joining, setJoining] = useState(false);
   const [joinedSuccess, setJoinedSuccess] = useState(false);
 
-  // Admin On-The-Spot Car Photo Personalization State
+  // Admin On-The-Spot Car Photo & Unclaimed Vehicle Staging State
   const [editTargetType, setEditTargetType] = useState('intake_join');
   const [editTargetDest, setEditTargetDest] = useState('/join');
   const [editMethod, setEditMethod] = useState('handout');
@@ -45,6 +46,12 @@ function JoinPageContent() {
   const [editSpottedPhoto, setEditSpottedPhoto] = useState('');
   const [editSpottedTitle, setEditSpottedTitle] = useState('');
   const [editSpottedNote, setEditSpottedNote] = useState('');
+  
+  // Unclaimed Vehicle Specific Fields
+  const [editYear, setEditYear] = useState('1969');
+  const [editMake, setEditMake] = useState('Chevrolet');
+  const [editModel, setEditModel] = useState('Camaro');
+  const [editTrim, setEditTrim] = useState('SS 396');
 
   // Fetch Database Entities when Admin Drawer Opens
   useEffect(() => {
@@ -122,6 +129,22 @@ function JoinPageContent() {
           setEditSpottedPhoto(rec.custom_spotted_photo_url || '');
           setEditSpottedTitle(rec.custom_spotted_title || '');
           setEditSpottedNote(rec.custom_spotted_note || '');
+          setEditYear(rec.unclaimed_year || '1969');
+          setEditMake(rec.unclaimed_make || 'Chevrolet');
+          setEditModel(rec.unclaimed_model || 'Camaro');
+          setEditTrim(rec.unclaimed_trim || 'SS 396');
+        }
+
+        // If tag points to an unclaimed vehicle ID
+        if (rec.unclaimed_vehicle_id) {
+          try {
+            const vSnap = await getDocs(query(collection(db, 'vehicles'), where('id', '==', rec.unclaimed_vehicle_id)));
+            if (!vSnap.empty && isMounted) {
+              setUnclaimedVehicle({ id: vSnap.docs[0].id, ...vSnap.docs[0].data() });
+            }
+          } catch (err) {
+            console.warn('Error resolving unclaimed vehicle:', err);
+          }
         }
 
         // Log scan telemetry
@@ -175,7 +198,18 @@ function JoinPageContent() {
     reader.readAsDataURL(file);
   };
 
-  // Handle Form Submission
+  // 1-Tap Copy Shareable VIP Link (for Facebook / SMS / Instagram DMs)
+  const copyShareableLink = () => {
+    const url = `${window.location.origin}/join?tag=${rawTagId || '250'}`;
+    navigator.clipboard.writeText(url);
+    showToast({
+      title: 'SHAREABLE VIP LINK COPIED! 📋',
+      message: `Direct invitation link (${url}) copied to clipboard. Send on Facebook, SMS, or DM!`,
+      icon: '📋',
+    });
+  };
+
+  // Handle Form Submission (or Claiming Unclaimed Vehicle)
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -186,7 +220,7 @@ function JoinPageContent() {
       await setDoc(userRef, {
         email,
         full_name: fullName || 'Gridpass Member',
-        vehicle_make_model: vehicleMakeModel || null,
+        vehicle_make_model: vehicleMakeModel || (editMake && editModel ? `${editYear} ${editMake} ${editModel}` : null),
         interest_category: selectedCategory,
         referred_by_tag_id: rawTagId || null,
         spotted_car_photo: tagRecord?.custom_spotted_photo_url || null,
@@ -194,6 +228,29 @@ function JoinPageContent() {
         starting_credits: 100,
         created_at: new Date().toISOString(),
       });
+
+      // If an unclaimed vehicle was linked to this tag, transfer it to the new user's garage!
+      if (tagRecord?.unclaimed_vehicle_id || tagRecord?.custom_spotted_photo_url) {
+        const vehicleId = tagRecord.unclaimed_vehicle_id || `veh_claimed_${Date.now()}`;
+        await setDoc(
+          doc(db, 'vehicles', vehicleId),
+          {
+            id: vehicleId,
+            owner_id: userRef.id,
+            owner_email: email,
+            owner_name: fullName || 'Verified Member',
+            year: Number(editYear) || 1969,
+            make: editMake || 'Chevrolet',
+            model: editModel || 'Camaro',
+            trim: editTrim || 'SS',
+            photo_url: tagRecord?.custom_spotted_photo_url || null,
+            status: 'claimed',
+            is_unclaimed: false,
+            claimed_at: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      }
 
       if (rawTagId && tagRecord?.id) {
         await updateDoc(doc(db, 'physical_tags', tagRecord.id), {
@@ -205,7 +262,7 @@ function JoinPageContent() {
       setJoinedSuccess(true);
       showToast({
         title: 'WELCOME TO GRIDPASS! 🎉',
-        message: rawTagId ? `Membership active! Referred by Tag #${rawTagId}.` : 'Membership active! Welcome to the roster.',
+        message: rawTagId ? `Membership active! Vehicle passport claimed for Card #${rawTagId}.` : 'Membership active! Welcome to the roster.',
         icon: '🎉',
       });
 
@@ -229,16 +286,44 @@ function JoinPageContent() {
     e.preventDefault();
     if (!rawTagId) return;
 
+    // Create Unclaimed Vehicle Document in Firestore if photo or vehicle details specified
+    let newUnclaimedVehId = tagRecord?.unclaimed_vehicle_id || null;
+    if (editSpottedPhoto || (editMake && editModel)) {
+      newUnclaimedVehId = `veh_unclaimed_${rawTagId}_${Date.now()}`;
+      await setDoc(
+        doc(db, 'vehicles', newUnclaimedVehId),
+        {
+          id: newUnclaimedVehId,
+          owner_id: null,
+          year: Number(editYear) || 1969,
+          make: editMake || 'Chevrolet',
+          model: editModel || 'Camaro',
+          trim: editTrim || 'SS',
+          photo_url: editSpottedPhoto || null,
+          status: 'unclaimed',
+          is_unclaimed: true,
+          created_by: user?.email || 'loseyp@gmail.com',
+          created_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    }
+
     const updated = {
       tag_id: rawTagId,
-      title: editSpottedTitle || tagRecord?.title || `Physical Tag #${rawTagId}`,
+      title: editSpottedTitle || `${editYear} ${editMake} ${editModel}` || `Physical Tag #${rawTagId}`,
       distribution_method: editMethod,
       target_type: editTargetType,
       target_destination: editTargetDest,
       partner_business_name: editPartnerName || '',
       custom_spotted_photo_url: editSpottedPhoto || null,
-      custom_spotted_title: editSpottedTitle || null,
+      custom_spotted_title: editSpottedTitle || `${editYear} ${editMake} ${editModel}` || null,
       custom_spotted_note: editSpottedNote || null,
+      unclaimed_vehicle_id: newUnclaimedVehId,
+      unclaimed_year: editYear,
+      unclaimed_make: editMake,
+      unclaimed_model: editModel,
+      unclaimed_trim: editTrim,
       status: 'active',
       last_scanned_at: new Date().toISOString(),
     };
@@ -249,9 +334,9 @@ function JoinPageContent() {
       const tagDocId = tagRecord?.id || `tag_${rawTagId}`;
       await setDoc(doc(db, 'physical_tags', tagDocId), updated, { merge: true });
       showToast({
-        title: 'PERSONALIZED CAR INVITATION SAVED! 📸',
-        message: `Tag #${rawTagId} updated with machine photo & destination ${editTargetDest}.`,
-        icon: '📸',
+        title: 'UNCLAIMED VEHICLE & CARD INVITATION CREATED! 🏎️',
+        message: `Tag #${rawTagId} pre-staged for ${editYear} ${editMake} ${editModel}.`,
+        icon: '🏎️',
       });
       setShowAdminDrawer(false);
     } catch (err: any) {
@@ -260,8 +345,8 @@ function JoinPageContent() {
   };
 
   const getContextualHeadline = () => {
-    if (tagRecord?.custom_spotted_photo_url) {
-      return `📸 SPOTTED! WE LOVED YOUR ${tagRecord.custom_spotted_title || 'MACHINE'}!`;
+    if (tagRecord?.custom_spotted_photo_url || editMake) {
+      return `🏎️ SPOTTED! PRE-STAGED PASSPORT FOR ${tagRecord?.custom_spotted_title || `${editYear} ${editMake} ${editModel}`}`;
     }
     const method = tagRecord?.distribution_method;
     if (method === 'car_drop') {
@@ -304,7 +389,7 @@ function JoinPageContent() {
               </div>
               <div className="absolute bottom-3 left-3 right-3 space-y-1">
                 <h2 className="text-lg font-black uppercase text-white tracking-tight leading-tight">
-                  {tagRecord.custom_spotted_title || 'YOUR MACHINE HAS BEEN SPOTTED!'}
+                  {tagRecord.custom_spotted_title || `${tagRecord.unclaimed_year || ''} ${tagRecord.unclaimed_make || ''} ${tagRecord.unclaimed_model || ''}`}
                 </h2>
                 {tagRecord.custom_spotted_note && (
                   <p className="text-xs text-neutral-300 font-medium italic">
@@ -352,12 +437,22 @@ function JoinPageContent() {
 
           {/* Super Admin Controller Trigger */}
           {user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com') && (
-            <button
-              onClick={() => setShowAdminDrawer(true)}
-              className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-2"
-            >
-              <span>📸 Snap Car Photo & Set Target {rawTagId ? `(#${rawTagId})` : ''}</span>
-            </button>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => setShowAdminDrawer(true)}
+                className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
+              >
+                <CameraIcon className="w-3.5 h-3.5" />
+                <span>Snap & Personalize</span>
+              </button>
+              <button
+                onClick={copyShareableLink}
+                className="py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Share Link</span>
+              </button>
+            </div>
           )}
 
         </div>
@@ -394,7 +489,7 @@ function JoinPageContent() {
                 href="/dash"
                 className="w-full py-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-between px-4"
               >
-                <span>➕ REGISTER / ADD VEHICLE TO GARAGE</span>
+                <span>➕ REGISTER / CLAIM VEHICLE PASSPORT</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
@@ -413,10 +508,10 @@ function JoinPageContent() {
             <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
-                  JOIN THE ROSTER
+                  {tagRecord?.custom_spotted_photo_url ? 'CLAIM THIS VEHICLE PASSPORT' : 'JOIN THE ROSTER'}
                 </h2>
                 <p className="text-xs text-neutral-500 font-bold">
-                  Free instant membership for drivers, vendors, pilots & fans.
+                  {tagRecord?.custom_spotted_photo_url ? 'Claim your pre-staged passport & transfer vehicle to your garage.' : 'Free instant membership for drivers, vendors, pilots & fans.'}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-[#ff3b30] text-white flex items-center justify-center shadow-md">
@@ -431,7 +526,7 @@ function JoinPageContent() {
                 </div>
                 <h3 className="text-xl font-black uppercase text-neutral-900">PASSPORT CLAIMED! 🎉</h3>
                 <p className="text-xs text-neutral-600 font-bold max-w-xs mx-auto">
-                  Welcome to Gridpass! Redirecting to your dashboard...
+                  Welcome to Gridpass! Vehicle passport transferred to your garage. Redirecting...
                 </p>
               </div>
             ) : (
@@ -579,7 +674,7 @@ function JoinPageContent() {
               >
                 {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
-                    <span>JOIN GRIDPASS & CLAIM PASSPORT</span>
+                    <span>CLAIM PASSPORT & JOIN GRIDPASS</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -608,7 +703,7 @@ function JoinPageContent() {
                   <span>⚡ DYNAMIC TAG CONTROLLER</span>
                   <span className="font-mono text-[#ff3b30]">{rawTagId ? `#${rawTagId}` : ''}</span>
                 </h2>
-                <p className="text-[10px] text-neutral-500 font-mono">Snap car photo & set dynamic target route.</p>
+                <p className="text-[10px] text-neutral-500 font-mono">Pre-stage unclaimed vehicle passport & personalize invitation.</p>
               </div>
               <button onClick={() => setShowAdminDrawer(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
                 ✕
@@ -654,15 +749,51 @@ function JoinPageContent() {
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Machine Title / Name</label>
-                  <input
-                    type="text"
-                    value={editSpottedTitle}
-                    onChange={(e) => setEditSpottedTitle(e.target.value)}
-                    placeholder="e.g. 1969 Camaro SS"
-                    className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                  />
+                {/* Pre-stage Unclaimed Vehicle Specs */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Year</label>
+                    <input
+                      type="text"
+                      value={editYear}
+                      onChange={(e) => setEditYear(e.target.value)}
+                      placeholder="1969"
+                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Make</label>
+                    <input
+                      type="text"
+                      value={editMake}
+                      onChange={(e) => setEditMake(e.target.value)}
+                      placeholder="Chevrolet"
+                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Model</label>
+                    <input
+                      type="text"
+                      value={editModel}
+                      onChange={(e) => setEditModel(e.target.value)}
+                      placeholder="Camaro"
+                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Trim / Package</label>
+                    <input
+                      type="text"
+                      value={editTrim}
+                      onChange={(e) => setEditTrim(e.target.value)}
+                      placeholder="SS 396"
+                      className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -827,7 +958,7 @@ function JoinPageContent() {
                   type="submit"
                   className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-sm"
                 >
-                  Save Personalized Card ➔
+                  Save & Stage Vehicle ➔
                 </button>
               </div>
             </form>
