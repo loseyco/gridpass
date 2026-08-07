@@ -256,7 +256,11 @@ export function ExcelWorksheetTable<T extends Record<string, any>>({
                     </div>
                   </th>
                 ))}
-                {actionRenderer && <th className="p-2 text-right w-24">ACTIONS</th>}
+                {actionRenderer && (
+                  <th className="p-2.5 text-right w-36 sticky right-0 bg-[#1c1c1e] z-20 border-l border-neutral-800 shadow-xs">
+                    ACTIONS
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 font-mono text-xs">
@@ -276,17 +280,16 @@ export function ExcelWorksheetTable<T extends Record<string, any>>({
                 sortedData.map((row, idx) => {
                   const rowId = String(row[idKey]);
                   const isSelected = selectedIds.includes(rowId);
+                  const rowBgClass = isSelected
+                    ? 'bg-red-50/80'
+                    : idx % 2 === 0
+                    ? 'bg-white hover:bg-neutral-100/80'
+                    : 'bg-neutral-50 hover:bg-neutral-100/80';
 
                   return (
                     <tr
                       key={rowId}
-                      className={`transition ${
-                        isSelected
-                          ? 'bg-red-50/80'
-                          : idx % 2 === 0
-                          ? 'bg-white hover:bg-neutral-100/80'
-                          : 'bg-neutral-50 hover:bg-neutral-100/80'
-                      }`}
+                      className={`transition ${rowBgClass}`}
                     >
                       {/* Checkbox with Touch Container */}
                       <td className="p-0 border-r border-neutral-200 text-center">
@@ -340,9 +343,11 @@ export function ExcelWorksheetTable<T extends Record<string, any>>({
                         );
                       })}
 
-                      {/* Actions */}
+                      {/* Sticky Right Actions Column */}
                       {actionRenderer && (
-                        <td className="p-2.5 text-right border-l border-neutral-200 whitespace-nowrap">
+                        <td className={`p-2.5 text-right border-l border-neutral-200 whitespace-nowrap sticky right-0 z-10 shadow-xs ${
+                          isSelected ? 'bg-red-50' : idx % 2 === 0 ? 'bg-white' : 'bg-neutral-50'
+                        }`}>
                           {actionRenderer(row)}
                         </td>
                       )}
