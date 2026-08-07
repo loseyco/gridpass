@@ -9,11 +9,37 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1045_physical_tag_safe_distribution_method',
+    ticket_number: 'TICK-1045',
+    agent_role: 'gm',
+    title: 'Physical Tag Safe Optional Chaining & /admin/tags Crash Resolution',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['admin/tags', 'ExcelWorksheetTable', 'distribution_method'],
+    files_modified: ['src/app/admin/tags/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported that /admin/tags rendered a "This page couldn\'t load" crash screen.',
+    root_cause: 'admin/tags/page.tsx invoked t.distribution_method.includes(...) without optional fallback, throwing a TypeError if distribution_method was missing on a tag document.',
+    resolution_summary: 'Updated admin/tags/page.tsx with safe fallback default (t.distribution_method || \'\').includes(...) across all tab filters and KPI metric counters.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean rendering on localhost/admin/tags.',
+    sop_summary: 'SOP for safe string property dereferencing in Firestore data tables.',
+    sop_steps: [
+      'Always use safe fallback defaults (row.field || \'\') before calling string methods like .includes().',
+      'Verify table filtering logic against empty or partial Firestore documents.',
+      'Test /admin/tags page rendering with 0 console errors.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1044_intake_route_redirect_disallowance',
     ticket_number: 'TICK-1044',
     agent_role: 'gm',
     title: 'Intake Landing Route /join Protected Destination Redirect Disallowance Invariant',
-    category: 'bugfix',
+    category: 'ui_design',
     status: 'VERIFIED',
     priority: 'urgent',
     components_used: ['JoinClient', 'isProtectedOrIntake', 'resolvePhysicalTag'],

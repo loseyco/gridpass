@@ -87,12 +87,13 @@ export default function AdminTagsPage() {
   };
 
   const filteredTags = tags.filter((t) => {
+    const method = t.distribution_method || 'handout';
     if (activeTab === 'all') return true;
-    if (activeTab === 'handout' && t.distribution_method === 'handout') return true;
-    if (activeTab === 'car_drop' && t.distribution_method === 'car_drop') return true;
-    if (activeTab === 'lanyard' && t.distribution_method === 'lanyard') return true;
-    if (activeTab === 'sticker' && t.distribution_method === 'sticker') return true;
-    if (activeTab === 'dealership' && (t.distribution_method.includes('dealership') || t.distribution_method.includes('sales') || t.distribution_method.includes('service'))) return true;
+    if (activeTab === 'handout' && method === 'handout') return true;
+    if (activeTab === 'car_drop' && method === 'car_drop') return true;
+    if (activeTab === 'lanyard' && method === 'lanyard') return true;
+    if (activeTab === 'sticker' && method === 'sticker') return true;
+    if (activeTab === 'dealership' && (method.includes('dealership') || method.includes('sales') || method.includes('service'))) return true;
     return false;
   });
 
@@ -235,7 +236,7 @@ export default function AdminTagsPage() {
         <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
           <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider block">B2B Dealership Tags</span>
           <span className="text-2xl font-black text-purple-600">
-            {tags.filter((t) => t.distribution_method.includes('dealership') || t.partner_business_id).length}
+            {tags.filter((t) => (t.distribution_method || '').includes('dealership') || t.partner_business_id).length}
           </span>
         </div>
       </div>
@@ -248,11 +249,11 @@ export default function AdminTagsPage() {
         idKey="id"
         filterCategories={[
           { label: 'All Tags', key: 'all', count: tags.length },
-          { label: '🎴 Handout Cards', key: 'handout', count: tags.filter((t) => t.distribution_method === 'handout').length },
+          { label: '🎴 Handout Cards', key: 'handout', count: tags.filter((t) => (t.distribution_method || 'handout') === 'handout').length },
           { label: '🏎️ Car Drops', key: 'car_drop', count: tags.filter((t) => t.distribution_method === 'car_drop').length },
           { label: '🏷️ Lanyard Hangs', key: 'lanyard', count: tags.filter((t) => t.distribution_method === 'lanyard').length },
           { label: '🚽 Guerrilla Stickers', key: 'sticker', count: tags.filter((t) => t.distribution_method === 'sticker').length },
-          { label: '🏬 B2B Dealerships', key: 'dealership', count: tags.filter((t) => t.distribution_method.includes('dealership') || t.partner_business_id).length },
+          { label: '🏬 B2B Dealerships', key: 'dealership', count: tags.filter((t) => (t.distribution_method || '').includes('dealership') || t.partner_business_id).length },
         ]}
         activeFilter={activeTab}
         onFilterChange={setActiveTab}
