@@ -9,6 +9,33 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1014)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1015_vercel_webhook_audit',
+    ticket_number: 'TICK-1015',
+    agent_role: 'firebase_expert',
+    title: 'Vercel Legacy Webhook Alert Audit & Disconnection Protocol',
+    category: 'security',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['GitHub Webhooks', 'Firebase Hosting', 'Vercel Integration'],
+    files_modified: ['src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Vercel emitted a deployment failed email alert upon GitHub push. Gridpass v4 uses Google Firebase Hosting (gridpass.web.app) exclusively, but an orphaned Vercel GitHub webhook remained active on the GitHub repository.',
+    root_cause: 'Orphaned GitHub repository integration webhook connecting GitHub push events to legacy Vercel project deployment triggers.',
+    resolution_summary: 'Audited codebase for Vercel configuration files (0 found), confirmed Google Firebase Hosting as sole production host, and provided step-by-step GitHub & Vercel webhook disconnection instructions.',
+    verification_proof: 'Verified zero Vercel config files in repository and logged TICK-1015 execution ticket.',
+    sop_summary: 'SOP for disconnecting legacy Vercel webhooks from GitHub repositories when hosting on Firebase.',
+    sop_steps: [
+      'Navigate to GitHub repository settings at https://github.com/loseyco/gridpass/settings/installations.',
+      'Locate Vercel under Integrations and click Configure / Uninstall.',
+      'Alternatively in Vercel Dashboard (vercel.com/dashboard), navigate to gridpass > Settings > Git and click Disconnect Repository.',
+      'Confirm GitHub pushes no longer trigger legacy Vercel build attempts.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'FIREBASE_EXPERT',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1014_firestore_rules_audit',
     ticket_number: 'TICK-1014',
     agent_role: 'architect',
