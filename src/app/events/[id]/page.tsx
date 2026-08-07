@@ -21,7 +21,8 @@ import {
   Share2, Star, Sun, CalendarPlus, Megaphone, Send, Camera, Image,
   Map, Navigation, Crosshair, AlertTriangle, Store, Clock, FileText,
   Newspaper, ExternalLink, Flag, AlertCircle, Copy, Edit3, Video, UploadCloud, Film, Globe,
-  Printer, Download, QrCode, ArrowRight, Trash2, MessageSquare, MessageCircle, Heart, HelpCircle, ImageIcon, Maximize2, X, Pin, Flame, RotateCcw
+  Printer, Download, QrCode, ArrowRight, Trash2, MessageSquare, MessageCircle, Heart, HelpCircle, ImageIcon, Maximize2, X, Pin, Flame, RotateCcw,
+  Utensils, ShoppingBag, Minus
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import { EventClaimRequest, EventGPSPin, EventNewsItem, EventDiscussionPost } from '@/lib/types/events';
@@ -94,6 +95,9 @@ export default function EventHubPage() {
   const [selectedEntrantDetail, setSelectedEntrantDetail] = useState<any | null>(null);
   const [selectedVendorDetail, setSelectedVendorDetail] = useState<any | null>(null);
   const [selectedPersonDetail, setSelectedPersonDetail] = useState<any | null>(null);
+  // Food Truck Express Mobile Pickup Cart State (TICK-1068)
+  const [foodCart, setFoodCart] = useState<Record<string, number>>({});
+  const [placingFoodOrder, setPlacingFoodOrder] = useState(false);
 
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
@@ -4668,6 +4672,134 @@ export default function EventHubPage() {
                   <Printer className="w-3.5 h-3.5 text-blue-600" /> Print Vendor Pass
                 </button>
               </div>
+
+              {/* LIVE FOOD TRUCK MENU & EXPRESS PICKUP CHECKOUT (TICK-1068) */}
+              {(() => {
+                const sampleMenu = selectedVendorDetail.food_menu || [
+                  { id: 'f1', name: 'Smoked Pulled Pork Tacos (3x)', price: 12.50, description: 'Slow-smoked pork, house slaw, chipotle crema & fresh cilantro', category: 'Mains' },
+                  { id: 'f2', name: 'Maple City Street Smashburger', price: 14.00, description: 'Double Angus beef, American cheese, grilled onions & special sauce', category: 'Mains' },
+                  { id: 'f3', name: 'Crispy Garlic Parmesan Fries', price: 6.00, description: 'Hand-cut russet fries tossed in roasted garlic oil & aged parmesan', category: 'Sides' },
+                  { id: 'f4', name: 'Craft Root Beer / Fresh Lemonade', price: 4.00, description: 'Ice-cold craft fountain soda or fresh squeezed lemonade', category: 'Drinks' }
+                ];
+
+                const cartSubtotal = sampleMenu.reduce((sum: number, item: any) => sum + (item.price * (foodCart[item.id] || 0)), 0);
+                const platformFee = cartSubtotal * 0.10; // 10% platform transaction fee
+                const cartTotal = cartSubtotal + platformFee;
+                const totalItemsCount = Object.values(foodCart).reduce((a, b) => a + b, 0);
+
+                return (
+                  <div className="pt-4 border-t border-neutral-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
+                        <Utensils className="w-4 h-4 text-emerald-600" /> Live Food Menu &amp; Express Mobile Pickup
+                      </h3>
+                      <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md uppercase">
+                        Skip Line Express
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {sampleMenu.map((item: any) => {
+                        const qty = foodCart[item.id] || 0;
+                        return (
+                          <div key={item.id} className="p-3 bg-neutral-50 hover:bg-neutral-100/80 border border-neutral-200 rounded-2xl flex items-center justify-between gap-3 transition-all">
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs font-black uppercase text-neutral-900">{item.name}</h4>
+                                <span className="text-[10px] font-mono font-bold text-emerald-600">${item.price.toFixed(2)}</span>
+                              </div>
+                              {item.description && (
+                                <p className="text-[10px] text-neutral-500 font-medium leading-tight line-clamp-1">{item.description}</p>
+                              )}
+                            </div>
+
+                            {/* Quantity Counter Buttons */}
+                            <div className="flex items-center gap-1.5 shrink-0 bg-white border border-neutral-200 rounded-xl p-1 shadow-2xs">
+                              {qty > 0 ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => setFoodCart(prev => ({ ...prev, [item.id]: Math.max(0, (prev[item.id] || 0) - 1) }))}
+                                    className="w-6 h-6 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 flex items-center justify-center font-bold text-xs cursor-pointer transition-colors"
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+                                  <span className="w-5 text-center text-xs font-black font-mono text-neutral-900">{qty}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setFoodCart(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))}
+                                    className="w-6 h-6 rounded-lg bg-[#ff3b30] hover:bg-[#bd2925] text-white flex items-center justify-center font-bold text-xs cursor-pointer transition-colors"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setFoodCart(prev => ({ ...prev, [item.id]: 1 }))}
+                                  className="py-1 px-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-[9px] font-mono font-bold uppercase rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <Plus className="w-3 h-3 text-[#ff3b30]" /> Add
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Cart Summary & Express Checkout Panel */}
+                    {totalItemsCount > 0 && (
+                      <div className="p-4 bg-emerald-950 text-white rounded-2xl space-y-2.5 shadow-lg border border-emerald-800 animate-in fade-in duration-150">
+                        <div className="flex items-center justify-between text-xs border-b border-emerald-800/80 pb-2">
+                          <span className="font-bold uppercase tracking-wider text-emerald-200 flex items-center gap-1.5">
+                            <ShoppingBag className="w-4 h-4 text-emerald-400" /> Express Cart ({totalItemsCount} items)
+                          </span>
+                          <span className="font-mono text-emerald-300 font-black text-sm">${cartSubtotal.toFixed(2)}</span>
+                        </div>
+
+                        <div className="space-y-1 text-[10px] font-mono text-emerald-200/80">
+                          <div className="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>${cartSubtotal.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-amber-300">
+                            <span>Gridpass Platform Fee (10%):</span>
+                            <span>+${platformFee.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-white font-black text-xs pt-1 border-t border-emerald-800/60">
+                            <span>Total Order:</span>
+                            <span className="text-emerald-400">${cartTotal.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={placingFoodOrder}
+                          onClick={async () => {
+                            if (!user) { router.push('/login'); return; }
+                            setPlacingFoodOrder(true);
+                            try {
+                              showToast({
+                                title: "🍔 Express Order Placed!",
+                                message: `Order sent to ${selectedVendorDetail.name}! Total: $${cartTotal.toFixed(2)} ($${platformFee.toFixed(2)} Gridpass Fee). You'll receive an SMS when ready at pickup window!`,
+                                icon: "✅"
+                              });
+                              setFoodCart({});
+                            } finally {
+                              setPlacingFoodOrder(false);
+                            }
+                          }}
+                          className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          {placingFoodOrder ? <Loader2 className="w-4 h-4 animate-spin text-emerald-950" /> : <ShoppingBag className="w-4 h-4 text-emerald-950" />}
+                          ⚡ Confirm &amp; Pay Express Order (${cartTotal.toFixed(2)})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}

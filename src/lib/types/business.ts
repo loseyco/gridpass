@@ -17,6 +17,16 @@ export interface BusinessSubscription {
   status: 'active' | 'demo' | 'past_due';
 }
 
+export interface FoodMenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  category?: 'Mains' | 'Sides' | 'Drinks' | 'Desserts';
+  image_url?: string;
+  available?: boolean;
+}
+
 export interface BusinessProfile {
   id: string; // URL Slug, e.g. "nielsens" or "blarney-island"
   owner_uid: string; // The member UID managing this business
@@ -39,6 +49,9 @@ export interface BusinessProfile {
   
   // Custom Metadata
   services?: string; // Comma-separated list of services, e.g. "detail, wrap, tint"
+
+  // Food Truck Live Menus & Express Checkout (TICK-1068)
+  food_menu?: FoodMenuItem[];
 
   // Modular SaaS Entitlements & Subscription
   enabled_modules?: BusinessModules;
