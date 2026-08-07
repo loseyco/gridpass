@@ -683,16 +683,30 @@ export default function AdminTicketsPage() {
     const unsubTickets = onSnapshot(
       collection(db, 'agent_tickets'),
       (snapshot) => {
+        const listMap = new Map<string, AgentTicket>();
+        
+        // 1. Seed with local DEFAULT_AGENT_TICKETS so tickets never flash or disappear on page load
+        DEFAULT_AGENT_TICKETS.forEach((t) => {
+          const key = t.ticket_number || t.id;
+          listMap.set(key, t);
+        });
+
+        // 2. Merge Firestore live records over defaults
         if (!snapshot.empty) {
-          const list: AgentTicket[] = [];
-          snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as AgentTicket));
-          setTickets(
-            list.sort((a, b) =>
-              (b.ticket_number || b.id || '').localeCompare(a.ticket_number || a.id || '') ||
-              (b.created_at || '').localeCompare(a.created_at || '')
-            )
-          );
+          snapshot.forEach((d) => {
+            const data = { id: d.id, ...d.data() } as AgentTicket;
+            const key = data.ticket_number || data.id;
+            listMap.set(key, data);
+          });
         }
+
+        const mergedList = Array.from(listMap.values());
+        setTickets(
+          mergedList.sort((a, b) =>
+            (b.ticket_number || b.id || '').localeCompare(a.ticket_number || a.id || '') ||
+            (b.created_at || '').localeCompare(a.created_at || '')
+          )
+        );
       },
       (err) => console.warn('Agent tickets listener fallback:', err)
     );
