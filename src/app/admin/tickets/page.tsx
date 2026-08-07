@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1032_instant_registration_session_auth',
+    ticket_number: 'TICK-1032',
+    agent_role: 'gm',
+    title: 'Instant Account Registration Firebase Auth Session & Auto-Redirect to /dash',
+    category: 'security',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'createUserWithEmailAndPassword', 'router.push'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['users schema: doc(db, "users", uid) keyed to Firebase Auth UID'],
+    issue_description: 'Platform owner required that registering a new account on /join MUST immediately log the user into an active Firebase Auth session and auto-redirect them directly to /dash.',
+    root_cause: 'Previously, user documents were set in Firestore without invoking createUserWithEmailAndPassword, leaving the Firebase Auth session unauthenticated.',
+    resolution_summary: 'Updated JoinClient.tsx handleJoinSubmit to execute createUserWithEmailAndPassword(getAuth(), email, password) on account creation, keying Firestore user document directly to Auth UID and auto-redirecting to /dash.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and staging on localhost.',
+    sop_summary: 'SOP for instant registration authentication and dashboard routing.',
+    sop_steps: [
+      'Invoke createUserWithEmailAndPassword when creating accounts on /join.',
+      'Key user profile document to Auth UID in Firestore users collection.',
+      'Auto-redirect authenticated session directly to /dash.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1031_pure_blank_state_form_inputs',
     ticket_number: 'TICK-1031',
     agent_role: 'gm',

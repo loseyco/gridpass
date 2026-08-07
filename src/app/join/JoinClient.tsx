@@ -8,7 +8,7 @@ import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Cam
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
-import { getAuth, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 function JoinPageContent() {
   const searchParams = useSearchParams();
@@ -276,19 +276,26 @@ function JoinPageContent() {
           icon: '🔑',
         });
       } else {
-        const userRef = doc(collection(db, 'users'));
-        await setDoc(userRef, {
-          email,
-          full_name: fullName || 'Gridpass Member',
-          vehicle_make_model: vehicleMakeModel || (editMake && editModel ? `${editYear} ${editMake} ${editModel}` : null),
-          discovery_note: discoveryNote || null,
-          interest_category: selectedCategory,
-          referred_by_tag_id: rawTagId || null,
-          spotted_car_photo: tagRecord?.custom_spotted_photo_url || null,
-          role: 'member',
-          starting_credits: 100,
-          created_at: new Date().toISOString(),
-        });
+        const userCred = await createUserWithEmailAndPassword(getAuth(), email, password);
+        const userId = userCred.user.uid;
+        const userRef = doc(db, 'users', userId);
+        await setDoc(
+          userRef,
+          {
+            uid: userId,
+            email,
+            full_name: fullName || 'Gridpass Member',
+            vehicle_make_model: vehicleMakeModel || (editMake && editModel ? `${editYear} ${editMake} ${editModel}` : null),
+            discovery_note: discoveryNote || null,
+            interest_category: selectedCategory,
+            referred_by_tag_id: rawTagId || null,
+            spotted_car_photo: tagRecord?.custom_spotted_photo_url || null,
+            role: 'member',
+            starting_credits: 100,
+            created_at: new Date().toISOString(),
+          },
+          { merge: true }
+        );
       }
 
       // If an unclaimed vehicle was staged for this tag, transfer it into the member's garage!
