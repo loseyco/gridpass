@@ -202,138 +202,6 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
     let isMounted = true;
 
     async function loadDriverProfile() {
-      if (isMock) {
-        await new Promise(r => setTimeout(r, 100));
-        
-        const isPJ = userId === 'pjlosey' || userId === 'loseyp' || userId === 'loseyp@gmail.com';
-        
-        const mockProfile: DriverProfile = isPJ ? {
-          uid: 'loseyp-uid-123',
-          email: 'loseyp@gmail.com',
-          display_name: 'PJ Losey',
-          username: 'pjlosey',
-          bio: 'Founder & Lead Architect of Gridpass & LoseyCo. From Engines to Protons, if it has an engine or motor, I\'m involved.',
-          cover_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1600&q=80',
-          avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-          is_supporter: true,
-          role: 'SUPER ADMIN & FOUNDER',
-          socials: {
-            instagram: 'pjlosey',
-            youtube: 'PJLoseyGridpass',
-            twitter: 'pjlosey'
-          },
-          home_town: 'Chicago, IL 🇺🇸',
-          birth_town: 'Chicago, IL',
-          birthday: '1988-04-12',
-          tagId: 'GP-DRV-YOYN2H',
-          current_status: '📍 Founder & Platform Owner @ Gridpass',
-          credits_balance: 9999,
-          badges: ['founder', 'super-admin', 'platform-owner']
-        } : {
-          uid: userId || 'user-marcus-123',
-          email: 'marcus@enthusiast.com',
-          display_name: 'Marcus Mustang',
-          username: 'marcus_gt',
-          bio: 'Everyday track hobbyist, Mustang enthusiast, carbon fiber addict. Building for time attack & weekend car meets.',
-          cover_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1600&q=80',
-          avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-          is_supporter: true,
-          role: 'PRO BUILDER',
-          socials: {
-            instagram: 'marcus_stang_gt',
-            youtube: 'MarcusTrackDays',
-            tiktok: 'marcus_gt'
-          },
-          home_town: 'Grayslake, IL 🇺🇸',
-          birth_town: 'Chicago, IL',
-          birthday: '1990-06-15',
-          tagId: 'GP-MARCUS-ID',
-          current_status: '📍 Staged @ Monmouth Cruise Night',
-          credits_balance: 1450,
-          badges: ['founder', 'track-marshal', 'top-voted']
-        };
-
-        const mockVehicles: Vehicle[] = [
-          {
-            id: 'mock-v1',
-            tag_id: 'GP-MARCUS-GT',
-            year: 2024,
-            make: 'Ford',
-            model: 'Mustang GT',
-            trim: '5.0 V8 Dark Horse Spec',
-            photo_url: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80',
-            respects_count: 42
-          },
-          {
-            id: 'mock-v2',
-            tag_id: 'GP-MARCUS-OW',
-            year: 2023,
-            make: 'Future Motion',
-            model: 'Onewheel GT S-Series',
-            trim: '⚡ 756Wh | 75.6V | 750W Peak',
-            photo_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-            respects_count: 19
-          }
-        ];
-
-        const mockGuestbook: GuestbookMessage[] = [
-          {
-            id: 'msg_1',
-            author_name: 'Sarah (Spectator)',
-            author_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-            message: 'Loved your 5.0 Mustang build at the Monmouth Cruise Night! That exhaust note sounds unreal 🔥',
-            timestamp: '2 hours ago'
-          },
-          {
-            id: 'msg_2',
-            author_name: 'Ranger Dave',
-            author_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-            message: 'Great having you staged front row in the paddock. See you at the next track day!',
-            timestamp: 'Yesterday'
-          }
-        ];
-
-        const mockBusinesses = isPJ ? [
-          {
-            id: 'loseyco',
-            name: 'LoseyCo Software & Holdings',
-            description: 'Parent software & technology holdings company behind Gridpass and iracersresource.',
-            category: 'Parent Software HQ',
-            role: 'FOUNDER & OWNER',
-            badge: 'PLATFORM HQ',
-            link: '/b/loseyco'
-          },
-          {
-            id: 'gridpass',
-            name: 'Gridpass Platform & Passport HQ',
-            description: 'The ultimate all-in-one motorsport event, vehicle garage, & paddock telemetry passport platform.',
-            category: 'Motorsport Platform',
-            role: 'FOUNDER & ARCHITECT',
-            badge: 'VERIFIED HQ',
-            link: '/b/gridpass'
-          }
-        ] : [
-          {
-            id: 'nielsens',
-            name: 'Nielsen Enterprises & Motorsport Garage',
-            description: 'Full service performance tuning, dyno testing, track staging & aftermarket upfitting.',
-            category: 'Official Sponsor & Shop',
-            role: 'SPONSOR PARTNER',
-            badge: 'VERIFIED SHOP',
-            link: '/b/nielsens'
-          }
-        ];
-
-        if (isMounted) {
-          setProfile(mockProfile);
-          setVehicles(mockVehicles);
-          setUserBusinesses(mockBusinesses);
-          setGuestbookMessages(mockGuestbook);
-          setLoading(false);
-        }
-        return;
-      }
-
       if (!userId) {
         setLoading(false);
         return;
@@ -356,15 +224,15 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           const loadedProfile: DriverProfile = {
             uid: uDoc.id,
             email: uData.email || '',
-            display_name: uData.display_name || uData.name || 'Anonymous Member',
+            display_name: uData.display_name || uData.name || uData.email?.split('@')[0] || 'Member',
             username: uData.username || '',
             website: uData.website || uData.website_url || '',
             website_url: uData.website_url || uData.website || '',
-            bio: uData.bio,
-            cover_url: uData.cover_url || DEFAULT_COVER,
-            avatar_url: uData.avatar_url || uData.photoURL,
+            bio: uData.bio || '',
+            cover_url: uData.cover_url || '',
+            avatar_url: uData.avatar_url || uData.photoURL || '',
             is_supporter: uData.is_supporter === true,
-            role: uData.role || 'MEMBER',
+            role: uData.role || (uData.email?.includes('loseyp') ? 'SUPER ADMIN & FOUNDER' : ''),
             socials: {
               instagram: uData.social_instagram || uData.socials?.instagram || '',
               youtube: uData.social_youtube || uData.socials?.youtube || '',
@@ -374,16 +242,16 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             },
             tagId: uData.tagId || uData.tag_id || `GP-DRV-${uDoc.id.slice(0, 6).toUpperCase()}`,
             badges: uData.badges || [],
-            home_town: uData.home_town || 'Midwest, USA',
+            home_town: uData.home_town || uData.location || '',
             birth_town: uData.birth_town || '',
             birthday: uData.birthday || '',
-            current_status: uData.current_status || '📍 Active Gridpass Member',
-            credits_balance: uData.credits || uData.credits_balance || 100
+            current_status: uData.current_status || '',
+            credits_balance: uData.credits || uData.credits_balance || 0
           };
 
           if (isMounted) setProfile(loadedProfile);
 
-          // Query vehicles
+          // Query vehicles strictly from Firestore
           const vQuery = query(collection(db, 'vehicles'), where('owner_id', '==', uDoc.id));
           const vSnap = await getDocs(vQuery);
           const vList = vSnap.docs.map(vDoc => {
@@ -396,74 +264,29 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               model: vData.model || '',
               trim: vData.trim,
               photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl || (vData.images && vData.images[0]),
-              respects_count: vData.respects_count || 12
+              respects_count: vData.respects_count || 0
             } as Vehicle;
           });
           if (isMounted) setVehicles(vList);
 
-          // Query businesses owned by profile user
+          // Query businesses strictly from Firestore
           try {
             const bQuery = query(collection(db, 'businesses'), where('owner_uid', '==', uDoc.id));
             const bSnap = await getDocs(bQuery);
             const bList = bSnap.docs.map(bDoc => ({ id: bDoc.id, ...bDoc.data() }));
-            
-            if (bList.length > 0) {
-              if (isMounted) setUserBusinesses(bList);
-            } else if (uData.email === 'loseyp@gmail.com' || loadedProfile.username === 'pjlosey' || userId === 'pjlosey') {
-              if (isMounted) setUserBusinesses([
-                {
-                  id: 'loseyco',
-                  name: 'LoseyCo Software & Holdings',
-                  description: 'Parent software & technology holdings company behind Gridpass and iracersresource.',
-                  category: 'Parent Software HQ',
-                  role: 'FOUNDER & OWNER',
-                  badge: 'PLATFORM HQ',
-                  link: '/b/loseyco'
-                },
-                {
-                  id: 'gridpass',
-                  name: 'Gridpass Platform & Passport HQ',
-                  description: 'The ultimate all-in-one motorsport event, vehicle garage, & paddock telemetry passport platform.',
-                  category: 'Motorsport Platform',
-                  role: 'FOUNDER & ARCHITECT',
-                  badge: 'VERIFIED HQ',
-                  link: '/b/gridpass'
-                }
-              ]);
-            }
+            if (isMounted) setUserBusinesses(bList);
           } catch (e) {
-            if (uData.email === 'loseyp@gmail.com' || loadedProfile.username === 'pjlosey' || userId === 'pjlosey') {
-              if (isMounted) setUserBusinesses([
-                {
-                  id: 'loseyco',
-                  name: 'LoseyCo Software & Holdings',
-                  description: 'Parent software & technology holdings company behind Gridpass and iracersresource.',
-                  category: 'Parent Software HQ',
-                  role: 'FOUNDER & OWNER',
-                  badge: 'PLATFORM HQ',
-                  link: '/b/loseyco'
-                },
-                {
-                  id: 'gridpass',
-                  name: 'Gridpass Platform & Passport HQ',
-                  description: 'The ultimate all-in-one motorsport event, vehicle garage, & paddock telemetry passport platform.',
-                  category: 'Motorsport Platform',
-                  role: 'FOUNDER & ARCHITECT',
-                  badge: 'VERIFIED HQ',
-                  link: '/b/gridpass'
-                }
-              ]);
-            }
+            if (isMounted) setUserBusinesses([]);
           }
 
-          // Query guestbook messages
+          // Query guestbook messages strictly from Firestore
           try {
             const qMsg = query(collection(db, 'user_messages'), where('recipient_uid', '==', uDoc.id));
             const msgSnap = await getDocs(qMsg);
             const msgList = msgSnap.docs.map(mDoc => ({ id: mDoc.id, ...mDoc.data() } as GuestbookMessage));
-            if (isMounted && msgList.length > 0) setGuestbookMessages(msgList);
+            if (isMounted) setGuestbookMessages(msgList);
           } catch (e) {
-            console.error("Guestbook listener note:", e);
+            if (isMounted) setGuestbookMessages([]);
           }
         }
       } catch (err) {
@@ -501,12 +324,14 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
     <div className="flex-1 bg-white text-neutral-900 flex flex-col items-center justify-start pb-16">
       
       {/* 🏁 HERO COVER BANNER & HEADER */}
-      <div className="w-full h-48 sm:h-64 bg-neutral-900 relative overflow-hidden shadow-inner">
-        <img 
-          src={profile.cover_url || DEFAULT_COVER} 
-          alt="Driver Hero Banner" 
-          className="w-full h-full object-cover opacity-80"
-        />
+      <div className="w-full h-48 sm:h-64 bg-gradient-to-r from-neutral-950 via-neutral-900 to-black relative overflow-hidden shadow-inner">
+        {profile.cover_url && (
+          <img 
+            src={profile.cover_url} 
+            alt="Driver Hero Banner" 
+            className="w-full h-full object-cover opacity-80"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         
         {/* Top Floating Control Bar */}
@@ -568,9 +393,11 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                 <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 uppercase tracking-tight">
                   {profile.display_name}
                 </h1>
-                <span className="text-[10px] font-mono font-bold text-[#ff3b30] bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full uppercase">
-                  {profile.role || 'PRO DRIVER'}
-                </span>
+                {profile.role && (
+                  <span className="text-[10px] font-mono font-bold text-[#ff3b30] bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full uppercase">
+                    {profile.role}
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs font-mono font-bold text-neutral-500">
@@ -903,26 +730,36 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             {/* Badges Matrix */}
             <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md">
               <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-amber-500" /> Unlocked Paddock Badges
+                <Award className="w-4 h-4 text-amber-500" /> Unlocked Paddock Badges ({profile.badges?.length || (profile.is_supporter ? 1 : 0)})
               </h4>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-2xl">
-                  <span className="text-2xl">🏅</span>
-                  <div>
-                    <h5 className="text-xs font-black uppercase text-amber-900">Original Founder &amp; Supporter</h5>
-                    <p className="text-[10px] text-amber-800 font-medium">Backed early Gridpass platform launch</p>
-                  </div>
-                </div>
+              {(profile.badges && profile.badges.length > 0) || profile.is_supporter ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {profile.is_supporter && (
+                    <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <span className="text-2xl">🏅</span>
+                      <div>
+                        <h5 className="text-xs font-black uppercase text-amber-900">Original Supporter</h5>
+                        <p className="text-[10px] text-amber-800 font-medium">Verified early platform supporter</p>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-2xl">
-                  <span className="text-2xl">🏁</span>
-                  <div>
-                    <h5 className="text-xs font-black uppercase text-[#ff3b30]">Official Track Marshal</h5>
-                    <p className="text-[10px] text-red-800 font-medium">Verified gate check-in &amp; paddock marshal</p>
-                  </div>
+                  {profile.badges?.map((badge: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-neutral-50 border border-neutral-200 rounded-2xl">
+                      <span className="text-2xl">🏁</span>
+                      <div>
+                        <h5 className="text-xs font-black uppercase text-neutral-900">{badge.replace(/-/g, ' ')}</h5>
+                        <p className="text-[10px] text-neutral-500 font-medium">Verified Paddock Credential</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 bg-neutral-50 border border-dashed border-neutral-200 rounded-2xl text-center">
+                  <p className="text-xs font-mono font-bold text-neutral-400 uppercase">No paddock badges unlocked yet.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
