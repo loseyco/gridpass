@@ -75,7 +75,7 @@ export default function AdminLayout({
           </div>
           <div className="space-y-2 pt-2">
             <Link
-              href={`/auth?redirect=${encodeURIComponent(pathname)}`}
+              href={`/login?redirect=${encodeURIComponent(pathname)}`}
               className="w-full py-3 bg-[#ff3b30] hover:bg-[#d63025] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition active:scale-95 flex items-center justify-center gap-2"
             >
               <span>🔒 Sign In to Admin HQ</span>
