@@ -205,7 +205,31 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
       if (isMock) {
         await new Promise(r => setTimeout(r, 100));
         
-        const mockProfile: DriverProfile = {
+        const isPJ = userId === 'pjlosey' || userId === 'loseyp' || userId === 'loseyp@gmail.com';
+        
+        const mockProfile: DriverProfile = isPJ ? {
+          uid: 'loseyp-uid-123',
+          email: 'loseyp@gmail.com',
+          display_name: 'PJ Losey',
+          username: 'pjlosey',
+          bio: 'Founder & Lead Architect of Gridpass & LoseyCo. From Engines to Protons, if it has an engine or motor, I\'m involved.',
+          cover_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1600&q=80',
+          avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+          is_supporter: true,
+          role: 'SUPER ADMIN & FOUNDER',
+          socials: {
+            instagram: 'pjlosey',
+            youtube: 'PJLoseyGridpass',
+            twitter: 'pjlosey'
+          },
+          home_town: 'Chicago, IL 🇺🇸',
+          birth_town: 'Chicago, IL',
+          birthday: '1988-04-12',
+          tagId: 'GP-DRV-YOYN2H',
+          current_status: '📍 Founder & Platform Owner @ Gridpass',
+          credits_balance: 9999,
+          badges: ['founder', 'super-admin', 'platform-owner']
+        } : {
           uid: userId || 'user-marcus-123',
           email: 'marcus@enthusiast.com',
           display_name: 'Marcus Mustang',
@@ -269,9 +293,41 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           }
         ];
 
+        const mockBusinesses = isPJ ? [
+          {
+            id: 'loseyco',
+            name: 'LoseyCo Software & Holdings',
+            description: 'Parent software & technology holdings company behind Gridpass and iracersresource.',
+            category: 'Parent Software HQ',
+            role: 'FOUNDER & OWNER',
+            badge: 'PLATFORM HQ',
+            link: '/b/loseyco'
+          },
+          {
+            id: 'gridpass',
+            name: 'Gridpass Platform & Passport HQ',
+            description: 'The ultimate all-in-one motorsport event, vehicle garage, & paddock telemetry passport platform.',
+            category: 'Motorsport Platform',
+            role: 'FOUNDER & ARCHITECT',
+            badge: 'VERIFIED HQ',
+            link: '/b/gridpass'
+          }
+        ] : [
+          {
+            id: 'nielsens',
+            name: 'Nielsen Enterprises & Motorsport Garage',
+            description: 'Full service performance tuning, dyno testing, track staging & aftermarket upfitting.',
+            category: 'Official Sponsor & Shop',
+            role: 'SPONSOR PARTNER',
+            badge: 'VERIFIED SHOP',
+            link: '/b/nielsens'
+          }
+        ];
+
         if (isMounted) {
           setProfile(mockProfile);
           setVehicles(mockVehicles);
+          setUserBusinesses(mockBusinesses);
           setGuestbookMessages(mockGuestbook);
           setLoading(false);
         }
@@ -344,6 +400,61 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             } as Vehicle;
           });
           if (isMounted) setVehicles(vList);
+
+          // Query businesses owned by profile user
+          try {
+            const bQuery = query(collection(db, 'businesses'), where('owner_uid', '==', uDoc.id));
+            const bSnap = await getDocs(bQuery);
+            const bList = bSnap.docs.map(bDoc => ({ id: bDoc.id, ...bDoc.data() }));
+            
+            if (bList.length > 0) {
+              if (isMounted) setUserBusinesses(bList);
+            } else if (uData.email === 'loseyp@gmail.com' || loadedProfile.username === 'pjlosey' || userId === 'pjlosey') {
+              if (isMounted) setUserBusinesses([
+                {
+                  id: 'loseyco',
+                  name: 'LoseyCo Software & Holdings',
+                  description: 'Parent software & technology holdings company behind Gridpass and iracersresource.',
+                  category: 'Parent Software HQ',
+                  role: 'FOUNDER & OWNER',
+                  badge: 'PLATFORM HQ',
+                  link: '/b/loseyco'
+                },
+                {
+                  id: 'gridpass',
+                  name: 'Gridpass Platform & Passport HQ',
+                  description: 'The ultimate all-in-one motorsport event, vehicle garage, & paddock telemetry passport platform.',
+                  category: 'Motorsport Platform',
+                  role: 'FOUNDER & ARCHITECT',
+                  badge: 'VERIFIED HQ',
+                  link: '/b/gridpass'
+                }
+              ]);
+            }
+          } catch (e) {
+            if (uData.email === 'loseyp@gmail.com' || loadedProfile.username === 'pjlosey' || userId === 'pjlosey') {
+              if (isMounted) setUserBusinesses([
+                {
+                  id: 'loseyco',
+                  name: 'LoseyCo Software & Holdings',
+                  description: 'Parent software & technology holdings company behind Gridpass and iracersresource.',
+                  category: 'Parent Software HQ',
+                  role: 'FOUNDER & OWNER',
+                  badge: 'PLATFORM HQ',
+                  link: '/b/loseyco'
+                },
+                {
+                  id: 'gridpass',
+                  name: 'Gridpass Platform & Passport HQ',
+                  description: 'The ultimate all-in-one motorsport event, vehicle garage, & paddock telemetry passport platform.',
+                  category: 'Motorsport Platform',
+                  role: 'FOUNDER & ARCHITECT',
+                  badge: 'VERIFIED HQ',
+                  link: '/b/gridpass'
+                }
+              ]);
+            }
+          }
 
           // Query guestbook messages
           try {
@@ -632,32 +743,53 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
         {/* TAB 2: BUSINESSES & TEAMS */}
         {activeProfileTab === 'businesses' && (
           <div className="space-y-4 animate-in fade-in duration-150 text-left">
-            <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
-              <Store className="w-4 h-4 text-blue-600" /> Affiliated Businesses &amp; Race Teams
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md hover:border-blue-500 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-mono font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md uppercase">
-                    Official Sponsor &amp; Shop
-                  </span>
-                  <span className="text-[9px] font-mono font-bold text-neutral-400">VERIFIED</span>
-                </div>
-                <h4 className="text-base font-black uppercase text-neutral-900 tracking-tight">
-                  Nielsen Enterprises &amp; Motorsport Garage
-                </h4>
-                <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                  Full service performance tuning, dyno testing, track staging &amp; aftermarket upfitting.
-                </p>
-                <Link
-                  href="/b/nielsens"
-                  className="inline-flex py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all flex items-center gap-1 shadow-2xs"
-                >
-                  <Store className="w-3.5 h-3.5" /> View Business Storefront
-                </Link>
-              </div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
+                <Store className="w-4 h-4 text-blue-600" /> Affiliated Businesses &amp; Race Teams ({userBusinesses.length})
+              </h3>
             </div>
+
+            {userBusinesses.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {userBusinesses.map((biz: any) => (
+                  <div key={biz.id} className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md hover:border-blue-500 transition-all flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md uppercase">
+                          {biz.category || 'Motorsport Entity'}
+                        </span>
+                        <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase">
+                          {biz.badge || 'VERIFIED HQ'}
+                        </span>
+                      </div>
+                      <h4 className="text-base font-black uppercase text-neutral-900 tracking-tight">
+                        {biz.name}
+                      </h4>
+                      <p className="text-xs text-neutral-600 font-medium leading-relaxed">
+                        {biz.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                      <span className="text-[9px] font-mono font-black text-neutral-500 uppercase">
+                        Role: <span className="text-neutral-900">{biz.role || 'OWNER'}</span>
+                      </span>
+                      <Link
+                        href={biz.link || `/b/${biz.id}`}
+                        className="py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all flex items-center gap-1 shadow-2xs"
+                      >
+                        <Store className="w-3.5 h-3.5" /> View Profile
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 bg-neutral-50 border border-dashed border-neutral-200 rounded-3xl text-center space-y-2">
+                <Store className="w-8 h-8 mx-auto text-neutral-300" />
+                <p className="text-xs font-mono font-bold text-neutral-400 uppercase">No registered business or team affiliations listed.</p>
+              </div>
+            )}
           </div>
         )}
 
