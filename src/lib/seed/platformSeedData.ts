@@ -146,6 +146,15 @@ export const INITIAL_PLATFORM_FEATURES: InitialFeature[] = [
 
 export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
   {
+    version: 'v4.3.2',
+    title: 'Food Truck Mobile Menus, 10% Platform Fee Split, PEV Staging Classes & 9:16 Story Exporter',
+    category: 'feature',
+    description: 'Released Live Food Truck Menu & Express Mobile Cart with 10% Gridpass commission fee split, dedicated PEV & micro-mobility staging classes (Onewheels, E-Bikes, EUCs) with electric battery Wh metrics, 1-tap SMS crew invites, and 9:16 Instagram Story Canvas Exporter.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/events/[id]',
+  },
+  {
     version: 'v4.7.0',
     title: 'Immutable Subcollection Telemetry Architecture, Hall of Fame Leaderboard & Jargon-Free Analytics',
     category: 'feature',

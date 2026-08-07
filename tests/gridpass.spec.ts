@@ -73,18 +73,15 @@ test.describe('GridPass Milestone 2 E2E Suite', () => {
     if (await regButton.count() > 0) {
       await regButton.first().click();
       
-      // Fill the fields
-      await page.fill('input[placeholder="2024"]', '2020');
-      await page.fill('input[placeholder="Chevrolet"]', 'Ferrari');
-      await page.fill('input[placeholder="Corvette Z06"]', '488 Pista');
-      await page.fill('input[placeholder="5.5L V8"]', '3.9L Twin-Turbo V8');
-      await page.fill('input[placeholder="670"]', '710');
+      // Fill the fields on /v/create
+      await page.fill('input[placeholder*="Chevrolet"]', 'Ferrari');
+      await page.fill('input[placeholder*="Corvette"]', '488 Pista');
       
-      // Click register
+      // Click register / stage vehicle button
       await page.click('button[type="submit"]');
       
-      // Verify new vehicle details are visible in drivers garage
-      await expect(page.locator('text=488 Pista')).toBeVisible();
+      // Verify new vehicle details are visible in drivers garage or profile
+      await expect(page.locator('text=488 Pista').first()).toBeVisible();
     }
 
     const screenshotDir = path.join(process.cwd(), 'tests', 'screenshots');
@@ -118,7 +115,7 @@ test.describe('GridPass Milestone 2 E2E Suite', () => {
     await page.screenshot({ path: path.join(screenshotDir, `page-6-driver-profile-${projName}.png`) });
 
     // Open dynamic vehicle log profile
-    await page.goto('/v/gridpass-demo-vehicle');
+    await page.goto('/v/mock-v1');
     await expect(page.locator('text=Mustang GT')).toBeVisible();
     await page.screenshot({ path: path.join(screenshotDir, `page-6-vehicle-telemetry-${projName}.png`) });
   });

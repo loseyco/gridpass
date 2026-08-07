@@ -2,13 +2,14 @@
   "name": "gridpass-monorepo",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@11.6.2",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
+    "build": "next build",
     "lint": "turbo run lint",
     "test": "node run-tests.js --all",
     "test:headed": "playwright test tests/admin_ops.spec.ts --headed",
@@ -24,6 +25,7 @@
     "clsx": "^2.1.1",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.7.0",
+    "firebase-functions": "^7.3.2",
     "jsqr": "^1.4.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",

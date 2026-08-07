@@ -175,80 +175,88 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Slide-Down Mobile Drawer Overlay for Logged-In & Logged-Out Visitors */}
       {mobileMenuOpen && !isAuthPage && (
-        <div className="md:hidden sticky top-14 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-xl px-4 py-4 space-y-2 animate-in slide-in-from-top-2 duration-150">
-          <Link 
-            href="/explore" 
+        <>
+          {/* Backdrop Blur Overlay */}
+          <div 
+            className="md:hidden fixed inset-0 top-14 bg-black/40 backdrop-blur-xs z-30 transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
-          >
-            <Compass className="w-5 h-5 text-[#ff3b30]" />
-            <span>Explore All</span>
-          </Link>
+          />
 
-          <Link 
-            href="/vehicles" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
-          >
-            <Car className="w-5 h-5 text-[#ff3b30]" />
-            <span>Vehicles & Builds</span>
-          </Link>
-
-          <Link 
-            href="/events" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
-          >
-            <Calendar className="w-5 h-5 text-[#ff3b30]" />
-            <span>Events & Pit Passes</span>
-          </Link>
-
-          <Link 
-            href="/businesses" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
-          >
-            <Building2 className="w-5 h-5 text-[#ff3b30]" />
-            <span>Businesses & Food Trucks</span>
-          </Link>
-
-          <Link 
-            href="/feed" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
-          >
-            <Activity className="w-5 h-5 text-[#ff3b30]" />
-            <span>Live Activity Feed</span>
-          </Link>
-
-          <Link 
-            href="/secondlife" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
-          >
-            <Globe className="w-5 h-5 text-[#ff3b30]" />
-            <span>Second Life Track Telemetry</span>
-          </Link>
-
-          <div className="pt-2 border-t border-neutral-100 flex flex-col gap-2">
+          <div className="md:hidden sticky top-14 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-2xl px-4 py-4 space-y-2 max-h-[calc(100vh-3.5rem)] overflow-y-auto animate-in slide-in-from-top-2 duration-150">
             <Link 
-              href="/join" 
+              href="/explore" 
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-center text-xs uppercase tracking-wider rounded-xl shadow-xs active:scale-95 transition-all min-h-[44px] flex items-center justify-center"
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
             >
-              Claim Tag / Join Gridpass
+              <Compass className="w-5 h-5 text-[#ff3b30]" />
+              <span>Explore All</span>
             </Link>
-            {!user && (
+
+            <Link 
+              href="/vehicles" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
+            >
+              <Car className="w-5 h-5 text-[#ff3b30]" />
+              <span>Vehicles & Builds</span>
+            </Link>
+
+            <Link 
+              href="/events" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
+            >
+              <Calendar className="w-5 h-5 text-[#ff3b30]" />
+              <span>Events & Pit Passes</span>
+            </Link>
+
+            <Link 
+              href="/businesses" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
+            >
+              <Building2 className="w-5 h-5 text-[#ff3b30]" />
+              <span>Businesses & Food Trucks</span>
+            </Link>
+
+            <Link 
+              href="/feed" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
+            >
+              <Activity className="w-5 h-5 text-[#ff3b30]" />
+              <span>Live Activity Feed</span>
+            </Link>
+
+            <Link 
+              href="/secondlife" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
+            >
+              <Globe className="w-5 h-5 text-[#ff3b30]" />
+              <span>Second Life Track Telemetry</span>
+            </Link>
+
+            <div className="pt-2 border-t border-neutral-100 flex flex-col gap-2">
               <Link 
-                href="/login" 
+                href="/join" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-bold text-center text-xs uppercase tracking-wider rounded-xl active:scale-95 transition-all min-h-[44px] flex items-center justify-center"
+                className="w-full py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-center text-xs uppercase tracking-wider rounded-xl shadow-xs active:scale-95 transition-all min-h-[44px] flex items-center justify-center"
               >
-                Sign In
+                Claim Tag / Join Gridpass
               </Link>
-            )}
+              {!user && (
+                <Link 
+                  href="/login" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-bold text-center text-xs uppercase tracking-wider rounded-xl active:scale-95 transition-all min-h-[44px] flex items-center justify-center"
+                >
+                  Sign In
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Main Responsive App Content Area */}
