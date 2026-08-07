@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
 
     // Parse query params
     const title = searchParams.get('title') || 'GRIDPASS';
-    const description = searchParams.get('desc') || 'The Universal Vehicle Network. Connect your rig, log service provenance, and verify track check-ins.';
+    const description = searchParams.get('desc') || 'Whether you race it, show it, cook it, or capture it — Gridpass brings your world together.';
     const badge = searchParams.get('badge') || 'Gridpass Engine Online';
 
     return new ImageResponse(

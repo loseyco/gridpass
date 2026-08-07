@@ -1,0 +1,15 @@
+# Gridpass | One Tag for Everything
+
+> Gridpass brings your automotive world together with one universal QR tag for vehicles, photos, events, vendors, venues, food trucks, and craft.
+
+## System Overview
+- **Official Website**: https://gridpass.app
+- **Core Tagline**: VEHICLES • PHOTOS • EVENTS • VENDORS • VENUES • MORE
+- **Primary Value Proposition**: Whether you race it, show it, cook it, or capture it — Gridpass brings your world together.
+
+## Core Entity Routes & APIs
+- Member Profiles (`/u/[id]`): Public driver card/resume, social badges, home town, and digital garage.
+- Vehicle Passports (`/v/[id]`): Digital vehicle deed containing year, make, model, VIN verification, build specs, service logs, and telemetry.
+- Business Stamp Passes (`/b/[id]`): Business and venue passport pages for auto shops, racetracks, offroad parks, and food trucks.
+- Event Passes & Radar (`/events/[id]`): Live event hubs featuring GPS pin maps, staging classes, check-in badges, and race passes.
+- Partner Network (`/partner`): B2B automotive & venue SaaS portal for provisioning custom client accounts, proposals, and feature modules.

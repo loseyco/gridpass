@@ -1,7 +1,7 @@
 {
   "name": "Gridpass",
   "short_name": "Gridpass",
-  "description": "The Universal Vehicle Network. Permanent dynamic QR code tags for vehicle passports and registries.",
+  "description": "Whether you race it, show it, cook it, or capture it — Gridpass brings your world together with One Universal Tag.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'Gridpass | The Universal Vehicle Network';
+export const alt = 'Gridpass | One Tag for Everything';
 export const size = {
   width: 1200,
   height: 630,
@@ -71,50 +71,24 @@ export default async function Image() {
               gap: '24px',
             }}
           >
-            {/* The Mountain Track SVG Logo */}
+            {/* Official Gridpass Original Logo Emblem */}
             <svg
               width="150"
               height="125"
-              viewBox="0 0 120 100"
+              viewBox="0 0 400 350"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              {/* Mountain Peaks */}
-              <path
-                d="M10 70 L42 22 L65 52 L88 28 L110 70 Z"
-                fill="#121214"
-                stroke="#f4f4f7"
-                strokeWidth="5"
-                strokeLinejoin="round"
-              />
-              {/* Ridge highlights */}
-              <path
-                d="M42 22 L52 42 M88 28 L98 48"
-                stroke="#525252"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-              />
-              {/* Asphalt racetrack road */}
-              <path
-                d="M18 86 C 48 86, 56 59, 96 59"
-                stroke="#262626"
-                strokeWidth="15"
-                strokeLinecap="round"
-              />
-              {/* Curb stripes */}
-              <path
-                d="M18 90 C 48 90, 56 63, 96 63"
-                stroke="#f4f4f7"
-                strokeWidth="5.5"
-                strokeLinecap="round"
-              />
-              <path
-                d="M18 90 C 48 90, 56 63, 96 63"
-                stroke="#bd2925"
-                strokeWidth="5.5"
-                strokeLinecap="round"
-                strokeDasharray="9 9"
-              />
+              <path d="M 30 205 L 95 88 L 115 185 L 170 40 L 195 145 L 250 85 L 280 155 Z" fill="#ffffff" />
+              <path d="M 95 88 L 110 170 M 170 40 L 188 135 M 250 85 L 265 148" stroke="#0a0a0c" strokeWidth="7" strokeLinecap="round" />
+              <g>
+                <path d="M 285 170 C 270 172, 230 185, 205 190 L 225 210 C 250 205, 290 190, 305 188 Z" fill="#ffffff" />
+                <path d="M 205 190 C 180 195, 150 215, 135 225 L 155 245 C 170 235, 200 215, 225 210 Z" fill="#ff3b30" />
+                <path d="M 135 225 C 120 235, 95 260, 80 275 L 105 298 C 120 280, 145 258, 155 245 Z" fill="#ffffff" />
+                <path d="M 80 275 C 65 290, 35 330, 25 345 L 55 370 C 65 352, 95 315, 105 298 Z" fill="#ff3b30" />
+                <path d="M 25 345 C 18 355, 10 368, 5 378 L 38 395 C 42 385, 48 375, 55 370 Z" fill="#ffffff" />
+              </g>
+              <path d="M 335 170 C 300 175, 220 200, 195 245 C 170 290, 175 350, 170 380 L 210 380 C 215 340, 215 285, 240 240 C 260 205, 320 188, 345 182 Z" fill="#ff3b30" />
             </svg>
 
             {/* Typography brand name */}
@@ -145,7 +119,7 @@ export default async function Image() {
               fontFamily: 'system-ui, sans-serif',
             }}
           >
-            The Universal Vehicle Network. Connect your rig, log service provenance, and verify track check-ins with a permanent QR passport.
+            Whether you race it, show it, cook it, or capture it — Gridpass brings your world together with One Universal Tag.
           </div>
         </div>
 
