@@ -6,8 +6,45 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { AgentTicket } from '@/lib/types/admin';
 import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 
-// Default Subagent Execution Tickets Array (Includes TICK-1014)
+// Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
+  {
+    id: 'tick_1025_ultimate_join_system',
+    ticket_number: 'TICK-1025',
+    agent_role: 'gm',
+    title: 'Ultimate Physical QR Tag & Referral Intake System (/join & /admin/tags)',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'AdminTagsPage', 'ExcelWorksheetTable', 'physical_tags', 'tag_scans'],
+    files_modified: [
+      'src/app/join/JoinClient.tsx',
+      'src/app/admin/tags/page.tsx',
+      'src/lib/types/admin.ts',
+      'src/app/admin/layout.tsx',
+      'firestore.rules'
+    ],
+    schema_changes: [
+      'physical_tags schema: tag_id, distribution_method, target_type, target_destination, custom_spotted_photo_url, custom_spotted_title, custom_spotted_note, total_scans, members_joined_count',
+      'tag_scans schema: tag_id, scanned_at, distribution_method, user_id, user_email, target_destination, user_agent, referrer'
+    ],
+    issue_description: 'Platform owner requested building a badass, modern, mobile-first physical invitation card and QR tag intake system to power thousands of printed cards, windshield drops, lanyards, guerrilla stickers, and B2B dealership machine tags (Nielsen Enterprises in Lake Villa, IL).',
+    root_cause: 'Physical invitation cards and QR stickers in the wild require dynamic target re-routing, on-the-spot vehicle photo personalization, scan telemetry tracking, and zero hardcoded fallback data.',
+    resolution_summary: 'Built modern glassmorphic /join intake app with On-The-Spot Car Drop Photo Invitation feature, universal inclusive member category selector (Motorsports, Food/Vendor, Aviation, Spectator, Sticker Scan, Anything Else), real-time scan telemetry, and Admin Dynamic Tag Controller. Created /admin/tags Master Physical Tag Control Center with high-density ExcelWorksheetTable.',
+    verification_proof: 'Deployed firestore.rules live to Cloud Firestore, verified zero hardcoded seed fallback arrays, and passed TypeScript static compilation (npx tsc --noEmit) with 0 errors.',
+    sop_summary: 'SOP for physical QR tag intake, dynamic card re-routing, on-the-spot car photo personalization, and guerrilla scan telemetry.',
+    sop_steps: [
+      'Deploy updated firestore.rules for physical_tags and tag_scans collections.',
+      'Build src/app/join/JoinClient.tsx with glassmorphic aesthetic, dynamic tag lookup, and on-the-spot car photo invitation banner.',
+      'Build src/app/admin/tags/page.tsx Master Physical Tag Control HQ with zero hardcoded seed arrays.',
+      'Register /admin/tags in src/app/admin/layout.tsx under Global System Tools.',
+      'Verify compilation with npx tsc --noEmit and push to origin/feature/sales-crm-intake-engine.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
   {
     id: 'tick_1016_unified_feedback_triage',
     ticket_number: 'TICK-1016_unified_feedback_triage',
