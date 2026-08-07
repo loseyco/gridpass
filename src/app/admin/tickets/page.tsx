@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1033_dynamic_card_rebinding_cleanup',
+    ticket_number: 'TICK-1033',
+    agent_role: 'gm',
+    title: 'Dynamic Physical Card Re-Binding State Overwrite & Photo Cleanup Invariant',
+    category: 'database',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'handleAdminSaveTarget', 'setDoc'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: setDoc un-merged overwrite on target re-binding'],
+    issue_description: 'Platform owner reported that changing a card target destination (e.g. from vehicle to custom_url or business) retained previous vehicle photo and title views due to Firestore merge state persistence.',
+    root_cause: 'setDoc with { merge: true } preserved previous vehicle photo and title fields when changing target_type to custom_url, driver, or business.',
+    resolution_summary: 'Updated JoinClient.tsx handleAdminSaveTarget to explicitly evaluate target_type, reset photo/title states on mode switch, and overwrite physical_tags document without merge so previous vehicle photo data is completely erased.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean tag re-binding on localhost.',
+    sop_summary: 'SOP for card target re-binding state cleanup.',
+    sop_steps: [
+      'Evaluate target_type during tag binding save operations.',
+      'Explicitly set vehicle photo and title fields to null when re-binding tags to non-vehicle destinations.',
+      'Reset local state hooks when admins switch target destination buttons in wizard.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1032_instant_registration_session_auth',
     ticket_number: 'TICK-1032',
     agent_role: 'gm',

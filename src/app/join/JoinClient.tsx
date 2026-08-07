@@ -354,8 +354,10 @@ function JoinPageContent() {
     e.preventDefault();
     if (!rawTagId) return; // Strict Invariant: Cannot bind without real scanned rawTagId!
 
-    let newUnclaimedVehId = tagRecord?.unclaimed_vehicle_id || null;
-    if (editTargetType === 'vehicle' && (editSpottedPhoto || (editMake && editModel))) {
+    const isVehicleMode = editTargetType === 'vehicle';
+    let newUnclaimedVehId = isVehicleMode ? (tagRecord?.unclaimed_vehicle_id || null) : null;
+
+    if (isVehicleMode && (editSpottedPhoto || (editMake && editModel))) {
       newUnclaimedVehId = `veh_unclaimed_${rawTagId}_${Date.now()}`;
       await setDoc(
         doc(db, 'vehicles', newUnclaimedVehId),
@@ -376,20 +378,22 @@ function JoinPageContent() {
       );
     }
 
-    const updated = {
+    const vehicleTitle = [editYear, editMake, editModel].filter(Boolean).join(' ');
+
+    const updated: any = {
       tag_id: rawTagId,
-      title: editSpottedTitle || (editTargetType === 'vehicle' ? `${editYear} ${editMake} ${editModel}` : `Tag #${rawTagId}`),
+      title: isVehicleMode ? (editSpottedTitle || vehicleTitle || `Card #${rawTagId}`) : `Card #${rawTagId}`,
       distribution_method: editMethod,
       target_type: editTargetType,
       target_destination: editTargetDest,
-      custom_spotted_photo_url: editSpottedPhoto || null,
-      custom_spotted_title: editSpottedTitle || (editTargetType === 'vehicle' ? `${editYear} ${editMake} ${editModel}` : null),
-      custom_spotted_note: editSpottedNote || null,
+      custom_spotted_photo_url: isVehicleMode ? (editSpottedPhoto || null) : null,
+      custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : null,
+      custom_spotted_note: isVehicleMode ? (editSpottedNote || null) : null,
       unclaimed_vehicle_id: newUnclaimedVehId,
-      unclaimed_year: editYear,
-      unclaimed_make: editMake,
-      unclaimed_model: editModel,
-      unclaimed_trim: editTrim,
+      unclaimed_year: isVehicleMode ? editYear : '',
+      unclaimed_make: isVehicleMode ? editMake : '',
+      unclaimed_model: isVehicleMode ? editModel : '',
+      unclaimed_trim: isVehicleMode ? editTrim : '',
       status: 'active',
       last_scanned_at: new Date().toISOString(),
     };
@@ -397,9 +401,10 @@ function JoinPageContent() {
     setTagRecord(updated);
 
     try {
-      await setDoc(doc(db, 'physical_tags', `tag_${rawTagId}`), updated, { merge: true });
+      // Use setDoc without merge so old vehicle fields are explicitly overwritten when switching target types
+      await setDoc(doc(db, 'physical_tags', `tag_${rawTagId}`), updated);
       showToast({
-        title: 'PHYSICAL CARD BOUND & INVITATION ACTIVE! ⚡',
+        title: 'PHYSICAL CARD RE-BOUND & INVITATION ACTIVE! ⚡',
         message: `Card #${rawTagId} is now configured as a ${editTargetType} invitation!`,
         icon: '⚡',
       });
@@ -853,7 +858,7 @@ function JoinPageContent() {
 
                 <button
                   type="button"
-                  onClick={() => { setEditTargetType('business'); setEditTargetDest('/partner'); }}
+                  onClick={() => { setEditTargetType('business'); setEditTargetDest('/partner'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); }}
                   className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
                     editTargetType === 'business'
                       ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
@@ -866,7 +871,7 @@ function JoinPageContent() {
 
                 <button
                   type="button"
-                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/dash'); }}
+                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/dash'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); }}
                   className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
                     editTargetType === 'driver'
                       ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
@@ -879,7 +884,7 @@ function JoinPageContent() {
 
                 <button
                   type="button"
-                  onClick={() => setEditTargetType('custom_url')}
+                  onClick={() => { setEditTargetType('custom_url'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); }}
                   className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
                     editTargetType === 'custom_url'
                       ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
