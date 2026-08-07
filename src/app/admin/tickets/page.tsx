@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1059_dynamic_opengraph_social_cards',
+    ticket_number: 'TICK-1059',
+    agent_role: 'aiseo_expert',
+    title: 'Server-Side Dynamic OpenGraph OG Card Metadata Engine for Shared Invitations',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinPage', 'generateMetadata', 'openGraph', 'twitter'],
+    files_modified: ['src/app/join/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner asked if shared invitation links (/join?tag=VIP-F7JEP) render custom uploaded photos, titles, and notes when texted or posted on social media.',
+    root_cause: 'Join page previously used static export const metadata, rendering generic "Claim Your QR Decal" preview cards when shared.',
+    resolution_summary: 'Re-architected src/app/join/page.tsx with Next.js App Router generateMetadata({ searchParams }). Automatically queries Firestore server-side for physical_tags and businesses documents to dynamically output og:title (e.g. "Shaw Daddy\'s BBQ | Gridpass Invitation"), og:description (custom spotted note), and og:image (staged photo/logo) for iMessage, SMS, Facebook, Twitter, and WhatsApp previews.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified server-side generateMetadata execution.',
+    sop_summary: 'SOP for server-side dynamic OpenGraph social cards.',
+    sop_steps: [
+      'Export generateMetadata({ searchParams }) in src/app/join/page.tsx.',
+      'Query physical_tags and businesses collections using URL tag parameter.',
+      'Output dynamic og:title, og:description, and og:image for rich social previews.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'aiseo_expert',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1058_dynamic_intake_header_resolution',
     ticket_number: 'TICK-1058',
     agent_role: 'site_auditor',
