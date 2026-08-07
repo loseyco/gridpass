@@ -7,6 +7,26 @@ import { SOPGuide } from '@/lib/types/admin';
 
 const DEFAULT_SOPS: SOPGuide[] = [
   {
+    id: 'sop_004_production_deployment_and_intake',
+    slug: 'production-deployment-and-intake-sop',
+    title: 'Master Production Build, Physical QR Decal Intake & Firebase Hosting Deployment SOP',
+    category: 'Deployment & Operations',
+    author_agent: 'firebase_expert',
+    description: 'Master standard operating procedure for configuring Firebase hosting targets (gridpass), building production bundles (npm run build), verifying server-side OpenGraph metadata, and deploying live to https://gridpass.app.',
+    prerequisites: ['Super Admin Role Access', 'Firebase CLI', 'Google AI Ultra Workspace'],
+    steps: [
+      'Step 1 (Localhost First): Build and test all UI and Firestore flow additions locally on localhost (http://localhost:3000).',
+      'Step 2 (Execution Tickets & Audit): Document every task in /admin/tickets with root cause, resolution summary, files modified, and sop_steps.',
+      'Step 3 (System Changelog): Append release version log (e.g. v4.6.0) to platformSeedData.ts and verify in /admin/changelog.',
+      'Step 4 (Target Configuration): Verify .firebaserc specifies "default": "gridpass" and firebase.json specifies "hosting": { "site": "gridpass" }.',
+      'Step 5 (OpenGraph Scraping): Verify generateMetadata in /join/page.tsx outputs absolute image URLs (https://gridpass.app/api/og...) and 1200x630 dimensions for Facebook Debugger & iMessage previews.',
+      'Step 6 (Git Remote Push): Run conventional commits and push tracking branches to GitHub remote (git push origin main).',
+      'Step 7 (Firebase Deployment): Execute npm run build && npx firebase deploy --only hosting --project gridpass to publish live to https://gridpass.app.'
+    ],
+    components_referenced: ['JoinPage', 'JoinClient', 'firebase.json', '.firebaserc', 'AdminTicketsPage', 'AdminChangelogPage'],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
     id: 'sop_003_tickets_sop_arch',
     slug: 'tickets-sop-separation-sop',
     title: 'Subagent Execution Ticket HQ & Master SOP Manuals Separation Standard',
