@@ -380,15 +380,24 @@ export default function AdminFeaturesPage() {
         onExportCSV={exportCSV}
         onInlineSave={handleInlineSave}
         loading={loading}
-        actionRenderer={(row) => (
-        <Link
-          href={row.route_path || '#'}
-          target="_blank"
-          className="text-[10px] font-bold uppercase bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-2 py-1 rounded border border-neutral-300"
-        >
-          Open Route ↗
-        </Link>
-        )}
+        actionRenderer={(row) => {
+          const rawPath = row.route_path || '';
+          const cleanPath = rawPath.split(',')[0].trim();
+          const safePath = cleanPath.includes('[')
+            ? cleanPath.replace(/\[id\]/g, 'demo').replace(/\[slug\]/g, 'sample')
+            : cleanPath;
+
+          return (
+            <a
+              href={safePath || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-bold uppercase bg-neutral-100 hover:bg-neutral-200 text-neutral-800 px-2 py-1 rounded border border-neutral-300"
+            >
+              Open Route ↗
+            </a>
+          );
+        }}
       />
 
       {/* Add Feature Modal */}
