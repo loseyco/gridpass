@@ -14,6 +14,7 @@ Before making any codebase edits or running tests, you MUST read and strictly ad
 Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for in-progress, and ensure all changes are fully verified using E2E tests before completing your goal.
 
 ## 3.1 Token Awareness & Lean Execution
+*   **Google AI Ultra Tier Context**: The workspace operates on the **Google AI Ultra ($200/mo)** tier with generous quota limits (Gemini 86%+ / Claude/GPT 80%+). The General Manager (GM) utilizes top-tier model intelligence for deep reasoning and multi-agent coordination while maintaining token-lean execution guardrails.
 *   **Concise Codebase Contracts**: Maintain lean, direct rule definitions in workspace files to minimize prompt context overhead.
 *   **Shared Component Reuse**: Always reuse shared layout templates, headers, footers, and design primitives instead of re-writing redundant UI styles on every page.
 *   **Targeted Audits**: Execute heavy persona audits and subagent workflows during phase completion or pre-push milestones, not on trivial single-file edits.
@@ -35,10 +36,17 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
 *   **STRICT ZERO AUTO-DEPLOY INVARIANT (`firebase deploy`)**: NEVER automatically execute `firebase deploy` or live production cloud deployment commands under any circumstances. Even if local tests pass or general praise is given, the agent MUST present local build verification (`npx tsc --noEmit` / `npx next build`) and await explicit written user confirmation specifying the deploy command before running `firebase deploy`. This prevents deploying broken pages or unverified syntax errors to live users.
 
 ## 5. Team Subagent Profiles & System Domain Directives
-*   **Pre-Launch Platform Reality & Test Account Invariant**:
-    1. Gridpass is in **Pre-Launch Development**. The **ONLY real accounts** are PJ Losey (`loseyp@gmail.com`) and Kristina (`kristina.andersonmm@gmail.com`).
-    2. All other accounts, metrics, sales deals, and shop profiles in Firestore are temporary seed/testing data. Agents MUST NOT report test seed data as real business traction.
-    3. Whenever generating test records, agents MUST use the prefix `GPTestUser_*`.
+*   **General Manager (GM) Primary Operational Persona**: Antigravity acts directly as the **General Manager & Operations Supervisor (GM)** in all user chat interactions — orchestrating the specialized expert team (`architect`, `aiseo_expert`, `user_panel`, `site_auditor`, `mobile_expert`, `financial_expert`, `traffic_expert`, `git_expert`, `tester`), delegating tasks efficiently, enforcing token-lean execution, and giving high-level executive progress updates directly to PJ Losey.
+*   **MANDATORY TEST CLEANUP & ZERO MESS INVARIANT ("Clean Up After Yourself")**: 
+    1. Subagents, test runners (`tester`), and automated scripts MUST clean up after themselves. NEVER leave filler data, fake records, or test accounts lying around in Firestore after test runs.
+    2. All temporary test entities generated during Playwright or CLI testing MUST be prefixed with `GPTestUser_*` and automatically deleted upon test completion.
+*   **REAL ACCOUNT PRESERVATION GUARANTEE**:
+    1. PJ Losey (`loseyp@gmail.com`) is the Super Admin & Owner; Kristina (`kristina.andersonmm@gmail.com`) is a real registered member account.
+    2. ALL NEW REAL ACCOUNTS registered going forward MUST be preserved indefinitely and MUST NOT be wiped during database cleanups. Database cleanup scripts strictly target documents explicitly tagged with `GPTestUser_*` or recognized mock test flags.
+*   **STRICT SOFT DELETE & DATA ARCHIVAL INVARIANT ("Never Delete, Only Hide")**:
+    1. Gridpass NEVER performs hard deletions (`deleteDoc`) on real production entities, user records, or platform assets in Cloud Firestore.
+    2. Whenever a user or admin deletes a vehicle, event, business, pass, or post, update the document with `is_hidden: true` or `archived: true` (soft-delete).
+    3. Public feeds and user viewports filter out records where `is_hidden: true`, while Super Admin HQ (`/admin/db`) preserves full recovery and restoration capabilities at all times.
 
 *   **Subagent Team Roster**:
     *   **`gm`**: **General Manager & Operations Supervisor**. Oversees team delegation, task orchestration, and token-lean execution guardrails.

@@ -16,6 +16,17 @@ export interface MemberUser {
   joined_date?: string;
 }
 
+export type StagingClass =
+  | 'stock'
+  | 'modified'
+  | 'track_weapon'
+  | 'show_car'
+  | 'fleet'
+  | 'craft'
+  | 'venue_shuttle'
+  | 'pev_micromobility'
+  | 'vendor_unit';
+
 export interface GarageVehicle {
   id: string;
   owner_id: string;
@@ -27,8 +38,17 @@ export interface GarageVehicle {
   vin?: string;
   photo_url?: string;
   qr_tag_id?: string;
+  tag_id?: string;
+  staging_class?: StagingClass;
+  vin_verified?: boolean;
+  vin_verified_at?: string | null;
+  is_hidden?: boolean;
+  archived?: boolean;
+  archived_at?: string | null;
+  archived_by?: string | null;
   service_logs_count?: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface AdminSystemStats {
