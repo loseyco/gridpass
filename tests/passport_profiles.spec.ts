@@ -98,7 +98,7 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
   });
 
   test('Universal Driver Passport displays garage & socials', async ({ page }) => {
-    await page.goto('/u/pjlosey-mock');
+    await page.goto('/u/pjlosey-mock?tab=garage');
 
     // Verify avatar profile headers
     await expect(page.locator('text=Marcus Mustang')).toBeVisible();
@@ -108,6 +108,53 @@ test.describe('Passport Profiles Context-Aware E2E Suite', () => {
     await expect(page.locator('text=2024 Ford Mustang GT')).toBeVisible();
     const linkBtn = page.locator('a:has-text("View Passport Details")');
     await expect(linkBtn).toBeVisible();
+  });
+
+  test('User Profile tab deep-linking directly opens career tab on /u/pjlosey?tab=career', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=career');
+    await expect(page.locator('text=Motorsport Achievements')).toBeVisible();
+    await expect(page.locator('button:has-text("Career & About Me")')).toHaveClass(/bg-\[#ff3b30\]/);
+  });
+
+  test('User Profile tab deep-linking directly opens garage tab on /u/pjlosey?tab=garage', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=garage');
+    await expect(page.locator('text=Verified Garage Builds')).toBeVisible();
+    await expect(page.locator('button:has-text("Digital Garage")')).toHaveClass(/bg-\[#ff3b30\]/);
+  });
+
+  test('User Profile tab deep-linking directly opens businesses tab on /u/pjlosey?tab=businesses', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=businesses');
+    await expect(page.locator('text=Affiliated Businesses')).toBeVisible();
+    await expect(page.locator('button:has-text("Businesses & Teams")')).toHaveClass(/bg-\[#ff3b30\]/);
+  });
+
+  test('User Profile tab deep-linking directly opens guestbook tab on /u/pjlosey?tab=guestbook', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=guestbook');
+    await expect(page.locator('text=Fan Wall & Guestbook')).toBeVisible();
+    await expect(page.locator('button:has-text("Fan Wall & Guestbook")')).toHaveClass(/bg-\[#ff3b30\]/);
+  });
+
+  test('User Profile interactive tab switching updates query param and share functionality', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('/u/pjlosey');
+
+    // Click garage tab
+    await page.click('button:has-text("Digital Garage")');
+    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=garage/);
+
+    // Click businesses tab
+    await page.click('button:has-text("Businesses & Teams")');
+    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=businesses/);
+
+    // Click guestbook tab
+    await page.click('button:has-text("Fan Wall & Guestbook")');
+    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=guestbook/);
+
+    // Click share button
+    const shareBtn = page.locator('button:has-text("Share Passport")');
+    await expect(shareBtn).toBeVisible();
+    await shareBtn.click();
+    await expect(page.locator('text=Copied Tab Link!')).toBeVisible();
   });
 
   test('Business storefront displays inventory & CRM leads', async ({ page }) => {

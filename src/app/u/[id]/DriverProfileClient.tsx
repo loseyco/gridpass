@@ -111,7 +111,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
     }
   };
 
-  const isMock = (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock');
+  const isMock = (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) || userId === 'pjlosey' || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock');
 
   const renderSocialIcon = (
     platform: string, 
@@ -251,7 +251,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           }
         }
 
-        if (!uData && (isMock || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock'))) {
+        if (!uData && (isMock || userId === 'pjlosey' || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock'))) {
           const mockDriverProfile: DriverProfile = {
             uid: 'user-marcus-123',
             email: 'marcus@enthusiast.com',
