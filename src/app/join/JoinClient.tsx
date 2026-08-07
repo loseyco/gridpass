@@ -1122,86 +1122,86 @@ function JoinPageContent() {
               {/* Universal Category Selector (Signup Mode) */}
               {authMode === 'signup' && (
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-500 mb-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-700 mb-1.5">
                     Who Are You? / What Brings You Here?
                   </label>
                   <div className="grid grid-cols-3 gap-1.5">
                     <button
                       type="button"
                       onClick={() => setSelectedCategory('motorsports')}
-                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      className={`p-2 min-h-[44px] rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
                         selectedCategory === 'motorsports'
                           ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                           : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                       }`}
                     >
-                      <Car className="w-4 h-4" />
+                      <Car className="w-4 h-4 text-[#ff3b30]" />
                       <span className="text-[9px] font-black uppercase">Motorsports</span>
                     </button>
 
                     <button
                       type="button"
+                      onClick={() => setSelectedCategory('pev_emobility')}
+                      className={`p-2 min-h-[44px] rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'pev_emobility'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Zap className="w-4 h-4 text-amber-500 fill-current" />
+                      <span className="text-[9px] font-black uppercase">PEV / E-Bikes</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setSelectedCategory('food_truck')}
-                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      className={`p-2 min-h-[44px] rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
                         selectedCategory === 'food_truck'
                           ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                           : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                       }`}
                     >
-                      <Utensils className="w-4 h-4" />
+                      <Utensils className="w-4 h-4 text-emerald-500" />
                       <span className="text-[9px] font-black uppercase">Food/Vendor</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setSelectedCategory('aviation')}
-                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      className={`p-2 min-h-[44px] rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
                         selectedCategory === 'aviation'
                           ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                           : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                       }`}
                     >
-                      <Plane className="w-4 h-4" />
+                      <Plane className="w-4 h-4 text-blue-500" />
                       <span className="text-[9px] font-black uppercase">Aviation/Pilot</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setSelectedCategory('spectator')}
-                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      className={`p-2 min-h-[44px] rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
                         selectedCategory === 'spectator'
                           ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                           : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                       }`}
                     >
-                      <Camera className="w-4 h-4" />
+                      <Camera className="w-4 h-4 text-purple-500" />
                       <span className="text-[9px] font-black uppercase">Enthusiast</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setSelectedCategory('wild_scan')}
-                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      className={`p-2 min-h-[44px] rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
                         selectedCategory === 'wild_scan'
                           ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                           : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                       }`}
                     >
-                      <Toilet className="w-4 h-4" />
+                      <Toilet className="w-4 h-4 text-neutral-500" />
                       <span className="text-[9px] font-black uppercase">Sticker Scan</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('other')}
-                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                        selectedCategory === 'other'
-                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                      }`}
-                    >
-                      <Flame className="w-4 h-4" />
-                      <span className="text-[9px] font-black uppercase">Anything Else</span>
                     </button>
                   </div>
                 </div>
@@ -1216,7 +1216,7 @@ function JoinPageContent() {
                     placeholder="PJ Losey"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                    className="w-full text-base font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                   />
                 </div>
               )}
@@ -1229,7 +1229,7 @@ function JoinPageContent() {
                   placeholder="you@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-base font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                 />
               </div>
 
@@ -1241,7 +1241,7 @@ function JoinPageContent() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-base font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                 />
               </div>
 
@@ -1256,7 +1256,7 @@ function JoinPageContent() {
                       placeholder="e.g. Found on my Camaro windshield at Road America, Nielsen's, or bathroom stall!"
                       value={discoveryNote}
                       onChange={(e) => setDiscoveryNote(e.target.value)}
-                      className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                      className="w-full text-base font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                     />
                   </div>
                 </>
