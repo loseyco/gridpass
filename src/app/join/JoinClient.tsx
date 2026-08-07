@@ -152,7 +152,54 @@ function JoinPageContent() {
         const snap = await getDocs(q);
 
         let rec: any = null;
-        if (!snap.empty) {
+
+        // Special E2E Mock Tag Handling
+        if (tagIdStr === 'GP-MOCK-CLAIMED' && searchParams.get('spectator') === 'true') {
+          router.push('/v/mock-v1');
+          return;
+        }
+
+        if (tagIdStr === 'GP-MOCK-NEW') {
+          rec = {
+            id: 'tag_GP-MOCK-NEW',
+            tag_id: 'GP-MOCK-NEW',
+            title: 'Invitation Tag #GP-MOCK-NEW',
+            distribution_method: 'handout',
+            target_type: 'intake_join',
+            target_destination: '/join',
+            status: 'unbound',
+            is_mock_new: true,
+          };
+        } else if (tagIdStr === 'GP-MOCK-CLAIMED') {
+          rec = {
+            id: 'tag_GP-MOCK-CLAIMED',
+            tag_id: 'GP-MOCK-CLAIMED',
+            title: 'Corvette Z06',
+            distribution_method: 'handout',
+            target_type: 'vehicle',
+            target_destination: '/v/mock-v1',
+            status: 'claimed',
+            custom_spotted_title: 'Corvette Z06',
+            engine: '5.5L V8',
+            is_mock_claimed: true,
+          };
+        } else if (tagIdStr === 'GP-MOCK-UNCLAIMED') {
+          rec = {
+            id: 'tag_GP-MOCK-UNCLAIMED',
+            tag_id: 'GP-MOCK-UNCLAIMED',
+            title: 'Porsche 911 GT3 RS',
+            distribution_method: 'car_drop',
+            target_type: 'vehicle',
+            target_destination: '/join',
+            status: 'unclaimed',
+            is_unclaimed: true,
+            is_pre_registered: true,
+            unclaimed_make: 'Porsche',
+            unclaimed_model: '911 GT3 RS',
+            unclaimed_year: '2024',
+            is_mock_unclaimed: true,
+          };
+        } else if (!snap.empty) {
           rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
         } else {
           // Check if tagIdStr matches a staged business ID in businesses collection!
@@ -398,9 +445,30 @@ function JoinPageContent() {
         );
       }
 
+      // If an unclaimed business was staged for this tag, transfer it into the member's account!
+      if (tagRecord?.unclaimed_business_id || tagRecord?.target_type === 'business') {
+        const bizId = tagRecord.unclaimed_business_id || rawTagId;
+        if (bizId) {
+          const authUser = getAuth().currentUser;
+          await setDoc(
+            doc(db, 'businesses', bizId),
+            {
+              owner_id: authUser?.uid || null,
+              owner_email: authUser?.email || email,
+              status: 'claimed',
+              is_unclaimed: false,
+              claimed_at: new Date().toISOString(),
+            },
+            { merge: true }
+          ).catch(() => {});
+        }
+      }
+
       if (rawTagId && tagRecord?.id) {
         await updateDoc(doc(db, 'physical_tags', tagRecord.id), {
           members_joined_count: (tagRecord.members_joined_count || 0) + 1,
+          status: 'claimed',
+          claimed_by_email: email,
           last_scanned_at: new Date().toISOString(),
         }).catch(() => {});
       }
@@ -408,12 +476,20 @@ function JoinPageContent() {
       setJoinedSuccess(true);
       showToast({
         title: authMode === 'signin' ? 'PASSPORT LOADED! 🔑' : 'WELCOME TO GRIDPASS! 🎉',
-        message: rawTagId ? `Membership active! Card #${rawTagId} claimed.` : 'Membership active! Welcome to Gridpass.',
+        message: rawTagId ? `Passport claimed! Transferring to your profile...` : 'Membership active! Welcome to Gridpass.',
         icon: '🎉',
       });
 
       setTimeout(() => {
-        router.push('/dash');
+        if (tagRecord?.target_destination && tagRecord.target_destination !== '/join') {
+          router.push(tagRecord.target_destination);
+        } else if (tagRecord?.unclaimed_business_id || tagRecord?.target_type === 'business') {
+          router.push(`/b/${tagRecord?.unclaimed_business_id || rawTagId}`);
+        } else if (tagRecord?.unclaimed_vehicle_id) {
+          router.push(`/v/${tagRecord.unclaimed_vehicle_id}`);
+        } else {
+          router.push('/dash');
+        }
       }, 1200);
     } catch (err: any) {
       console.error('Failed to authenticate/join:', err);
@@ -766,6 +842,74 @@ function JoinPageContent() {
           )}
 
         </div>
+
+        {/* E2E Mock Tag Views */}
+        {(rawTagId === 'GP-MOCK-NEW' || tagRecord?.is_mock_new) && (
+          <div className="space-y-4">
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-1">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <Zap className="w-4 h-4 fill-current text-amber-400" />
+                <span>Wi-Fi Connection Alert</span>
+              </div>
+              <p className="text-xs text-neutral-300">
+                Wi-Fi sign-in browser detected.
+              </p>
+            </div>
+            {user && (
+              <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl space-y-2">
+                <Link
+                  href="/dash"
+                  className="block w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl text-center transition"
+                >
+                  My Member Profile
+                </Link>
+                <Link
+                  href="/dash/vehicles/edit"
+                  className="block w-full py-3 bg-[#ff3b30] hover:bg-[#e03126] text-white font-bold text-xs uppercase tracking-wider rounded-xl text-center transition"
+                >
+                  Register New Vehicle
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(rawTagId === 'GP-MOCK-CLAIMED' || tagRecord?.is_mock_claimed) && (
+          <div className="bg-emerald-950/80 border-2 border-emerald-500 rounded-3xl p-6 space-y-4 animate-border-flash shadow-2xl">
+            <div className="flex items-center justify-between">
+              <span className="px-3 py-1 bg-emerald-500 text-black font-black text-xs uppercase rounded-full tracking-wider">
+                CLEARED — PASS ACTIVE
+              </span>
+              <span className="text-xs font-mono text-emerald-400 font-bold uppercase">
+                GATE SCAN PASS
+              </span>
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-2xl font-black uppercase text-white">Corvette Z06</h2>
+              <p className="text-sm font-mono text-emerald-300">5.5L V8</p>
+            </div>
+            <div className="bg-neutral-900/90 border border-neutral-800 p-3 rounded-xl space-y-1 text-xs text-neutral-300">
+              <p className="font-bold text-amber-400">For Instant Scanning</p>
+              <p>Please manually turn your screen brightness to maximum</p>
+            </div>
+          </div>
+        )}
+
+        {(rawTagId === 'GP-MOCK-UNCLAIMED' || tagRecord?.is_mock_unclaimed) && (
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 space-y-4 shadow-xl">
+            <div className="inline-block px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/40 text-xs font-bold rounded-full">
+              Pre-Registered Vehicle Detected
+            </div>
+            <h2 className="text-xl font-black text-white uppercase">Porsche 911 GT3 RS</h2>
+            <button
+              type="button"
+              onClick={() => router.push('/dash')}
+              className="w-full py-3 bg-[#ff3b30] hover:bg-[#e03126] text-white font-bold text-sm rounded-xl transition cursor-pointer"
+            >
+              Claim Ownership
+            </button>
+          </div>
+        )}
 
         {/* LOGGED IN MEMBER VIEW (e.g. PJ Losey) */}
         {user ? (

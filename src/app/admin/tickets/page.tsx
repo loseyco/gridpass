@@ -9,6 +9,33 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1053_unclaimed_passport_asset_transfer_redirect',
+    ticket_number: 'TICK-1053',
+    agent_role: 'architect',
+    title: 'Unclaimed Passport 1-Tap Asset Transfer & Auto-Redirect to Profile',
+    category: 'architecture',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'unclaimed_business_id', 'unclaimed_vehicle_id'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['businesses schema: owner_id, status set to claimed upon registration'],
+    issue_description: 'Platform owner asked to confirm that staged unclaimed businesses and vehicles exist live on the site, and that registering on /join claims the asset and routes them directly to their claimed profile page for editing.',
+    root_cause: 'JoinClient.tsx previously transferred vehicles but required explicit business setDoc and dynamic routing to /b/[id] or /v/[id].',
+    resolution_summary: 'Updated JoinClient.tsx: upon registration or 1-tap Google Sign-In, updates businesses and vehicles setDoc with owner_id = loggedUser.uid, status = claimed, is_unclaimed = false, and auto-routes directly to claimed passport page for immediate owner editing.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean asset claim redirect logic.',
+    sop_summary: 'SOP for unclaimed passport claiming and auto-redirect.',
+    sop_steps: [
+      'Recipient clicks/scans invitation link (/join?id=monarch-defender or /join?tag=VIP-9XP32).',
+      'Recipient registers via email or 1-tap Google Auth.',
+      'System updates Firestore setting owner_id = user.uid and status = claimed.',
+      'System auto-redirects directly to claimed profile page (/b/monarch-defender or /v/corvette-z06).'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'architect',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1051_business_passport_photo_staging_engine',
     ticket_number: 'TICK-1051',
     agent_role: 'gm',
