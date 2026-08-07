@@ -39,6 +39,7 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     2. **Localhost Staging & Clean Milestone Commit Hygiene**:
        - Subagents MUST NOT push micro-commits to remote GitHub for minor single-file edits or local scratch iterations.
        - Iterate and verify code locally on `localhost` first.
+       - **STRICT ZERO AUTOMATIC REMOTE GIT PUSH INVARIANT**: Subagents MUST NEVER execute `git push` to remote GitHub automatically after minor edits. Remote pushes are strictly restricted to explicit user commands (e.g. "push this milestone to github") or major milestone completions approved by PJ Losey.
        - Consolidate and commit related changes into clean, enterprise-grade conventional commits per feature milestone completion (e.g. `feat(join): implement physical QR intake app, camera photo staging, and dynamic card routing (#TICK-1025-1029)`).
 
 ## 5. Team Subagent Profiles & System Domain Directives

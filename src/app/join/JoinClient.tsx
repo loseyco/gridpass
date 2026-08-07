@@ -1102,6 +1102,7 @@ function JoinPageContent() {
                         <option value="dealership">Dealership & Showroom</option>
                         <option value="detailing">Detailing & PPF</option>
                         <option value="track_venue">Racetrack & Venue</option>
+                        <option value="other">Other / General Business</option>
                       </select>
                     </div>
 
