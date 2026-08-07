@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { AppShell } from "@/components/AppShell";
+import { ToastProvider } from "@/components/ToastContext";
+import DailyRewardChecker from "@/components/auth/DailyRewardChecker";
+import { GridpassTelemetryProvider } from "@/components/analytics/GridpassTelemetryProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,13 +21,17 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gridpass.app'),
-  title: "Gridpass | The Universal Vehicle Network",
+  title: "Gridpass | One Tag for Everything",
   manifest: "/manifest.json",
-  description: "Transform any vehicle—car, boat, motorcycle, or plane—into a connected digital asset. Get a universal QR tag for service records, event entries, and ownership transfers.",
-  keywords: ["gridpass", "vehicle network", "qr tag", "car community", "digital garage", "service logs", "ownership transfer"],
+  icons: {
+    icon: [{ url: '/gridpass_logo.png', type: 'image/png' }],
+    apple: [{ url: '/gridpass_logo.png', type: 'image/png' }],
+  },
+  description: "Whether you race it, show it, cook it, or capture it—Gridpass brings your world together with one universal QR tag for vehicles, events, food trucks, vendors, spotters, and venues.",
+  keywords: ["gridpass", "one tag", "vehicles", "events", "vendors", "venues", "food trucks", "spotters", "qr tag", "digital passport"],
   openGraph: {
-    title: "Gridpass | The Universal Vehicle Network",
-    description: "Transform any vehicle into a connected digital asset with a single, permanent QR code tag.",
+    title: "Gridpass | One Tag for Everything",
+    description: "Whether you race it, show it, cook it, or capture it—Gridpass brings your world together.",
     url: "https://gridpass.app",
     siteName: "Gridpass",
     locale: "en_US",
@@ -34,14 +41,14 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Gridpass | The Universal Vehicle Network",
+        alt: "Gridpass | One Tag for Everything",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gridpass | The Universal Vehicle Network",
-    description: "Transform any vehicle into a connected digital asset with a single, permanent QR code tag.",
+    title: "Gridpass | One Tag for Everything",
+    description: "Whether you race it, show it, cook it, or capture it—Gridpass brings your world together.",
     images: ["/opengraph-image"],
   }
 };
@@ -58,11 +65,17 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#060608] text-[#f4f4f7]">
         <AuthProvider>
-          <AppShell>
-            {children}
-          </AppShell>
+          <ToastProvider>
+            <GridpassTelemetryProvider>
+              <DailyRewardChecker />
+              <AppShell>
+                {children}
+              </AppShell>
+            </GridpassTelemetryProvider>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
+

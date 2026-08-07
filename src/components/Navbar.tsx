@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from './Logo';
-import { Menu, X, LayoutDashboard, Users, CarFront, Calendar, Building2 } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Compass, Calendar, Activity, QrCode } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 export default function Navbar() {
@@ -51,29 +51,27 @@ export default function Navbar() {
 
         {/* Right Side Desktop Links */}
         <div className="hidden md:flex items-center gap-6">
+          <Link href="/explore" className={linkClass('/explore')}>
+            Explore
+          </Link>
+          <Link href="/secondlife" className={linkClass('/secondlife')}>
+            Second Life
+          </Link>
+          <Link href="/feed" className={linkClass('/feed')}>
+            Feed
+          </Link>
           <Link href="/dash" className={linkClass('/dash')}>
             Dash
           </Link>
-          <Link href="/members" className={linkClass('/members')}>
-            Members
-          </Link>
-          <Link href="/vehicles" className={linkClass('/vehicles')}>
-            Vehicles
-          </Link>
-          <Link href="/events" className={linkClass('/events')}>
-            Events
-          </Link>
-          <Link href="/businesses" className={linkClass('/businesses')}>
-            Businesses
-          </Link>
         </div>
 
-        {/* Hamburger Menu Toggle */}
+        {/* Mobile Hamburger Menu Toggle with >=44px Touch Target */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`md:hidden p-1 transition-colors ${menuButtonClass}`}
+          className={`md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-colors active:scale-95 ${menuButtonClass}`}
+          aria-label="Toggle Navigation Menu"
         >
-          {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
 
       </div>
@@ -81,49 +79,33 @@ export default function Navbar() {
       {/* Mobile Drawer Overlay */}
       {isOpen && (
         <div 
-          className={`md:hidden border-t py-4 px-4 space-y-4 animate-in slide-in-from-top-2 duration-150 ${
+          className={`md:hidden border-t py-4 px-4 space-y-2 animate-in slide-in-from-top-2 duration-150 ${
             isDarkTheme ? 'bg-[#060608] border-neutral-900' : 'bg-white border-neutral-100'
           }`}
         >
           <Link 
+            href="/explore" 
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-2 rounded-xl active:bg-neutral-100 min-h-[44px]"
+          >
+            <Compass className="w-5 h-5 text-[#ff3b30]" />
+            Explore
+          </Link>
+          <Link 
+            href="/feed" 
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-2 rounded-xl active:bg-neutral-100 min-h-[44px]"
+          >
+            <Activity className="w-5 h-5 text-[#ff3b30]" />
+            Feed
+          </Link>
+          <Link 
             href="/dash" 
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider py-1.5"
+            className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-2 rounded-xl active:bg-neutral-100 min-h-[44px]"
           >
-            <LayoutDashboard className="w-4 h-4 text-[#ff3b30]" />
+            <LayoutDashboard className="w-5 h-5 text-[#ff3b30]" />
             Dash
-          </Link>
-          <Link 
-            href="/members" 
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider py-1.5"
-          >
-            <Users className="w-4 h-4 text-[#ff3b30]" />
-            Members
-          </Link>
-          <Link 
-            href="/vehicles" 
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider py-1.5"
-          >
-            <CarFront className="w-4 h-4 text-[#ff3b30]" />
-            Vehicles
-          </Link>
-          <Link 
-            href="/events" 
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider py-1.5"
-          >
-            <Calendar className="w-4 h-4 text-[#ff3b30]" />
-            Events
-          </Link>
-          <Link 
-            href="/businesses" 
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 text-xs font-black uppercase tracking-wider py-1.5"
-          >
-            <Building2 className="w-4 h-4 text-[#ff3b30]" />
-            Businesses
           </Link>
         </div>
       )}

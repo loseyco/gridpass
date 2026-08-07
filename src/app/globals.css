@@ -55,7 +55,7 @@
   --mobile-accent-deep: #473a00; 
 }
 
-/* Base resets & typography */
+/* Base resets & Native Apple iOS typography & touch behavior */
 html, body {
   background-color: var(--background);
   color: var(--foreground);
@@ -65,6 +65,25 @@ html, body {
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Native Apple iOS Spring Physics & Touch Scaling */
+.ios-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ios-active-scale {
+  transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.15s ease;
+}
+
+.ios-active-scale:active {
+  transform: scale(0.96);
 }
 
 /* Apple system scrollbar */
