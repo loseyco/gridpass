@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1041_unified_scan_and_view_telemetry',
+    ticket_number: 'TICK-1041',
+    agent_role: 'gm',
+    title: 'Unified Physical Card Scan & Page View Telemetry Counter Engine',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['JoinClient', 'admin/tags', 'increment'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tags/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: total_scans increment on page view'],
+    issue_description: 'Platform owner required clarifying and tracking page views / link opens alongside NFC physical scans, incrementing total_scans on physical_tags and logging scan telemetry events.',
+    root_cause: 'JoinClient.tsx logged scan telemetry into tag_scans collection but was missing the atomic Firestore increment(1) update on the physical_tags document total_scans field.',
+    resolution_summary: 'Updated JoinClient.tsx to execute setDoc(..., { total_scans: increment(1) }) on physical tag resolution and updated /admin/tags labels to "Total Scans & Views" and "SCANS / VIEWS".',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local staging on localhost.',
+    sop_summary: 'SOP for unified QR scan and referral link view tracking.',
+    sop_steps: [
+      'Every time a card QR link or referral tag URL (/join?tag=123) is loaded in a browser, increment total_scans atomically.',
+      'Log full scan telemetry payload to tag_scans collection.',
+      'Display unified Total Scans & Views metric on Super Admin registry HQ.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1040_person_member_invitation_engine',
     ticket_number: 'TICK-1040',
     agent_role: 'gm',

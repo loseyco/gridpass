@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Copy, Link as LinkIcon, Building2, Calendar, UserCheck, PlusCircle, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
@@ -181,6 +181,18 @@ function JoinPageContent() {
             setShowAdminWizard(true);
           }
         }
+
+        // Increment total_scans and update last_scanned_at on physical_tags document
+        const tagDocId = snap.empty ? `tag_${rawTagId}` : snap.docs[0].id;
+        await setDoc(
+          doc(db, 'physical_tags', tagDocId),
+          {
+            tag_id: rawTagId,
+            total_scans: increment(1),
+            last_scanned_at: new Date().toISOString(),
+          },
+          { merge: true }
+        ).catch(() => {});
 
         // Log scan telemetry
         await addDoc(collection(db, 'tag_scans'), {

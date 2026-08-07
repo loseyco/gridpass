@@ -137,7 +137,7 @@ export default function AdminTagsPage() {
     },
     {
       key: 'total_scans',
-      label: 'SCANS',
+      label: 'SCANS / VIEWS',
       align: 'center',
       render: (row) => (
         <span className="font-mono font-black text-xs text-neutral-900">{row.total_scans || 0}</span>
@@ -221,7 +221,7 @@ export default function AdminTagsPage() {
           <span className="text-2xl font-black text-neutral-900">{tags.length}</span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider block">Total Physical Scans</span>
+          <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider block">Total Scans & Views</span>
           <span className="text-2xl font-black text-[#ff3b30]">{totalScansSum}</span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
