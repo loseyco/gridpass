@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon } from 'lucide-react';
+import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon, Upload, Building2, Calendar, UserCheck } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
@@ -19,6 +19,12 @@ function JoinPageContent() {
   const [loading, setLoading] = useState(!!rawTagId);
   const [tagRecord, setTagRecord] = useState<any | null>(null);
   const [showAdminDrawer, setShowAdminDrawer] = useState(false);
+
+  // Real Database Entity Lists for Admin Selector
+  const [dbVehicles, setDbVehicles] = useState<any[]>([]);
+  const [dbBusinesses, setDbBusinesses] = useState<any[]>([]);
+  const [dbEvents, setDbEvents] = useState<any[]>([]);
+  const [dbDrivers, setDbDrivers] = useState<any[]>([]);
 
   // Universal Persona / Member Interest Categories
   const [selectedCategory, setSelectedCategory] = useState<string>('motorsports');
@@ -39,6 +45,42 @@ function JoinPageContent() {
   const [editSpottedPhoto, setEditSpottedPhoto] = useState('');
   const [editSpottedTitle, setEditSpottedTitle] = useState('');
   const [editSpottedNote, setEditSpottedNote] = useState('');
+
+  // Fetch Database Entities when Admin Drawer Opens
+  useEffect(() => {
+    if (!showAdminDrawer) return;
+
+    async function fetchDbEntities() {
+      try {
+        const [vSnap, bSnap, eSnap, uSnap] = await Promise.all([
+          getDocs(collection(db, 'vehicles')),
+          getDocs(collection(db, 'businesses')),
+          getDocs(collection(db, 'events')),
+          getDocs(collection(db, 'users')),
+        ]);
+
+        const vList: any[] = [];
+        vSnap.forEach((d) => vList.push({ id: d.id, ...d.data() }));
+        setDbVehicles(vList);
+
+        const bList: any[] = [];
+        bSnap.forEach((d) => bList.push({ id: d.id, ...d.data() }));
+        setDbBusinesses(bList);
+
+        const eList: any[] = [];
+        eSnap.forEach((d) => eList.push({ id: d.id, ...d.data() }));
+        setDbEvents(eList);
+
+        const uList: any[] = [];
+        uSnap.forEach((d) => uList.push({ id: d.id, ...d.data() }));
+        setDbDrivers(uList);
+      } catch (err) {
+        console.warn('Error fetching DB entities for tag controller:', err);
+      }
+    }
+
+    fetchDbEntities();
+  }, [showAdminDrawer]);
 
   // Audit & Resolve Tag Intake
   useEffect(() => {
@@ -112,6 +154,26 @@ function JoinPageContent() {
     resolvePhysicalTag();
     return () => { isMounted = false; };
   }, [rawTagId, user, router]);
+
+  // Handle Native Mobile Camera Capture / File Pick
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (base64) {
+        setEditSpottedPhoto(base64);
+        showToast({
+          title: 'MACHINE PHOTO SNAP CAPTURED! 📸',
+          message: 'Car photo attached directly from camera/device.',
+          icon: '📸',
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Handle Form Submission
   const handleJoinSubmit = async (e: React.FormEvent) => {
@@ -536,7 +598,7 @@ function JoinPageContent() {
 
       </div>
 
-      {/* Admin Tag Controller & Car Photo Personalization Modal */}
+      {/* Admin Tag Controller & Camera Photo Personalization Modal */}
       {showAdminDrawer && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl font-sans max-h-[90vh] overflow-y-auto">
@@ -546,7 +608,7 @@ function JoinPageContent() {
                   <span>⚡ DYNAMIC TAG CONTROLLER</span>
                   <span className="font-mono text-[#ff3b30]">{rawTagId ? `#${rawTagId}` : ''}</span>
                 </h2>
-                <p className="text-[10px] text-neutral-500 font-mono">Snap car photo & personalize windshield drop invitation.</p>
+                <p className="text-[10px] text-neutral-500 font-mono">Snap car photo & set dynamic target route.</p>
               </div>
               <button onClick={() => setShowAdminDrawer(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
                 ✕
@@ -555,23 +617,42 @@ function JoinPageContent() {
 
             <form onSubmit={handleAdminSaveTarget} className="space-y-3">
               
-              {/* On-The-Spot Car Photo Personalization */}
+              {/* Native Camera Photo Capture Button */}
               <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-2">
                 <span className="block text-[10px] font-black uppercase text-[#ff3b30] flex items-center gap-1">
                   <CameraIcon className="w-3.5 h-3.5" />
-                  <span>📸 Snap Car Drop Photo & Personalize</span>
+                  <span>📸 Snap Car Drop Photo (On-The-Spot)</span>
                 </span>
-                
-                <div>
-                  <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Car Photo Image URL</label>
-                  <input
-                    type="text"
-                    value={editSpottedPhoto}
-                    onChange={(e) => setEditSpottedPhoto(e.target.value)}
-                    placeholder="https://images.unsplash.com/photo-..."
-                    className="w-full text-xs font-mono font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
-                  />
-                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  id="camera-photo-input"
+                  className="hidden"
+                  onChange={handleCameraCapture}
+                />
+
+                <label
+                  htmlFor="camera-photo-input"
+                  className="w-full py-3 bg-neutral-900 hover:bg-black text-white font-mono font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <CameraIcon className="w-4 h-4 text-[#ff3b30]" />
+                  <span>{editSpottedPhoto ? '📷 Retake Machine Photo' : '📸 Snap Photo with Camera'}</span>
+                </label>
+
+                {editSpottedPhoto && (
+                  <div className="relative h-32 w-full rounded-xl overflow-hidden border border-neutral-300">
+                    <img src={editSpottedPhoto} alt="Spotted Machine" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setEditSpottedPhoto('')}
+                      className="absolute top-2 right-2 bg-black/70 text-white rounded-full p-1 text-[10px]"
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Machine Title / Name</label>
@@ -618,31 +699,121 @@ function JoinPageContent() {
                 <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Persona Type</label>
                 <select
                   value={editTargetType}
-                  onChange={(e) => setEditTargetType(e.target.value)}
+                  onChange={(e) => {
+                    const nextType = e.target.value;
+                    setEditTargetType(nextType);
+                    if (nextType === 'intake_join') setEditTargetDest('/join');
+                  }}
                   className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
                 >
                   <option value="intake_join">🌐 Default /join Intake & Signup</option>
-                  <option value="vehicle">🏎️ Vehicle Passport Spec Sheet</option>
-                  <option value="business">🏢 Business / Vendor Exhibit</option>
-                  <option value="event">🏁 Event Hub & Gate Check-in</option>
-                  <option value="driver">👤 Driver Card & Resume</option>
+                  <option value="vehicle">🏎️ Specific Garage Vehicle Passport</option>
+                  <option value="business">🏢 Specific Auto Shop / Business Exhibit</option>
+                  <option value="event">🏁 Specific Motorsports Event Hub</option>
+                  <option value="driver">👤 Specific Driver Card & Resume</option>
                   <option value="dealership_service">🔧 Dealership Service Log & Work Orders</option>
                   <option value="dealership_sales">🏬 Dealership Sales Floor Spec & Price Alert</option>
-                  <option value="custom_url">🔗 Custom URL Redirect</option>
+                  <option value="custom_url">🔗 Custom URL Path / Link</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Destination Path / URL</label>
-                <input
-                  type="text"
-                  required
-                  value={editTargetDest}
-                  onChange={(e) => setEditTargetDest(e.target.value)}
-                  placeholder="/join or /v/corvette-z06"
-                  className="w-full text-xs font-mono font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
-                />
-              </div>
+              {/* Dynamic Real Database Entity Dropdowns */}
+              {editTargetType === 'vehicle' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
+                    <Car className="w-3.5 h-3.5 text-[#ff3b30]" />
+                    <span>Select Vehicle from Database</span>
+                  </label>
+                  <select
+                    value={editTargetDest}
+                    onChange={(e) => setEditTargetDest(e.target.value)}
+                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
+                  >
+                    <option value="/v/demo">Demo Vehicle Passport (/v/demo)</option>
+                    {dbVehicles.map((v) => (
+                      <option key={v.id} value={`/v/${v.id}`}>
+                        {v.year || ''} {v.make || ''} {v.model || v.name || v.id} (/v/{v.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {editTargetType === 'business' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Select Shop / Business from Database</span>
+                  </label>
+                  <select
+                    value={editTargetDest}
+                    onChange={(e) => setEditTargetDest(e.target.value)}
+                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
+                  >
+                    <option value="/b/nielsens-enterprises">Nielsen&apos;s Enterprises (/b/nielsens-enterprises)</option>
+                    {dbBusinesses.map((b) => (
+                      <option key={b.id} value={`/b/${b.id}`}>
+                        {b.name || b.company_name || b.id} (/b/{b.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {editTargetType === 'event' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Select Event from Database</span>
+                  </label>
+                  <select
+                    value={editTargetDest}
+                    onChange={(e) => setEditTargetDest(e.target.value)}
+                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
+                  >
+                    <option value="/events/demo">Demo Motorsports Event (/events/demo)</option>
+                    {dbEvents.map((ev) => (
+                      <option key={ev.id} value={`/events/${ev.id}`}>
+                        {ev.title || ev.name || ev.id} (/events/{ev.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {editTargetType === 'driver' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1 flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Select Driver from Database</span>
+                  </label>
+                  <select
+                    value={editTargetDest}
+                    onChange={(e) => setEditTargetDest(e.target.value)}
+                    className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
+                  >
+                    {dbDrivers.map((u) => (
+                      <option key={u.id} value={`/u/${u.username || u.id}`}>
+                        {u.full_name || u.email || u.id} (/u/{u.username || u.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {editTargetType === 'custom_url' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Target Destination Path / URL</label>
+                  <input
+                    type="text"
+                    required
+                    value={editTargetDest}
+                    onChange={(e) => setEditTargetDest(e.target.value)}
+                    placeholder="/join or /v/corvette-z06"
+                    className="w-full text-xs font-mono font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  />
+                </div>
+              )}
 
               <div className="pt-2 flex justify-end gap-2">
                 <button
