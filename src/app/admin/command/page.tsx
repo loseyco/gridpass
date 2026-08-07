@@ -10,6 +10,7 @@ export default function AdminCommandCenterPage() {
   const [currentTime, setCurrentTime] = useState('');
   const [logs, setLogs] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
 
   // Localhost Suppression & Immersive Fullscreen Mode
   const [hideLocalhost, setHideLocalhost] = useState(true);
@@ -25,7 +26,7 @@ export default function AdminCommandCenterPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Listen to live system_logs
+  // 1. Listen to live system_logs
   useEffect(() => {
     const unsub = onSnapshot(
       query(collection(db, 'system_logs'), orderBy('timestamp', 'desc'), limit(30)),
@@ -41,7 +42,7 @@ export default function AdminCommandCenterPage() {
     return () => unsub();
   }, []);
 
-  // Listen to live agent_tickets
+  // 2. Listen to live agent_tickets
   useEffect(() => {
     const unsub = onSnapshot(
       query(collection(db, 'agent_tickets'), orderBy('created_at', 'desc'), limit(10)),
@@ -50,6 +51,22 @@ export default function AdminCommandCenterPage() {
           const list: any[] = [];
           snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
           setTickets(list);
+        }
+      },
+      () => {}
+    );
+    return () => unsub();
+  }, []);
+
+  // 3. Listen to live user_feedback (Member Feedback & Bug Requests)
+  useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, 'user_feedback'), orderBy('created_at', 'desc'), limit(10)),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const list: any[] = [];
+          snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+          setFeedback(list);
         }
       },
       () => {}
@@ -101,7 +118,7 @@ export default function AdminCommandCenterPage() {
               </span>
             </div>
             <p className="text-[10px] text-neutral-400 font-mono hidden sm:block">
-              Owner Overview • Zero-Scroll Viewport • Real-Time Telemetry Stream
+              Owner Overview • Real-Time Member Visits, Vehicle Additions, Bug Requests & Telemetry
             </p>
           </div>
         </div>
@@ -187,21 +204,21 @@ export default function AdminCommandCenterPage() {
 
           <div className="grid grid-cols-2 gap-2 my-auto min-h-0">
             <div className="bg-neutral-950/80 p-2.5 rounded-lg border border-neutral-800">
-              <span className="text-[9px] font-mono text-neutral-400 block font-bold">PAGE VIEWS</span>
+              <span className="text-[9px] font-mono text-neutral-400 block font-bold">MEMBER VISITS</span>
               <span className="text-xl font-black text-white leading-tight">{pageViews.toLocaleString()}</span>
-              <span className="text-[8px] text-emerald-400 font-mono block">↑ Live Stream</span>
+              <span className="text-[8px] text-emerald-400 font-mono block">↑ Live Route Views</span>
             </div>
 
             <div className="bg-neutral-950/80 p-2.5 rounded-lg border border-neutral-800">
-              <span className="text-[9px] font-mono text-neutral-400 block font-bold">TAG SCANS</span>
+              <span className="text-[9px] font-mono text-neutral-400 block font-bold">VEHICLES & TAGS</span>
               <span className="text-xl font-black text-[#ff3b30] leading-tight">{tagScans.toLocaleString()}</span>
-              <span className="text-[8px] text-emerald-400 font-mono block">NFC / QR Tags</span>
+              <span className="text-[8px] text-emerald-400 font-mono block">Staged & Scanned</span>
             </div>
 
             <div className="bg-neutral-950/80 p-2.5 rounded-lg border border-neutral-800">
               <span className="text-[9px] font-mono text-neutral-400 block font-bold">ACTIVE DRIVERS</span>
               <span className="text-xl font-black text-blue-400 leading-tight">{activeUsers}</span>
-              <span className="text-[8px] text-neutral-500 font-mono block">Unique UIDs</span>
+              <span className="text-[8px] text-neutral-500 font-mono block">Unique Session UIDs</span>
             </div>
 
             <div className="bg-neutral-950/80 p-2.5 rounded-lg border border-neutral-800">
@@ -246,14 +263,14 @@ export default function AdminCommandCenterPage() {
           </div>
         </div>
 
-        {/* Quadrant 3: Live Telemetry Stream Ticker */}
+        {/* Quadrant 3: Live Member Visits, Vehicle Additions & Activity Feed */}
         <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-3 flex flex-col justify-between shadow-lg overflow-hidden min-h-0">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5 shrink-0">
             <span className="text-[11px] font-black uppercase tracking-wider text-neutral-300 flex items-center gap-1">
-              <span>📡</span> Live Activity Stream ({filteredLogs.length})
+              <span>🏎️</span> Live Member Visits & Vehicle Feed
             </span>
             <Link href="/admin/logs" className="text-[9px] font-mono text-[#ff3b30] hover:underline">
-              Logs →
+              Full Logs →
             </Link>
           </div>
 
@@ -262,50 +279,62 @@ export default function AdminCommandCenterPage() {
               filteredLogs.slice(0, 4).map((log) => (
                 <div key={log.id} className="p-2 bg-neutral-950/80 rounded-lg border border-neutral-800 space-y-0.5">
                   <div className="flex items-center justify-between text-[9px] font-mono">
-                    <span className="font-black text-neutral-300">{log.action || 'PAGE_VIEW'}</span>
+                    <span className="font-black text-emerald-400">
+                      {log.action === 'VEHICLE_TAG_BOUND' || log.category === 'VEHICLE'
+                        ? '🏎️ VEHICLE ADDED / BOUND'
+                        : log.action || '👤 MEMBER VISIT'}
+                    </span>
                     <span className="text-neutral-500">{(log.timestamp || '').split('T')[1]?.slice(0, 8)}</span>
                   </div>
-                  <p className="text-[10px] text-neutral-400 truncate">
+                  <p className="text-[10px] text-neutral-300 font-medium truncate">
                     {log.actor || 'Visitor'} • {log.target_path || '/'}
                   </p>
                 </div>
               ))
             ) : (
               <div className="text-center p-4 text-[10px] text-neutral-500 font-mono">
-                {hideLocalhost ? '⚪ Localhost logs hidden. Awaiting production member traffic...' : '⚪ Listening for live telemetry stream...'}
+                {hideLocalhost ? '⚪ Localhost logs hidden. Awaiting production member traffic...' : '⚪ Listening for live member traffic & vehicle uploads...'}
               </div>
             )}
           </div>
         </div>
 
-        {/* Quadrant 4: Agent Tickets & Issue Radar */}
+        {/* Quadrant 4: Member Feedback, Bug Reports & Feature Requests */}
         <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-3 flex flex-col justify-between shadow-lg overflow-hidden min-h-0">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5 shrink-0">
             <span className="text-[11px] font-black uppercase tracking-wider text-neutral-300 flex items-center gap-1">
-              <span>🎟️</span> Ticket Execution Queue ({tickets.length})
+              <span>💡</span> Member Needs & Bug Requests ({feedback.length})
             </span>
-            <Link href="/admin/tickets" className="text-[9px] font-mono text-[#ff3b30] hover:underline">
-              Tickets →
+            <Link href="/admin/feedback" className="text-[9px] font-mono text-[#ff3b30] hover:underline">
+              Triage HQ →
             </Link>
           </div>
 
           <div className="space-y-1.5 overflow-y-auto pr-1 my-auto scrollbar-thin min-h-0">
-            {tickets.slice(0, 4).map((ticket) => (
-              <div key={ticket.id} className="p-2 bg-neutral-950/80 rounded-lg border border-neutral-800 flex items-center justify-between text-[11px]">
-                <div className="truncate pr-2">
-                  <div className="flex items-center gap-1">
-                    <span className="font-mono font-black text-[#ff3b30]">{ticket.ticket_number}</span>
-                    <span className="px-1 py-0.2 bg-emerald-950 text-emerald-400 text-[8px] font-mono font-bold rounded">
-                      {ticket.status}
+            {feedback.length > 0 ? (
+              feedback.slice(0, 4).map((fb) => (
+                <div key={fb.id} className="p-2 bg-neutral-950/80 rounded-lg border border-neutral-800 space-y-0.5">
+                  <div className="flex items-center justify-between text-[9px] font-mono">
+                    <span className="font-black text-[#ff3b30] uppercase">
+                      {fb.category === 'bug' ? '🐛 BUG REPORT' : fb.category === 'feature' ? '🚀 FEATURE' : '💡 SUGGESTION'}
+                    </span>
+                    <span className="px-1 py-0.2 bg-amber-950 text-amber-400 text-[8px] font-bold rounded">
+                      {fb.status || 'PENDING'}
                     </span>
                   </div>
-                  <span className="text-neutral-300 font-medium block truncate max-w-[180px]">
-                    {ticket.title}
+                  <span className="text-neutral-200 font-bold text-[11px] block truncate">
+                    {fb.title}
                   </span>
+                  <p className="text-[9px] text-neutral-400 truncate font-mono">
+                    {fb.submitted_by_email} • {fb.page_route}
+                  </p>
                 </div>
-                <span className="text-[8px] font-mono text-neutral-500 uppercase shrink-0">{ticket.priority}</span>
+              ))
+            ) : (
+              <div className="text-center p-4 text-[10px] text-neutral-500 font-mono">
+                ⚪ No pending member feedback items.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -342,7 +371,7 @@ export default function AdminCommandCenterPage() {
         <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-3 flex flex-col justify-between shadow-lg overflow-hidden min-h-0">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-1.5 shrink-0">
             <span className="text-[11px] font-black uppercase tracking-wider text-neutral-300 flex items-center gap-1">
-              <span>📖</span> Platform Architecture & SOPs
+              <span>📖</span> Master Architecture & SOPs
             </span>
             <Link href="/admin/sop" className="text-[9px] font-mono text-[#ff3b30] hover:underline">
               SOPs →
@@ -383,7 +412,7 @@ export default function AdminCommandCenterPage() {
         </div>
         <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-          <span>OWNER COMMAND HQ ACTIVE • ZERO SCROLL REQUIRED</span>
+          <span>OWNER COMMAND HQ ACTIVE • LIVE MEMBER VISITS & FEEDBACK INGESTION</span>
         </div>
       </div>
 
