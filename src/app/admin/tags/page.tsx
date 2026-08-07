@@ -7,84 +7,10 @@ import { collection, onSnapshot, doc, setDoc, query, orderBy, limit } from 'fire
 import { PhysicalTagRecord, DistributionMethod, TagTargetType } from '@/lib/types/admin';
 import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 
-// Default Seed Physical Cards matching user's printed card box (Cards 001 to 250+)
-const DEFAULT_PHYSICAL_TAGS: PhysicalTagRecord[] = [
-  {
-    id: 'tag_250',
-    tag_id: '250',
-    title: 'Printed Invitation Card #250 (Printed Box)',
-    distribution_method: 'handout',
-    target_type: 'intake_join',
-    target_destination: '/join',
-    total_scans: 42,
-    members_joined_count: 18,
-    assigned_owner_email: 'loseyp@gmail.com',
-    status: 'active',
-    created_at: '2026-08-01',
-    last_scanned_at: new Date().toISOString(),
-  },
-  {
-    id: 'tag_002',
-    tag_id: '002',
-    title: 'Rearview Mirror Lanyard Tag #002',
-    distribution_method: 'lanyard',
-    target_type: 'intake_join',
-    target_destination: '/join',
-    total_scans: 28,
-    members_joined_count: 9,
-    assigned_owner_email: 'loseyp@gmail.com',
-    status: 'active',
-    created_at: '2026-08-02',
-    last_scanned_at: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    id: 'tag_nielsen_088',
-    tag_id: 'Nielsen_088',
-    title: 'Nielsen Enterprises Dealership Machine Tag #088',
-    distribution_method: 'dealership_intake',
-    target_type: 'dealership_sales',
-    target_destination: '/b/nielsens-enterprises',
-    partner_business_id: 'nielsens_enterprises',
-    partner_business_name: 'Nielsen\'s Enterprises (Lake Villa, IL)',
-    total_scans: 114,
-    members_joined_count: 34,
-    assigned_owner_email: 'sales@nielsens.com',
-    status: 'active',
-    created_at: '2026-08-03',
-    last_scanned_at: new Date(Date.now() - 1800000).toISOString(),
-  },
-  {
-    id: 'tag_sticker_104',
-    tag_id: '104',
-    title: 'Road America Bathroom Stall Guerrilla Sticker #104',
-    distribution_method: 'sticker',
-    target_type: 'intake_join',
-    target_destination: '/join',
-    total_scans: 89,
-    members_joined_count: 22,
-    assigned_owner_email: 'loseyp@gmail.com',
-    status: 'active',
-    created_at: '2026-08-04',
-    last_scanned_at: new Date(Date.now() - 900000).toISOString(),
-  },
-  {
-    id: 'tag_cardrop_067',
-    tag_id: '067',
-    title: 'Car Drop Windshield Card #067 (1969 Camaro)',
-    distribution_method: 'car_drop',
-    target_type: 'vehicle',
-    target_destination: '/v/demo',
-    total_scans: 19,
-    members_joined_count: 7,
-    assigned_owner_email: 'loseyp@gmail.com',
-    status: 'active',
-    created_at: '2026-08-05',
-    last_scanned_at: new Date(Date.now() - 7200000).toISOString(),
-  },
-];
+// Real-Time Physical Tag Control Center
 
 export default function AdminTagsPage() {
-  const [tags, setTags] = useState<PhysicalTagRecord[]>(DEFAULT_PHYSICAL_TAGS);
+  const [tags, setTags] = useState<PhysicalTagRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedTag, setSelectedTag] = useState<PhysicalTagRecord | null>(null);
@@ -95,28 +21,21 @@ export default function AdminTagsPage() {
   const [editMethod, setEditMethod] = useState<DistributionMethod>('handout');
   const [editPartnerName, setEditPartnerName] = useState('');
 
-  // Subscribe to physical_tags collection & seed if empty
+  // Subscribe to physical_tags collection directly from Cloud Firestore
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, 'physical_tags'),
       (snapshot) => {
-        if (!snapshot.empty) {
-          const list: PhysicalTagRecord[] = [];
-          snapshot.forEach((docSnap) => {
-            list.push({ id: docSnap.id, ...docSnap.data() } as PhysicalTagRecord);
-          });
-          setTags(list);
-        } else {
-          // Seed defaults
-          DEFAULT_PHYSICAL_TAGS.forEach(async (t) => {
-            await setDoc(doc(db, 'physical_tags', t.id), t, { merge: true }).catch(() => {});
-          });
-          setTags(DEFAULT_PHYSICAL_TAGS);
-        }
+        const list: PhysicalTagRecord[] = [];
+        snapshot.forEach((docSnap) => {
+          list.push({ id: docSnap.id, ...docSnap.data() } as PhysicalTagRecord);
+        });
+        setTags(list);
         setLoading(false);
       },
-      () => {
-        setTags(DEFAULT_PHYSICAL_TAGS);
+      (err) => {
+        console.warn('Physical tags listener error:', err);
+        setTags([]);
         setLoading(false);
       }
     );

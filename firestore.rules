@@ -91,6 +91,10 @@ service cloud.firestore {
     match /track_releases/{id} { allow read, write: if true; }
     match /track_waivers/{id} { allow read, write: if true; }
 
+    // Physical Tags & QR Scan Telemetry
+    match /physical_tags/{id} { allow read, write: if true; }
+    match /tag_scans/{id} { allow read, write: if true; }
+
     // Universal Dynamic update exception / fallback
     match /{collection}/{document} {
       allow update: if true;

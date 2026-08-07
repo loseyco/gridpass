@@ -3,23 +3,25 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
-import { QrCode, Loader2, ShieldCheck, CarFront, LogIn, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Bike, Ship, Truck, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
 
 function JoinPageContent() {
   const searchParams = useSearchParams();
-  const rawTagId = searchParams.get('tag') || searchParams.get('id') || searchParams.get('ref') || searchParams.get('referral') || '';
+  const rawTagId = searchParams.get('tag') || searchParams.get('id') || searchParams.get('ref') || searchParams.get('referral') || null;
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   const [loading, setLoading] = useState(!!rawTagId);
   const [tagRecord, setTagRecord] = useState<any | null>(null);
-  const [tagInput, setTagInput] = useState(rawTagId);
   const [showAdminDrawer, setShowAdminDrawer] = useState(false);
+
+  // Machine Category Pills
+  const [selectedMachineType, setSelectedMachineType] = useState<'car' | 'powersports' | 'boat' | 'truck'>('car');
 
   // Form State
   const [email, setEmail] = useState('');
@@ -35,7 +37,7 @@ function JoinPageContent() {
   const [editMethod, setEditMethod] = useState('handout');
   const [editPartnerName, setEditPartnerName] = useState('');
 
-  // 1. Audit & Resolve Tag Intake
+  // Audit & Resolve Tag Intake
   useEffect(() => {
     if (!rawTagId) {
       setLoading(false);
@@ -46,7 +48,6 @@ function JoinPageContent() {
 
     async function resolvePhysicalTag() {
       try {
-        // Query physical_tags collection
         const q = query(collection(db, 'physical_tags'), where('tag_id', '==', rawTagId));
         const snap = await getDocs(q);
 
@@ -54,11 +55,10 @@ function JoinPageContent() {
         if (!snap.empty) {
           rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
         } else {
-          // Default unbound physical card record matching user's printed card box
           rec = {
             id: `tag_${rawTagId}`,
             tag_id: rawTagId,
-            title: `Invitation Card #${rawTagId}`,
+            title: `Invitation Tag #${rawTagId}`,
             distribution_method: 'handout',
             target_type: 'intake_join',
             target_destination: '/join',
@@ -76,7 +76,7 @@ function JoinPageContent() {
           setEditPartnerName(rec.partner_business_name || '');
         }
 
-        // Log scan event telemetry
+        // Log scan event
         await addDoc(collection(db, 'tag_scans'), {
           tag_id: rawTagId,
           scanned_at: new Date().toISOString(),
@@ -88,7 +88,7 @@ function JoinPageContent() {
           referrer: typeof document !== 'undefined' ? document.referrer : '',
         }).catch(() => {});
 
-        // If tag is bound to a specific destination (e.g. vehicle, event, business) AND not default intake
+        // Auto-redirect if bound tag and not logged in as admin
         if (rec.status === 'active' && rec.target_destination && rec.target_destination !== '/join' && !rec.target_destination.includes('/join')) {
           if (!user || ((user as any).role !== 'super_admin' && user?.email !== 'loseyp@gmail.com')) {
             router.push(rec.target_destination);
@@ -114,19 +114,18 @@ function JoinPageContent() {
 
     setJoining(true);
     try {
-      // Create user profile in Firestore
       const userRef = doc(collection(db, 'users'));
       await setDoc(userRef, {
         email,
         full_name: fullName || 'Gridpass Member',
         vehicle_make_model: vehicleMakeModel || 'Staged Machine',
+        machine_type: selectedMachineType,
         referred_by_tag_id: rawTagId || null,
         role: 'member',
         starting_credits: 100,
         created_at: new Date().toISOString(),
       });
 
-      // Update physical tag joined count if tag exists
       if (rawTagId && tagRecord?.id) {
         await updateDoc(doc(db, 'physical_tags', tagRecord.id), {
           members_joined_count: (tagRecord.members_joined_count || 0) + 1,
@@ -137,12 +136,13 @@ function JoinPageContent() {
       setJoinedSuccess(true);
       showToast({
         title: 'WELCOME TO GRIDPASS! 🎉',
-        message: `Your membership card is active! Referred by Card #${rawTagId || '250'}.`,
+        message: rawTagId ? `Membership active! Referred by Tag #${rawTagId}.` : 'Membership active! Welcome to the roster.',
         icon: '🎉',
       });
+
       setTimeout(() => {
         router.push('/dash');
-      }, 1500);
+      }, 1200);
     } catch (err: any) {
       console.error('Failed to join:', err);
       showToast({
@@ -162,7 +162,7 @@ function JoinPageContent() {
 
     const updated = {
       tag_id: rawTagId,
-      title: tagRecord?.title || `Physical Card #${rawTagId}`,
+      title: tagRecord?.title || `Physical Tag #${rawTagId}`,
       distribution_method: editMethod,
       target_type: editTargetType,
       target_destination: editTargetDest,
@@ -178,107 +178,177 @@ function JoinPageContent() {
       await setDoc(doc(db, 'physical_tags', tagDocId), updated, { merge: true });
       showToast({
         title: 'PHYSICAL TAG RE-ROUTED! ⚡',
-        message: `Card #${rawTagId} now points to ${editTargetDest}.`,
+        message: `Tag #${rawTagId} now points to ${editTargetDest}.`,
         icon: '⚡',
       });
       setShowAdminDrawer(false);
     } catch (err: any) {
       console.error('Failed to update tag:', err);
-      showToast({
-        title: 'TAG UPDATE ERROR',
-        message: err.message || 'Failed to update tag.',
-        icon: '⚠️',
-      });
     }
   };
 
   const getContextualHeadline = () => {
     const method = tagRecord?.distribution_method;
     if (method === 'car_drop') {
-      return { headline: '🏎️ SPOTTED! YOU GOT A GRIDPASS CARD ON YOUR MACHINE!', bg: 'from-amber-950/90 to-neutral-900' };
+      return '🏎️ SPOTTED! INVITATION LEFT ON YOUR MACHINE';
     }
     if (method === 'sticker') {
-      return { headline: '💥 SPOTTED IN THE WILD! YOU ARE INVITED TO JOIN GRIDPASS!', bg: 'from-rose-950/90 to-neutral-900' };
+      return '💥 SPOTTED IN THE WILD! YOU ARE INVITED TO GRIDPASS';
     }
     if (method === 'dealership_intake' || method === 'sales_floor') {
-      return { headline: '🏬 DEALERSHIP MACHINE PASSPORT • NIELSEN\'S ENTERPRISES', bg: 'from-emerald-950/90 to-neutral-900' };
+      return '🏬 NIELSEN\'S ENTERPRISES • MACHINE DIGITAL PASSPORT';
     }
-    return { headline: '🎴 YOU ARE INVITED TO GRIDPASS', bg: 'from-neutral-900 to-black' };
+    return '⚡ YOU ARE INVITED TO JOIN GRIDPASS';
   };
 
-  const contextHeader = getContextualHeadline();
-
   return (
-    <div className="min-h-screen bg-[#ffffff] text-[#1c1c1e] font-sans flex flex-col items-center justify-between p-4 sm:p-6 select-none">
+    <div className="min-h-screen bg-neutral-950 text-white font-sans flex flex-col items-center justify-between p-4 sm:p-6 relative overflow-x-hidden selection:bg-[#ff3b30] selection:text-white">
       
-      {/* Top Banner & Physical Card Badge */}
-      <div className="w-full max-w-md space-y-4">
+      {/* Dynamic Background Glow Mesh */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#ff3b30]/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md space-y-5 relative z-10 my-auto">
         
-        {/* Physical Invitation Card Banner */}
-        <div className={`p-4 rounded-2xl bg-gradient-to-r ${contextHeader.bg} text-white shadow-xl border border-neutral-800 space-y-2 relative overflow-hidden`}>
+        {/* Modern Vibrant Hero Card */}
+        <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 p-6 rounded-3xl space-y-4 shadow-2xl relative overflow-hidden">
+          
           <div className="flex items-center justify-between">
-            <span className="px-2.5 py-0.5 bg-[#ff3b30] text-white font-mono font-black text-[10px] uppercase rounded-md tracking-wider">
-              {rawTagId ? `CARD #${rawTagId}` : 'INVITATION CARD'}
-            </span>
-            <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase">
-              BUILT BY LOSEY.CO
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-[#ff3b30] text-white font-mono font-black text-[10px] uppercase rounded-full tracking-wider shadow-sm flex items-center gap-1">
+                <Zap className="w-3 h-3 fill-current" />
+                {rawTagId ? `TAG #${rawTagId}` : 'VIP INVITATION'}
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-neutral-400 font-bold uppercase tracking-wider">
+              LOSEY.CO
             </span>
           </div>
 
-          <h1 className="text-base sm:text-lg font-black uppercase tracking-tight text-white leading-tight">
-            {contextHeader.headline}
-          </h1>
-
-          <p className="text-xs text-neutral-300 font-medium leading-relaxed">
-            Whether you race it, show it, cook it, or capture it — Gridpass brings your world together.
-          </p>
-
-          {/* Special First-Scan Onboarding Callout */}
-          <div className="pt-2 border-t border-neutral-800/80 flex items-center gap-2 text-emerald-400 font-mono text-[11px] font-bold">
-            <Sparkles className="w-4 h-4 shrink-0 text-emerald-400 animate-pulse" />
-            <span>HEY! THIS ISN&apos;T JUST A QR CODE — WELCOME TO GRIDPASS!</span>
+          <div className="space-y-2">
+            <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
+              {getContextualHeadline()}
+            </h1>
+            <p className="text-xs text-neutral-300 font-medium leading-relaxed">
+              Whether you race it, show it, cook it, or capture it — Gridpass brings your machines, events, and people together.
+            </p>
           </div>
+
+          {/* First-Scan Excitement Callout */}
+          <div className="p-3 bg-gradient-to-r from-emerald-950/80 via-neutral-900 to-emerald-950/80 border border-emerald-500/30 rounded-2xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+              <Sparkles className="w-4 h-4 animate-spin" />
+            </div>
+            <p className="text-xs font-mono font-bold text-emerald-300 leading-tight">
+              HEY! THIS ISN&apos;T JUST A QR CODE — WELCOME TO GRIDPASS!
+            </p>
+          </div>
+
+          {/* Super Admin Controller Trigger */}
+          {user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com') && (
+            <button
+              onClick={() => setShowAdminDrawer(true)}
+              className="w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-2"
+            >
+              <span>⚡ Super Admin Tag Controller {rawTagId ? `(#${rawTagId})` : ''}</span>
+            </button>
+          )}
+
         </div>
 
-        {/* Super Admin Tag Controller Button */}
-        {user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com') && (
-          <button
-            onClick={() => setShowAdminDrawer(true)}
-            className="w-full py-2.5 bg-neutral-900 hover:bg-black text-white font-mono font-black text-xs uppercase tracking-wider rounded-xl border border-neutral-800 shadow-md flex items-center justify-center gap-2 transition active:scale-95"
-          >
-            <span>⚡ Super Admin Tag Controller (Card #{rawTagId || '250'})</span>
-          </button>
-        )}
-
-        {/* Join / Registration Card */}
-        <div className="bg-white border-2 border-neutral-900 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+        {/* Dynamic Intake Form Card */}
+        <div className="bg-white text-neutral-900 rounded-3xl p-6 shadow-2xl space-y-5 border border-neutral-200">
           
           <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black uppercase tracking-tight text-neutral-900">
-                JOIN GRIDPASS
+              <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
+                JOIN THE ROSTER
               </h2>
-              <p className="text-xs text-neutral-500 font-medium">
-                Claim your digital vehicle passport & join the roster.
+              <p className="text-xs text-neutral-500 font-bold">
+                Claim your digital vehicle passport & get instant access.
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-[#ff3b30]/10 border border-[#ff3b30]/20 flex items-center justify-center text-[#ff3b30]">
-              <QrCode className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-[#ff3b30] text-white flex items-center justify-center shadow-md">
+              <QrCode className="w-6 h-6" />
             </div>
           </div>
 
           {joinedSuccess ? (
             <div className="py-8 text-center space-y-3">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h3 className="text-lg font-black uppercase text-neutral-900">YOU ARE IN! 🎉</h3>
-              <p className="text-xs text-neutral-600 font-medium max-w-xs mx-auto">
-                Your Gridpass membership is active. Redirecting to your driver dashboard...
+              <h3 className="text-xl font-black uppercase text-neutral-900">PASSPORT CLAIMED! 🎉</h3>
+              <p className="text-xs text-neutral-600 font-bold max-w-xs mx-auto">
+                Welcome to Gridpass! Redirecting to your driver dashboard...
               </p>
             </div>
           ) : (
-            <form onSubmit={handleJoinSubmit} className="space-y-3">
+            <form onSubmit={handleJoinSubmit} className="space-y-4">
+              
+              {/* Machine Category Pills */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-500 mb-1.5">
+                  Select Machine Category
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMachineType('car')}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      selectedMachineType === 'car'
+                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <Car className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Race/Car</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMachineType('powersports')}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      selectedMachineType === 'powersports'
+                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <Bike className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Moto/ATV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMachineType('boat')}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      selectedMachineType === 'boat'
+                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <Ship className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Boat/PWC</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMachineType('truck')}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      selectedMachineType === 'truck'
+                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <Truck className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Hauler</span>
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Full Name</label>
                 <input
@@ -287,7 +357,7 @@ function JoinPageContent() {
                   placeholder="PJ Losey"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                 />
               </div>
 
@@ -299,7 +369,7 @@ function JoinPageContent() {
                   placeholder="you@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                 />
               </div>
 
@@ -311,35 +381,41 @@ function JoinPageContent() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Primary Machine / Vehicle Make & Model</label>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Primary Machine Make & Model</label>
                 <input
                   type="text"
                   placeholder="e.g. 2024 Corvette Z06 or Sea-Doo RXT-X"
                   value={vehicleMakeModel}
                   onChange={(e) => setVehicleMakeModel(e.target.value)}
-                  className="w-full text-xs font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={joining}
-                className="w-full py-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+                className="w-full py-4 bg-gradient-to-r from-[#ff3b30] via-red-600 to-[#bd2925] hover:opacity-95 text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>JOIN GRIDPASS & CLAIM PASSPORT ➔</span>}
+                {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    <span>JOIN GRIDPASS & CLAIM PASSPORT</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
           )}
 
-          {/* Printed Card Footer Note */}
-          <div className="pt-3 border-t border-neutral-200 text-center text-[10px] font-mono text-neutral-500">
-            <span>EACH CARD HAS A UNIQUE ID • REFERRED BY CARD #{rawTagId || '250'}</span>
-          </div>
+          {rawTagId && (
+            <div className="pt-3 border-t border-neutral-200 text-center text-[10px] font-mono text-neutral-500 font-bold">
+              <span>EACH CARD HAS A UNIQUE ID • REFERRED BY TAG #{rawTagId}</span>
+            </div>
+          )}
 
         </div>
 
@@ -347,13 +423,13 @@ function JoinPageContent() {
 
       {/* Admin Tag Controller Modal */}
       {showAdminDrawer && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-300 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl font-sans">
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl font-sans">
             <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
               <div>
                 <h2 className="font-black text-sm uppercase text-neutral-900 flex items-center gap-2">
                   <span>⚡ DYNAMIC TAG CONTROLLER</span>
-                  <span className="font-mono text-[#ff3b30]">#{rawTagId || '250'}</span>
+                  <span className="font-mono text-[#ff3b30]">{rawTagId ? `#${rawTagId}` : ''}</span>
                 </h2>
                 <p className="text-[10px] text-neutral-500 font-mono">Re-route physical card destination & persona rules.</p>
               </div>
@@ -368,7 +444,7 @@ function JoinPageContent() {
                 <select
                   value={editMethod}
                   onChange={(e) => setEditMethod(e.target.value)}
-                  className="w-full text-xs font-bold p-2 bg-neutral-50 border border-neutral-300 rounded-lg focus:outline-none"
+                  className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
                 >
                   <option value="handout">🎴 Business Card Handout</option>
                   <option value="car_drop">🏎️ Car Drop (Windshield Wiper / Interior)</option>
@@ -386,7 +462,7 @@ function JoinPageContent() {
                 <select
                   value={editTargetType}
                   onChange={(e) => setEditTargetType(e.target.value)}
-                  className="w-full text-xs font-bold p-2 bg-neutral-50 border border-neutral-300 rounded-lg focus:outline-none"
+                  className="w-full text-xs font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none"
                 >
                   <option value="intake_join">🌐 Default /join Intake & Signup</option>
                   <option value="vehicle">🏎️ Vehicle Passport Spec Sheet</option>
@@ -407,7 +483,7 @@ function JoinPageContent() {
                   value={editTargetDest}
                   onChange={(e) => setEditTargetDest(e.target.value)}
                   placeholder="/join or /v/corvette-z06"
-                  className="w-full text-xs font-mono font-bold p-2.5 bg-neutral-50 border border-neutral-300 rounded-lg focus:outline-none focus:border-[#ff3b30]"
+                  className="w-full text-xs font-mono font-bold p-3 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                 />
               </div>
 
@@ -415,13 +491,13 @@ function JoinPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowAdminDrawer(false)}
-                  className="px-3 py-2 bg-neutral-100 text-neutral-700 text-xs font-bold uppercase rounded-lg"
+                  className="px-3 py-2 bg-neutral-100 text-neutral-700 text-xs font-bold uppercase rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-sm"
+                  className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-sm"
                 >
                   Save Target Route ➔
                 </button>
@@ -431,10 +507,9 @@ function JoinPageContent() {
         </div>
       )}
 
-      {/* Minimal Footer */}
-      <footer className="w-full text-center py-4 border-t border-neutral-200 text-[10px] font-mono text-neutral-500 space-y-1">
+      {/* Footer */}
+      <footer className="w-full text-center py-4 text-[10px] font-mono text-neutral-500 space-y-1 relative z-10 mt-auto">
         <p>GRIDPASS PLATFORM • LOSEY.CO • ALL RIGHTS RESERVED</p>
-        <p className="text-neutral-400">AUTHENTICATED PHYSICAL TAG INTENDED FOR OUTDOOR & AUTOMOTIVE USE</p>
       </footer>
 
     </div>
@@ -444,9 +519,9 @@ function JoinPageContent() {
 export default function JoinClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4">
         <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
-        <span className="text-xs font-mono font-bold text-neutral-600 mt-2">Loading Gridpass Invitation...</span>
+        <span className="text-xs font-mono font-bold text-neutral-400 mt-2">Loading Gridpass Invitation...</span>
       </div>
     }>
       <JoinPageContent />
