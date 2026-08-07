@@ -50,6 +50,7 @@ function JoinPageContent() {
   const [tagRecord, setTagRecord] = useState<any | null>(null);
   const [showAdminWizard, setShowAdminWizard] = useState(false);
   const [referrerDisplayName, setReferrerDisplayName] = useState<string | null>(null);
+  const [createdShareUrl, setCreatedShareUrl] = useState<string | null>(null);
 
   // Real Database Entity Lists for Admin Selector
   const [dbVehicles, setDbVehicles] = useState<any[]>([]);
@@ -500,9 +501,10 @@ function JoinPageContent() {
       await setDoc(doc(db, 'physical_tags', `tag_${effectiveTagId}`), updated);
 
       if (!rawTagId) {
-        // Virtual VIP share link created on raw /join — copy link to clipboard!
+        // Virtual VIP share link created on raw /join — display in modal & copy link to clipboard!
         const refCode = user?.uid || encodeURIComponent(memberName);
         const shareUrl = `${window.location.origin}/join?tag=${effectiveTagId}&ref=${refCode}`;
+        setCreatedShareUrl(shareUrl);
         navigator.clipboard.writeText(shareUrl);
         showToast({
           title: 'CUSTOM VIP SHARE LINK CREATED & COPIED! 📋',
@@ -515,8 +517,8 @@ function JoinPageContent() {
           message: `Card #${rawTagId} is now configured as a ${editTargetType} invitation!`,
           icon: '⚡',
         });
+        setShowAdminWizard(false);
       }
-      setShowAdminWizard(false);
     } catch (err: any) {
       console.error('Failed to bind or create tag:', err);
     }
@@ -949,17 +951,103 @@ function JoinPageContent() {
             <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
               <div>
                 <h2 className="font-black text-sm uppercase text-neutral-900 flex items-center gap-2">
-                  <span>{rawTagId ? '⚡ BINDING PHYSICAL CARD' : '📋 CONFIGURE VIP SHARE LINK'}</span>
+                  <span>{rawTagId ? '⚡ BINDING PHYSICAL CARD' : createdShareUrl ? '🎉 SHARE LINK CREATED' : '📋 CONFIGURE VIP SHARE LINK'}</span>
                   {rawTagId && <span className="font-mono text-[#ff3b30]">#{rawTagId}</span>}
                 </h2>
                 <p className="text-[10px] text-neutral-500 font-mono">Assign card target destination & personalized invitation.</p>
               </div>
-              <button onClick={() => setShowAdminWizard(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
+              <button onClick={() => { setCreatedShareUrl(null); setShowAdminWizard(false); }} className="text-neutral-400 font-bold hover:text-neutral-900">
                 ✕
               </button>
             </div>
 
-            {/* Target Type Selector */}
+            {createdShareUrl ? (
+              <div className="space-y-4 py-2">
+                <div className="text-center space-y-1">
+                  <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                    🎉
+                  </div>
+                  <h3 className="text-base font-black uppercase text-neutral-900">
+                    VIP Share Link Created & Copied!
+                  </h3>
+                  <p className="text-xs text-neutral-500 font-medium">
+                    Link is ready to share on Facebook, SMS, or Instagram DMs!
+                  </p>
+                </div>
+
+                <div className="bg-neutral-900 text-white p-4 rounded-2xl border border-neutral-800 space-y-2 select-all cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wider">
+                      📋 Generated Share Link (Click to Select / Copy)
+                    </span>
+                    <span className="text-[9px] font-mono text-neutral-400 font-bold uppercase">
+                      COPIED TO CLIPBOARD
+                    </span>
+                  </div>
+                  <code className="text-xs font-mono font-bold text-amber-300 block break-all select-all p-2 bg-neutral-950 rounded-xl border border-neutral-800">
+                    {createdShareUrl}
+                  </code>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdShareUrl);
+                      showToast({ title: 'LINK COPIED TO CLIPBOARD! 📋', message: createdShareUrl, icon: '📋' });
+                    }}
+                    className="py-3 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-black uppercase rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-sm"
+                  >
+                    <Copy className="w-4 h-4 text-blue-400" />
+                    <span>Copy Link Again</span>
+                  </button>
+
+                  <a
+                    href={createdShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase rounded-xl flex items-center justify-center gap-1.5 text-center transition active:scale-95 shadow-sm"
+                  >
+                    <LinkIcon className="w-4 h-4 text-white" />
+                    <span>Preview Link ➔</span>
+                  </a>
+                </div>
+
+                <div className="pt-3 border-t border-neutral-200 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreatedShareUrl(null);
+                      setEditSpottedPhoto('');
+                      setEditSpottedTitle('');
+                      setEditSpottedNote('');
+                      setEditYear('');
+                      setEditMake('');
+                      setEditModel('');
+                      setEditTrim('');
+                      setEditBusinessName('');
+                      setEditPersonName('');
+                    }}
+                    className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-sm"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Create Another VIP Link</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreatedShareUrl(null);
+                      setShowAdminWizard(false);
+                    }}
+                    className="px-5 py-3 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-xs font-black uppercase rounded-xl transition font-bold"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
             <div className="space-y-2">
               <label className="block text-[10px] font-black uppercase text-neutral-700">
                 {rawTagId ? `What Would You Like to Assign to Card #${rawTagId}?` : 'What Would You Like to Invite or Share?'}
@@ -1276,6 +1364,8 @@ function JoinPageContent() {
                 </button>
               </div>
             </form>
+          </div>
+        )}
           </div>
         </div>
       )}
