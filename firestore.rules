@@ -6,6 +6,14 @@ service cloud.firestore {
     match /system_logs/{logId} {
       allow read, write: if true;
     }
+
+    // Subagent Execution Tickets & SOP Knowledge Base Rules
+    match /agent_tickets/{ticketId} {
+      allow read, write: if true;
+    }
+    match /sops/{sopId} {
+      allow read, write: if true;
+    }
     
     // Issue and Feedback Dispatch Queue Rules: Public write, strictly restricted reading
     match /feedback_queue/{ticketId} {

@@ -16,6 +16,36 @@ export interface MemberUser {
   joined_date?: string;
 }
 
+export interface AgentTicket {
+  id: string;
+  ticket_number: string;
+  agent_role: 'architect' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'aiseo_expert' | 'gm';
+  title: string;
+  category: 'architecture' | 'ui_design' | 'mobile_touch' | 'seo' | 'security' | 'testing' | 'feature' | 'database';
+  status: 'COMPLETED' | 'VERIFIED' | 'IN_PROGRESS';
+  components_used: string[];
+  files_modified: string[];
+  schema_changes?: string[];
+  sop_summary: string;
+  sop_steps: string[];
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface SOPGuide {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  author_agent: string;
+  description: string;
+  prerequisites: string[];
+  steps: string[];
+  code_snippets?: { title: string; language: string; code: string }[];
+  components_referenced: string[];
+  created_at: string;
+}
+
 export type StagingClass =
   | 'stock'
   | 'modified'
