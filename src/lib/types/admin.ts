@@ -19,7 +19,7 @@ export interface MemberUser {
 export interface AgentTicket {
   id: string;
   ticket_number: string;
-  agent_role: 'architect' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'aiseo_expert' | 'gm';
+  agent_role: 'architect' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'aiseo_expert' | 'firebase_expert' | 'gm';
   title: string;
   category: 'architecture' | 'ui_design' | 'mobile_touch' | 'seo' | 'security' | 'testing' | 'feature' | 'database';
   status: 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED';
@@ -57,7 +57,7 @@ export interface SOPGuide {
 export interface AgentStaff {
   id: string;
   name: string;
-  role_code: 'architect' | 'aiseo_expert' | 'user_panel' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'gm';
+  role_code: 'architect' | 'aiseo_expert' | 'user_panel' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'firebase_expert' | 'gm';
   title: string;
   icon: string;
   category: string;

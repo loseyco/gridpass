@@ -321,6 +321,8 @@ export default function AdminTicketsPage() {
         return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">🚦 Traffic</span>;
       case 'tester':
         return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">🧪 E2E Playwright</span>;
+      case 'firebase_expert':
+        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-300">🔥 Firebase & Cloud</span>;
       default:
         return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-300">🫡 General Manager</span>;
     }
@@ -420,6 +422,7 @@ export default function AdminTicketsPage() {
             <option value="financial_expert">💵 Financial</option>
             <option value="traffic_expert">🚦 Traffic</option>
             <option value="tester">🧪 Playwright Tester</option>
+            <option value="firebase_expert">🔥 Firebase & Cloud</option>
             <option value="gm">🫡 General Manager</option>
           </select>
         </div>

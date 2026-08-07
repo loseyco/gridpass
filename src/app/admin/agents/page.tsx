@@ -143,6 +143,21 @@ const DEFAULT_AGENTS: AgentStaff[] = [
     sops_count: 5,
     system_prompt: 'Automated Playwright E2E visual browser testing (headless: false) and auth session persistence.',
   },
+  {
+    id: 'firebase_expert',
+    name: 'Firebase & Cloud Deploy Specialist',
+    role_code: 'firebase_expert',
+    title: 'Cloud Deployments, Firestore Rules & Storage Security',
+    icon: '🔥',
+    category: 'Cloud & Infrastructure',
+    status: 'ACTIVE',
+    llm_model: 'Claude 3.5 Sonnet',
+    api_key_name: 'FIREBASE_CLI_TOKEN',
+    credentials_configured: true,
+    tickets_completed: 1,
+    sops_count: 1,
+    system_prompt: 'Firebase hosting deployments, Firestore & Storage security rules audit, Cloud Functions, and environment variable security.',
+  },
 ];
 
 export default function AdminAgentsPage() {
