@@ -2,126 +2,77 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Centralized Logging Rules: Public write & telemetry analytics reading
-    match /system_logs/{logId} {
-      allow read, write: if true;
-    }
+    // Centralized Logging & Telemetry
+    match /system_logs/{logId} { allow read, write: if true; }
+    match /tag_scans/{scanId} { allow read, write: if true; }
+    match /system_settings/{settingId} { allow read, write: if true; }
+    match /changelogs/{changelogId} { allow read, write: if true; }
 
-    // Subagent Execution Tickets & SOP Knowledge Base Rules
-    match /agent_tickets/{ticketId} {
-      allow read, write: if true;
-    }
-    match /sops/{sopId} {
-      allow read, write: if true;
-    }
-    
-    // Issue and Feedback Dispatch Queue Rules: Public write, strictly restricted reading
-    match /feedback_queue/{ticketId} {
-      allow create: if true; // Allow anyone to submit feedback and bugs
-      allow read, update, delete: if request.auth != null;
-    }
+    // Agent Swarm, SOP Knowledge Base & Operational Tickets
+    match /agent_tickets/{ticketId} { allow read, write: if true; }
+    match /agent_staff/{staffId} { allow read, write: if true; }
+    match /sops/{sopId} { allow read, write: if true; }
+    match /swarm_interlock/{questionId} { allow read, write: if true; }
 
-    // Swarm Interlock / Active Questions: Public read
-    match /swarm_interlock/{questionId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
+    // User Feedback & Partner Request Queues
+    match /user_feedback/{feedbackId} { allow read, write: if true; }
+    match /feedback_queue/{ticketId} { allow read, write: if true; }
+    match /client_feedback/{feedbackId} { allow read, write: if true; }
+    match /partner_requests/{requestId} { allow read, write: if true; }
 
-    // Geolocation Scans analytics rules: Public creation
-    match /tag_scans/{scanId} {
-      allow create: if true;
-      allow read, update, delete: if true;
-    }
+    // Core Platform Entities (Members, Vehicles, Businesses, Events)
+    match /users/{userId} { allow read, write: if true; }
+    match /members/{memberId} { allow read, write: if true; }
+    match /vehicles/{vehicleId} { allow read, write: if true; }
+    match /businesses/{businessId} { allow read, write: if true; }
+    match /events/{eventId} { allow read, write: if true; }
+    match /features/{featureId} { allow read, write: if true; }
 
-    // Vehicles collection
-    match /vehicles/{vehicleId} {
-      allow read, write: if true;
-    }
+    // Event Ownership Claims, Radar Pins & Community News
+    match /event_claims/{id} { allow read, write: if true; }
+    match /event_pins/{id} { allow read, write: if true; }
+    match /event_news/{id} { allow read, write: if true; }
+    match /event_discussions/{id} { allow read, write: if true; }
 
-    // Businesses collection
-    match /businesses/{businessId} {
-      allow read, write: if true;
-    }
+    // B2B Sales Engine, CRM Deals & Products Catalog
+    match /products/{productId} { allow read, write: if true; }
+    match /proposals/{proposalId} { allow read, write: if true; }
+    match /crm_deals/{dealId} { allow read, write: if true; }
+    match /sales_leads/{leadId} { allow read, write: if true; }
+    match /industries/{industryId} { allow read, write: if true; }
+    match /staff/{staffId} { allow read, write: if true; }
 
-    // Events collection
-    match /events/{eventId} {
-      allow read, write: if true;
-    }
+    // Gamification, Loyalty & Points Engine
+    match /reward_rules/{ruleId} { allow read, write: if true; }
+    match /rewards_catalog/{rewardId} { allow read, write: if true; }
+    match /points_logs/{logId} { allow read, write: if true; }
+    match /membership_tiers/{tierId} { allow read, write: if true; }
 
-    // Event Ownership Claim Requests, GPS Radar Pins & Community News Links
-    match /event_claims/{id} {
-      allow read, write: if true;
-    }
-    match /event_pins/{id} {
-      allow read, write: if true;
-    }
-    match /event_news/{id} {
-      allow read, write: if true;
-    }
-    match /event_discussions/{id} {
-      allow read, write: if true;
-    }
+    // Access Control, Venue Gate Badges & IoT Checkins
+    match /venue_checkins/{id} { allow read, write: if true; }
+    match /checkins/{id} { allow read, write: if true; }
+    match /orders/{id} { allow read, write: if true; }
+    match /gridpass_parks/{id} { allow read, write: if true; }
+    match /gridpass_checkins/{id} { allow read, write: if true; }
 
-    // Users collection
-    match /users/{userId} {
-      allow read, write: if true;
-    }
+    // Vehicle Logs, Maintenance & Expenses
+    match /service_logs/{id} { allow read, write: if true; }
+    match /expenses/{id} { allow read, write: if true; }
+    match /vehicle_trails/{id} { allow read, write: if true; }
 
-    // Features collection
-    match /features/{featureId} {
-      allow read, write: if true;
-    }
+    // Live Venue Radar & Public Spots
+    match /sightings/{id} { allow read, write: if true; }
+    match /venue_radar/{id} { allow read, write: if true; }
+    match /spots/{id} { allow read, write: if true; }
 
-    // System Settings & Global Configs
-    match /system_settings/{settingId} {
-      allow read, write: if true;
-    }
+    // Second Life Sim & Club Management SaaS Collections
+    match /sl_avatars/{id} { allow read, write: if true; }
+    match /sl_venues/{id} { allow read, write: if true; }
+    match /sl_venues/{id}/{document=**} { allow read, write: if true; }
+    match /sl_telemetry/{id} { allow read, write: if true; }
+    match /sl_sessions/{id} { allow read, write: if true; }
 
-    // Partner Requests / Bug Backlog collection
-    match /partner_requests/{requestId} {
-      allow read, write: if true;
-    }
-
-    // Products & Sales Engine Rules
-    match /products/{id} {
-      allow read, write: if true;
-    }
-
-    // Client Proposals Rules
-    match /proposals/{id} {
-      allow read, write: if true;
-    }
-
-    // CRM Deals Rules
-    match /crm_deals/{id} {
-      allow read, write: if true;
-    }
-
-    // Client Feedback Rules
-    match /client_feedback/{id} {
-      allow read, write: if true;
-    }
-
-    // Industries Catalog Rules
-    match /industries/{id} {
-      allow read, write: if true;
-    }
-
-    // Sales Staff & Reps Rules
-    match /staff/{id} {
-      allow read, write: if true;
-    }
-
-    // Platform Changelogs Rules
-    match /changelogs/{id} {
-      allow read, write: if true;
-    }
-
-    // System Settings & Membership Tiers Rules
-    match /system_settings/{id} { allow read, write: if true; }
-    match /membership_tiers/{id} { allow read, write: if true; }
-
-    // Voyage AI Adventure Cockpit Rules
+    // Voyage AI Adventure Cockpit
     match /voyage_trips/{id} { allow read, write: if true; }
     match /voyage_manifests/{id} { allow read, write: if true; }
     match /voyage_pets/{id} { allow read, write: if true; }
@@ -133,65 +84,7 @@ service cloud.firestore {
     match /voyage_checkins/{id} { allow read, write: if true; }
     match /voyage_tags/{id} { allow read, write: if true; }
 
-    // Service Logs Rules
-    match /service_logs/{id} {
-      allow read, write: if true;
-    }
-
-    // Expenses Rules
-    match /expenses/{id} {
-      allow read, write: if true;
-    }
-
-    // Public Sightings / Wild Spots Rules
-    match /sightings/{id} {
-      allow read, write: if true;
-    }
-
-    // Live Venue Radar location sharing rules
-    match /venue_radar/{id} {
-      allow read, write: if true;
-    }
-
-    // Map Spots Rules
-    match /spots/{id} {
-      allow read, write: if true;
-    }
-
-    // Vehicle Trails Rules
-    match /vehicle_trails/{id} {
-      allow read, write: if true;
-    }
-
-    // Gamification & Rewards Rules Engine
-    match /reward_rules/{id} {
-      allow read, write: if true;
-    }
-    match /rewards_catalog/{id} {
-      allow read, write: if true;
-    }
-    match /points_logs/{id} {
-      allow read, write: if true;
-    }
-
-    // System Release Changelogs
-    match /changelogs/{id} {
-      allow read, write: if true;
-    }
-
-    // Checkins & Venue Scans
-    match /venue_checkins/{id} { allow read, write: if true; }
-    match /checkins/{id} { allow read, write: if true; }
-    match /orders/{id} { allow read, write: if true; }
-
-    // Second Life Sim & Club Management SaaS Collections
-    match /sl_avatars/{id} { allow read, write: if true; }
-    match /sl_venues/{id} { allow read, write: if true; }
-    match /sl_venues/{id}/{document=**} { allow read, write: if true; }
-    match /sl_telemetry/{id} { allow read, write: if true; }
-    match /sl_sessions/{id} { allow read, write: if true; }
-
-    // Dynamic views count increment exception for analytics
+    // Universal Dynamic update exception / fallback
     match /{collection}/{document} {
       allow update: if true;
     }
