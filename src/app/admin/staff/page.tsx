@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 
 export interface SalesStaffItem {
   id: string;
@@ -10,7 +11,7 @@ export interface SalesStaffItem {
   email: string;
   phone?: string;
   role: 'sales_rep' | 'sales_lead' | 'partner' | 'admin';
-  commission_split: number; // e.g. 50%
+  commission_split: number;
   status: 'active' | 'inactive';
 }
 
@@ -22,7 +23,6 @@ const DEFAULT_STAFF: SalesStaffItem[] = [
 export default function AdminStaffPage() {
   const [staff, setStaff] = useState<SalesStaffItem[]>(DEFAULT_STAFF);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -66,6 +66,17 @@ export default function AdminStaffPage() {
 
     return () => unsub();
   }, []);
+
+  const handleInlineSave = async (id: string, key: string, newValue: any) => {
+    const valToSave = key === 'commission_split' ? Number(newValue) || 50 : newValue;
+    setStaff((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, [key]: valToSave } : s))
+    );
+
+    try {
+      await setDoc(doc(db, 'staff', id), { [key]: valToSave }, { merge: true });
+    } catch (err) {}
+  };
 
   const openAddModal = () => {
     setEditingItem(null);
@@ -123,7 +134,6 @@ export default function AdminStaffPage() {
   };
 
   const handleDeleteStaff = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this sales staff member?')) return;
     setStaff((prev) => {
       const updated = prev.filter((s) => s.id !== id);
       if (typeof window !== 'undefined') {
@@ -137,111 +147,104 @@ export default function AdminStaffPage() {
     } catch (err) {}
   };
 
-  const filteredStaff = staff.filter((s) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
-    }
-    return true;
-  });
+  // Export CSV
+  const exportCSV = () => {
+    const headers = ['Rep ID', 'Name', 'Email', 'Phone', 'Role', 'Commission Split (%)'];
+    const rows = staff.map((s) => [
+      s.id,
+      `"${s.name || ''}"`,
+      s.email || '',
+      s.phone || '',
+      s.role || '',
+      s.commission_split,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `gridpass_staff_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Columns for ExcelWorksheetTable
+  const columns: ColumnDef<SalesStaffItem>[] = [
+    {
+      key: 'name',
+      label: 'REP NAME',
+      editable: true,
+      render: (row) => <span className="font-bold text-neutral-900 uppercase">👤 {row.name}</span>,
+    },
+    {
+      key: 'email',
+      label: 'EMAIL & CONTACT',
+      editable: true,
+      render: (row) => (
+        <span className="font-mono text-neutral-700">
+          {row.email}
+          {row.phone && <span className="block text-[10px] text-neutral-400">{row.phone}</span>}
+        </span>
+      ),
+    },
+    {
+      key: 'role',
+      label: 'ROLE',
+      render: (row) => (
+        <span className="px-2 py-0.5 bg-neutral-100 font-black text-[10px] text-neutral-800 uppercase rounded">
+          {(row.role || 'sales_rep').replace('_', ' ')}
+        </span>
+      ),
+    },
+    {
+      key: 'commission_split',
+      label: 'COMMISSION SPLIT',
+      editable: true,
+      render: (row) => (
+        <span className="px-2.5 py-1 bg-purple-100 font-black text-xs text-purple-900 rounded">
+          {row.commission_split}% Revenue Split
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 font-sans">
-      {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <span className="bg-neutral-900 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded tracking-wider">
-            Sales &amp; CRM Department
-          </span>
-          <h1 className="text-2xl font-black text-neutral-900 uppercase tracking-tight mt-1">
-            Sales Staff &amp; Reps
-          </h1>
-          <p className="text-sm font-medium text-neutral-600 mt-0.5">
-            Manage active sales representatives, partners, and revenue commission splits.
-          </p>
-        </div>
-
-        <button
-          onClick={openAddModal}
-          className="px-4 py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-bold text-xs uppercase rounded-lg shadow-sm transition flex items-center gap-1.5"
-        >
-          <span>+ Add Sales Rep</span>
-        </button>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-sm flex items-center justify-between gap-3">
-        <span className="text-xs font-bold text-neutral-500 uppercase">
-          Total Active Reps: {staff.length}
-        </span>
-
-        <input
-          type="text"
-          placeholder="Search sales reps..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="px-3 py-1.5 border border-neutral-300 rounded-lg text-xs w-full md:w-60 focus:outline-none focus:border-[#ff3b30]"
-        />
-      </div>
-
-      {/* Staff Table */}
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="bg-neutral-50 border-b border-neutral-200 text-neutral-500 uppercase font-black">
-              <th className="p-3">Rep Name</th>
-              <th className="p-3">Email &amp; Contact</th>
-              <th className="p-3">Role</th>
-              <th className="p-3">Commission Split</th>
-              <th className="p-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {filteredStaff.map((s) => (
-              <tr key={s.id} className="hover:bg-neutral-50 transition">
-                <td className="p-3 font-black text-neutral-900 uppercase">
-                  👤 {s.name}
-                </td>
-                <td className="p-3 font-mono text-neutral-700">
-                  {s.email}
-                  {s.phone && <span className="block text-[10px] text-neutral-400">{s.phone}</span>}
-                </td>
-                <td className="p-3">
-                  <span className="px-2 py-0.5 bg-neutral-100 font-black text-[10px] text-neutral-800 uppercase rounded">
-                    {s.role.replace('_', ' ')}
-                  </span>
-                </td>
-                <td className="p-3">
-                  <span className="px-2.5 py-1 bg-purple-100 font-black text-xs text-purple-900 rounded">
-                    {s.commission_split}% Revenue Split
-                  </span>
-                </td>
-                <td className="p-3 text-right space-x-2">
-                  <button
-                    onClick={() => openEditModal(s)}
-                    className="text-xs font-bold text-neutral-900 hover:text-[#ff3b30] hover:underline"
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteStaff(s.id)}
-                    className="text-xs font-bold text-red-600 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="space-y-4 font-sans">
+      <ExcelWorksheetTable
+        title="Sales Staff & Platform Reps"
+        data={staff}
+        columns={columns}
+        idKey="id"
+        searchPlaceholder="Search sales reps..."
+        onAddRow={openAddModal}
+        onExportCSV={exportCSV}
+        onInlineSave={handleInlineSave}
+        loading={loading}
+        actionRenderer={(row) => (
+          <div className="flex items-center gap-2 justify-end">
+            <button
+              onClick={() => openEditModal(row)}
+              className="text-xs font-bold text-neutral-900 hover:text-[#ff3b30] hover:underline"
+            >
+              ✏️ Edit
+            </button>
+            <button
+              onClick={() => handleDeleteStaff(row.id)}
+              className="text-xs font-bold text-red-600 hover:underline"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      />
 
       {/* MODAL: ADD / EDIT STAFF */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 font-sans">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-              <h3 className="font-black text-base text-neutral-900 uppercase">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-300 rounded-xl max-w-md w-full p-5 space-y-4 shadow-xl font-sans">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+              <h3 className="font-black text-sm text-neutral-900 uppercase">
                 {editingItem ? '✏️ Edit Sales Rep' : '+ Add Sales Rep'}
               </h3>
               <button onClick={() => setShowModal(false)} className="text-neutral-400 hover:text-neutral-900 font-bold">✕</button>
@@ -249,7 +252,7 @@ export default function AdminStaffPage() {
 
             <form onSubmit={handleSaveStaff} className="space-y-3">
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Rep Full Name</label>
+                <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Rep Full Name</label>
                 <input
                   type="text"
                   required
@@ -261,7 +264,7 @@ export default function AdminStaffPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Email Address</label>
+                <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Email Address</label>
                 <input
                   type="email"
                   required
@@ -274,7 +277,7 @@ export default function AdminStaffPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Role</label>
+                  <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Role</label>
                   <select
                     value={roleInput}
                     onChange={(e) => setRoleInput(e.target.value as any)}
@@ -288,7 +291,7 @@ export default function AdminStaffPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Commission Split (%)</label>
+                  <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Commission Split (%)</label>
                   <input
                     type="number"
                     value={splitInput}
@@ -299,7 +302,7 @@ export default function AdminStaffPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Phone Number (Optional)</label>
+                <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Phone Number (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. (555) 867-5309"
@@ -313,13 +316,13 @@ export default function AdminStaffPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-neutral-100 text-neutral-700 font-bold text-xs uppercase rounded-lg"
+                  className="px-3 py-1.5 text-xs font-bold text-neutral-600 uppercase"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase rounded-lg shadow-sm"
+                  className="px-4 py-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase rounded shadow-sm"
                 >
                   {editingItem ? 'Save Changes' : 'Save Rep'}
                 </button>

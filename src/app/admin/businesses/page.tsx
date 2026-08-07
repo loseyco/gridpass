@@ -6,10 +6,9 @@ import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot, setDoc, doc } from 'firebase/firestore';
 import { BusinessProfile } from '@/lib/types/business';
 import { MemberUser } from '@/lib/types/admin';
+import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 
-type BusinessFilter = 'all' | 'auto_shop' | 'race_team' | 'food_truck' | 'track_venue';
-type SortField = 'name' | 'vertical' | 'mrr' | 'id';
-type SortOrder = 'asc' | 'desc';
+type BusinessFilter = 'all' | 'food_truck' | 'auto_shop' | 'race_team' | 'track_venue';
 
 export interface ProductCatalogItem {
   id: string;
@@ -72,14 +71,11 @@ export default function AdminBusinessesPage() {
   const [products, setProducts] = useState<ProductCatalogItem[]>(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(true);
 
-  // Filter & Search & Sort State
+  // Filter & Modal State
   const [activeFilter, setActiveFilter] = useState<BusinessFilter>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-
-  // Modal State for Add Business
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Add Business Modal State
   const [newClientName, setNewClientName] = useState('');
   const [newVertical, setNewVertical] = useState<'auto_shop' | 'race_team' | 'food_truck' | 'track_venue'>('food_truck');
   const [newOwnerUid, setNewOwnerUid] = useState('');
@@ -137,15 +133,18 @@ export default function AdminBusinessesPage() {
     };
   }, []);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
+  // Handle Inline Editing Save
+  const handleInlineSave = async (id: string, key: string, newValue: any) => {
+    setClients((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, [key]: newValue } : c))
+    );
+
+    try {
+      await setDoc(doc(db, 'businesses', id), { [key]: newValue }, { merge: true });
+    } catch (err) {}
   };
 
+  // Vertical Change
   const handleVerticalChange = async (clientId: string, vertical: 'auto_shop' | 'race_team' | 'food_truck' | 'track_venue') => {
     setClients((prev) =>
       prev.map((c) => (c.id === clientId ? { ...c, vertical } : c))
@@ -156,6 +155,7 @@ export default function AdminBusinessesPage() {
     } catch (err) {}
   };
 
+  // Add Business Entity
   const handleAddBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClientName) return;
@@ -191,7 +191,7 @@ export default function AdminBusinessesPage() {
     setShowAddModal(false);
   };
 
-  // Open Proposal Builder for a specific business & client
+  // Open Proposal Builder
   const openProposalModal = (biz: BusinessProfile) => {
     setProposalTargetBiz(biz);
     setGeneratedLink('');
@@ -254,170 +254,144 @@ export default function AdminBusinessesPage() {
     setLinkCopied(true);
   };
 
+  // Filtered Businesses
   const filteredClients = clients.filter((c) => {
     if (activeFilter !== 'all' && c.vertical !== activeFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
-        c.contact_email?.toLowerCase().includes(q)
-      );
-    }
     return true;
   });
 
-  const sortedClients = [...filteredClients].sort((a, b) => {
-    let aVal: any = a[sortField as keyof BusinessProfile] || '';
-    let bVal: any = b[sortField as keyof BusinessProfile] || '';
+  // Export CSV
+  const exportCSV = () => {
+    const headers = ['Business ID', 'Name', 'Vertical', 'Owner UID', 'Contact Email', 'Target MRR'];
+    const rows = filteredClients.map((c) => [
+      c.id,
+      `"${c.name || ''}"`,
+      c.vertical || '',
+      c.owner_uid || '',
+      c.contact_email || '',
+      c.subscription?.mrr || 0,
+    ]);
 
-    if (sortField === 'mrr') {
-      aVal = a.subscription?.mrr || 0;
-      bVal = b.subscription?.mrr || 0;
-    }
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `gridpass_businesses_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-    if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-    if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+  // Columns for ExcelWorksheetTable
+  const columns: ColumnDef<BusinessProfile>[] = [
+    {
+      key: 'name',
+      label: 'BUSINESS NAME & ID',
+      editable: true,
+      render: (row) => (
+        <Link href={`/b/${row.id}`} target="_blank" className="font-bold text-neutral-900 hover:text-[#ff3b30] flex items-center gap-1.5">
+          <span>{row.name}</span>
+          <span className="text-[10px] font-mono text-neutral-400 font-normal">({row.id})</span>
+        </Link>
+      ),
+    },
+    {
+      key: 'vertical',
+      label: 'VERTICAL',
+      render: (row) => (
+        <select
+          value={row.vertical || 'food_truck'}
+          onChange={(e) => handleVerticalChange(row.id, e.target.value as any)}
+          className="px-2 py-0.5 border border-neutral-300 rounded text-[10px] font-bold uppercase bg-neutral-100 text-neutral-900 focus:border-[#ff3b30]"
+        >
+          <option value="food_truck">🍔 Food Truck</option>
+          <option value="auto_shop">🛠️ Auto Shop</option>
+          <option value="race_team">🏎️ Race Team</option>
+          <option value="track_venue">🏁 Track Venue</option>
+        </select>
+      ),
+    },
+    {
+      key: 'owner_uid',
+      label: 'CLIENT MEMBER OWNER',
+      render: (row) => {
+        const owner = members.find((m) => m.uid === row.owner_uid);
+        return owner ? (
+          <span className="font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded">
+            👤 {owner.display_name}
+          </span>
+        ) : (
+          <span className="text-neutral-500 font-mono text-[11px]">{row.owner_uid || 'Unassigned'}</span>
+        );
+      },
+    },
+    {
+      key: 'contact_email',
+      label: 'CONTACT EMAIL',
+      editable: true,
+      render: (row) => <span className="font-mono text-neutral-700">{row.contact_email || '—'}</span>,
+    },
+    {
+      key: 'mrr',
+      label: 'TARGET MRR',
+      render: (row) => <span className="font-black text-neutral-900">${row.subscription?.mrr || 0}/mo</span>,
+    },
+  ];
 
-    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
+  const filterCategories = [
+    { label: 'All', key: 'all', count: clients.length },
+    { label: '🍔 Food Trucks', key: 'food_truck' },
+    { label: '🛠️ Auto Shops', key: 'auto_shop' },
+    { label: '🏎️ Race Teams', key: 'race_team' },
+    { label: '🏁 Track Venues', key: 'track_venue' },
+  ];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 font-sans">
-      {/* Header */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <span className="bg-neutral-900 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded tracking-wider">
-            Data &amp; Records
-          </span>
-          <h1 className="text-2xl font-black text-neutral-900 uppercase tracking-tight mt-1">
-            Businesses &amp; Client Accounts
-          </h1>
-          <p className="text-sm font-medium text-neutral-600 mt-0.5">
-            Manage partner businesses, link them to Client Members (e.g. Zach Shaw), and issue live proposals.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-bold text-xs uppercase rounded-lg shadow-sm transition flex items-center gap-1.5"
-        >
-          <span>+ Add Business</span>
-        </button>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-bold text-neutral-500 uppercase mr-1">Vertical:</span>
-          {['all', 'food_truck', 'auto_shop', 'race_team', 'track_venue'].map((v) => (
+    <div className="space-y-4 font-sans">
+      <ExcelWorksheetTable
+        title="Businesses & Client Accounts"
+        data={filteredClients}
+        columns={columns}
+        idKey="id"
+        filterCategories={filterCategories}
+        activeFilter={activeFilter}
+        onFilterChange={(key) => setActiveFilter(key as BusinessFilter)}
+        searchPlaceholder="Search business names, IDs, emails..."
+        onAddRow={() => setShowAddModal(true)}
+        onExportCSV={exportCSV}
+        onInlineSave={handleInlineSave}
+        loading={loading}
+        actionRenderer={(row) => (
+          <div className="flex items-center gap-1.5 justify-end">
             <button
-              key={v}
-              onClick={() => setActiveFilter(v as any)}
-              className={`px-3 py-1 rounded-md text-xs font-bold uppercase transition ${
-                activeFilter === v
-                  ? 'bg-neutral-900 text-white'
-                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-              }`}
+              onClick={() => openProposalModal(row)}
+              className="px-2.5 py-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-[10px] uppercase rounded shadow-2xs transition"
             >
-              {v.replace('_', ' ')}
+              📄 Proposal
             </button>
-          ))}
-        </div>
+            <Link
+              href={`/b/${row.id}`}
+              target="_blank"
+              className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-[10px] uppercase rounded transition inline-block"
+            >
+              Live 🔗
+            </Link>
+          </div>
+        )}
+      />
 
-        <input
-          type="text"
-          placeholder="Search businesses..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="px-3 py-1.5 border border-neutral-300 rounded-lg text-xs w-full md:w-60 focus:outline-none focus:border-[#ff3b30]"
-        />
-      </div>
-
-      {/* Businesses Table */}
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="bg-neutral-50 border-b border-neutral-200 text-neutral-500 uppercase font-black">
-              <th className="p-3">Business Name &amp; ID</th>
-              <th className="p-3">Vertical</th>
-              <th className="p-3">Client Member Owner</th>
-              <th className="p-3">Contact Email</th>
-              <th className="p-3">Target MRR</th>
-              <th className="p-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {sortedClients.map((biz) => {
-              const owner = members.find((m) => m.uid === biz.owner_uid);
-
-              return (
-                <tr key={biz.id} className="hover:bg-neutral-50 transition">
-                  <td className="p-3 font-black text-neutral-900 uppercase">
-                    <Link href={`/b/${biz.id}`} target="_blank" className="hover:text-[#ff3b30] flex items-center gap-1.5">
-                      <span>{biz.name}</span>
-                      <span className="text-[10px] font-mono text-neutral-400 font-normal">({biz.id})</span>
-                    </Link>
-                  </td>
-                  <td className="p-3">
-                    <select
-                      value={biz.vertical || 'food_truck'}
-                      onChange={(e) => handleVerticalChange(biz.id, e.target.value as any)}
-                      className="px-2 py-0.5 border border-neutral-300 rounded text-xs font-bold uppercase bg-white focus:border-[#ff3b30]"
-                    >
-                      <option value="food_truck">🍔 Food Truck</option>
-                      <option value="auto_shop">🛠️ Auto Shop</option>
-                      <option value="race_team">🏎️ Race Team</option>
-                      <option value="track_venue">🏁 Track Venue</option>
-                    </select>
-                  </td>
-                  <td className="p-3">
-                    {owner ? (
-                      <span className="font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded">
-                        👤 {owner.display_name}
-                      </span>
-                    ) : (
-                      <span className="text-neutral-500 font-mono text-[11px]">{biz.owner_uid || 'Unassigned'}</span>
-                    )}
-                  </td>
-                  <td className="p-3 font-mono text-neutral-700">{biz.contact_email || '—'}</td>
-                  <td className="p-3 font-black text-neutral-900">${biz.subscription?.mrr || 0}/mo</td>
-                  <td className="p-3 text-right space-x-2">
-                    <button
-                      onClick={() => openProposalModal(biz)}
-                      className="px-2.5 py-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-[11px] uppercase rounded shadow-2xs transition"
-                    >
-                      📄 Create Proposal
-                    </button>
-                    <Link
-                      href={`/b/${biz.id}`}
-                      target="_blank"
-                      className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-[11px] uppercase rounded transition inline-block"
-                    >
-                      View Live 🔗
-                    </Link>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* MODAL 1: ADD BUSINESS & LINK CLIENT */}
+      {/* MODAL 1: ADD BUSINESS */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 font-sans">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
-              <h3 className="font-black text-base text-neutral-900 uppercase">+ Add Business Entity</h3>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-300 rounded-xl max-w-md w-full p-5 space-y-4 shadow-xl font-sans">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+              <h3 className="font-black text-sm text-neutral-900 uppercase">+ Add Business Entity</h3>
               <button onClick={() => setShowAddModal(false)} className="text-neutral-400 hover:text-neutral-900 font-bold">✕</button>
             </div>
 
             <form onSubmit={handleAddBusiness} className="space-y-3">
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Business Name</label>
+                <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Business Name</label>
                 <input
                   type="text"
                   required
@@ -429,7 +403,7 @@ export default function AdminBusinessesPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Link Client Member Owner</label>
+                <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Link Client Member Owner</label>
                 <select
                   value={newOwnerUid}
                   onChange={(e) => setNewOwnerUid(e.target.value)}
@@ -446,7 +420,7 @@ export default function AdminBusinessesPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Vertical</label>
+                  <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Vertical</label>
                   <select
                     value={newVertical}
                     onChange={(e) => setNewVertical(e.target.value as any)}
@@ -460,7 +434,7 @@ export default function AdminBusinessesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Target MRR ($/mo)</label>
+                  <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Target MRR ($/mo)</label>
                   <input
                     type="number"
                     value={newMrr}
@@ -471,7 +445,7 @@ export default function AdminBusinessesPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-500 mb-1">Business Contact Email</label>
+                <label className="block text-xs font-bold uppercase text-neutral-700 mb-1">Business Contact Email</label>
                 <input
                   type="email"
                   placeholder="e.g. zach@shawdaddys.com"
@@ -485,13 +459,13 @@ export default function AdminBusinessesPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-neutral-100 text-neutral-700 font-bold text-xs uppercase rounded-lg"
+                  className="px-3 py-1.5 text-xs font-bold text-neutral-600 uppercase"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase rounded-lg shadow-sm"
+                  className="px-4 py-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase rounded"
                 >
                   Save Business Entity
                 </button>
@@ -501,16 +475,16 @@ export default function AdminBusinessesPage() {
         </div>
       )}
 
-      {/* MODAL 2: CREATE PROPOSAL FOR SPECIFIC BUSINESS & CLIENT */}
+      {/* MODAL 2: CREATE PROPOSAL */}
       {proposalTargetBiz && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-200 rounded-xl max-w-xl w-full p-6 shadow-2xl space-y-4 font-sans max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-neutral-300 rounded-xl max-w-xl w-full p-5 space-y-4 shadow-xl font-sans max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
               <div>
                 <span className="bg-neutral-900 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded">
                   Client Proposal Dispatch
                 </span>
-                <h3 className="font-black text-lg text-neutral-900 uppercase mt-0.5">
+                <h3 className="font-black text-sm text-neutral-900 uppercase mt-0.5">
                   Generate Proposal for {proposalTargetBiz.name}
                 </h3>
               </div>
@@ -524,7 +498,7 @@ export default function AdminBusinessesPage() {
                   <p className="text-neutral-500 font-mono">{proposalTargetBiz.contact_email || 'zach@shawdaddys.com'}</p>
                 </div>
                 <span className="px-2.5 py-1 bg-green-100 text-green-800 font-black text-[10px] uppercase rounded">
-                  {proposalTargetBiz.vertical?.replace('_', ' ')}
+                  {(proposalTargetBiz.vertical || 'food_truck').replace('_', ' ')}
                 </span>
               </div>
 
@@ -549,7 +523,7 @@ export default function AdminBusinessesPage() {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-black uppercase px-1.5 py-0.5 bg-neutral-100 text-neutral-700 rounded">
-                              {p.category.replace('_', ' ')}
+                              {(p.category || 'auto_shop').replace('_', ' ')}
                             </span>
                             <span className="font-black text-xs text-neutral-900 uppercase">{p.name}</span>
                           </div>
@@ -569,7 +543,7 @@ export default function AdminBusinessesPage() {
               <div className="pt-2">
                 <button
                   onClick={handleGenerateProposalLink}
-                  className="w-full py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase rounded-xl shadow-sm transition"
+                  className="w-full py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase rounded shadow-sm transition"
                 >
                   💾 Save &amp; Generate Proposal Link
                 </button>

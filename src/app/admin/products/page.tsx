@@ -23,11 +23,11 @@ export interface ProductCatalogItem {
 const DEFAULT_PRODUCTS: ProductCatalogItem[] = [
   {
     id: 'prod_member_free',
-    name: 'Unlimited Driver & Member Profile',
+    name: 'Unlimited Member Passport & Profile',
     category: 'driver',
     pricing_model: 'free',
     price: 0,
-    description: 'Public driver profile resume with career bio, garage links, licensing badges, and dynamic QR card.',
+    description: 'Public member profile resume with career bio, garage links, licensing badges, and dynamic QR card.',
     status: 'live_working',
     route_path: '/members',
     is_active: true,
@@ -96,6 +96,17 @@ const DEFAULT_PRODUCTS: ProductCatalogItem[] = [
     description: 'Repair work orders, parts inventory, labor estimates, and verified digital customer service stamps.',
     status: 'planned',
     route_path: '/b/demo-shop',
+    is_active: true,
+  },
+  {
+    id: 'prod_fleet_manager',
+    name: 'B2B Trade & Commercial Fleet Passport Manager',
+    category: 'auto_shop',
+    pricing_model: 'monthly',
+    price: 49.0,
+    description: 'Universal QR fleet tracking for trade services (plumbing, HVAC, electrical, contracting), work vans, heavy construction equipment, and utility trailers. Auto-categorize equipment, track service logs, and manage driver/operator assignments.',
+    status: 'planned',
+    route_path: '/admin/fleet',
     is_active: true,
   },
   {

@@ -20,24 +20,25 @@ export default function AdminLayout({
 
   const navCategories = [
     {
-      title: 'Data & Records',
+      title: 'Global System Tools',
       items: [
-        { label: 'Members', path: '/admin/users', icon: '👤' },
-        { label: 'Vehicles', path: '/admin/vehicles', icon: '🏎️' },
-        { label: 'Events', path: '/admin/events', icon: '🏁' },
-        { label: 'Businesses', path: '/admin/businesses', icon: '🏢' },
-        { label: 'Products Catalog', path: '/admin/products', icon: '📦' },
-        { label: 'Industries Catalog', path: '/admin/industries', icon: '🏭' },
+        { label: 'System Analytics', path: '/admin/analytics', icon: '📈' },
+        { label: 'Database Inspector', path: '/admin/db', icon: '🗄️' },
+        { label: 'System Changelog', path: '/admin/changelog', icon: '📝' },
+        { label: 'Feature Registry', path: '/admin/features', icon: '🚀' },
       ],
     },
     {
-      title: 'Sales & CRM',
+      title: 'Core Platform Entities',
       items: [
-        { label: 'Sales CRM & Deals', path: '/admin/crm', icon: '💼' },
-        { label: 'Sales Staff & Reps', path: '/admin/staff', icon: '👥' },
+        { label: 'Members & Drivers', path: '/admin/users', icon: '👤' },
+        { label: 'Vehicles', path: '/admin/vehicles', icon: '🏎️' },
+        { label: 'Businesses & Vendors', path: '/admin/businesses', icon: '🏢' },
+        { label: 'Platform Staff & Reps', path: '/admin/staff', icon: '👥' },
       ],
     },
   ];
+
 
   return (
     <div className="min-h-screen bg-neutral-100 text-neutral-900 font-sans flex flex-col md:flex-row">
