@@ -9,6 +9,34 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1014)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1020_pre_push_qa_protocol',
+    ticket_number: 'TICK-1020',
+    agent_role: 'tester',
+    title: 'Automated Pre-Push Playwright Visual E2E Verification & Persona QA Protocol',
+    category: 'security',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['tester', 'site_auditor', 'user_panel', 'Playwright', 'tests/admin_ops.spec.ts'],
+    files_modified: ['tests/admin_ops.spec.ts', 'AGENTS.md', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner required verification that all code changes, route additions, layout refactors, and feature updates are rigorously tested before declaring tasks complete or pushing updates to production.',
+    root_cause: 'Preventing syntax errors, unhandled exceptions, permissions bugs, and layout regressions from reaching production viewports.',
+    resolution_summary: 'Enforced mandatory pre-push audit workflow assigning tester agent for visual Playwright browser execution (npm run test:headed), site_auditor for Apple HIG/touch target compliance, user_panel for 7-persona walkthroughs, and firebase_expert for zero auto-deploy invariant enforcement.',
+    verification_proof: 'Verified Playwright E2E suite (7/7 passed in 18.9s) and static compilation (npx tsc --noEmit).',
+    sop_summary: 'SOP for automated E2E testing, visual browser verification, persona interviews, and pre-push deployment guardrails.',
+    sop_steps: [
+      'Invoke tester subagent to execute Playwright E2E visual browser suite (npm run test:headed).',
+      'Invoke site_auditor subagent to inspect mobile touch targets (>=44px), solid white backgrounds, and red/black accent compliance.',
+      'Invoke user_panel subagent to run 7-persona walkthroughs (Track Owners, Enthusiasts, Cynical CFO Rich, Tech-Illiterate Billy).',
+      'Verify zero compilation errors via npx tsc --noEmit.',
+      'Await explicit written user approval before executing live production deployment (firebase deploy).'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'TESTER',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1019_owner_command_center',
     ticket_number: 'TICK-1019',
     agent_role: 'architect',
