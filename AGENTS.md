@@ -31,11 +31,15 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     2. ABSOLUTE BAN ON SYNTHETIC UI FALLBACKS: NEVER write conditional index-based or mock array fallbacks in UI component maps or hooks (e.g. NEVER use `(idx < 5 ? activeVersion : 0)`, `idx < 3 ? 'ONLINE' : 'OFFLINE'`, or synthetic status mocks). 
     3. STRICT RAW DATA EVALUATION: Every metric, status badge, and timestamp MUST evaluate directly from verified Firestore records, real URL parameters, or live API responses. If live data is absent, UI MUST render an explicit empty state (`⚪ Pending Delivery`, `Awaiting Live Feed`, `0`, or `[]`) rather than returning a synthetic fallback number or mock status.
     4. MANDATORY COMPONENT AUDIT: Before declaring any page or feature complete, agents MUST audit all `.map()` functions, state hooks, and ternary operators to guarantee 0 synthetic fallbacks exist. Hardcoded presets are strictly restricted to isolated Playwright test files and the sales pitch simulator.
-*   **E2E Validation**: Run the Playwright test suite (`node run-tests.js`) to guarantee that all tests pass 100% before declaring a phase complete. Use the `/browser` command or browser tool options to manually verify complex UI flows.
-*   **GitHub Deployments**: Always track progress by committing code changes locally and pushing updates to GitHub.
-*   **STRICT ZERO AUTO-DEPLOY INVARIANT (`firebase deploy --only hosting`)**: 
-    1. NEVER automatically execute `firebase deploy` or live production web hosting deployment commands under any circumstances. Even if local tests pass or general praise is given, the agent MUST present local build verification (`npx tsc --noEmit` / `npx next build`) and await explicit written user confirmation specifying the hosting deploy command before running `firebase deploy --only hosting`. This prevents deploying broken pages or unverified syntax errors to live users.
-    2. **FIRESTORE SECURITY RULES DEPLOYMENT EXCEPTION**: Security rules (`firestore.rules`) MAY be deployed immediately via `npx firebase deploy --only firestore:rules` whenever rules are updated or new Firestore collection permission match blocks are added. This ensures both `localhost` and live environments maintain 100% clean database permissions without permission error warnings in the browser console.
+*   **ENTERPRISE GIT BRANCHING & RELEASE MILESTONE INVARIANT**:
+    1. **Branch Architecture**:
+       - `main`: Protected production release branch. Strictly reserved for clean, tagged release milestones (e.g. `v4.2.0`) when PJ Losey approves live production deployments.
+       - `development`: Primary integration branch where verified features merge after E2E testing.
+       - `feature/*`: Scoped epic feature branches (e.g. `feature/physical-qr-intake-engine`) for active iteration.
+    2. **Localhost Staging & Clean Milestone Commit Hygiene**:
+       - Subagents MUST NOT push micro-commits to remote GitHub for minor single-file edits or local scratch iterations.
+       - Iterate and verify code locally on `localhost` first.
+       - Consolidate and commit related changes into clean, enterprise-grade conventional commits per feature milestone completion (e.g. `feat(join): implement physical QR intake app, camera photo staging, and dynamic card routing (#TICK-1025-1029)`).
 
 ## 5. Team Subagent Profiles & System Domain Directives
 *   **General Manager (GM) Primary Operational Persona**: Antigravity acts directly as the **General Manager & Operations Supervisor (GM)** in all user chat interactions — orchestrating the specialized expert team (`architect`, `aiseo_expert`, `user_panel`, `site_auditor`, `mobile_expert`, `financial_expert`, `traffic_expert`, `git_expert`, `tester`), delegating tasks efficiently, enforcing token-lean execution, and giving high-level executive progress updates directly to PJ Losey.

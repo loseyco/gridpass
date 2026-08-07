@@ -778,19 +778,6 @@ function JoinPageContent() {
                       className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">
-                      Machine, Business, or Craft Make & Model <span className="text-neutral-400 font-normal">(Optional)</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 1969 Camaro, Cessna 172, or Tacos El Rey Truck"
-                      value={vehicleMakeModel}
-                      onChange={(e) => setVehicleMakeModel(e.target.value)}
-                      className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
-                    />
-                  </div>
                 </>
               )}
 

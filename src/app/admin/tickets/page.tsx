@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1030_lean_onboarding_cleanup',
+    ticket_number: 'TICK-1030',
+    agent_role: 'gm',
+    title: 'Lean Onboarding Form Cleanup & Removal of Optional Make/Model Input on /join',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'medium',
+    components_used: ['JoinClient', 'handleJoinSubmit'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner required dropping the optional "Machine, Business, or Craft Make & Model" input field from the logged-out /join form, since members manage vehicles and businesses directly inside their /dash dashboard.',
+    root_cause: 'Extra optional input clutter reduced conversion velocity on the initial mobile signup form.',
+    resolution_summary: 'Removed vehicleMakeModel input field from JoinClient.tsx signup form, keeping initial intake form ultra-lean and focused on account creation and discovery story notes.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and staging on localhost.',
+    sop_summary: 'SOP for maintaining lean mobile onboarding intake forms.',
+    sop_steps: [
+      'Remove non-essential optional fields from initial registration view.',
+      'Defer detailed vehicle and business registration to post-login dashboard workflows.',
+      'Verify clean layout on 390px mobile viewports.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1029_discovery_note_and_signin_toggle',
     ticket_number: 'TICK-1029',
     agent_role: 'gm',
