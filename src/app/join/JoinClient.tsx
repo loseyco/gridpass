@@ -1041,13 +1041,13 @@ function JoinPageContent() {
                 <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-3">
                   <span className="block text-[10px] font-black uppercase text-blue-600 flex items-center gap-1">
                     <Building2 className="w-3.5 h-3.5" />
-                    <span>🏢 Configure Business & Auto Shop Passport</span>
+                    <span>🏢 Configure Business Passport</span>
                   </span>
 
                   {/* Dropdown Selector of Live Firestore Businesses */}
                   <div>
                     <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">
-                      Select Existing Business or Stage New Shop
+                      Select Existing Business or Stage New Business
                     </label>
                     <select
                       value={editBusinessId}
@@ -1068,17 +1068,17 @@ function JoinPageContent() {
                       }}
                       className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-blue-500"
                     >
-                      <option value="">➕ Stage New Unclaimed Business / Auto Shop</option>
+                      <option value="">➕ Stage New Unclaimed Business</option>
                       {dbBusinesses.map((b) => (
                         <option key={b.id} value={b.id}>
-                          {b.name || b.id} ({b.category || 'Shop'})
+                          {b.name || b.id} ({b.category || 'Business'})
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Business / Shop Name</label>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Business Name</label>
                     <input
                       type="text"
                       value={editBusinessName}

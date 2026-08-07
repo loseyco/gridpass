@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1037_business_copywriting_simplification',
+    ticket_number: 'TICK-1037',
+    agent_role: 'gm',
+    title: 'Universal Business Copywriting Simplification Invariant on /join',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'low',
+    components_used: ['JoinClient'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner required dropping overly specific "/ Auto Shop" references in the business card setup dropdown and labels, simplifying text to universal "Business".',
+    root_cause: 'Labels specified "Business / Auto Shop" which was overly narrow for multi-vertical businesses.',
+    resolution_summary: 'Cleaned up JoinClient.tsx labels from "Stage New Unclaimed Business / Auto Shop" to "Stage New Unclaimed Business", "Select Existing Business or Stage New Business", and "Business Name".',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean UI on localhost.',
+    sop_summary: 'SOP for maintaining clean, inclusive business copy.',
+    sop_steps: [
+      'Use universal "Business" terminology across intake forms and setup wizards.',
+      'Avoid overly narrow vertical suffixes (like "/ Auto Shop") on top-level business selectors.',
+      'Verify clean visual alignment in select dropdown menus.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1036_unclaimed_business_passport_staging',
     ticket_number: 'TICK-1036',
     agent_role: 'gm',
