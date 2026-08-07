@@ -8,7 +8,7 @@ import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Cam
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 
 function JoinPageContent() {
   const searchParams = useSearchParams();
@@ -60,10 +60,12 @@ function JoinPageContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>('motorsports');
 
   // Form State
+  const [authMode, setAuthMode] = useState<'signup' | 'signin'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [vehicleMakeModel, setVehicleMakeModel] = useState('');
+  const [discoveryNote, setDiscoveryNote] = useState('');
   const [joining, setJoining] = useState(false);
   const [joinedSuccess, setJoinedSuccess] = useState(false);
 
@@ -259,25 +261,35 @@ function JoinPageContent() {
     });
   };
 
-  // Handle Visitor Join or Claim Submission
+  // Handle Visitor Join, Sign-In, or Claim Submission
   const handleJoinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
 
     setJoining(true);
     try {
-      const userRef = doc(collection(db, 'users'));
-      await setDoc(userRef, {
-        email,
-        full_name: fullName || 'Gridpass Member',
-        vehicle_make_model: vehicleMakeModel || (editMake && editModel ? `${editYear} ${editMake} ${editModel}` : null),
-        interest_category: selectedCategory,
-        referred_by_tag_id: rawTagId || null,
-        spotted_car_photo: tagRecord?.custom_spotted_photo_url || null,
-        role: 'member',
-        starting_credits: 100,
-        created_at: new Date().toISOString(),
-      });
+      if (authMode === 'signin') {
+        await signInWithEmailAndPassword(getAuth(), email, password);
+        showToast({
+          title: 'WELCOME BACK TO GRIDPASS! 🎉',
+          message: 'Signed in successfully. Transferring to dashboard...',
+          icon: '🔑',
+        });
+      } else {
+        const userRef = doc(collection(db, 'users'));
+        await setDoc(userRef, {
+          email,
+          full_name: fullName || 'Gridpass Member',
+          vehicle_make_model: vehicleMakeModel || (editMake && editModel ? `${editYear} ${editMake} ${editModel}` : null),
+          discovery_note: discoveryNote || null,
+          interest_category: selectedCategory,
+          referred_by_tag_id: rawTagId || null,
+          spotted_car_photo: tagRecord?.custom_spotted_photo_url || null,
+          role: 'member',
+          starting_credits: 100,
+          created_at: new Date().toISOString(),
+        });
+      }
 
       // If an unclaimed vehicle was staged for this tag, transfer it into the member's garage!
       if (tagRecord?.unclaimed_vehicle_id || tagRecord?.custom_spotted_photo_url) {
@@ -286,7 +298,6 @@ function JoinPageContent() {
           doc(db, 'vehicles', vehicleId),
           {
             id: vehicleId,
-            owner_id: userRef.id,
             owner_email: email,
             owner_name: fullName || 'Verified Member',
             year: Number(editYear) || 1969,
@@ -311,7 +322,7 @@ function JoinPageContent() {
 
       setJoinedSuccess(true);
       showToast({
-        title: 'WELCOME TO GRIDPASS! 🎉',
+        title: authMode === 'signin' ? 'PASSPORT LOADED! 🔑' : 'WELCOME TO GRIDPASS! 🎉',
         message: rawTagId ? `Membership active! Card #${rawTagId} claimed.` : 'Membership active! Welcome to Gridpass.',
         icon: '🎉',
       });
@@ -320,10 +331,10 @@ function JoinPageContent() {
         router.push('/dash');
       }, 1200);
     } catch (err: any) {
-      console.error('Failed to join:', err);
+      console.error('Failed to authenticate/join:', err);
       showToast({
-        title: 'JOIN ERROR',
-        message: err.message || 'Failed to complete registration.',
+        title: 'AUTHENTICATION ERROR',
+        message: err.message || 'Failed to authenticate.',
         icon: '⚠️',
       });
     } finally {
@@ -601,103 +612,133 @@ function JoinPageContent() {
             ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-4">
               
-              {/* Universal Category Selector */}
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-500 mb-1.5">
-                  Who Are You? / What Brings You Here?
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('motorsports')}
-                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedCategory === 'motorsports'
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                    }`}
-                  >
-                    <Car className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Motorsports</span>
-                  </button>
+              {/* Sign Up vs Sign In Mode Switcher */}
+              <div className="flex rounded-xl bg-neutral-100 p-1 border border-neutral-200 font-mono font-bold text-xs uppercase">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signup')}
+                  className={`flex-1 py-2.5 rounded-lg transition text-[11px] ${
+                    authMode === 'signup'
+                      ? 'bg-neutral-900 text-white shadow-xs'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  🚀 Create Account & Claim
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signin')}
+                  className={`flex-1 py-2.5 rounded-lg transition text-[11px] ${
+                    authMode === 'signin'
+                      ? 'bg-neutral-900 text-white shadow-xs'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  🔑 Sign In Existing Account
+                </button>
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('food_truck')}
-                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedCategory === 'food_truck'
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                    }`}
-                  >
-                    <Utensils className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Food/Vendor</span>
-                  </button>
+              {/* Universal Category Selector (Signup Mode) */}
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-500 mb-1.5">
+                    Who Are You? / What Brings You Here?
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('motorsports')}
+                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'motorsports'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Car className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase">Motorsports</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('aviation')}
-                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedCategory === 'aviation'
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                    }`}
-                  >
-                    <Plane className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Aviation/Pilot</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('food_truck')}
+                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'food_truck'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Utensils className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase">Food/Vendor</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('spectator')}
-                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedCategory === 'spectator'
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                    }`}
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Enthusiast</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('aviation')}
+                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'aviation'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Plane className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase">Aviation/Pilot</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('wild_scan')}
-                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedCategory === 'wild_scan'
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                    }`}
-                  >
-                    <Toilet className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Sticker Scan</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('spectator')}
+                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'spectator'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase">Enthusiast</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('other')}
-                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedCategory === 'other'
-                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
-                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
-                    }`}
-                  >
-                    <Flame className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Anything Else</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('wild_scan')}
+                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'wild_scan'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Toilet className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase">Sticker Scan</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('other')}
+                      className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                        selectedCategory === 'other'
+                          ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                          : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <Flame className="w-4 h-4" />
+                      <span className="text-[9px] font-black uppercase">Anything Else</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="PJ Losey"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
-                />
-              </div>
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="PJ Losey"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Email Address</label>
@@ -723,18 +764,35 @@ function JoinPageContent() {
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">
-                  Machine, Business, or Craft Make & Model <span className="text-neutral-400 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 1969 Camaro, Cessna 172, or Tacos El Rey Truck"
-                  value={vehicleMakeModel}
-                  onChange={(e) => setVehicleMakeModel(e.target.value)}
-                  className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
-                />
-              </div>
+              {authMode === 'signup' && (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">
+                      Got a Note for Us? Where did you find this card / QR code? <span className="text-neutral-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Found on my Camaro windshield at Road America, Nielsen's, or bathroom stall!"
+                      value={discoveryNote}
+                      onChange={(e) => setDiscoveryNote(e.target.value)}
+                      className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">
+                      Machine, Business, or Craft Make & Model <span className="text-neutral-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 1969 Camaro, Cessna 172, or Tacos El Rey Truck"
+                      value={vehicleMakeModel}
+                      onChange={(e) => setVehicleMakeModel(e.target.value)}
+                      className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
+                    />
+                  </div>
+                </>
+              )}
 
               <button
                 type="submit"
@@ -743,7 +801,7 @@ function JoinPageContent() {
               >
                 {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                   <>
-                    <span>CLAIM PASSPORT & JOIN GRIDPASS</span>
+                    <span>{authMode === 'signin' ? 'SIGN IN & CLAIM PASSPORT' : 'CLAIM PASSPORT & JOIN GRIDPASS'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

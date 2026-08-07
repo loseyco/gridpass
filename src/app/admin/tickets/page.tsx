@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1029_discovery_note_and_signin_toggle',
+    ticket_number: 'TICK-1029',
+    agent_role: 'gm',
+    title: 'Got a Note for Us Discovery Story Input & 1-Tap Sign In / Sign Up Mode Switcher',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'authMode', 'discoveryNote'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['users schema: discovery_note'],
+    issue_description: 'Platform owner required adding a "Got a Note for Us?" story input to capture where members found cards/stickers (guerrilla marketing insights) and adding a 1-tap Sign In vs Sign Up mode toggle so existing members scanning cards on new devices can authenticate directly.',
+    root_cause: 'Visitors without accounts needed to share discovery stories, while existing members scanning cards needed a frictionless way to log in without creating duplicate profiles.',
+    resolution_summary: 'Added authMode tab switcher (Create Account & Claim vs Sign In Existing Account) supporting signInWithEmailAndPassword, integrated "Got a Note for Us?" input saving discovery_note to Firestore users collection.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and pushed commit to origin/feature/sales-crm-intake-engine.',
+    sop_summary: 'SOP for member discovery note intake and dual-mode authentication on /join.',
+    sop_steps: [
+      'Add authMode state toggle to switch between signup and signin forms.',
+      'Integrate discoveryNote story input field in JoinClient.tsx.',
+      'Save discovery_note into Firestore user document on account creation.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1028_physical_card_security_invariant',
     ticket_number: 'TICK-1028',
     agent_role: 'gm',
