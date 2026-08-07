@@ -51,42 +51,54 @@ export function FloatingFeedbackDrawer() {
       };
 
       // 1. Save to user_feedback collection
-      await addDoc(collection(db, 'user_feedback'), feedbackPayload);
+      try {
+        await addDoc(collection(db, 'user_feedback'), feedbackPayload);
+      } catch (e1) {
+        console.warn('user_feedback Firestore write warning:', e1);
+      }
 
       // 2. Also log as a pending TODO Execution Ticket in agent_tickets
-      const ticketNum = `TICK-${Math.floor(2000 + Math.random() * 8000)}`;
-      await logAgentExecutionTicket({
-        ticket_number: ticketNum,
-        agent_role: 'site_auditor',
-        title: `[${category.toUpperCase()}] ${title}`,
-        category: category === 'bug' ? 'ui_design' : 'feature',
-        priority,
-        status: 'TODO',
-        components_used: ['FloatingFeedbackDrawer', 'UserFeedbackQueue'],
-        files_modified: [pathname],
-        issue_description: `User Feedback from ${user?.email || 'Visitor'} on page ${pathname}: ${description}`,
-        root_cause: `Submitted via Universal Floating Feedback Drawer on ${pathname}.`,
-        resolution_summary: 'Pending agent team review during sprint planning meeting.',
-        verification_proof: 'Awaiting subagent verification upon ticket triage.',
-        sop_summary: `User feedback ticket submitted from ${pathname}.`,
-        sop_steps: [
-          `Review submitted feedback item ${ticketNum} during sprint planning meeting.`,
-          `Assign responsible subagent (architect, site_auditor, mobile_expert, etc.).`,
-          `Execute code modifications and update ticket status to VERIFIED upon completion.`
-        ],
-      });
+      try {
+        const ticketNum = `TICK-${Math.floor(2000 + Math.random() * 8000)}`;
+        await logAgentExecutionTicket({
+          ticket_number: ticketNum,
+          agent_role: 'site_auditor',
+          title: `[${category.toUpperCase()}] ${title}`,
+          category: category === 'bug' ? 'ui_design' : 'feature',
+          priority,
+          status: 'TODO',
+          components_used: ['FloatingFeedbackDrawer', 'UserFeedbackQueue'],
+          files_modified: [pathname],
+          issue_description: `User Feedback from ${user?.email || 'Visitor'} on page ${pathname}: ${description}`,
+          root_cause: `Submitted via Universal Floating Feedback Drawer on ${pathname}.`,
+          resolution_summary: 'Pending agent team review during sprint planning meeting.',
+          verification_proof: 'Awaiting subagent verification upon ticket triage.',
+          sop_summary: `User feedback ticket submitted from ${pathname}.`,
+          sop_steps: [
+            `Review submitted feedback item ${ticketNum} during sprint planning meeting.`,
+            `Assign responsible subagent (architect, site_auditor, mobile_expert, etc.).`,
+            `Execute code modifications and update ticket status to VERIFIED upon completion.`
+          ],
+        });
+      } catch (e2) {
+        console.warn('agent_tickets write warning:', e2);
+      }
 
       // 3. Log to system_logs for telemetry
-      await addDoc(collection(db, 'system_logs'), {
-        timestamp: now,
-        category: 'USER',
-        actor: user?.email || 'Anonymous Visitor',
-        actor_role: 'member',
-        action: 'USER_FEEDBACK_SUBMITTED',
-        target_path: pathname,
-        details: `Submitted ${category} ticket: "${title}"`,
-        metadata: feedbackPayload,
-      });
+      try {
+        await addDoc(collection(db, 'system_logs'), {
+          timestamp: now,
+          category: 'USER',
+          actor: user?.email || 'Anonymous Visitor',
+          actor_role: 'member',
+          action: 'USER_FEEDBACK_SUBMITTED',
+          target_path: pathname,
+          details: `Submitted ${category} ticket: "${title}"`,
+          metadata: feedbackPayload,
+        });
+      } catch (e3) {
+        console.warn('system_logs write warning:', e3);
+      }
 
       setSubmitting(false);
       setSubmittedSuccess(true);
