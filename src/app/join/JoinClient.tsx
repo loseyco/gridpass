@@ -78,10 +78,10 @@ function JoinPageContent() {
   const [editSpottedNote, setEditSpottedNote] = useState('');
   
   // Vehicle Invite Fields
-  const [editYear, setEditYear] = useState('1969');
-  const [editMake, setEditMake] = useState('Chevrolet');
-  const [editModel, setEditModel] = useState('Camaro');
-  const [editTrim, setEditTrim] = useState('SS 396');
+  const [editYear, setEditYear] = useState('');
+  const [editMake, setEditMake] = useState('');
+  const [editModel, setEditModel] = useState('');
+  const [editTrim, setEditTrim] = useState('');
 
   // Is Current User Admin?
   const isAdmin = user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com');
@@ -162,10 +162,10 @@ function JoinPageContent() {
           setEditSpottedPhoto(rec.custom_spotted_photo_url || '');
           setEditSpottedTitle(rec.custom_spotted_title || '');
           setEditSpottedNote(rec.custom_spotted_note || '');
-          setEditYear(rec.unclaimed_year || '1969');
-          setEditMake(rec.unclaimed_make || 'Chevrolet');
-          setEditModel(rec.unclaimed_model || 'Camaro');
-          setEditTrim(rec.unclaimed_trim || 'SS 396');
+          setEditYear(rec.unclaimed_year || '');
+          setEditMake(rec.unclaimed_make || '');
+          setEditModel(rec.unclaimed_model || '');
+          setEditTrim(rec.unclaimed_trim || '');
 
           // If unbound physical tag scanned by admin, open setup wizard automatically!
           if (rec.status === 'unbound' && isAdmin) {

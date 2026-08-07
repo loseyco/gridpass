@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1031_pure_blank_state_form_inputs',
+    ticket_number: 'TICK-1031',
+    agent_role: 'gm',
+    title: 'Pure Blank State Invariant & Zero Pre-filled Form Fields in Tag Binding Wizard',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['JoinClient', 'setShowAdminWizard', 'setEditYear'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner required that card binding wizard input fields (Year, Make, Model, Trim) MUST NOT contain pre-filled hardcoded sample data (e.g. 1969 Chevrolet Camaro SS 396), starting 100% blank with clean placeholders.',
+    root_cause: 'State hooks were initialized with sample vehicle string presets instead of empty strings, requiring admins to clear text fields when binding new tags.',
+    resolution_summary: 'Replaced sample string state initializers with empty strings in JoinClient.tsx, keeping form inputs 100% blank while preserving helpful placeholder hints.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean blank form inputs on localhost.',
+    sop_summary: 'SOP for enforcing pure blank state form initializers.',
+    sop_steps: [
+      'Initialize form state hooks with empty strings rather than hardcoded presets.',
+      'Use HTML placeholder attributes for user guidance without populating field values.',
+      'Verify clean blank form fields across admin modals.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1030_lean_onboarding_cleanup',
     ticket_number: 'TICK-1030',
     agent_role: 'gm',
