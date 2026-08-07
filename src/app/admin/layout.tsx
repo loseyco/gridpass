@@ -25,6 +25,7 @@ export default function AdminLayout({
     {
       title: 'Global System Tools',
       items: [
+        { label: 'Owner Command HQ', path: '/admin/command', icon: '🎛️' },
         { label: 'System Analytics', path: '/admin/analytics', icon: '📈' },
         { label: 'System Activity Logs', path: '/admin/logs', icon: '📡' },
         { label: 'AI Agent Staff', path: '/admin/agents', icon: '🤖' },
