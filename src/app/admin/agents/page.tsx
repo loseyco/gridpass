@@ -7,7 +7,7 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 import { AgentStaff } from '@/lib/types/admin';
 import { AgentTrainingDrawer } from './AgentTrainingDrawer';
 
-export const DEFAULT_AGENTS: AgentStaff[] = [
+const DEFAULT_AGENTS: AgentStaff[] = [
   {
     id: 'architect',
     name: 'Technical Architect',

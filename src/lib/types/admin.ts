@@ -31,6 +31,9 @@ export interface AgentTicket {
   sop_steps: string[];
   created_at: string;
   updated_at?: string;
+  verified_by_agent?: string;
+  audit_status?: 'passed' | 'pending_review' | 'flagged';
+  telemetry_verified?: boolean;
 }
 
 export interface SOPGuide {
