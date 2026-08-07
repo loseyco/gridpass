@@ -244,12 +244,14 @@ function HomeClient() {
                       )}
                     </div>
                     <h3 className="text-sm sm:text-base font-black text-neutral-900 uppercase tracking-tight group-hover:text-[#ff3b30] transition-colors line-clamp-1">
-                      {evt.title || evt.name || '26TH ANNUAL MONMOUTH CRUISE NIGHT'}
+                      {evt.title || evt.name}
                     </h3>
-                    <p className="text-xs text-neutral-500 font-medium flex items-center gap-1">
-                      <span>📍</span>
-                      <span>{evt.location_name || evt.address || 'Monmouth Public Square & Main Street'}</span>
-                    </p>
+                    {evt.location_name || evt.address ? (
+                      <p className="text-xs text-neutral-500 font-medium flex items-center gap-1">
+                        <span>📍</span>
+                        <span>{evt.location_name || evt.address}</span>
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -264,42 +266,10 @@ function HomeClient() {
             ))}
           </div>
         ) : (
-          /* Default Featured Monmouth Cruise Night Fallback Event Card matching exact screenshot */
-          <div className="p-4 bg-neutral-50 hover:bg-neutral-100/80 border border-neutral-200/80 rounded-2xl transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group">
-            <div className="flex items-center gap-3.5">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-neutral-200 rounded-xl overflow-hidden shrink-0 border border-neutral-300 relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&auto=format&fit=crop&q=80" 
-                  alt="Monmouth Cruise Night" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="px-2 py-0.5 bg-amber-500 text-white text-[9px] font-black uppercase rounded-md tracking-wider">
-                    📢 RESCHEDULED
-                  </span>
-                  <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-700 text-[9px] font-bold uppercase rounded-md tracking-wider">
-                    Permanent Venue
-                  </span>
-                </div>
-                <h3 className="text-sm sm:text-base font-black text-neutral-900 uppercase tracking-tight group-hover:text-[#ff3b30] transition-colors line-clamp-1">
-                  26TH ANNUAL MONMOUTH CRUISE NIGHT (MAPLE CITY STREET MACHINES)
-                </h3>
-                <p className="text-xs text-neutral-500 font-medium flex items-center gap-1">
-                  <span>📍</span>
-                  <span>Monmouth Public Square & Main Street</span>
-                </p>
-              </div>
-            </div>
-
-            <Link 
-              href="/events/maple-city-cruise"
-              className="w-full sm:w-auto px-5 py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-colors text-center shrink-0 flex items-center justify-center gap-1 min-h-[44px]"
-            >
-              <span>VIEW</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+          <div className="p-8 bg-neutral-50 border border-dashed border-neutral-200 rounded-2xl text-center space-y-2">
+            <span className="text-2xl">🏁</span>
+            <p className="text-xs font-mono font-bold text-neutral-500 uppercase tracking-wider">Awaiting Live Event Feed</p>
+            <p className="text-[11px] text-neutral-400">No active featured events scheduled right now.</p>
           </div>
         )}
       </div>

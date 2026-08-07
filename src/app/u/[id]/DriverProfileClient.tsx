@@ -10,10 +10,11 @@ import {
   Instagram, Youtube, Compass, MapPin, 
   CarFront, Loader2, ArrowLeft, Heart, ShieldCheck, Printer, Sparkles, UserCircle,
   Facebook, Twitter, Globe, Share2, MessageSquare, Send, Store, Trophy,
-  Calendar, CheckCircle2, Award, Flame, Download, Camera, Copy, Plus, X
+  Calendar, CheckCircle2, Award, Flame, Download, Camera, Copy, Plus, X, Settings, Briefcase
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import GridpassQRCode, { downloadGridpassQR } from '@/components/qr/GridpassQRCode';
+import { EditPassportDrawer } from '@/components/EditPassportDrawer';
 
 interface DriverProfile {
   uid: string;
@@ -27,6 +28,7 @@ interface DriverProfile {
   avatar_url?: string;
   is_supporter?: boolean;
   role?: string;
+  experiences?: any[];
   socials?: {
     instagram?: string;
     youtube?: string;
@@ -85,6 +87,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [postingMessage, setPostingMessage] = useState(false);
   const [loading, setLoading] = useState(!initialProfile);
   const [showPrintModal, setShowPrintModal] = useState(false);
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [shareText, setShareText] = useState('Share Passport');
   const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
@@ -344,13 +347,23 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
           
-          <button 
-            type="button"
-            onClick={handleShare}
-            className="py-1.5 px-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-mono font-black uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-500/20"
-          >
-            <Share2 className="w-3.5 h-3.5" /> {shareText}
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={() => setShowEditDrawer(true)}
+              className="py-1.5 px-3 bg-neutral-900/80 hover:bg-black backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+            >
+              <Settings className="w-3.5 h-3.5 text-[#ff3b30]" /> Manage Passport
+            </button>
+
+            <button 
+              type="button"
+              onClick={handleShare}
+              className="py-1.5 px-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-mono font-black uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-500/20"
+            >
+              <Share2 className="w-3.5 h-3.5" /> {shareText}
+            </button>
+          </div>
         </div>
 
         {/* Status Pill Floating Badge */}
@@ -727,6 +740,40 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               );
             })()}
 
+            {/* Work & Career Experience Section */}
+            <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
+                  <Briefcase className="w-4 h-4 text-blue-600" /> Work Experience &amp; Motorsport Career History
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowEditDrawer(true)}
+                  className="text-[10px] font-mono font-bold text-[#ff3b30] hover:underline cursor-pointer"
+                >
+                  + Manage History
+                </button>
+              </div>
+
+              {profile.experiences && profile.experiences.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {profile.experiences.map((exp: any, idx: number) => (
+                    <div key={idx} className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-1">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-xs font-black uppercase text-neutral-900">{exp.title}</h5>
+                        <span className="text-[9px] font-mono font-bold text-neutral-500">{exp.years}</span>
+                      </div>
+                      <p className="text-[11px] font-bold text-neutral-700">{exp.company}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 bg-neutral-50 border border-dashed border-neutral-200 rounded-2xl text-center">
+                  <p className="text-xs font-mono font-bold text-neutral-400 uppercase">No work experience entries added yet.</p>
+                </div>
+              )}
+            </div>
+
             {/* Badges Matrix */}
             <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md">
               <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
@@ -810,6 +857,14 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </div>
         </div>
       )}
+
+      {/* ⚙️ SELF-SERVICE PASSPORT & CAREER MANAGEMENT DRAWER */}
+      <EditPassportDrawer
+        isOpen={showEditDrawer}
+        onClose={() => setShowEditDrawer(false)}
+        profile={profile}
+        onProfileUpdated={(updated) => setProfile(updated)}
+      />
     </div>
   );
 }
