@@ -129,9 +129,8 @@ export default function AdminLogsPage() {
     return () => unsub();
   }, []);
 
-  // Filtered Logs
-  const filteredLogs = logs.filter((log) => {
-    // 1. Localhost suppression filter (defaults to TRUE to hide local dev spam)
+  // 1. Apply Localhost suppression filter FIRST
+  const nonLocalLogs = logs.filter((log) => {
     if (hideLocalhost) {
       const isLocal =
         (log as any).is_localhost === true ||
@@ -140,11 +139,13 @@ export default function AdminLogsPage() {
         (log.details || '').includes('Localhost');
       if (isLocal) return false;
     }
-
-    // 2. Category filter
-    if (activeCategory === 'all') return true;
-    return log.category === activeCategory;
+    return true;
   });
+
+  // 2. Apply Category filter for table display
+  const filteredLogs = activeCategory === 'all'
+    ? nonLocalLogs
+    : nonLocalLogs.filter((l) => l.category === activeCategory);
 
   const getCategoryBadge = (category: SystemLogEntry['category']) => {
     switch (category) {
@@ -238,10 +239,11 @@ export default function AdminLogsPage() {
     document.body.removeChild(link);
   };
 
-  const agentCount = logs.filter((l) => l.category === 'AGENT').length;
-  const userCount = logs.filter((l) => l.category === 'USER').length;
-  const vehicleCount = logs.filter((l) => l.category === 'VEHICLE').length;
-  const securityCount = logs.filter((l) => l.category === 'SECURITY').length;
+  const agentCount = nonLocalLogs.filter((l) => l.category === 'AGENT').length;
+  const userCount = nonLocalLogs.filter((l) => l.category === 'USER').length;
+  const vehicleCount = nonLocalLogs.filter((l) => l.category === 'VEHICLE').length;
+  const businessCount = nonLocalLogs.filter((l) => l.category === 'BUSINESS').length;
+  const securityCount = nonLocalLogs.filter((l) => l.category === 'SECURITY').length;
 
   return (
     <div className="space-y-6 font-sans">
@@ -277,7 +279,7 @@ export default function AdminLogsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
           <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider block">Total Logs Captured</span>
-          <span className="text-2xl font-black text-neutral-900">{logs.length}</span>
+          <span className="text-2xl font-black text-neutral-900">{nonLocalLogs.length}</span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
           <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider block">Subagent Actions</span>
@@ -304,11 +306,11 @@ export default function AdminLogsPage() {
         columns={columns}
         idKey="id"
         filterCategories={[
-          { label: 'All Logs', key: 'all', count: logs.length },
+          { label: 'All Logs', key: 'all', count: nonLocalLogs.length },
           { label: '🤖 Agent Actions', key: 'AGENT', count: agentCount },
           { label: '👤 User Activity', key: 'USER', count: userCount },
           { label: '🏎️ Vehicle Mutations', key: 'VEHICLE', count: vehicleCount },
-          { label: '🏢 Business & Sales', key: 'BUSINESS', count: logs.filter((l) => l.category === 'BUSINESS').length },
+          { label: '🏢 Business & Sales', key: 'BUSINESS', count: businessCount },
           { label: '🔒 Security & Rules', key: 'SECURITY', count: securityCount },
         ]}
         activeFilter={activeCategory}
