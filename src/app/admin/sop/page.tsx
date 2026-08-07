@@ -70,6 +70,43 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     ],
     created_at: new Date().toISOString().split('T')[0],
   },
+  {
+    id: 'tick_1004_mobile_admin_nav',
+    ticket_number: 'TICK-1004',
+    agent_role: 'site_auditor',
+    title: 'Collapsible Mobile Admin Hamburger Navigation Bar',
+    category: 'mobile_touch',
+    status: 'VERIFIED',
+    components_used: ['AdminLayout', 'Navbar'],
+    files_modified: ['src/app/admin/layout.tsx'],
+    schema_changes: [],
+    sop_summary: 'Added isMobileMenuOpen toggle to reduce mobile vertical header height from 70% to <52px.',
+    sop_steps: [
+      'Navigate to Super Admin UI on mobile or small viewports (<768px).',
+      'Toggle hamburger menu state using isMobileMenuOpen state hook.',
+      'Verify header height remains under 52px when collapsed, preventing viewport clipping.',
+      'Ensure touch targets for hamburger toggle meet Apple iOS HIG >=44px standards.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'tick_1005_sticky_actions',
+    ticket_number: 'TICK-1005',
+    agent_role: 'site_auditor',
+    title: 'Sticky Right Actions Column in ExcelWorksheetTable',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    components_used: ['ExcelWorksheetTable'],
+    files_modified: ['packages/ui/src/ExcelWorksheetTable.tsx'],
+    schema_changes: [],
+    sop_summary: 'Made ACTIONS column sticky right-0 so action buttons are 100% visible on all viewports without being cut off.',
+    sop_steps: [
+      'Open ExcelWorksheetTable in wide data tables with horizontal scroll.',
+      'Verify the rightmost ACTIONS column is styled with sticky right-0 z-10 bg-white.',
+      'Confirm action buttons (Edit, Delete, Support, Toggle) remain visible without horizontal scrolling.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
 ];
 
 const DEFAULT_SOPS: SOPGuide[] = [
