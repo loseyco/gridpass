@@ -9,6 +9,31 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1073_member_profile_motorsport_resume_passport',
+    ticket_number: 'TICK-1073',
+    agent_role: 'architect',
+    title: 'Ultimate Member Profile & Motorsport Resume Passport (/u/[id]) with Guestbook Fan Wall & Build Respects',
+    category: 'ui_design',
+    status: 'COMPLETED',
+    priority: 'urgent',
+    components_used: ['DriverProfileClient', 'GuestbookFanWall', 'GarageRespectCounter', 'PassportQRBadge'],
+    files_modified: ['src/app/u/[id]/DriverProfileClient.tsx', 'src/app/u/[id]/page.tsx'],
+    schema_changes: ['user_messages: recipient_uid, author_name, message, timestamp'],
+    issue_description: 'Member profiles lacked F1 paddock hero cards, real-time fan wall guestbooks, build respect counters, and business/team showcases.',
+    root_cause: 'Profile view was a simplified placeholder card.',
+    resolution_summary: 'Re-architected DriverProfileClient.tsx into the Ultimate Motorsport & Life Resume Passport featuring F1 cover header, 4 core tabs (Garage & Builds with Respect Upvotes, Businesses & Teams, Real-time Guestbook Fan Wall, and Career Telemetry), and 1-tap QR passport exporter.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors). Tested on http://localhost:3000/u/pjlosey and http://localhost:3000/u/marcus.',
+    sop_summary: 'SOP for member profile resume passport architecture.',
+    sop_steps: [
+      'Build F1 paddock hero card with cover banner, driver avatar, hometown flag, and status pill.',
+      'Render 4 core resume tabs: Garage Builds with Respect upvotes, Businesses & Teams, Guestbook Fan Wall, and Career Stats.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'architect',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1072_sms_group_chat_and_ig_story_exporter',
     ticket_number: 'TICK-1072',
     agent_role: 'aiseo_expert',
