@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1042_business_destination_and_hero_card_fix',
+    ticket_number: 'TICK-1042',
+    agent_role: 'gm',
+    title: 'Business Card Destination Routing & Dynamic Hero Card Invitation Fix',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'resolvePhysicalTag', 'handleAdminSaveTarget'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported that card VIP-9XP32 configured as a business invitation was not displaying the business invitation banner or routing correctly.',
+    root_cause: 'JoinClient.tsx evaluated referrerName before checking target_type === business, overriding the hero invitation card, and resolvePhysicalTag failed to populate editBusinessName state.',
+    resolution_summary: 'Updated JoinClient.tsx to evaluate business and person target modes in the Hero Card Header, rendering "🏢 YOU ARE INVITED! CLAIM PASSPORT FOR [BIZ_NAME]", and populated editBusinessName state in resolvePhysicalTag.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local staging on localhost.',
+    sop_summary: 'SOP for target-mode priority in invitation hero banners.',
+    sop_steps: [
+      'Evaluate target_type (business, person, vehicle) BEFORE generic referral link fallbacks in invitation hero banners.',
+      'Populate all mode-specific state fields (editBusinessName, editPersonName) upon initial tag resolution.',
+      'Ensure target_destination correctly defaults to /b/[slug] for business invitations.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1041_unified_scan_and_view_telemetry',
     ticket_number: 'TICK-1041',
     agent_role: 'gm',

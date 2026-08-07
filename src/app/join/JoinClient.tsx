@@ -175,6 +175,9 @@ function JoinPageContent() {
           setEditMake(rec.unclaimed_make || '');
           setEditModel(rec.unclaimed_model || '');
           setEditTrim(rec.unclaimed_trim || '');
+          setEditBusinessId(rec.unclaimed_business_id || '');
+          setEditBusinessName(rec.custom_spotted_title || '');
+          setEditPersonName(rec.recipient_name || rec.custom_spotted_title || '');
 
           // If unbound physical tag scanned by admin, open setup wizard automatically!
           if (rec.status === 'unbound' && isAdmin) {
@@ -405,23 +408,25 @@ function JoinPageContent() {
     }
 
     let stagedBizId = editBusinessId;
-    if (isBusinessMode && editBusinessName) {
-      stagedBizId = editBusinessId || editBusinessName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-      targetDest = `/b/${stagedBizId}`;
-      await setDoc(
-        doc(db, 'businesses', stagedBizId),
-        {
-          id: stagedBizId,
-          name: editBusinessName,
-          category: editBusinessCategory || 'shop_garage',
-          location_name: editBusinessLocation || 'Local Region',
-          is_unclaimed: true,
-          status: 'unclaimed',
-          created_by: user?.email || 'loseyp@gmail.com',
-          created_at: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+    if (isBusinessMode) {
+      stagedBizId = editBusinessId || (editBusinessName ? editBusinessName.toLowerCase().replace(/[^a-z0-9]/g, '-') : `biz_${rawTagId}`);
+      targetDest = (editTargetDest && editTargetDest !== '/join' && editTargetDest !== '/partner') ? editTargetDest : `/b/${stagedBizId}`;
+      if (editBusinessName) {
+        await setDoc(
+          doc(db, 'businesses', stagedBizId),
+          {
+            id: stagedBizId,
+            name: editBusinessName,
+            category: editBusinessCategory || 'shop_garage',
+            location_name: editBusinessLocation || 'Local Region',
+            is_unclaimed: true,
+            status: 'unclaimed',
+            created_by: user?.email || 'loseyp@gmail.com',
+            created_at: new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      }
     }
 
     const vehicleTitle = [editYear, editMake, editModel].filter(Boolean).join(' ');
@@ -529,14 +534,24 @@ function JoinPageContent() {
             </span>
           </div>
 
-          {/* Derived Referrer Name */}
+          {/* Derived Referrer & Target Mode Customization */}
           {(() => {
             const referrerName = tagRecord?.referrer_name || searchParams.get('ref') || searchParams.get('referrer') || null;
+            const isBiz = tagRecord?.target_type === 'business';
+            const isPerson = tagRecord?.target_type === 'driver' || tagRecord?.target_type === 'person';
+            const isVeh = tagRecord?.target_type === 'vehicle' || tagRecord?.custom_spotted_photo_url;
+            const bizName = tagRecord?.custom_spotted_title || 'BUSINESS';
+            const personName = tagRecord?.recipient_name || tagRecord?.custom_spotted_title;
+
             return (
               <div className="space-y-2">
                 <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white leading-tight">
-                  {tagRecord?.custom_spotted_photo_url
-                    ? `🏎️ YOU ARE INVITED! CLAIM PASSPORT FOR YOUR ${tagRecord.custom_spotted_title || 'MACHINE'}`
+                  {isBiz
+                    ? `🏢 YOU ARE INVITED! CLAIM PASSPORT FOR ${bizName.toUpperCase()}`
+                    : isPerson && personName
+                    ? `⚡ SPECIAL INVITATION FOR ${personName.toUpperCase()}!`
+                    : isVeh
+                    ? `🏎️ YOU ARE INVITED! CLAIM PASSPORT FOR YOUR ${tagRecord?.custom_spotted_title || 'MACHINE'}`
                     : referrerName
                     ? `⚡ ${referrerName.toUpperCase()} INVITED YOU TO JOIN GRIDPASS!`
                     : rawTagId
@@ -544,9 +559,17 @@ function JoinPageContent() {
                     : '⚡ YOU ARE INVITED TO JOIN GRIDPASS'}
                 </h1>
                 <p className="text-xs text-neutral-300 font-medium leading-relaxed">
-                  {referrerName
-                    ? `Your friend ${referrerName} invited you to claim your vehicle passport, register your business, or join the roster on Gridpass!`
-                    : 'Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.'}
+                  {tagRecord?.custom_spotted_note ? (
+                    <span className="italic font-bold text-amber-300">&quot;{tagRecord.custom_spotted_note}&quot;</span>
+                  ) : isBiz ? (
+                    `Claim your official Gridpass business passport for ${bizName}, create your product catalog, and connect with active drivers.`
+                  ) : isPerson && personName ? (
+                    `${personName}, you have been personally invited to join the Gridpass roster!`
+                  ) : referrerName ? (
+                    `Your friend ${referrerName} invited you to claim your vehicle passport, register your business, or join the roster on Gridpass!`
+                  ) : (
+                    'Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.'
+                  )}
                 </p>
               </div>
             );
