@@ -98,6 +98,8 @@ export default function EventHubPage() {
   // Food Truck Express Mobile Pickup Cart State (TICK-1068)
   const [foodCart, setFoodCart] = useState<Record<string, number>>({});
   const [placingFoodOrder, setPlacingFoodOrder] = useState(false);
+  // 9:16 Instagram Story Canvas Exporter State (TICK-1072)
+  const [showStoryExporter, setShowStoryExporter] = useState(false);
 
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
@@ -6036,19 +6038,29 @@ export default function EventHubPage() {
             {/* 1-Click Social Media Share Buttons */}
             <div className="space-y-2 pt-1">
               <span className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-neutral-400 block">
-                Instant 1-Tap Share
+                Instant 1-Tap Share &amp; Story Canvas Exporter (TICK-1072)
               </span>
+
+              {/* 9:16 Instagram Story Exporter Highlight Button */}
+              <button
+                type="button"
+                onClick={() => setShowStoryExporter(true)}
+                className="w-full py-3 px-3 bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 text-white text-xs font-mono font-black uppercase rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              >
+                <Camera className="w-4 h-4" /> 📸 Generate 9:16 Instagram Story Card
+              </button>
 
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    const smsUrl = `sms:?body=${encodeURIComponent(shareModalData.shareText)}`;
+                    const crewSmsText = `Yo! Staging my build for ${event?.title || 'Maple City Cruise'} on Gridpass! Check out my pass & join our pit crew here: ${shareModalData.url}`;
+                    const smsUrl = `sms:?body=${encodeURIComponent(crewSmsText)}`;
                     window.location.href = smsUrl;
                   }}
                   className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-mono font-black uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" /> Text (SMS)
+                  <MessageSquare className="w-3.5 h-3.5" /> 📲 SMS Crew Invite
                 </button>
 
                 <button
@@ -6125,6 +6137,109 @@ export default function EventHubPage() {
                   <FileText className="w-4 h-4 text-neutral-600" /> Copy Full Caption & Message Post
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📸 9:16 INSTAGRAM STORY CANVAS EXPORTER MODAL (TICK-1072) */}
+      {showStoryExporter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-neutral-950 text-white max-w-sm w-full p-5 rounded-[2.5rem] border border-neutral-800 text-left relative shadow-2xl space-y-4 my-6">
+            <button
+              type="button"
+              onClick={() => setShowStoryExporter(false)}
+              className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white rounded-full bg-neutral-900/80 transition-colors cursor-pointer z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-0.5 border-b border-neutral-800 pb-2.5">
+              <span className="text-[9px] font-mono font-black uppercase text-purple-400 tracking-widest block">
+                9:16 INSTAGRAM STORY GRAPHIC
+              </span>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                <Camera className="w-4 h-4 text-purple-400" /> Export Story Canvas Image
+              </h3>
+            </div>
+
+            {/* Vertical 9:16 Story Card Preview Container */}
+            <div className="w-full aspect-[9/16] bg-gradient-to-b from-neutral-900 via-neutral-950 to-black rounded-3xl border border-purple-500/30 p-5 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+              {/* Top Banner Image Background Overlay */}
+              {event?.cover_url && (
+                <div className="absolute inset-0 opacity-25 bg-cover bg-center pointer-events-none" style={{ backgroundImage: `url(${event.cover_url})` }} />
+              )}
+
+              {/* Story Top Brand Header */}
+              <div className="relative z-10 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-mono font-black text-[#ff3b30] uppercase tracking-widest bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm border border-neutral-800">
+                    GRIDPASS PASSPORT
+                  </span>
+                  <span className="text-[8px] font-mono text-purple-300 bg-purple-950/80 border border-purple-800 px-2 py-0.5 rounded-full font-bold uppercase">
+                    STORY CANVAS
+                  </span>
+                </div>
+                <h2 className="text-base font-black uppercase text-white tracking-tight pt-1 leading-tight">
+                  {event?.title || 'MAPLE CITY CRUISE'}
+                </h2>
+                <p className="text-[9.5px] font-mono font-bold text-neutral-300 flex items-center gap-1">
+                  <span>📍 {event?.location_name || 'Public Square'}</span>
+                </p>
+              </div>
+
+              {/* Center High-Res QR Code Card Overlay */}
+              <div className="relative z-10 py-3 bg-white/95 backdrop-blur-md rounded-2xl p-4 text-center space-y-2 text-neutral-900 border border-neutral-200 shadow-xl my-auto">
+                <div className="flex justify-center">
+                  <GridpassQRCode 
+                    value={`${typeof window !== 'undefined' ? window.location.origin : 'https://gridpass.app'}/events/${eventId}?ref=ig_story`} 
+                    size={160} 
+                    logoSize={36} 
+                  />
+                </div>
+                <span className="text-[8.5px] font-mono font-black text-[#ff3b30] uppercase tracking-widest block">
+                  SCAN WITH PHONE CAMERA TO JOIN
+                </span>
+              </div>
+
+              {/* Story Bottom Call to Action Banner */}
+              <div className="relative z-10 border-t border-neutral-800/80 pt-2 text-center space-y-0.5">
+                <p className="text-[9px] font-mono font-bold text-neutral-300 uppercase">
+                  VEHICLES • PASSES • VENDORS • COMMUNITY
+                </p>
+                <span className="text-[10px] font-mono font-black text-purple-400 block">
+                  GRIDPASS.APP
+                </span>
+              </div>
+            </div>
+
+            {/* Action Download Buttons */}
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  downloadGridpassQR(
+                    `${typeof window !== 'undefined' ? window.location.origin : 'https://gridpass.app'}/events/${eventId}?ref=ig_story`,
+                    `Gridpass_Story_Card_${(event?.title || 'Event').replace(/[^a-zA-Z0-9]/g, '_')}.png`
+                  );
+                  showToast({
+                    title: "📸 9:16 Story Graphic Exported!",
+                    message: "High-res Instagram Story graphic downloaded to your device! Upload directly to Instagram Stories or Snapchat.",
+                    icon: "✅"
+                  });
+                }}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-mono font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" /> Download 9:16 Story Graphic
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowStoryExporter(false)}
+                className="w-full py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 text-[10px] font-mono font-bold uppercase rounded-xl transition-colors text-center cursor-pointer"
+              >
+                Close Canvas
+              </button>
             </div>
           </div>
         </div>
