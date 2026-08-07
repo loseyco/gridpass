@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1066_embedded_featured_events_on_homepage',
+    ticket_number: 'TICK-1066',
+    agent_role: 'site_auditor',
+    title: 'Embedded Featured Events Cards Section on Home Page & Strict Localhost-First Verification Invariant',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['HomePage', 'FeaturedEventsCard', 'onSnapshot', 'AppShell'],
+    files_modified: ['src/app/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner requested real event cards (like 26TH ANNUAL MONMOUTH CRUISE NIGHT at /events/maple-city-cruise) be embedded directly on the home page, and strictly enforced ZERO LIVE DEPLOYMENTS until localhost testing is approved.',
+    root_cause: 'Landing page previously omitted real-time event card streams and subagents auto-deployed to Firebase Hosting without explicit user approval.',
+    resolution_summary: 'Updated src/app/page.tsx: added real-time Firestore onSnapshot listener for events collection and rendered a dedicated "Featured Events & Meets" section with full event cards (cover image, RESCHEDULED badge, venue tag, title, location, and direct VIEW button). Strictly enforced LOCALHOST ONLY rule (http://localhost:3000) with zero live deployments until PJ Losey reviews and approves.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean event card rendering on localhost.',
+    sop_summary: 'SOP for embedded event cards and localhost-first deployment rule.',
+    sop_steps: [
+      'Query Firestore events collection via real-time onSnapshot.',
+      'Render featured event card with cover photo, badges, title, location, and VIEW CTA button.',
+      'Test strictly on localhost (http://localhost:3000) and NEVER execute firebase deploy without explicit user approval.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1065_public_landing_page_and_mobile_nav_rearchitecture',
     ticket_number: 'TICK-1065',
     agent_role: 'site_auditor',
