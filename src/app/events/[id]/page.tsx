@@ -43,6 +43,8 @@ const DEFAULT_STAGING_CLASSES = [
   'Off-Road / Trucks',
   'Imports',
   'Motorcycles',
+  'Onewheels & PEVs',
+  'Bicycles & E-Bikes',
   'Exotics & Supercars',
   'PWC / Marine',
   'EV & Modern'
@@ -3060,6 +3062,18 @@ export default function EventHubPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Dynamic PEV & Electric Vehicle Spec Badges Prompt */}
+              {(selectedGroup.includes('PEV') || selectedGroup.includes('E-Bike') || selectedGroup.includes('EV')) && (
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-1 text-left">
+                  <div className="text-xs font-black uppercase text-amber-900 flex items-center gap-1.5">
+                    ⚡ Electric Vehicle &amp; PEV Telemetry Specs
+                  </div>
+                  <p className="text-[10px] text-amber-800 font-medium leading-relaxed">
+                    Gridpass automatically reads battery capacity (Wh / Volts) and motor peak wattage from your digital garage passport for Onewheels, E-Bikes, EUCs &amp; EVs.
+                  </p>
+                </div>
+              )}
 
               {/* Digital Waiver Checkbox */}
               {event.require_waiver && (

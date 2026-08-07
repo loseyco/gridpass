@@ -58,6 +58,8 @@ const DEFAULT_STAGING_CLASSES = [
   'Off-Road / Trucks',
   'Imports',
   'Motorcycles',
+  'Onewheels & PEVs',
+  'Bicycles & E-Bikes',
   'Exotics & Supercars',
   'PWC / Marine',
   'EV & Modern'
