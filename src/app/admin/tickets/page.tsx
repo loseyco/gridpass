@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1040_person_member_invitation_engine',
+    ticket_number: 'TICK-1040',
+    agent_role: 'gm',
+    title: 'Universal Person / Member Invitation Mode Engine with Recipient Name & Personal Notes',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['JoinClient', 'editPersonName', 'editSpottedNote'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: recipient_name'],
+    issue_description: 'Platform owner required refactoring "Invite Driver" to universal "Invite Person / Member" with optional inputs for recipient name and personal invitation notes.',
+    root_cause: 'Card binding wizard previously labeled mode as "Invite Driver", which was overly narrow for general members, fans, and spectators.',
+    resolution_summary: 'Updated JoinClient.tsx: relabeled button to "Invite Person / Member", added optional Recipient Name and Personal Note setup fields, and rendered personalized friend invitation headers.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local staging on localhost.',
+    sop_summary: 'SOP for universal person/member invitation setup.',
+    sop_steps: [
+      'Relabel Invite Driver button to Invite Person / Member in Card Binding Wizard.',
+      'Provide optional inputs for Recipient Name (e.g. Sarah) and Personal Note.',
+      'Display personalized recipient greeting when card is scanned by invited friend.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1039_other_business_category_option',
     ticket_number: 'TICK-1039',
     agent_role: 'gm',

@@ -89,6 +89,9 @@ function JoinPageContent() {
   const [editBusinessCategory, setEditBusinessCategory] = useState('shop_garage');
   const [editBusinessLocation, setEditBusinessLocation] = useState('');
 
+  // Person / Member Invite Fields
+  const [editPersonName, setEditPersonName] = useState('');
+
   // Is Current User Admin?
   const isAdmin = user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com');
 
@@ -363,6 +366,7 @@ function JoinPageContent() {
 
     const isVehicleMode = editTargetType === 'vehicle';
     const isBusinessMode = editTargetType === 'business';
+    const isPersonMode = editTargetType === 'driver' || editTargetType === 'person';
 
     let newUnclaimedVehId = isVehicleMode ? (tagRecord?.unclaimed_vehicle_id || null) : null;
     let targetDest = editTargetDest;
@@ -413,6 +417,8 @@ function JoinPageContent() {
       ? (editSpottedTitle || vehicleTitle || `Card #${rawTagId}`)
       : isBusinessMode
       ? (editBusinessName ? `🏢 ${editBusinessName}` : `Business Invitation #${rawTagId}`)
+      : isPersonMode
+      ? (editPersonName ? `👤 ${editPersonName}` : `Member Invitation #${rawTagId}`)
       : `Card #${rawTagId}`;
 
     const updated: any = {
@@ -422,8 +428,9 @@ function JoinPageContent() {
       target_type: editTargetType,
       target_destination: targetDest,
       custom_spotted_photo_url: isVehicleMode ? (editSpottedPhoto || null) : null,
-      custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : (isBusinessMode ? (editBusinessName || null) : null),
-      custom_spotted_note: isVehicleMode ? (editSpottedNote || null) : (isBusinessMode ? (editSpottedNote || null) : null),
+      custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : (isBusinessMode ? (editBusinessName || null) : (isPersonMode ? (editPersonName || null) : null)),
+      custom_spotted_note: editSpottedNote || null,
+      recipient_name: isPersonMode ? (editPersonName || null) : null,
       unclaimed_vehicle_id: newUnclaimedVehId,
       unclaimed_business_id: isBusinessMode ? stagedBizId : null,
       unclaimed_year: isVehicleMode ? editYear : '',
@@ -911,15 +918,15 @@ function JoinPageContent() {
 
                 <button
                   type="button"
-                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/dash'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); }}
+                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/dash'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); setEditPersonName(''); }}
                   className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
-                    editTargetType === 'driver'
+                    (editTargetType === 'driver' || editTargetType === 'person')
                       ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                       : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
                   }`}
                 >
                   <UserCheck className="w-4 h-4 text-emerald-500" />
-                  <div className="text-[10px] uppercase font-black">Invite Driver</div>
+                  <div className="text-[10px] uppercase font-black">Invite Person / Member</div>
                 </button>
 
                 <button
@@ -1120,6 +1127,38 @@ function JoinPageContent() {
 
                   <div>
                     <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Personal Invitation Note to Business Owner</label>
+                    <input
+                      type="text"
+                      value={editSpottedNote}
+                      onChange={(e) => setEditSpottedNote(e.target.value)}
+                      placeholder="Personal note or invitation message..."
+                      className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* PERSON / MEMBER INVITATION SPECIFIC FIELDS */}
+              {(editTargetType === 'driver' || editTargetType === 'person') && (
+                <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-3">
+                  <span className="block text-[10px] font-black uppercase text-emerald-600 flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>👤 Configure Person / Member Invitation</span>
+                  </span>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Recipient Name <span className="text-neutral-400 font-normal">(Optional)</span></label>
+                    <input
+                      type="text"
+                      value={editPersonName}
+                      onChange={(e) => setEditPersonName(e.target.value)}
+                      placeholder="Enter Name"
+                      className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Personal Invitation Note <span className="text-neutral-400 font-normal">(Optional)</span></label>
                     <input
                       type="text"
                       value={editSpottedNote}
