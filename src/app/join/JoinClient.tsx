@@ -209,14 +209,17 @@ function JoinPageContent() {
           referrer: typeof document !== 'undefined' ? document.referrer : '',
         }).catch(() => {});
 
-        // Auto-redirect if bound tag, has a destination, and visitor is NOT admin
-        if (
-          rec.status === 'active' &&
-          rec.target_destination &&
-          rec.target_destination !== '/join' &&
-          !rec.target_destination.includes('/join') &&
-          !rec.custom_spotted_photo_url
-        ) {
+        // Auto-redirect ONLY if bound tag points to a public showcase path (e.g. /v/, /b/, /events/) AND is NOT /join, /dash, or /login
+        const isProtectedOrIntake =
+          !rec.target_destination ||
+          rec.target_destination === '/join' ||
+          rec.target_destination === '/dash' ||
+          rec.target_destination === '/login' ||
+          rec.target_destination.includes('/join') ||
+          rec.target_destination.includes('/dash') ||
+          rec.target_destination.includes('/login');
+
+        if (rec.status === 'active' && !isProtectedOrIntake && !rec.custom_spotted_photo_url) {
           if (!isAdmin) {
             router.push(rec.target_destination);
             return;
@@ -962,7 +965,7 @@ function JoinPageContent() {
 
                 <button
                   type="button"
-                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/dash'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); setEditPersonName(''); }}
+                  onClick={() => { setEditTargetType('driver'); setEditTargetDest('/join'); setEditSpottedPhoto(''); setEditSpottedTitle(''); setEditSpottedNote(''); setEditPersonName(''); }}
                   className={`p-3 rounded-xl border text-left flex items-center gap-2 transition ${
                     (editTargetType === 'driver' || editTargetType === 'person')
                       ? 'bg-neutral-900 text-white border-neutral-900 font-bold'

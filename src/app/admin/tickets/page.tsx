@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1044_intake_route_redirect_disallowance',
+    ticket_number: 'TICK-1044',
+    agent_role: 'gm',
+    title: 'Intake Landing Route /join Protected Destination Redirect Disallowance Invariant',
+    category: 'bugfix',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'isProtectedOrIntake', 'resolvePhysicalTag'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner reported that opening share link VIP-ED6MJ (/join?tag=VIP-ED6MJ) redirected unauthenticated visitors away to /login instead of displaying the /join invitation landing page.',
+    root_cause: 'Invite Person / Member target mode defaulted target_destination to /dash, which triggered resolvePhysicalTag auto-redirect to /dash, which in turn redirected logged-out visitors to /login.',
+    resolution_summary: 'Updated JoinClient.tsx: set target_destination default to /join for member invitations, and added isProtectedOrIntake guard in resolvePhysicalTag to strictly block auto-redirecting /join visitors to /dash or /login.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local staging on localhost.',
+    sop_summary: 'SOP for invitation landing page protection.',
+    sop_steps: [
+      'Never set default target_destination of referral cards to protected routes like /dash or /login.',
+      'Ensure resolvePhysicalTag blocks auto-redirecting unauthenticated visitors to protected routes.',
+      'Always keep invitation link visitors on /join so they see the personalized onboarding card.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1043_configurable_virtual_vip_share_link_engine',
     ticket_number: 'TICK-1043',
     agent_role: 'gm',
