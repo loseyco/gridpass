@@ -300,34 +300,79 @@ function JoinPageContent() {
 
         </div>
 
-        {/* Dynamic Intake Form Card */}
-        <div className="bg-white text-neutral-900 rounded-3xl p-6 shadow-2xl space-y-5 border border-neutral-200">
-          
-          <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
-                JOIN THE ROSTER
-              </h2>
-              <p className="text-xs text-neutral-500 font-bold">
-                Free instant membership for drivers, vendors, pilots & fans.
-              </p>
+        {/* Dynamic Intake Form / Logged-in Welcome Card */}
+        {user ? (
+          <div className="bg-white text-neutral-900 rounded-3xl p-6 shadow-2xl space-y-5 border border-neutral-200 font-sans">
+            <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase text-[#ff3b30] tracking-wider block">AUTHENTICATED MEMBER</span>
+                <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
+                  WELCOME BACK, {user.displayName || (user.email ? user.email.split('@')[0] : 'MEMBER')}! 🏎️
+                </h2>
+                <p className="text-xs text-neutral-500 font-bold">
+                  Logged in as {user.email}. Your Gridpass is active.
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-700 flex items-center justify-center shadow-xs font-mono font-black text-[10px]">
+                ACTIVE
+              </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#ff3b30] text-white flex items-center justify-center shadow-md">
-              <QrCode className="w-6 h-6" />
+
+            {/* 1-Tap Quick Actions for Logged-In Members */}
+            <div className="space-y-2.5">
+              <Link
+                href="/dash"
+                className="w-full py-3.5 bg-neutral-900 hover:bg-black text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-between px-4"
+              >
+                <span>🏎️ GO TO DRIVER DASHBOARD & GARAGE</span>
+                <ArrowRight className="w-4 h-4 text-emerald-400" />
+              </Link>
+
+              <Link
+                href="/dash"
+                className="w-full py-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-between px-4"
+              >
+                <span>➕ REGISTER / ADD VEHICLE TO GARAGE</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <Link
+                href="/partner"
+                className="w-full py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl border border-neutral-300 transition flex items-center justify-between px-4"
+              >
+                <span>🏢 REGISTER BUSINESS OR AUTO SHOP</span>
+                <ArrowRight className="w-4 h-4 text-neutral-500" />
+              </Link>
             </div>
           </div>
-
-          {joinedSuccess ? (
-            <div className="py-8 text-center space-y-3">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 className="w-10 h-10" />
+        ) : (
+          <div className="bg-white text-neutral-900 rounded-3xl p-6 shadow-2xl space-y-5 border border-neutral-200">
+            
+            <div className="border-b border-neutral-200 pb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
+                  JOIN THE ROSTER
+                </h2>
+                <p className="text-xs text-neutral-500 font-bold">
+                  Free instant membership for drivers, vendors, pilots & fans.
+                </p>
               </div>
-              <h3 className="text-xl font-black uppercase text-neutral-900">PASSPORT CLAIMED! 🎉</h3>
-              <p className="text-xs text-neutral-600 font-bold max-w-xs mx-auto">
-                Welcome to Gridpass! Redirecting to your dashboard...
-              </p>
+              <div className="w-12 h-12 rounded-2xl bg-[#ff3b30] text-white flex items-center justify-center shadow-md">
+                <QrCode className="w-6 h-6" />
+              </div>
             </div>
-          ) : (
+
+            {joinedSuccess ? (
+              <div className="py-8 text-center space-y-3">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-black uppercase text-neutral-900">PASSPORT CLAIMED! 🎉</h3>
+                <p className="text-xs text-neutral-600 font-bold max-w-xs mx-auto">
+                  Welcome to Gridpass! Redirecting to your dashboard...
+                </p>
+              </div>
+            ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-4">
               
               {/* Universal Inclusive Category Selector */}
@@ -487,6 +532,7 @@ function JoinPageContent() {
           )}
 
         </div>
+        )}
 
       </div>
 
