@@ -6,8 +6,89 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { AgentTicket, SOPGuide } from '@/lib/types/admin';
 import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 
-// Default Subagent Execution Tickets & SOP Manuals
+// Default Subagent Execution Tickets & SOP Manuals (Ordered Newest First)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
+  {
+    id: 'tick_1005_sticky_actions',
+    ticket_number: 'TICK-1005',
+    agent_role: 'site_auditor',
+    title: 'Sticky Right Actions Column in ExcelWorksheetTable',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['ExcelWorksheetTable'],
+    files_modified: ['packages/ui/src/ExcelWorksheetTable.tsx'],
+    schema_changes: [],
+    sop_summary: 'Made ACTIONS column sticky right-0 so action buttons are 100% visible on all viewports without being cut off.',
+    sop_steps: [
+      'Open ExcelWorksheetTable in wide data tables with horizontal scroll.',
+      'Verify the rightmost ACTIONS column is styled with sticky right-0 z-10 bg-white.',
+      'Confirm action buttons (Edit, Delete, Support, Toggle) remain visible without horizontal scrolling.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'tick_1004_mobile_admin_nav',
+    ticket_number: 'TICK-1004',
+    agent_role: 'site_auditor',
+    title: 'Collapsible Mobile Admin Hamburger Navigation Bar',
+    category: 'mobile_touch',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['AdminLayout', 'Navbar'],
+    files_modified: ['src/app/admin/layout.tsx'],
+    schema_changes: [],
+    sop_summary: 'Added isMobileMenuOpen toggle to reduce mobile vertical header height from 70% to <52px.',
+    sop_steps: [
+      'Navigate to Super Admin UI on mobile or small viewports (<768px).',
+      'Toggle hamburger menu state using isMobileMenuOpen state hook.',
+      'Verify header height remains under 52px when collapsed, preventing viewport clipping.',
+      'Ensure touch targets for hamburger toggle meet Apple iOS HIG >=44px standards.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'tick_003_soft_delete',
+    ticket_number: 'TICK-1003',
+    agent_role: 'site_auditor',
+    title: 'Strict Soft Delete & Data Archival Invariant ("Never Delete, Only Hide")',
+    category: 'database',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['clean-test-db.mjs', 'firestore.rules', 'admin/db/page.tsx'],
+    files_modified: ['clean-test-db.mjs', 'AGENTS.md'],
+    schema_changes: ['is_hidden: boolean', 'archived: boolean', 'archived_at: string'],
+    sop_summary: 'SOP for hiding or archiving Firestore documents non-destructively without deleteDoc calls.',
+    sop_steps: [
+      'Never perform hard deletions (deleteDoc) on real production entities or user records.',
+      'Update documents with is_hidden: true or archived: true (soft-delete).',
+      'Public feeds and app viewports filter out records where is_hidden === true.',
+      'Super Admin HQ (/admin/db) preserves full recovery and restoration capabilities at all times.',
+      'Cleanup scripts strictly target temporary test documents tagged GPTestUser_*.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'tick_002_mobile_touch',
+    ticket_number: 'TICK-1002',
+    agent_role: 'mobile_expert',
+    title: 'Mobile-First Apple Native Touch Standards & Zoom Prevention',
+    category: 'mobile_touch',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['globals.css', 'AppShell.tsx', 'Navbar.tsx'],
+    files_modified: ['src/app/globals.css', 'src/components/Navbar.tsx'],
+    schema_changes: [],
+    sop_summary: 'SOP for building Apple iOS native feeling components with >=44px touch targets, zero hover lock, and input zoom prevention.',
+    sop_steps: [
+      'Enforce min-h-[44px] and min-w-[44px] on all buttons, links, inputs, and checkboxes via .touch-target-44 or .ios-touch-target.',
+      'Set form input font-size to >=16px (text-base md:text-xs) to prevent iOS WebKit layout zoom on focus.',
+      'Use active:scale-95 or .ios-active-scale for tactile spring physics feedback on touch presses.',
+      'Anchor key action buttons to a fixed bottom dock with pb-[calc(0.75rem+env(safe-area-inset-bottom))].',
+      'Never lock editing affordances or actions behind mouse hover states.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+  },
   {
     id: 'tick_001_vehicle_support',
     ticket_number: 'TICK-1001',
@@ -15,6 +96,7 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     title: 'Super Admin Vehicle Management HQ & Support Drawer',
     category: 'architecture',
     status: 'VERIFIED',
+    priority: 'medium',
     components_used: ['AdminVehicleSupportDrawer.tsx', 'ExcelWorksheetTable.tsx', 'vehicles'],
     files_modified: ['src/app/admin/vehicles/page.tsx', 'src/components/admin/AdminVehicleSupportDrawer.tsx', 'src/lib/types/admin.ts'],
     schema_changes: ['vehicles.tag_id', 'vehicles.staging_class', 'vehicles.vin_verified', 'vehicles.is_hidden', 'vehicles.archived'],
@@ -30,83 +112,6 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     ],
     created_at: new Date().toISOString().split('T')[0],
   },
-  {
-    id: 'tick_002_mobile_touch',
-    ticket_number: 'TICK-1002',
-    agent_role: 'mobile_expert',
-    title: 'Mobile-First Apple Native Touch Standards & Zoom Prevention',
-    category: 'mobile_touch',
-    status: 'VERIFIED',
-    components_used: ['globals.css', 'AppShell.tsx', 'Navbar.tsx'],
-    files_modified: ['src/app/globals.css', 'src/components/Navbar.tsx'],
-    schema_changes: [],
-    sop_summary: 'SOP for building Apple iOS native feeling components with >=44px touch targets, zero hover lock, and input zoom prevention.',
-    sop_steps: [
-      'Enforce min-h-[44px] and min-w-[44px] on all buttons, links, inputs, and checkboxes via .touch-target-44 or .ios-touch-target.',
-      'Set form input font-size to >=16px (text-base md:text-xs) to prevent iOS WebKit layout zoom on focus.',
-      'Use active:scale-95 or .ios-active-scale for tactile spring physics feedback on touch presses.',
-      'Anchor key action buttons to a fixed bottom dock with pb-[calc(0.75rem+env(safe-area-inset-bottom))].',
-      'Never lock editing affordances or actions behind mouse hover states.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_003_soft_delete',
-    ticket_number: 'TICK-1003',
-    agent_role: 'site_auditor',
-    title: 'Strict Soft Delete & Data Archival Invariant ("Never Delete, Only Hide")',
-    category: 'database',
-    status: 'VERIFIED',
-    components_used: ['clean-test-db.mjs', 'firestore.rules', 'admin/db/page.tsx'],
-    files_modified: ['clean-test-db.mjs', 'AGENTS.md'],
-    schema_changes: ['is_hidden: boolean', 'archived: boolean', 'archived_at: string'],
-    sop_summary: 'SOP for hiding or archiving Firestore documents non-destructively without deleteDoc calls.',
-    sop_steps: [
-      'Never perform hard deletions (deleteDoc) on real production entities or user records.',
-      'Update documents with is_hidden: true or archived: true (soft-delete).',
-      'Public feeds and app viewports filter out records where is_hidden === true.',
-      'Super Admin HQ (/admin/db) preserves full recovery and restoration capabilities at all times.',
-      'Cleanup scripts strictly target temporary test documents tagged GPTestUser_*.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_1004_mobile_admin_nav',
-    ticket_number: 'TICK-1004',
-    agent_role: 'site_auditor',
-    title: 'Collapsible Mobile Admin Hamburger Navigation Bar',
-    category: 'mobile_touch',
-    status: 'VERIFIED',
-    components_used: ['AdminLayout', 'Navbar'],
-    files_modified: ['src/app/admin/layout.tsx'],
-    schema_changes: [],
-    sop_summary: 'Added isMobileMenuOpen toggle to reduce mobile vertical header height from 70% to <52px.',
-    sop_steps: [
-      'Navigate to Super Admin UI on mobile or small viewports (<768px).',
-      'Toggle hamburger menu state using isMobileMenuOpen state hook.',
-      'Verify header height remains under 52px when collapsed, preventing viewport clipping.',
-      'Ensure touch targets for hamburger toggle meet Apple iOS HIG >=44px standards.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_1005_sticky_actions',
-    ticket_number: 'TICK-1005',
-    agent_role: 'site_auditor',
-    title: 'Sticky Right Actions Column in ExcelWorksheetTable',
-    category: 'ui_design',
-    status: 'VERIFIED',
-    components_used: ['ExcelWorksheetTable'],
-    files_modified: ['packages/ui/src/ExcelWorksheetTable.tsx'],
-    schema_changes: [],
-    sop_summary: 'Made ACTIONS column sticky right-0 so action buttons are 100% visible on all viewports without being cut off.',
-    sop_steps: [
-      'Open ExcelWorksheetTable in wide data tables with horizontal scroll.',
-      'Verify the rightmost ACTIONS column is styled with sticky right-0 z-10 bg-white.',
-      'Confirm action buttons (Edit, Delete, Support, Toggle) remain visible without horizontal scrolling.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
 ];
 
 const DEFAULT_SOPS: SOPGuide[] = [
@@ -118,8 +123,8 @@ const DEFAULT_SOPS: SOPGuide[] = [
     author_agent: 'architect',
     description: 'Complete guide for Super Admins to re-assign vehicle owners, bind physical RFID/QR emblem tags, set staging classes, and soft-delete/restore assets.',
     prerequisites: ['Super Admin Role Access (PJ Losey)', 'Access to /admin/vehicles'],
-    steps: DEFAULT_AGENT_TICKETS[0].sop_steps,
-    components_referenced: DEFAULT_AGENT_TICKETS[0].components_used,
+    steps: DEFAULT_AGENT_TICKETS[4].sop_steps,
+    components_referenced: DEFAULT_AGENT_TICKETS[4].components_used,
     created_at: new Date().toISOString().split('T')[0],
   },
   {
@@ -130,8 +135,8 @@ const DEFAULT_SOPS: SOPGuide[] = [
     author_agent: 'mobile_expert',
     description: 'Standard operating procedure for maintaining >=44px touch hitboxes, preventing iOS input zoom, and building fixed bottom action docks.',
     prerequisites: ['Tailwind CSS v4', 'Apple iOS HIG Guidelines'],
-    steps: DEFAULT_AGENT_TICKETS[1].sop_steps,
-    components_referenced: DEFAULT_AGENT_TICKETS[1].components_used,
+    steps: DEFAULT_AGENT_TICKETS[3].sop_steps,
+    components_referenced: DEFAULT_AGENT_TICKETS[3].components_used,
     created_at: new Date().toISOString().split('T')[0],
   },
 ];
@@ -151,14 +156,20 @@ export default function AdminSOPKnowledgeBasePage() {
   const [roleFilter, setRoleFilter] = useState('all');
 
   useEffect(() => {
-    // 1. Subscribe to Agent Execution Tickets
+    // 1. Subscribe to Agent Execution Tickets (Live Reactive Sync & Newest First Sort)
     const unsubTickets = onSnapshot(
       collection(db, 'agent_tickets'),
       (snapshot) => {
         if (!snapshot.empty) {
           const list: AgentTicket[] = [];
           snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as AgentTicket));
-          setTickets(list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')));
+          // Newest-first ticket sorting by ticket_number / created_at
+          setTickets(
+            list.sort((a, b) => 
+              (b.ticket_number || b.id || '').localeCompare(a.ticket_number || a.id || '') || 
+              (b.created_at || '').localeCompare(a.created_at || '')
+            )
+          );
         }
       },
       (err) => console.warn('Agent tickets listener fallback:', err)
@@ -195,11 +206,30 @@ export default function AdminSOPKnowledgeBasePage() {
     };
   }, []);
 
-  // Filtered Tickets
-  const filteredTickets = tickets.filter((t) => {
-    if (roleFilter !== 'all' && t.agent_role !== roleFilter) return false;
-    return true;
-  });
+  // Filtered & Newest-First Sorted Tickets
+  const filteredTickets = tickets
+    .filter((t) => {
+      if (roleFilter !== 'all' && t.agent_role !== roleFilter) return false;
+      return true;
+    })
+    .sort((a, b) => 
+      (b.ticket_number || b.id || '').localeCompare(a.ticket_number || a.id || '') || 
+      (b.created_at || '').localeCompare(a.created_at || '')
+    );
+
+  const getPriorityBadge = (priority?: string) => {
+    switch (priority) {
+      case 'urgent':
+        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-red-600 text-white shadow-xs">🚨 URGENT</span>;
+      case 'high':
+        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-300">⚡ HIGH</span>;
+      case 'medium':
+        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-300">🔵 MEDIUM</span>;
+      case 'low':
+      default:
+        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-300">⚪ LOW</span>;
+    }
+  };
 
   const getAgentRoleBadge = (role: string) => {
     switch (role) {
@@ -228,6 +258,11 @@ export default function AdminSOPKnowledgeBasePage() {
       key: 'ticket_number',
       label: 'TICKET #',
       render: (row) => <code className="text-xs font-mono font-bold text-neutral-900">{row.ticket_number || row.id}</code>,
+    },
+    {
+      key: 'priority',
+      label: 'PRIORITY',
+      render: (row) => getPriorityBadge(row.priority || 'medium'),
     },
     {
       key: 'agent_role',

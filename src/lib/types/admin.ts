@@ -23,6 +23,7 @@ export interface AgentTicket {
   title: string;
   category: 'architecture' | 'ui_design' | 'mobile_touch' | 'seo' | 'security' | 'testing' | 'feature' | 'database';
   status: 'COMPLETED' | 'VERIFIED' | 'IN_PROGRESS';
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
   components_used: string[];
   files_modified: string[];
   schema_changes?: string[];
