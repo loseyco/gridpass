@@ -89,8 +89,27 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [shareText, setShareText] = useState('Share Passport');
-  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('garage');
+  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'career' || tabParam === 'garage' || tabParam === 'businesses' || tabParam === 'guestbook') {
+        setActiveProfileTab(tabParam as any);
+      }
+    }
+  }, []);
+
+  const handleTabChange = (tabId: 'career' | 'garage' | 'businesses' | 'guestbook') => {
+    setActiveProfileTab(tabId);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tabId);
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
 
   const isMock = (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock');
 
@@ -117,7 +136,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   };
 
   const handleShare = async () => {
-    const profileUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const profileUrl = currentUrl.includes('?tab=') ? currentUrl : `${currentUrl}?tab=${activeProfileTab}`;
     const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isMobile && navigator.share) {
@@ -135,11 +155,19 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
 
     try {
       await navigator.clipboard.writeText(profileUrl);
-      setShareText('Copied Link!');
-      showToast({ title: "✓ Passport Link Copied!", message: "Profile URL copied to clipboard!", icon: "🔗" });
-      setTimeout(() => setShareText('Share Passport'), 2000);
+      setShareText('Copied Tab Link!');
+      showToast({
+        title: "📋 Tab URL Copied!",
+        message: `Direct link to ${activeProfileTab.toUpperCase()} tab copied to clipboard!`,
+        icon: "✨"
+      });
+      setTimeout(() => setShareText('Share Passport'), 2500);
     } catch (err) {
-      console.error('Failed to copy profile link:', err);
+      showToast({
+        title: "Share Link",
+        message: profileUrl,
+        icon: "🔗"
+      });
     }
   };
 
@@ -525,7 +553,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveProfileTab(tab.id as any)}
+              onClick={() => handleTabChange(tab.id as any)}
               className={`py-2.5 px-4 text-xs font-mono font-black uppercase rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
                 activeProfileTab === tab.id
                   ? 'bg-[#ff3b30] text-white shadow-md shadow-red-500/20'
