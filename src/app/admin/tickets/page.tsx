@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1038_generic_form_input_placeholders',
+    ticket_number: 'TICK-1038',
+    agent_role: 'gm',
+    title: 'Generic Form Input Placeholders & Universal Field Design Invariant',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'low',
+    components_used: ['JoinClient'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner required updating wizard input placeholders (Business Name, City, Personal Note) to be ultra-clean, concise, and generic without long specific brand examples.',
+    root_cause: 'Placeholders contained long brand examples like "Nielsen\'s Enterprises, SpeedShop Garage, Tacos El Rey" which cluttered inputs on mobile viewports.',
+    resolution_summary: 'Cleaned up input placeholders across JoinClient.tsx wizard modal to "Enter Business Name", "City, State", and "Personal note or invitation message...".',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean UI on localhost.',
+    sop_summary: 'SOP for concise generic form placeholders.',
+    sop_steps: [
+      'Use concise generic placeholders (Enter Business Name, City State) instead of long lists.',
+      'Maintain uncluttered input fields on 390px mobile viewports.',
+      'Ensure clear visual hierarchy between labels and placeholder text.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1037_business_copywriting_simplification',
     ticket_number: 'TICK-1037',
     agent_role: 'gm',

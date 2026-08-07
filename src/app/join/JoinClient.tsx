@@ -1029,7 +1029,7 @@ function JoinPageContent() {
                       type="text"
                       value={editSpottedNote}
                       onChange={(e) => setEditSpottedNote(e.target.value)}
-                      placeholder="e.g. Saw your Camaro at Road America — claim your passport!"
+                      placeholder="Personal note or invitation message..."
                       className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
                     />
                   </div>
@@ -1083,7 +1083,7 @@ function JoinPageContent() {
                       type="text"
                       value={editBusinessName}
                       onChange={(e) => setEditBusinessName(e.target.value)}
-                      placeholder="e.g. Nielsen's Enterprises, SpeedShop Garage, Tacos El Rey"
+                      placeholder="Enter Business Name"
                       className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-blue-500"
                     />
                   </div>
@@ -1111,7 +1111,7 @@ function JoinPageContent() {
                         type="text"
                         value={editBusinessLocation}
                         onChange={(e) => setEditBusinessLocation(e.target.value)}
-                        placeholder="e.g. Lake Villa, IL"
+                        placeholder="City, State"
                         className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none"
                       />
                     </div>
@@ -1123,7 +1123,7 @@ function JoinPageContent() {
                       type="text"
                       value={editSpottedNote}
                       onChange={(e) => setEditSpottedNote(e.target.value)}
-                      placeholder="e.g. Saw your shop at Road America — claim your Gridpass business passport!"
+                      placeholder="Personal note or invitation message..."
                       className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none"
                     />
                   </div>
