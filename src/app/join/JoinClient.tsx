@@ -11,7 +11,36 @@ import Link from 'next/link';
 
 function JoinPageContent() {
   const searchParams = useSearchParams();
-  const rawTagId = searchParams.get('tag') || searchParams.get('id') || searchParams.get('ref') || searchParams.get('referral') || null;
+
+  // Extract ANY URL parameter e.g. /join?tag=250, /join?id=250, /join?v=camaro_69, /join?250, /join?anything
+  const getUniversalTagId = () => {
+    const knownParam =
+      searchParams.get('tag') ||
+      searchParams.get('id') ||
+      searchParams.get('ref') ||
+      searchParams.get('referral') ||
+      searchParams.get('v') ||
+      searchParams.get('vehicle') ||
+      searchParams.get('b') ||
+      searchParams.get('business') ||
+      searchParams.get('e') ||
+      searchParams.get('event') ||
+      searchParams.get('u') ||
+      searchParams.get('user');
+
+    if (knownParam) return knownParam;
+
+    // Fallback: Check if ANY single key exists in searchParams e.g. /join?250 or /join?camaro69 or /join?nielsens
+    const keys = Array.from(searchParams.keys());
+    if (keys.length > 0 && keys[0]) {
+      const firstVal = searchParams.get(keys[0]);
+      return firstVal && firstVal !== '' ? firstVal : keys[0];
+    }
+
+    return null;
+  };
+
+  const rawTagId = getUniversalTagId();
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
