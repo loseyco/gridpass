@@ -9,6 +9,31 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1011)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1012_agent_staff_sidebar_fix',
+    ticket_number: 'TICK-1012',
+    agent_role: 'site_auditor',
+    title: 'AI Agent Staff Sidebar Menu Link & Mobile Header Overlap Fix',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['AdminLayout', 'Navbar'],
+    files_modified: ['src/app/admin/layout.tsx'],
+    issue_description: 'The AI Agent Staff link (/admin/agents) was missing from the left sidebar navigation menu, and the header logo text GRIDPASS.ADMIN overlapped with the mobile hamburger button on small viewports.',
+    root_cause: 'AdminLayout navCategories lacked the /admin/agents route entry, and header title container lacked whitespace-nowrap and flex-shrink-0 styling.',
+    resolution_summary: 'Registered 🤖 AI Agent Staff under Global System Tools in navCategories, added shrink-0 and whitespace-nowrap to GRIDPASS.ADMIN brand header, and verified clear viewport rendering.',
+    verification_proof: 'Verified TypeScript static analysis (npx tsc --noEmit) and visual Playwright test execution.',
+    sop_summary: 'SOP for adding admin sidebar links and preventing mobile header text overlap.',
+    sop_steps: [
+      'Register new admin routes in navCategories in src/app/admin/layout.tsx under the appropriate category.',
+      'Ensure brand header text uses shrink-0 and whitespace-nowrap to prevent overlap with mobile menu toggles.',
+      'Test navigation clicks and collapsible menu behavior on both mobile and desktop viewports.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'SITE_AUDITOR',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1011_tickets_sop_separation',
     ticket_number: 'TICK-1011',
     agent_role: 'architect',
