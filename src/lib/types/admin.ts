@@ -27,6 +27,10 @@ export interface AgentTicket {
   components_used: string[];
   files_modified: string[];
   schema_changes?: string[];
+  issue_description?: string;
+  root_cause?: string;
+  resolution_summary?: string;
+  verification_proof?: string;
   sop_summary: string;
   sop_steps: string[];
   created_at: string;

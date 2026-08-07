@@ -3,143 +3,34 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { AgentTicket, SOPGuide } from '@/lib/types/admin';
-import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
+import { SOPGuide } from '@/lib/types/admin';
 
-// Default Subagent Execution Tickets & SOP Manuals (Ordered Newest First)
-const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
+const DEFAULT_SOPS: SOPGuide[] = [
   {
-    id: 'tick_1007_crm_intake',
-    ticket_number: 'TICK-1007',
-    agent_role: 'architect',
-    title: 'UpfittersOS Sales CRM Intake Engine & Lead Conversion Pipeline',
-    category: 'feature',
-    status: 'TODO',
-    priority: 'urgent',
-    components_used: ['SalesIntakeForm', 'LeadTable', 'Firestore'],
-    files_modified: ['src/app/admin/sales/page.tsx', 'src/lib/types/sales.ts'],
-    schema_changes: ['sales_leads collection', 'lead_status', 'assigned_rep'],
-    sop_summary: 'Active ticket for building dual-worksheet CRM lead capture engine and automated quote pipeline.',
-    sop_steps: [
-      'Implement /admin/sales intake dashboard with lead capture forms.',
-      'Configure automatic lead routing to designated sales reps.',
-      'Set up instant SMS/email notification hooks upon new submission.'
+    id: 'sop_003_tickets_sop_arch',
+    slug: 'tickets-sop-separation-sop',
+    title: 'Subagent Execution Ticket HQ & Master SOP Manuals Separation Standard',
+    category: 'Platform Architecture',
+    author_agent: 'architect',
+    description: 'Architecture blueprint for separating live subagent execution task tickets (/admin/tickets) from master platform architecture specs and AI operating manuals (/admin/sop).',
+    prerequisites: ['Super Admin Role Access', 'Gridpass Admin Layout'],
+    steps: [
+      'Maintain dedicated ticket management hub at /admin/tickets with dual worksheets for active TODO tasks and completed execution logs.',
+      'Reserve /admin/sop strictly for platform architecture specs, AI operating standards, and production SOP guidebooks.',
+      'Register both tools under Global System Tools in /admin/layout.tsx.'
     ],
+    components_referenced: ['AdminTicketsPage', 'AdminSOPKnowledgeBasePage', 'AdminLayout'],
     created_at: new Date().toISOString().split('T')[0],
   },
   {
-    id: 'tick_1006_dual_worksheet_sop',
-    ticket_number: 'TICK-1006',
-    agent_role: 'git_expert',
-    title: 'Dual-Worksheet Active TODO Tickets & Completed SOP Log HQ',
-    category: 'architecture',
-    status: 'VERIFIED',
-    priority: 'high',
-    components_used: ['ExcelWorksheetTable', 'AdminSOPKnowledgeBasePage'],
-    files_modified: ['src/app/admin/sop/page.tsx', 'src/lib/types/admin.ts'],
-    schema_changes: ['AgentTicket.status union includes TODO'],
-    sop_summary: 'Dual worksheet table layout separating pending subagent TODO execution tickets from verified historical SOP manuals.',
-    sop_steps: [
-      'Audit /admin/sop active state and separate TODO/IN_PROGRESS queue from VERIFIED/COMPLETED log.',
-      'Render two independent ExcelWorksheetTable components on Tab 1 with status badge color codes.',
-      'Ensure drawer preview, search filtering, and live Firestore sync function seamlessly across both tables.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_1005_sticky_actions',
-    ticket_number: 'TICK-1005',
-    agent_role: 'site_auditor',
-    title: 'Sticky Right Actions Column in ExcelWorksheetTable',
-    category: 'ui_design',
-    status: 'VERIFIED',
-    priority: 'high',
-    components_used: ['ExcelWorksheetTable'],
-    files_modified: ['packages/ui/src/ExcelWorksheetTable.tsx'],
-    schema_changes: [],
-    sop_summary: 'Made ACTIONS column sticky right-0 so action buttons are 100% visible on all viewports without being cut off.',
-    sop_steps: [
-      'Open ExcelWorksheetTable in wide data tables with horizontal scroll.',
-      'Verify the rightmost ACTIONS column is styled with sticky right-0 z-10 bg-white.',
-      'Confirm action buttons (Edit, Delete, Support, Toggle) remain visible without horizontal scrolling.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_1004_mobile_admin_nav',
-    ticket_number: 'TICK-1004',
-    agent_role: 'site_auditor',
-    title: 'Collapsible Mobile Admin Hamburger Navigation Bar',
-    category: 'mobile_touch',
-    status: 'VERIFIED',
-    priority: 'high',
-    components_used: ['AdminLayout', 'Navbar'],
-    files_modified: ['src/app/admin/layout.tsx'],
-    schema_changes: [],
-    sop_summary: 'Added isMobileMenuOpen toggle to reduce mobile vertical header height from 70% to <52px.',
-    sop_steps: [
-      'Navigate to Super Admin UI on mobile or small viewports (<768px).',
-      'Toggle hamburger menu state using isMobileMenuOpen state hook.',
-      'Verify header height remains under 52px when collapsed, preventing viewport clipping.',
-      'Ensure touch targets for hamburger toggle meet Apple iOS HIG >=44px standards.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_003_soft_delete',
-    ticket_number: 'TICK-1003',
-    agent_role: 'site_auditor',
-    title: 'Strict Soft Delete & Data Archival Invariant ("Never Delete, Only Hide")',
-    category: 'database',
-    status: 'VERIFIED',
-    priority: 'urgent',
-    components_used: ['clean-test-db.mjs', 'firestore.rules', 'admin/db/page.tsx'],
-    files_modified: ['clean-test-db.mjs', 'AGENTS.md'],
-    schema_changes: ['is_hidden: boolean', 'archived: boolean', 'archived_at: string'],
-    sop_summary: 'SOP for hiding or archiving Firestore documents non-destructively without deleteDoc calls.',
-    sop_steps: [
-      'Never perform hard deletions (deleteDoc) on real production entities or user records.',
-      'Update documents with is_hidden: true or archived: true (soft-delete).',
-      'Public feeds and app viewports filter out records where is_hidden === true.',
-      'Super Admin HQ (/admin/db) preserves full recovery and restoration capabilities at all times.',
-      'Cleanup scripts strictly target temporary test documents tagged GPTestUser_*.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_002_mobile_touch',
-    ticket_number: 'TICK-1002',
-    agent_role: 'mobile_expert',
-    title: 'Mobile-First Apple Native Touch Standards & Zoom Prevention',
-    category: 'mobile_touch',
-    status: 'VERIFIED',
-    priority: 'high',
-    components_used: ['globals.css', 'AppShell.tsx', 'Navbar.tsx'],
-    files_modified: ['src/app/globals.css', 'src/components/Navbar.tsx'],
-    schema_changes: [],
-    sop_summary: 'SOP for building Apple iOS native feeling components with >=44px touch targets, zero hover lock, and input zoom prevention.',
-    sop_steps: [
-      'Enforce min-h-[44px] and min-w-[44px] on all buttons, links, inputs, and checkboxes via .touch-target-44 or .ios-touch-target.',
-      'Set form input font-size to >=16px (text-base md:text-xs) to prevent iOS WebKit layout zoom on focus.',
-      'Use active:scale-95 or .ios-active-scale for tactile spring physics feedback on touch presses.',
-      'Anchor key action buttons to a fixed bottom dock with pb-[calc(0.75rem+env(safe-area-inset-bottom))].',
-      'Never lock editing affordances or actions behind mouse hover states.'
-    ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-  {
-    id: 'tick_001_vehicle_support',
-    ticket_number: 'TICK-1001',
-    agent_role: 'architect',
-    title: 'Super Admin Vehicle Management HQ & Support Drawer',
-    category: 'architecture',
-    status: 'VERIFIED',
-    priority: 'medium',
-    components_used: ['AdminVehicleSupportDrawer.tsx', 'ExcelWorksheetTable.tsx', 'vehicles'],
-    files_modified: ['src/app/admin/vehicles/page.tsx', 'src/components/admin/AdminVehicleSupportDrawer.tsx', 'src/lib/types/admin.ts'],
-    schema_changes: ['vehicles.tag_id', 'vehicles.staging_class', 'vehicles.vin_verified', 'vehicles.is_hidden', 'vehicles.archived'],
-    sop_summary: 'SOP for troubleshooting member vehicles, rebinding RFID/QR tags, transferring ownership, and soft-deleting records without data loss.',
-    sop_steps: [
+    id: 'sop_001_vehicle_support',
+    slug: 'vehicle-support-sop',
+    title: 'Super Admin Vehicle Troubleshooting & Tag Binding SOP',
+    category: 'Vehicle Operations',
+    author_agent: 'architect',
+    description: 'Complete guide for Super Admins to re-assign vehicle owners, bind physical RFID/QR emblem tags, set staging classes, and soft-delete/restore assets.',
+    prerequisites: ['Super Admin Role Access (PJ Losey)', 'Access to /admin/vehicles'],
+    steps: [
       'Navigate to Super Admin HQ at /admin/vehicles.',
       'Click "Support 🛠️" on any vehicle row to open the slide-out Support Drawer.',
       'Tab 1 (Specs & Owner): Edit year/make/model or re-assign owner_name and owner_id.',
@@ -148,72 +39,35 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
       'Tab 4 (Audit History): Check document IDs, created timestamps, and service log counts.',
       'Use sticky footer buttons to toggle "Hide Vehicle" (is_hidden: true) or "Soft Archive" (archived: true). Click "Save Spec Overrides".'
     ],
-    created_at: new Date().toISOString().split('T')[0],
-  },
-];
-
-const DEFAULT_SOPS: SOPGuide[] = [
-  {
-    id: 'sop_001_vehicle_support',
-    slug: 'vehicle-support-sop',
-    title: 'Super Admin Vehicle Troubleshooting & Tag Binding SOP',
-    category: 'Architecture & Operations',
-    author_agent: 'architect',
-    description: 'Complete guide for Super Admins to re-assign vehicle owners, bind physical RFID/QR emblem tags, set staging classes, and soft-delete/restore assets.',
-    prerequisites: ['Super Admin Role Access (PJ Losey)', 'Access to /admin/vehicles'],
-    steps: DEFAULT_AGENT_TICKETS[4].sop_steps,
-    components_referenced: DEFAULT_AGENT_TICKETS[4].components_used,
+    components_referenced: ['AdminVehicleSupportDrawer', 'ExcelWorksheetTable', 'vehicles'],
     created_at: new Date().toISOString().split('T')[0],
   },
   {
     id: 'sop_002_mobile_touch',
     slug: 'mobile-touch-sop',
     title: 'Apple Native iOS Touch & Viewport Design SOP',
-    category: 'UI & Mobile Ergonomics',
+    category: 'UI & Ergonomics',
     author_agent: 'mobile_expert',
     description: 'Standard operating procedure for maintaining >=44px touch hitboxes, preventing iOS input zoom, and building fixed bottom action docks.',
     prerequisites: ['Tailwind CSS v4', 'Apple iOS HIG Guidelines'],
-    steps: DEFAULT_AGENT_TICKETS[3].sop_steps,
-    components_referenced: DEFAULT_AGENT_TICKETS[3].components_used,
+    steps: [
+      'Enforce min-h-[44px] and min-w-[44px] on all buttons, links, inputs, and checkboxes via .touch-target-44.',
+      'Set form input font-size to >=16px (text-base md:text-xs) to prevent iOS WebKit layout zoom on focus.',
+      'Use active:scale-95 or .ios-active-scale for tactile spring physics feedback on touch presses.',
+      'Anchor key action buttons to a fixed bottom dock with pb-[calc(0.75rem+env(safe-area-inset-bottom))].',
+      'Never lock editing affordances or actions behind mouse hover states.'
+    ],
+    components_referenced: ['globals.css', 'AppShell.tsx', 'Navbar.tsx'],
     created_at: new Date().toISOString().split('T')[0],
   },
 ];
 
 export default function AdminSOPKnowledgeBasePage() {
-  const [activeTab, setActiveTab] = useState<'tickets' | 'sops' | 'telemetry'>('tickets');
-  const [tickets, setTickets] = useState<AgentTicket[]>(DEFAULT_AGENT_TICKETS);
+  const [activeTab, setActiveTab] = useState<'architecture' | 'ai_standards' | 'sop_guides'>('architecture');
   const [sops, setSops] = useState<SOPGuide[]>(DEFAULT_SOPS);
-  const [telemetryLogs, setTelemetryLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // Selected Reader Drawer State
-  const [selectedTicket, setSelectedTicket] = useState<AgentTicket | null>(null);
   const [selectedSOP, setSelectedSOP] = useState<SOPGuide | null>(null);
 
-  // Search Filter State
-  const [roleFilter, setRoleFilter] = useState('all');
-
   useEffect(() => {
-    // 1. Subscribe to Agent Execution Tickets (Live Reactive Sync & Newest First Sort)
-    const unsubTickets = onSnapshot(
-      collection(db, 'agent_tickets'),
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const list: AgentTicket[] = [];
-          snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as AgentTicket));
-          // Newest-first ticket sorting by ticket_number / created_at
-          setTickets(
-            list.sort((a, b) => 
-              (b.ticket_number || b.id || '').localeCompare(a.ticket_number || a.id || '') || 
-              (b.created_at || '').localeCompare(a.created_at || '')
-            )
-          );
-        }
-      },
-      (err) => console.warn('Agent tickets listener fallback:', err)
-    );
-
-    // 2. Subscribe to SOP Knowledge Base Guides
     const unsubSOPs = onSnapshot(
       collection(db, 'sops'),
       (snapshot) => {
@@ -225,160 +79,31 @@ export default function AdminSOPKnowledgeBasePage() {
       },
       (err) => console.warn('SOPs listener fallback:', err)
     );
-
-    // 3. Subscribe to System Telemetry Logs
-    const unsubTelemetry = onSnapshot(
-      collection(db, 'system_logs'),
-      (snapshot) => {
-        const list: any[] = [];
-        snapshot.forEach((d) => list.push({ id: d.id, ...d.data() }));
-        setTelemetryLogs(list.slice(0, 50));
-      },
-      (err) => console.warn('Telemetry logs listener fallback:', err)
-    );
-
-    return () => {
-      unsubTickets();
-      unsubSOPs();
-      unsubTelemetry();
-    };
+    return () => unsubSOPs();
   }, []);
 
-  // Filtered & Newest-First Sorted Tickets
-  const filteredTickets = tickets
-    .filter((t) => {
-      if (roleFilter !== 'all' && t.agent_role !== roleFilter) return false;
-      return true;
-    })
-    .sort((a, b) => 
-      (b.ticket_number || b.id || '').localeCompare(a.ticket_number || a.id || '') || 
-      (b.created_at || '').localeCompare(a.created_at || '')
-    );
-
-  const getPriorityBadge = (priority?: string) => {
-    switch (priority) {
-      case 'urgent':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-red-600 text-white shadow-xs">🚨 URGENT</span>;
-      case 'high':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-300">⚡ HIGH</span>;
-      case 'medium':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-300">🔵 MEDIUM</span>;
-      case 'low':
-      default:
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-300">⚪ LOW</span>;
-    }
-  };
-
-  const getAgentRoleBadge = (role: string) => {
-    switch (role) {
-      case 'architect':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300">📐 Architect</span>;
-      case 'mobile_expert':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-teal-100 text-teal-800 border border-teal-300">📱 Mobile Touch</span>;
-      case 'git_expert':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-slate-900 text-white">🐙 Git & GitHub</span>;
-      case 'site_auditor':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-pink-100 text-pink-800 border border-pink-300">🎨 UI Auditor</span>;
-      case 'financial_expert':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">💵 Financial</span>;
-      case 'traffic_expert':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">🚦 Traffic</span>;
-      case 'tester':
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">🧪 E2E Playwright</span>;
-      default:
-        return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-300">🫡 General Manager</span>;
-    }
-  };
-
-  // Columns for Agent Execution Tickets
-  const columns: ColumnDef<AgentTicket>[] = [
-    {
-      key: 'ticket_number',
-      label: 'TICKET #',
-      render: (row) => <code className="text-xs font-mono font-bold text-neutral-900">{row.ticket_number || row.id}</code>,
-    },
-    {
-      key: 'priority',
-      label: 'PRIORITY',
-      render: (row) => getPriorityBadge(row.priority || 'medium'),
-    },
-    {
-      key: 'agent_role',
-      label: 'AUTHOR AGENT',
-      render: (row) => getAgentRoleBadge(row.agent_role),
-    },
-    {
-      key: 'title',
-      label: 'TASK / FEATURE TITLE',
-      render: (row) => <span className="font-bold text-neutral-900">{row.title}</span>,
-    },
-    {
-      key: 'components_used',
-      label: 'COMPONENTS & SCHEMAS',
-      render: (row) => (
-        <div className="flex items-center gap-1 max-w-xs overflow-hidden">
-          {(row.components_used || []).slice(0, 2).map((comp, idx) => (
-            <span key={idx} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 border border-neutral-300 truncate">
-              {comp}
-            </span>
-          ))}
-          {(row.components_used || []).length > 2 && (
-            <span className="text-[10px] font-bold text-neutral-400">+{row.components_used.length - 2}</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'STATUS',
-      render: (row) => {
-        const s = row.status || 'VERIFIED';
-        if (s === 'TODO') {
-          return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">⏳ TODO</span>;
-        }
-        if (s === 'IN_PROGRESS') {
-          return <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-300">🔄 IN PROGRESS</span>;
-        }
-        return (
-          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-            ✓ {s}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'created_at',
-      label: 'TIMESTAMP',
-      render: (row) => <span className="text-[11px] font-mono text-neutral-500">{(row.created_at || '').split('T')[0]}</span>,
-    },
-  ];
-
-  const todoTickets = filteredTickets.filter((t) => t.status === 'TODO' || t.status === 'IN_PROGRESS');
-  const completedTickets = filteredTickets.filter((t) => t.status === 'COMPLETED' || t.status === 'VERIFIED' || !t.status);
-
   return (
-    <div className="w-full max-w-full 2xl:max-w-[1800px] 4k:max-w-[3400px] mx-auto space-y-5 font-sans pb-24 sm:pb-0">
-      
-      {/* Top Header & Section Description */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-200 pb-4">
+    <div className="w-full max-w-full 2xl:max-w-[1800px] 4k:max-w-[3400px] mx-auto space-y-6 font-sans pb-24 sm:pb-0">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#ff3b30] shrink-0" />
             <h1 className="text-xl sm:text-2xl font-extrabold uppercase text-[#1c1c1e] tracking-tight">
-              Agent Intelligence & SOP Knowledge Base HQ
+              📚 Master Platform Architecture & AI Operating HQ
             </h1>
           </div>
           <p className="text-xs text-neutral-500 font-medium mt-0.5">
-            Living repository of subagent task reports, Standard Operating Procedures (SOPs), component catalogs, and real-time site telemetry.
+            Authoritative platform specifications, multi-agent operating invariants, domain vertical definitions, and step-by-step SOP guidebooks.
           </p>
         </div>
 
-        {/* View Tabs */}
-        <div className="flex items-center gap-2 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1.5 bg-neutral-100 p-1.5 rounded-xl border border-neutral-200">
           {[
-            { id: 'tickets', label: '🎟️ Agent Worksheets' },
-            { id: 'sops', label: '📚 SOP Manuals' },
-            { id: 'telemetry', label: '📡 Site Telemetry' },
+            { id: 'architecture', label: '📐 Platform Architecture' },
+            { id: 'ai_standards', label: '🤖 AI Agent Operating Standards' },
+            { id: 'sop_guides', label: '📖 Step-by-Step SOP Guides' },
           ].map((tb) => (
             <button
               key={tb.id}
@@ -395,65 +120,130 @@ export default function AdminSOPKnowledgeBasePage() {
         </div>
       </div>
 
-      {/* TAB 1: AGENT TICKETS DUAL WORKSHEETS */}
-      {activeTab === 'tickets' && (
+      {/* TAB 1: GRIDPASS PLATFORM ARCHITECTURE */}
+      {activeTab === 'architecture' && (
         <div className="space-y-8">
-          {/* Worksheet 1: Active TODO Execution Queue */}
-          <div className="space-y-2">
+          {/* Multi-Vertical Engine Matrix */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-              <h2 className="text-sm font-black uppercase tracking-tight text-neutral-900">
-                1. Active Agent TODO Execution Queue ({todoTickets.length})
+              <span className="text-base">🚀</span>
+              <h2 className="text-sm font-black uppercase text-neutral-900 tracking-tight">
+                1. Multi-Vertical Engine Architecture (8 Core Domains)
               </h2>
             </div>
-            <ExcelWorksheetTable
-              title="Active Subagent TODO Execution Queue"
-              data={todoTickets}
-              columns={columns}
-              idKey="id"
-              searchPlaceholder="Search active TODO execution tickets..."
-              loading={loading}
-              actionRenderer={(row) => (
-                <button
-                  onClick={() => setSelectedTicket(row)}
-                  className="text-[10px] font-black uppercase bg-neutral-900 hover:bg-black text-white px-3 py-1 rounded shadow-xs transition active:scale-95"
-                >
-                  View Details 📋
-                </button>
-              )}
-            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { title: '🏎️ Vehicles & Garages', spec: 'Staging classes (Track, Show, Fleet, Craft, PEV), RFID/QR tag binding (#0001-#9999), service logs, VIN verification.' },
+                { title: '📷 Photos & Media', spec: 'Dynamic OpenGraph social image cards, vehicle media manifests, lossy compressed WebP delivery, zero layout shift.' },
+                { title: '🏁 Events & Gates', spec: 'Digital gate badges, waiver status tracking, vehicle staging manifests, spectator pass check-in, real-time scan velocity.' },
+                { title: '🏢 Vendors & Gridpass B2B', spec: 'Business profiles, multi-tier SaaS package pricing, quote pipeline, CRM lead conversion engine, account executive routing.' },
+                { title: '🏟️ Venues & Facilities', spec: 'Track layout specs, pit shuttle manifests, facility access controls, event scheduling, spectator entry gates.' },
+                { title: '⛵ Marine & Watercraft', spec: 'Custom marine staging classification, dock pass registration, trailered craft inspection tags, hull ID tracking.' },
+                { title: '🚚 Trade Fleets', spec: 'Business fleet management, upfitter build staging, multi-vehicle batch assignment, service history sync.' },
+                { title: '⚡ PEVs & Micromobility', spec: 'Lightweight electric mobility staging class, charging bay passes, durable micro QR emblem tags.' },
+              ].map((vert, idx) => (
+                <div key={idx} className="bg-white p-4 border border-neutral-200 rounded-xl space-y-2 shadow-2xs hover:border-neutral-400 transition">
+                  <h3 className="font-black text-xs uppercase text-[#1c1c1e]">{vert.title}</h3>
+                  <p className="text-[11px] text-neutral-600 leading-relaxed font-medium">{vert.spec}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Worksheet 2: Verified & Completed SOP Log */}
-          <div className="space-y-2">
+          {/* Database Architecture & Firestore Schemas */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <h2 className="text-sm font-black uppercase tracking-tight text-neutral-900">
-                2. Verified & Completed Subagent SOP Log ({completedTickets.length})
+              <span className="text-base">🗄️</span>
+              <h2 className="text-sm font-black uppercase text-neutral-900 tracking-tight">
+                2. Firestore Database Schemas & Security Match Rules
               </h2>
             </div>
-            <ExcelWorksheetTable
-              title="Verified Subagent SOP Log & Architecture Manuals"
-              data={completedTickets}
-              columns={columns}
-              idKey="id"
-              searchPlaceholder="Search completed SOP manuals..."
-              loading={loading}
-              actionRenderer={(row) => (
-                <button
-                  onClick={() => setSelectedTicket(row)}
-                  className="text-[10px] font-black uppercase bg-[#ff3b30] hover:bg-[#bd2925] text-white px-3 py-1 rounded shadow-xs transition active:scale-95"
-                >
-                  Read SOP 📖
-                </button>
-              )}
-            />
+
+            <div className="bg-white p-5 border border-neutral-200 rounded-xl space-y-4 shadow-2xs">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 space-y-1">
+                  <span className="font-bold text-neutral-900 block font-mono">collection('members')</span>
+                  <p className="text-[11px] text-neutral-600">User accounts, display_name, is_gold, role ('member' | 'admin'), sales permissions.</p>
+                </div>
+                <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 space-y-1">
+                  <span className="font-bold text-neutral-900 block font-mono">collection('vehicles')</span>
+                  <p className="text-[11px] text-neutral-600">Year/make/model, tag_id, staging_class, vin_verified, soft-delete flags (is_hidden, archived).</p>
+                </div>
+                <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 space-y-1">
+                  <span className="font-bold text-neutral-900 block font-mono">collection('agent_tickets')</span>
+                  <p className="text-[11px] text-neutral-600">Subagent execution tickets, agent_role, status (TODO | VERIFIED), files_modified, audit logs.</p>
+                </div>
+              </div>
+              <div className="p-3 bg-neutral-900 text-white rounded-lg font-mono text-[11px]">
+                <p className="text-emerald-400 font-bold mb-1">// RBAC Match Rule Invariant (firestore.rules)</p>
+                <p>match /agent_tickets/{'{ticketId}'} {'{'} allow read: if request.auth != null; allow write: if request.auth.token.admin == true; {'}'}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: SOP KNOWLEDGE BASE CARDS */}
-      {activeTab === 'sops' && (
+      {/* TAB 2: AI AGENT OPERATING STANDARDS */}
+      {activeTab === 'ai_standards' && (
+        <div className="space-y-8">
+          {/* Core Invariants */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🛡️</span>
+              <h2 className="text-sm font-black uppercase text-neutral-900 tracking-tight">
+                1. Mandatory System Architecture Invariants
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { title: '1. GM Pure Delegation & Execution Ticket Invariant', desc: 'GM orchestrates and delegates to subagents, writing 0 direct code without task dispatching and logging an official Execution Ticket (TICK-...) to Firestore agent_tickets.' },
+                { title: '2. Zero Fake Data & Zero Mock Fallbacks Invariant', desc: 'Absolute ban on pre-populating views with hardcoded fake seed data or writing conditional fallback index hacks (idx < 5 ? activeVersion : 0). All metrics evaluate from verified live records.' },
+                { title: '3. Strict Soft Delete & Data Archival Invariant', desc: 'Gridpass NEVER performs hard deletions (deleteDoc) on real entities. Documents are tagged with is_hidden: true or archived: true to hide from feeds while preserving full recovery.' },
+                { title: '4. Apple Native Mobile Touch & Zoom Prevention', desc: 'All interactive elements enforce min-h-[44px] min-w-[44px], input font-size >= 16px to prevent iOS WebKit layout zoom, and active:scale-95 spring physics.' },
+              ].map((inv, idx) => (
+                <div key={idx} className="bg-white p-4 border border-neutral-200 rounded-xl space-y-2 shadow-2xs">
+                  <h3 className="font-black text-xs uppercase text-[#ff3b30]">{inv.title}</h3>
+                  <p className="text-xs text-neutral-700 leading-relaxed font-medium">{inv.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Subagent Team Roster */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">👥</span>
+              <h2 className="text-sm font-black uppercase text-neutral-900 tracking-tight">
+                2. Subagent Roster & Operational Domain Matrix
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { role: '🫡 gm', title: 'General Manager', task: 'Task orchestration, delegation, token-lean execution guardrails.' },
+                { role: '📐 architect', title: 'Feature Architect', task: 'Firestore schemas, TypeScript contracts, RBAC permission rules, multi-vertical specs.' },
+                { role: '🎨 site_auditor', title: 'UI/UX Auditor', task: 'Design system uniformity (#ff3b30 red/black/white), zero fluff, clean viewports.' },
+                { role: '📱 mobile_expert', title: 'Apple Mobile Expert', task: '>=44px touch targets, iOS zoom prevention, bottom dock action bars.' },
+                { role: '💵 financial_expert', title: 'Financial & B2B Expert', task: 'SaaS package matrices, MRR/ARR, sales quote pipeline, deal stages.' },
+                { role: '🧪 tester', title: 'Playwright Tester', task: 'E2E browser tests, persistent auth sessions, headed visual verification.' },
+              ].map((agent, idx) => (
+                <div key={idx} className="bg-white p-4 border border-neutral-200 rounded-xl space-y-2 shadow-2xs">
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-neutral-900 text-white">
+                    {agent.role}
+                  </span>
+                  <h3 className="font-black text-xs uppercase text-[#1c1c1e]">{agent.title}</h3>
+                  <p className="text-xs text-neutral-600 leading-relaxed">{agent.task}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: STEP-BY-STEP SOP GUIDES */}
+      {activeTab === 'sop_guides' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
           {sops.map((sop) => (
             <div
@@ -465,7 +255,9 @@ export default function AdminSOPKnowledgeBasePage() {
                 <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-neutral-100 text-neutral-700">
                   {sop.category}
                 </span>
-                {getAgentRoleBadge(sop.author_agent)}
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-300">
+                  {sop.author_agent}
+                </span>
               </div>
 
               <h3 className="font-black text-sm uppercase text-[#1c1c1e] line-clamp-2">{sop.title}</h3>
@@ -480,247 +272,50 @@ export default function AdminSOPKnowledgeBasePage() {
         </div>
       )}
 
-      {/* TAB 3: REAL-TIME SITE TELEMETRY AUDIT */}
-      {activeTab === 'telemetry' && (
-        <div className="space-y-4 bg-white p-5 border border-neutral-200 rounded-xl">
-          <h2 className="font-black text-sm uppercase text-[#1c1c1e]">Real-Time User Site Telemetry Stream</h2>
-          <div className="space-y-2 font-mono text-xs max-h-[600px] overflow-y-auto">
-            {telemetryLogs.length === 0 ? (
-              <p className="text-neutral-400">Awaiting user site activity telemetry...</p>
-            ) : (
-              telemetryLogs.map((log, idx) => (
-                <div key={idx} className="p-3 bg-neutral-50 border border-neutral-200 rounded-lg flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-neutral-900 mr-2">[{log.action || log.event || 'USER_ACTION'}]</span>
-                    <span className="text-neutral-600">{log.path || log.target || log.details || 'Site View'}</span>
-                  </div>
-                  <span className="text-neutral-400 text-[11px]">{log.timestamp || log.created_at || 'Recent'}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Slide-Out Ticket / SOP Reader Drawer */}
-      {(selectedTicket || selectedSOP) && (
+      {/* Slide-Out SOP Reader Drawer */}
+      {selectedSOP && (
         <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end">
           <div className="bg-white w-full max-w-2xl h-full flex flex-col justify-between shadow-2xl border-l border-neutral-200 animate-in slide-in-from-right duration-200">
-            
-            {/* Drawer Header */}
             <div className="p-5 border-b border-neutral-200 bg-neutral-50 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-mono font-bold uppercase text-neutral-500">
-                  {selectedTicket ? selectedTicket.ticket_number : selectedSOP?.category}
-                </span>
-                <h2 className="font-black text-lg uppercase text-[#1c1c1e]">
-                  {selectedTicket ? selectedTicket.title : selectedSOP?.title}
-                </h2>
+                <span className="text-[10px] font-mono font-bold uppercase text-neutral-500">{selectedSOP.category}</span>
+                <h2 className="font-black text-lg uppercase text-[#1c1c1e]">{selectedSOP.title}</h2>
               </div>
               <button
-                onClick={() => {
-                  setSelectedTicket(null);
-                  setSelectedSOP(null);
-                }}
+                onClick={() => setSelectedSOP(null)}
                 className="touch-target-44 rounded-lg text-neutral-400 hover:text-neutral-900 font-bold active:scale-95 transition"
               >
                 ✕
               </button>
             </div>
 
-            {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {selectedTicket && (
-                <>
-                  {/* SECTION 1: Ticket Metadata & Agent Ownership */}
-                  <div className="p-4 bg-neutral-900 text-white rounded-xl space-y-3 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
-                        Section 1 • Metadata & Agent Ownership
-                      </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
-                        {selectedTicket.ticket_number}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {getAgentRoleBadge(selectedTicket.agent_role)}
-                      {getPriorityBadge(selectedTicket.priority)}
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
-                        {selectedTicket.category}
-                      </span>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
-                        {selectedTicket.status}
-                      </span>
-                      <span className="text-[10px] font-mono text-neutral-400 ml-auto">
-                        Created: {selectedTicket.created_at}
-                      </span>
-                    </div>
-                  </div>
+              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2">
+                <h3 className="text-xs font-black uppercase text-neutral-900">Guide Description</h3>
+                <p className="text-xs text-neutral-700 leading-relaxed">{selectedSOP.description}</p>
+              </div>
 
-                  {/* SECTION 2: Executive Summary & Objective */}
-                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">🎯</span>
-                      <h3 className="text-xs font-black uppercase text-neutral-900">
-                        Section 2 • Executive Summary & Purpose
-                      </h3>
-                    </div>
-                    <p className="text-xs text-neutral-700 leading-relaxed font-medium">
-                      {selectedTicket.sop_summary}
-                    </p>
-                  </div>
-
-                  {/* SECTION 3: System Components & Schema Impact */}
-                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">🧩</span>
-                      <h3 className="text-xs font-black uppercase text-neutral-900">
-                        Section 3 • System Components & Schema Impact
-                      </h3>
-                    </div>
-
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-mono font-bold uppercase text-neutral-500">Components Used</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {(selectedTicket.components_used || []).map((comp, idx) => (
-                          <span key={idx} className="text-xs font-mono px-2 py-1 rounded bg-white border border-neutral-300 font-bold text-neutral-800 shadow-2xs">
-                            🧩 {comp}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {(selectedTicket.files_modified || []).length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-neutral-200">
-                        <span className="text-[10px] font-mono font-bold uppercase text-neutral-500">Files Modified</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedTicket.files_modified.map((file, idx) => (
-                            <span key={idx} className="text-[11px] font-mono px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 border border-neutral-200">
-                              📄 {file}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {(selectedTicket.schema_changes || []).length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-neutral-200">
-                        <span className="text-[10px] font-mono font-bold uppercase text-neutral-500">Schema Changes</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedTicket.schema_changes?.map((schema, idx) => (
-                            <span key={idx} className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
-                              🗄️ {schema}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* SECTION 4: Step-by-Step SOP Execution Protocol */}
-                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">⚡</span>
-                      <h3 className="text-xs font-black uppercase text-neutral-900">
-                        Section 4 • Step-by-Step Execution Protocol
-                      </h3>
-                    </div>
-                    <ol className="space-y-2 pl-2 text-xs text-neutral-800 font-medium">
-                      {(selectedTicket.sop_steps || []).map((step, idx) => (
-                        <li key={idx} className="flex items-start gap-2 leading-relaxed">
-                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-neutral-900 text-white shrink-0">
-                            {idx + 1}
-                          </span>
-                          <span className="pt-0.5">{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  {/* SECTION 5: Enterprise Telemetry & Audit Verification Log */}
-                  <div className="p-4 bg-emerald-950 text-emerald-100 rounded-xl space-y-3 border border-emerald-800 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-emerald-800/80 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs">🛡️</span>
-                        <h3 className="text-xs font-black uppercase tracking-wider text-emerald-300">
-                          Section 5 • Telemetry & Verification Audit Log
-                        </h3>
-                      </div>
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-900 text-emerald-200 uppercase">
-                        {selectedTicket.audit_status || 'VERIFIED_PASSED'}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-[11px] font-mono">
-                      <div className="bg-emerald-900/50 p-2 rounded border border-emerald-800/60">
-                        <span className="text-emerald-400 block text-[9px] uppercase font-bold">Verification Agent</span>
-                        <span className="font-bold text-white">{selectedTicket.verified_by_agent || selectedTicket.agent_role.toUpperCase()}</span>
-                      </div>
-                      <div className="bg-emerald-900/50 p-2 rounded border border-emerald-800/60">
-                        <span className="text-emerald-400 block text-[9px] uppercase font-bold">Telemetry Stream</span>
-                        <span className="font-bold text-emerald-300">⚡ LIVE_SYNCED</span>
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] text-emerald-300/90 leading-relaxed font-mono pt-1">
-                      ✅ Invariant Audit Verified: All components, schemas, and UI layout criteria passed regression safety checks.
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {selectedSOP && (
-                <>
-                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2">
-                    <h3 className="text-xs font-black uppercase text-neutral-900">Guide Description</h3>
-                    <p className="text-xs text-neutral-700 leading-relaxed">{selectedSOP.description}</p>
-                  </div>
-
-                  {/* Step-by-Step Guide */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-black uppercase text-neutral-900">Standard Operating Procedure</h3>
-                    <ol className="space-y-2 pl-4 list-decimal text-xs text-neutral-800 font-medium">
-                      {(selectedSOP.steps || []).map((step, idx) => (
-                        <li key={idx} className="leading-relaxed">{step}</li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  {/* Code Snippets */}
-                  {(selectedSOP.code_snippets || []).length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black uppercase text-neutral-900">Code Snippets & Implementation Rules</h3>
-                      {selectedSOP.code_snippets?.map((snip, idx) => (
-                        <div key={idx} className="space-y-1">
-                          <span className="text-xs font-bold text-neutral-700">{snip.title}</span>
-                          <pre className="p-3 bg-neutral-900 text-white rounded-lg font-mono text-[11px] overflow-x-auto">
-                            <code>{snip.code}</code>
-                          </pre>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+              <div className="space-y-3">
+                <h3 className="text-xs font-black uppercase text-neutral-900">Standard Operating Procedure</h3>
+                <ol className="space-y-2 pl-4 list-decimal text-xs text-neutral-800 font-medium">
+                  {(selectedSOP.steps || []).map((step, idx) => (
+                    <li key={idx} className="leading-relaxed">{step}</li>
+                  ))}
+                </ol>
+              </div>
             </div>
 
-            {/* Footer */}
             <div className="p-4 border-t border-neutral-200 bg-neutral-50 flex justify-end">
               <button
-                onClick={() => {
-                  setSelectedTicket(null);
-                  setSelectedSOP(null);
-                }}
+                onClick={() => setSelectedSOP(null)}
                 className="px-4 py-2 bg-neutral-900 text-white font-bold text-xs uppercase rounded-xl"
               >
-                Close Manual
+                Close Guide
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
