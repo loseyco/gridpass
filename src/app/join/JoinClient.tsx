@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Bike, Ship, Truck, ArrowRight, ShieldCheck } from 'lucide-react';
+import { QrCode, Loader2, Sparkles, CheckCircle2, Zap, Car, Utensils, Plane, Camera, Toilet, Flame, ArrowRight, Camera as CameraIcon } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useToast } from '@/components/ToastContext';
 import Link from 'next/link';
@@ -20,8 +20,8 @@ function JoinPageContent() {
   const [tagRecord, setTagRecord] = useState<any | null>(null);
   const [showAdminDrawer, setShowAdminDrawer] = useState(false);
 
-  // Machine Category Pills
-  const [selectedMachineType, setSelectedMachineType] = useState<'car' | 'powersports' | 'boat' | 'truck'>('car');
+  // Universal Persona / Member Interest Categories
+  const [selectedCategory, setSelectedCategory] = useState<string>('motorsports');
 
   // Form State
   const [email, setEmail] = useState('');
@@ -31,11 +31,14 @@ function JoinPageContent() {
   const [joining, setJoining] = useState(false);
   const [joinedSuccess, setJoinedSuccess] = useState(false);
 
-  // Admin Tag Controller State
+  // Admin On-The-Spot Car Photo Personalization State
   const [editTargetType, setEditTargetType] = useState('intake_join');
   const [editTargetDest, setEditTargetDest] = useState('/join');
   const [editMethod, setEditMethod] = useState('handout');
   const [editPartnerName, setEditPartnerName] = useState('');
+  const [editSpottedPhoto, setEditSpottedPhoto] = useState('');
+  const [editSpottedTitle, setEditSpottedTitle] = useState('');
+  const [editSpottedNote, setEditSpottedNote] = useState('');
 
   // Audit & Resolve Tag Intake
   useEffect(() => {
@@ -74,9 +77,12 @@ function JoinPageContent() {
           setEditTargetDest(rec.target_destination || '/join');
           setEditMethod(rec.distribution_method || 'handout');
           setEditPartnerName(rec.partner_business_name || '');
+          setEditSpottedPhoto(rec.custom_spotted_photo_url || '');
+          setEditSpottedTitle(rec.custom_spotted_title || '');
+          setEditSpottedNote(rec.custom_spotted_note || '');
         }
 
-        // Log scan event
+        // Log scan telemetry
         await addDoc(collection(db, 'tag_scans'), {
           tag_id: rawTagId,
           scanned_at: new Date().toISOString(),
@@ -118,9 +124,10 @@ function JoinPageContent() {
       await setDoc(userRef, {
         email,
         full_name: fullName || 'Gridpass Member',
-        vehicle_make_model: vehicleMakeModel || 'Staged Machine',
-        machine_type: selectedMachineType,
+        vehicle_make_model: vehicleMakeModel || null,
+        interest_category: selectedCategory,
         referred_by_tag_id: rawTagId || null,
+        spotted_car_photo: tagRecord?.custom_spotted_photo_url || null,
         role: 'member',
         starting_credits: 100,
         created_at: new Date().toISOString(),
@@ -155,18 +162,21 @@ function JoinPageContent() {
     }
   };
 
-  // Save Dynamic Target Re-route (Admin Controller)
+  // Save Dynamic Target Re-route & On-The-Spot Car Photo Personalization (Admin Controller)
   const handleAdminSaveTarget = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rawTagId) return;
 
     const updated = {
       tag_id: rawTagId,
-      title: tagRecord?.title || `Physical Tag #${rawTagId}`,
+      title: editSpottedTitle || tagRecord?.title || `Physical Tag #${rawTagId}`,
       distribution_method: editMethod,
       target_type: editTargetType,
       target_destination: editTargetDest,
       partner_business_name: editPartnerName || '',
+      custom_spotted_photo_url: editSpottedPhoto || null,
+      custom_spotted_title: editSpottedTitle || null,
+      custom_spotted_note: editSpottedNote || null,
       status: 'active',
       last_scanned_at: new Date().toISOString(),
     };
@@ -177,9 +187,9 @@ function JoinPageContent() {
       const tagDocId = tagRecord?.id || `tag_${rawTagId}`;
       await setDoc(doc(db, 'physical_tags', tagDocId), updated, { merge: true });
       showToast({
-        title: 'PHYSICAL TAG RE-ROUTED! ⚡',
-        message: `Tag #${rawTagId} now points to ${editTargetDest}.`,
-        icon: '⚡',
+        title: 'PERSONALIZED CAR INVITATION SAVED! 📸',
+        message: `Tag #${rawTagId} updated with machine photo & destination ${editTargetDest}.`,
+        icon: '📸',
       });
       setShowAdminDrawer(false);
     } catch (err: any) {
@@ -188,6 +198,9 @@ function JoinPageContent() {
   };
 
   const getContextualHeadline = () => {
+    if (tagRecord?.custom_spotted_photo_url) {
+      return `📸 SPOTTED! WE LOVED YOUR ${tagRecord.custom_spotted_title || 'MACHINE'}!`;
+    }
     const method = tagRecord?.distribution_method;
     if (method === 'car_drop') {
       return '🏎️ SPOTTED! INVITATION LEFT ON YOUR MACHINE';
@@ -213,6 +226,34 @@ function JoinPageContent() {
 
       <div className="w-full max-w-md space-y-5 relative z-10 my-auto">
         
+        {/* On-The-Spot Personal Car Photo Banner (If Admin Took Photo for Car Drop) */}
+        {tagRecord?.custom_spotted_photo_url && (
+          <div className="bg-neutral-900 border-2 border-[#ff3b30] rounded-3xl overflow-hidden shadow-2xl space-y-0 relative group">
+            <div className="relative h-56 sm:h-64 w-full bg-neutral-950">
+              <img
+                src={tagRecord.custom_spotted_photo_url}
+                alt="Spotted Vehicle"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/30 to-transparent" />
+              <div className="absolute top-3 left-3 bg-[#ff3b30] text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                <CameraIcon className="w-3.5 h-3.5" />
+                <span>SPOTTED BY GRIDPASS</span>
+              </div>
+              <div className="absolute bottom-3 left-3 right-3 space-y-1">
+                <h2 className="text-lg font-black uppercase text-white tracking-tight leading-tight">
+                  {tagRecord.custom_spotted_title || 'YOUR MACHINE HAS BEEN SPOTTED!'}
+                </h2>
+                {tagRecord.custom_spotted_note && (
+                  <p className="text-xs text-neutral-300 font-medium italic">
+                    &quot;{tagRecord.custom_spotted_note}&quot;
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Modern Vibrant Hero Card */}
         <div className="bg-neutral-900/90 backdrop-blur-xl border border-neutral-800 p-6 rounded-3xl space-y-4 shadow-2xl relative overflow-hidden">
           
@@ -233,7 +274,7 @@ function JoinPageContent() {
               {getContextualHeadline()}
             </h1>
             <p className="text-xs text-neutral-300 font-medium leading-relaxed">
-              Whether you race it, show it, cook it, or capture it — Gridpass brings your machines, events, and people together.
+              Whether you race it, show it, cook it, fly it, or captured it in the wild — Gridpass brings your world together.
             </p>
           </div>
 
@@ -251,9 +292,9 @@ function JoinPageContent() {
           {user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com') && (
             <button
               onClick={() => setShowAdminDrawer(true)}
-              className="w-full py-2 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-amber-400 border border-amber-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-2"
             >
-              <span>⚡ Super Admin Tag Controller {rawTagId ? `(#${rawTagId})` : ''}</span>
+              <span>📸 Snap Car Photo & Set Target {rawTagId ? `(#${rawTagId})` : ''}</span>
             </button>
           )}
 
@@ -268,7 +309,7 @@ function JoinPageContent() {
                 JOIN THE ROSTER
               </h2>
               <p className="text-xs text-neutral-500 font-bold">
-                Claim your digital vehicle passport & get instant access.
+                Free instant membership for drivers, vendors, pilots & fans.
               </p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-[#ff3b30] text-white flex items-center justify-center shadow-md">
@@ -283,68 +324,94 @@ function JoinPageContent() {
               </div>
               <h3 className="text-xl font-black uppercase text-neutral-900">PASSPORT CLAIMED! 🎉</h3>
               <p className="text-xs text-neutral-600 font-bold max-w-xs mx-auto">
-                Welcome to Gridpass! Redirecting to your driver dashboard...
+                Welcome to Gridpass! Redirecting to your dashboard...
               </p>
             </div>
           ) : (
             <form onSubmit={handleJoinSubmit} className="space-y-4">
               
-              {/* Machine Category Pills */}
+              {/* Universal Inclusive Category Selector */}
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-500 mb-1.5">
-                  Select Machine Category
+                  Who Are You? / What Brings You Here?
                 </label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setSelectedMachineType('car')}
+                    onClick={() => setSelectedCategory('motorsports')}
                     className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedMachineType === 'car'
+                      selectedCategory === 'motorsports'
                         ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                         : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                     }`}
                   >
                     <Car className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Race/Car</span>
+                    <span className="text-[9px] font-black uppercase">Motorsports</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setSelectedMachineType('powersports')}
+                    onClick={() => setSelectedCategory('food_truck')}
                     className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedMachineType === 'powersports'
+                      selectedCategory === 'food_truck'
                         ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                         : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                     }`}
                   >
-                    <Bike className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Moto/ATV</span>
+                    <Utensils className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Food/Vendor</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setSelectedMachineType('boat')}
+                    onClick={() => setSelectedCategory('aviation')}
                     className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedMachineType === 'boat'
+                      selectedCategory === 'aviation'
                         ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                         : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                     }`}
                   >
-                    <Ship className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Boat/PWC</span>
+                    <Plane className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Aviation/Pilot</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setSelectedMachineType('truck')}
+                    onClick={() => setSelectedCategory('spectator')}
                     className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
-                      selectedMachineType === 'truck'
+                      selectedCategory === 'spectator'
                         ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
                         : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
                     }`}
                   >
-                    <Truck className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase">Hauler</span>
+                    <Camera className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Enthusiast</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory('wild_scan')}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      selectedCategory === 'wild_scan'
+                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <Toilet className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Sticker Scan</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory('other')}
+                    className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition ${
+                      selectedCategory === 'other'
+                        ? 'bg-neutral-900 text-white border-neutral-900 font-bold'
+                        : 'bg-neutral-50 text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <Flame className="w-4 h-4" />
+                    <span className="text-[9px] font-black uppercase">Anything Else</span>
                   </button>
                 </div>
               </div>
@@ -386,10 +453,12 @@ function JoinPageContent() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Primary Machine Make & Model</label>
+                <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">
+                  Machine, Business, or Craft Make & Model <span className="text-neutral-400 font-normal">(Optional)</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="e.g. 2024 Corvette Z06 or Sea-Doo RXT-X"
+                  placeholder="e.g. 1969 Camaro, Cessna 172, or Tacos El Rey Truck"
                   value={vehicleMakeModel}
                   onChange={(e) => setVehicleMakeModel(e.target.value)}
                   className="w-full text-xs font-bold p-3.5 bg-neutral-50 border border-neutral-300 rounded-xl focus:outline-none focus:border-[#ff3b30]"
@@ -421,17 +490,17 @@ function JoinPageContent() {
 
       </div>
 
-      {/* Admin Tag Controller Modal */}
+      {/* Admin Tag Controller & Car Photo Personalization Modal */}
       {showAdminDrawer && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl font-sans">
+          <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl font-sans max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
               <div>
                 <h2 className="font-black text-sm uppercase text-neutral-900 flex items-center gap-2">
                   <span>⚡ DYNAMIC TAG CONTROLLER</span>
                   <span className="font-mono text-[#ff3b30]">{rawTagId ? `#${rawTagId}` : ''}</span>
                 </h2>
-                <p className="text-[10px] text-neutral-500 font-mono">Re-route physical card destination & persona rules.</p>
+                <p className="text-[10px] text-neutral-500 font-mono">Snap car photo & personalize windshield drop invitation.</p>
               </div>
               <button onClick={() => setShowAdminDrawer(false)} className="text-neutral-400 font-bold hover:text-neutral-900">
                 ✕
@@ -439,6 +508,48 @@ function JoinPageContent() {
             </div>
 
             <form onSubmit={handleAdminSaveTarget} className="space-y-3">
+              
+              {/* On-The-Spot Car Photo Personalization */}
+              <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-2">
+                <span className="block text-[10px] font-black uppercase text-[#ff3b30] flex items-center gap-1">
+                  <CameraIcon className="w-3.5 h-3.5" />
+                  <span>📸 Snap Car Drop Photo & Personalize</span>
+                </span>
+                
+                <div>
+                  <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Car Photo Image URL</label>
+                  <input
+                    type="text"
+                    value={editSpottedPhoto}
+                    onChange={(e) => setEditSpottedPhoto(e.target.value)}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full text-xs font-mono font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Machine Title / Name</label>
+                  <input
+                    type="text"
+                    value={editSpottedTitle}
+                    onChange={(e) => setEditSpottedTitle(e.target.value)}
+                    placeholder="e.g. 1969 Camaro SS"
+                    className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Personal Note to Owner</label>
+                  <input
+                    type="text"
+                    value={editSpottedNote}
+                    onChange={(e) => setEditSpottedNote(e.target.value)}
+                    placeholder="e.g. Saw your car at Road America — claim your passport!"
+                    className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-[10px] font-black uppercase text-neutral-700 mb-1">Distribution Method</label>
                 <select
@@ -499,7 +610,7 @@ function JoinPageContent() {
                   type="submit"
                   className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-sm"
                 >
-                  Save Target Route ➔
+                  Save Personalized Card ➔
                 </button>
               </div>
             </form>
