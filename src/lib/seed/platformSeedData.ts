@@ -200,6 +200,15 @@ export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
     route_affected: '/secondlife/[slug]',
   },
   {
+    version: 'v4.6.0',
+    title: 'Physical QR Decal Intake Engine, 1-Tap Google OAuth Registration & Unclaimed Machine/Business Passport Claiming Studio',
+    category: 'feature',
+    description: 'Released full physical QR decal intake engine on /join. Features 1-Tap Google OAuth popup sign-in, dynamic business passport hero cards (/join?id=monarch-defender), business photo staging, 1-tap unclaimed asset transfer & auto-redirect to profile, interactive VIP share link generator studio, unclaimed vehicle passport claim banners on /v/[id], City/Region & personal note dual-collection persistence, and Apple-native mobile touch target & iOS auto-zoom prevention upgrades.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/join, /v/[id], /b/[id], /admin/tickets',
+  },
+  {
     version: 'v4.2.7',
     title: 'High-Density Event Grid Roster & Inline Entrant/Vendor/Guest Views',
     category: 'feature',
