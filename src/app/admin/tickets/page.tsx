@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1036_unclaimed_business_passport_staging',
+    ticket_number: 'TICK-1036',
+    agent_role: 'gm',
+    title: 'Unclaimed Business & Auto Shop Passport Staging & Dynamic Card Binding Engine',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'dbBusinesses', 'setDoc'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['businesses collection staging: is_unclaimed: true', 'physical_tags schema: unclaimed_business_id'],
+    issue_description: 'Platform owner required building the full Business & Auto Shop invitation card setup wizard on /join, allowing admins to select existing businesses or pre-stage unclaimed shop passports.',
+    root_cause: 'The Invite Business mode in the card binding wizard lacked dedicated inputs for business name, vertical category, location, and Firestore business staging.',
+    resolution_summary: 'Updated JoinClient.tsx to render live Firestore business dropdown selectors, business name/vertical/location inputs, and auto-staging of unclaimed business profiles in the businesses collection linked to target_destination (/b/[id]).',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified business staging on localhost.',
+    sop_summary: 'SOP for business invitation setup and unclaimed shop passport staging.',
+    sop_steps: [
+      'Select Invite Business target mode in Card Binding Wizard.',
+      'Choose existing business from live dropdown or enter new business name, category, and city.',
+      'Auto-stage unclaimed business profile in Firestore businesses collection and bind card destination to /b/[id].'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1035_super_admin_dual_controller',
     ticket_number: 'TICK-1035',
     agent_role: 'gm',

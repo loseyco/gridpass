@@ -83,6 +83,12 @@ function JoinPageContent() {
   const [editModel, setEditModel] = useState('');
   const [editTrim, setEditTrim] = useState('');
 
+  // Business Invite Fields
+  const [editBusinessId, setEditBusinessId] = useState('');
+  const [editBusinessName, setEditBusinessName] = useState('');
+  const [editBusinessCategory, setEditBusinessCategory] = useState('shop_garage');
+  const [editBusinessLocation, setEditBusinessLocation] = useState('');
+
   // Is Current User Admin?
   const isAdmin = user && ((user as any).role === 'super_admin' || user.email === 'loseyp@gmail.com');
 
@@ -356,7 +362,10 @@ function JoinPageContent() {
     if (!rawTagId) return; // Strict Invariant: Cannot bind without real scanned rawTagId!
 
     const isVehicleMode = editTargetType === 'vehicle';
+    const isBusinessMode = editTargetType === 'business';
+
     let newUnclaimedVehId = isVehicleMode ? (tagRecord?.unclaimed_vehicle_id || null) : null;
+    let targetDest = editTargetDest;
 
     if (isVehicleMode && (editSpottedPhoto || (editMake && editModel))) {
       newUnclaimedVehId = `veh_unclaimed_${rawTagId}_${Date.now()}`;
@@ -379,18 +388,44 @@ function JoinPageContent() {
       );
     }
 
+    let stagedBizId = editBusinessId;
+    if (isBusinessMode && editBusinessName) {
+      stagedBizId = editBusinessId || editBusinessName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      targetDest = `/b/${stagedBizId}`;
+      await setDoc(
+        doc(db, 'businesses', stagedBizId),
+        {
+          id: stagedBizId,
+          name: editBusinessName,
+          category: editBusinessCategory || 'shop_garage',
+          location_name: editBusinessLocation || 'Local Region',
+          is_unclaimed: true,
+          status: 'unclaimed',
+          created_by: user?.email || 'loseyp@gmail.com',
+          created_at: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    }
+
     const vehicleTitle = [editYear, editMake, editModel].filter(Boolean).join(' ');
+    const displayTitle = isVehicleMode
+      ? (editSpottedTitle || vehicleTitle || `Card #${rawTagId}`)
+      : isBusinessMode
+      ? (editBusinessName ? `🏢 ${editBusinessName}` : `Business Invitation #${rawTagId}`)
+      : `Card #${rawTagId}`;
 
     const updated: any = {
       tag_id: rawTagId,
-      title: isVehicleMode ? (editSpottedTitle || vehicleTitle || `Card #${rawTagId}`) : `Card #${rawTagId}`,
+      title: displayTitle,
       distribution_method: editMethod,
       target_type: editTargetType,
-      target_destination: editTargetDest,
+      target_destination: targetDest,
       custom_spotted_photo_url: isVehicleMode ? (editSpottedPhoto || null) : null,
-      custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : null,
-      custom_spotted_note: isVehicleMode ? (editSpottedNote || null) : null,
+      custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : (isBusinessMode ? (editBusinessName || null) : null),
+      custom_spotted_note: isVehicleMode ? (editSpottedNote || null) : (isBusinessMode ? (editSpottedNote || null) : null),
       unclaimed_vehicle_id: newUnclaimedVehId,
+      unclaimed_business_id: isBusinessMode ? stagedBizId : null,
       unclaimed_year: isVehicleMode ? editYear : '',
       unclaimed_make: isVehicleMode ? editMake : '',
       unclaimed_model: isVehicleMode ? editModel : '',
@@ -405,7 +440,7 @@ function JoinPageContent() {
       // Use setDoc without merge so old vehicle fields are explicitly overwritten when switching target types
       await setDoc(doc(db, 'physical_tags', `tag_${rawTagId}`), updated);
       showToast({
-        title: 'PHYSICAL CARD RE-BOUND & INVITATION ACTIVE! ⚡',
+        title: 'PHYSICAL CARD BOUND & INVITATION ACTIVE! ⚡',
         message: `Card #${rawTagId} is now configured as a ${editTargetType} invitation!`,
         icon: '⚡',
       });
@@ -996,6 +1031,100 @@ function JoinPageContent() {
                       onChange={(e) => setEditSpottedNote(e.target.value)}
                       placeholder="e.g. Saw your Camaro at Road America — claim your passport!"
                       className="w-full text-xs font-bold p-2 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* BUSINESS INVITATION SPECIFIC FIELDS */}
+              {editTargetType === 'business' && (
+                <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-200 space-y-3">
+                  <span className="block text-[10px] font-black uppercase text-blue-600 flex items-center gap-1">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>🏢 Configure Business & Auto Shop Passport</span>
+                  </span>
+
+                  {/* Dropdown Selector of Live Firestore Businesses */}
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">
+                      Select Existing Business or Stage New Shop
+                    </label>
+                    <select
+                      value={editBusinessId}
+                      onChange={(e) => {
+                        const bId = e.target.value;
+                        setEditBusinessId(bId);
+                        if (bId) {
+                          const found = dbBusinesses.find(b => b.id === bId);
+                          if (found) {
+                            setEditBusinessName(found.name || '');
+                            setEditBusinessCategory(found.category || 'shop_garage');
+                            setEditBusinessLocation(found.location_name || '');
+                            setEditTargetDest(`/b/${found.id}`);
+                          }
+                        } else {
+                          setEditTargetDest('/partner');
+                        }
+                      }}
+                      className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="">➕ Stage New Unclaimed Business / Auto Shop</option>
+                      {dbBusinesses.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name || b.id} ({b.category || 'Shop'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Business / Shop Name</label>
+                    <input
+                      type="text"
+                      value={editBusinessName}
+                      onChange={(e) => setEditBusinessName(e.target.value)}
+                      placeholder="e.g. Nielsen's Enterprises, SpeedShop Garage, Tacos El Rey"
+                      className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Industry / Vertical</label>
+                      <select
+                        value={editBusinessCategory}
+                        onChange={(e) => setEditBusinessCategory(e.target.value)}
+                        className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                      >
+                        <option value="shop_garage">Auto Shop & Garage</option>
+                        <option value="food_truck">Food Truck & Catering</option>
+                        <option value="tuner_parts">Tuning & Aftermarket Parts</option>
+                        <option value="dealership">Dealership & Showroom</option>
+                        <option value="detailing">Detailing & PPF</option>
+                        <option value="track_venue">Racetrack & Venue</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">City / Region</label>
+                      <input
+                        type="text"
+                        value={editBusinessLocation}
+                        onChange={(e) => setEditBusinessLocation(e.target.value)}
+                        placeholder="e.g. Lake Villa, IL"
+                        className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase text-neutral-600 mb-1">Personal Invitation Note to Business Owner</label>
+                    <input
+                      type="text"
+                      value={editSpottedNote}
+                      onChange={(e) => setEditSpottedNote(e.target.value)}
+                      placeholder="e.g. Saw your shop at Road America — claim your Gridpass business passport!"
+                      className="w-full text-xs font-bold p-2.5 bg-white border border-neutral-300 rounded-lg focus:outline-none"
                     />
                   </div>
                 </div>
