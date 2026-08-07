@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1049_google_oauth_one_tap_join_engine',
+    ticket_number: 'TICK-1049',
+    agent_role: 'gm',
+    title: '1-Tap Google OAuth Registration & Sign-In Onboarding Engine on /join',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'handleGoogleSignIn', 'GoogleAuthProvider'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner requested adding 1-Tap Google Sign-In & Registration buttons directly on the /join intake landing page.',
+    root_cause: 'JoinClient.tsx previously only provided email/password form inputs, missing 1-tap Google OAuth authentication.',
+    resolution_summary: 'Updated JoinClient.tsx: added handleGoogleSignIn using GoogleAuthProvider and signInWithPopup, auto-provisioned user document in Firestore users collection, auto-transferred claimed passport assets, and rendered high-visibility 1-Tap Google Sign-In buttons.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local rendering on localhost/join.',
+    sop_summary: 'SOP for 1-tap OAuth intake onboarding.',
+    sop_steps: [
+      'Render 1-Tap Google Sign-In button prominently on /join above email inputs.',
+      'Auto-provision new user profiles in Firestore users collection upon Google popup success.',
+      'Auto-transfer physical QR tag assets or unclaimed vehicle passports upon registration.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1048_universal_business_id_intake_hero_fix',
     ticket_number: 'TICK-1048',
     agent_role: 'gm',
