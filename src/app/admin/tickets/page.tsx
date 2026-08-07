@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1035_super_admin_dual_controller',
+    ticket_number: 'TICK-1035',
+    agent_role: 'gm',
+    title: 'Super Admin Dual Controller Tools & Card Binding Access Control Invariant',
+    category: 'security',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'isAdmin', 'setShowAdminWizard'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Platform owner required that Super Admin users have access to BOTH Create VIP Share Link AND Configure Card actions on /join, while regular members only see the Create VIP Share Link button.',
+    root_cause: 'The controller block previously displayed only one action button depending on whether rawTagId was present.',
+    resolution_summary: 'Updated JoinClient.tsx to render a 2-button grid for Super Admins (Create VIP Share Link + Configure Card) and a single referral link button for regular members.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified Super Admin permissions on localhost.',
+    sop_summary: 'SOP for RBAC permission controls on /join admin tools.',
+    sop_steps: [
+      'Render 2-column controller tools grid for users with isAdmin role.',
+      'Allow Super Admin to launch card binding wizard for active or prompted card IDs.',
+      'Restrict card binding wizard trigger strictly to Super Admin role.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1034_member_referral_engine_and_clean_welcome_card',
     ticket_number: 'TICK-1034',
     agent_role: 'gm',

@@ -511,22 +511,32 @@ function JoinPageContent() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-2">
-                {rawTagId && isAdmin ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* Universal Referral Link Creation for All Members */}
+                <button
+                  onClick={createAndCopyShareableLink}
+                  className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>📋 Create VIP Share Link</span>
+                </button>
+
+                {/* Admin Card Binding Controller (Super Admin Role) */}
+                {isAdmin && (
                   <button
-                    onClick={() => setShowAdminWizard(true)}
+                    onClick={() => {
+                      if (!rawTagId) {
+                        const inputId = prompt('Enter Physical QR Card ID to Configure (e.g. 250):');
+                        if (!inputId) return;
+                        window.location.href = `/join?tag=${inputId.trim()}`;
+                      } else {
+                        setShowAdminWizard(true);
+                      }
+                    }}
                     className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
-                    <span>⚡ Configure Scanned Physical Card #{rawTagId}</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={createAndCopyShareableLink}
-                    className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>📋 Create & Copy Member VIP Referral Link</span>
+                    <span>⚡ Configure Card {rawTagId ? `#${rawTagId}` : ''}</span>
                   </button>
                 )}
               </div>
