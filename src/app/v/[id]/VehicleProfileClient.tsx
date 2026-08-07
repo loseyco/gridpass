@@ -17,6 +17,7 @@ import {
   CheckCircle, Users, Save, Anchor, ThumbsUp, ThumbsDown, Share2, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { logEvent } from '@/lib/logger';
+import { EditVehicleDrawer } from '@/components/EditVehicleDrawer';
 
 interface SpecItem {
   engine?: string;
@@ -333,6 +334,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const [voteType, setVoteType] = useState<'up' | 'down' | null>(null);
   const [voting, setVoting] = useState(false);
   const [shareText, setShareText] = useState('Share Passport');
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
 
   // VIN Checker States
   const [editVin, setEditVin] = useState('');
@@ -1715,14 +1717,14 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
           >
             <Share2 className="w-3.5 h-3.5" /> {shareText}
           </button>
-          {isOwner && (
-            <Link 
-              href={`/dash/vehicles/edit?id=${vehicleId}`}
-              className="text-[10px] font-mono font-bold text-[#ff3b30] hover:text-[#bd2925] flex items-center gap-1.5 uppercase transition-colors cursor-pointer border border-[#ff3b30] px-3 py-1 rounded-full hover:bg-[#ff3b30]/5"
-            >
-              Edit Passport
-            </Link>
-          )}
+
+          <button 
+            type="button"
+            onClick={() => setShowEditDrawer(true)}
+            className="text-[10px] font-mono font-bold bg-neutral-900 hover:bg-black text-white px-3 py-1 rounded-full uppercase transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+          >
+            <Settings className="w-3 h-3 text-[#ff3b30]" /> Manage Build
+          </button>
         </div>
       </div>
 
@@ -2077,9 +2079,16 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
               ✕
             </button>
           </div>
-            </div>
+        </div>
       )}
 
+      {/* 🏎️ SELF-SERVICE VEHICLE BUILD MANAGEMENT DRAWER */}
+      <EditVehicleDrawer
+        isOpen={showEditDrawer}
+        onClose={() => setShowEditDrawer(false)}
+        vehicle={vehicle}
+        onVehicleUpdated={(updated) => setVehicle(updated)}
+      />
     </div>
   </div>
   );
