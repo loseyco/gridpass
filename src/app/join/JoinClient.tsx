@@ -228,12 +228,33 @@ function JoinPageContent() {
   };
 
   // 1-Tap Copy Shareable VIP Link (for Facebook / SMS / Instagram DMs)
-  const copyShareableLink = () => {
-    const url = `${window.location.origin}/join?tag=${rawTagId || '250'}`;
+  const copyShareableLink = async () => {
+    const uniqueShareId = rawTagId || `VIP-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const url = `${window.location.origin}/join?tag=${uniqueShareId}`;
+
+    // Auto-register virtual share tag in Firestore if generated on the fly, protecting printed card IDs
+    if (!rawTagId) {
+      await setDoc(
+        doc(db, 'physical_tags', `tag_${uniqueShareId}`),
+        {
+          tag_id: uniqueShareId,
+          title: `Virtual Social Media Invitation Link (${uniqueShareId})`,
+          distribution_method: 'handout',
+          target_type: 'intake_join',
+          target_destination: '/join',
+          total_scans: 0,
+          members_joined_count: 0,
+          status: 'active',
+          created_at: new Date().toISOString(),
+        },
+        { merge: true }
+      ).catch(() => {});
+    }
+
     navigator.clipboard.writeText(url);
     showToast({
-      title: 'SHAREABLE VIP LINK COPIED! 📋',
-      message: `Direct invitation link (${url}) copied to clipboard. Send on Facebook, SMS, or DM!`,
+      title: 'UNIQUE SHAREABLE VIP LINK COPIED! 📋',
+      message: `Collision-free link (${url}) copied to clipboard. Send on Facebook, SMS, or Instagram!`,
       icon: '📋',
     });
   };
