@@ -9,6 +9,32 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1043_configurable_virtual_vip_share_link_engine',
+    ticket_number: 'TICK-1043',
+    agent_role: 'gm',
+    title: 'Configurable Virtual VIP Share Link Creation Engine & 0 Prompt Invariant',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: ['JoinClient', 'showAdminWizard', 'handleAdminSaveTarget'],
+    files_modified: ['src/app/join/JoinClient.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['physical_tags schema: virtual tag creation on raw /join'],
+    issue_description: 'Platform owner required dropping the browser prompt popup for card IDs on raw /join and allowing logged-in members to open the Setup Wizard to configure share links (Vehicle, Business, Person, URL) BEFORE generating and copying VIP referral links.',
+    root_cause: 'JoinClient.tsx invoked window.prompt when clicking Configure Card on raw /join and did not allow pre-configuring virtual VIP share links.',
+    resolution_summary: 'Removed prompt(...) entirely. Updated /join to render [📋 Configure & Create VIP Share Link], opening the Setup Wizard on raw /join to configure custom invitations before generating virtual tag VIP-XXXXX and copying to clipboard.',
+    verification_proof: 'Verified compilation with npx tsc --noEmit (0 errors) and verified clean local staging on localhost.',
+    sop_summary: 'SOP for pre-configuring virtual VIP share links.',
+    sop_steps: [
+      'Click [📋 Configure & Create VIP Share Link] on raw /join.',
+      'Configure target mode (Vehicle, Business, Person, Custom URL), photo, title, or note in Setup Wizard.',
+      'Click [Save & Create VIP Share Link ➔] to generate virtual tag VIP-XXXXX and copy link to clipboard.'
+    ],
+    created_at: new Date().toISOString().split('T')[0],
+    verified_by_agent: 'GM',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1042_business_destination_and_hero_card_fix',
     ticket_number: 'TICK-1042',
     agent_role: 'gm',

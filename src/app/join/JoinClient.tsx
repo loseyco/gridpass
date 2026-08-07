@@ -374,10 +374,12 @@ function JoinPageContent() {
     }
   };
 
-  // Save Dynamic Tag Binding (Admin Wizard - Only active when rawTagId exists from real QR scan)
+  // Save Dynamic Tag Binding or Virtual VIP Share Link
   const handleAdminSaveTarget = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rawTagId) return; // Strict Invariant: Cannot bind without real scanned rawTagId!
+
+    const memberName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Gridpass Member');
+    const effectiveTagId = rawTagId || `VIP-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
     const isVehicleMode = editTargetType === 'vehicle';
     const isBusinessMode = editTargetType === 'business';
@@ -387,7 +389,7 @@ function JoinPageContent() {
     let targetDest = editTargetDest;
 
     if (isVehicleMode && (editSpottedPhoto || (editMake && editModel))) {
-      newUnclaimedVehId = `veh_unclaimed_${rawTagId}_${Date.now()}`;
+      newUnclaimedVehId = `veh_unclaimed_${effectiveTagId}_${Date.now()}`;
       await setDoc(
         doc(db, 'vehicles', newUnclaimedVehId),
         {
@@ -409,7 +411,7 @@ function JoinPageContent() {
 
     let stagedBizId = editBusinessId;
     if (isBusinessMode) {
-      stagedBizId = editBusinessId || (editBusinessName ? editBusinessName.toLowerCase().replace(/[^a-z0-9]/g, '-') : `biz_${rawTagId}`);
+      stagedBizId = editBusinessId || (editBusinessName ? editBusinessName.toLowerCase().replace(/[^a-z0-9]/g, '-') : `biz_${effectiveTagId}`);
       targetDest = (editTargetDest && editTargetDest !== '/join' && editTargetDest !== '/partner') ? editTargetDest : `/b/${stagedBizId}`;
       if (editBusinessName) {
         await setDoc(
@@ -431,23 +433,25 @@ function JoinPageContent() {
 
     const vehicleTitle = [editYear, editMake, editModel].filter(Boolean).join(' ');
     const displayTitle = isVehicleMode
-      ? (editSpottedTitle || vehicleTitle || `Card #${rawTagId}`)
+      ? (editSpottedTitle || vehicleTitle || `Invitation ${effectiveTagId}`)
       : isBusinessMode
-      ? (editBusinessName ? `🏢 ${editBusinessName}` : `Business Invitation #${rawTagId}`)
+      ? (editBusinessName ? `🏢 ${editBusinessName}` : `Business Invitation ${effectiveTagId}`)
       : isPersonMode
-      ? (editPersonName ? `👤 ${editPersonName}` : `Member Invitation #${rawTagId}`)
-      : `Card #${rawTagId}`;
+      ? (editPersonName ? `👤 ${editPersonName}` : `Member Invitation ${effectiveTagId}`)
+      : `Invitation ${effectiveTagId}`;
 
     const updated: any = {
-      tag_id: rawTagId,
+      tag_id: effectiveTagId,
       title: displayTitle,
-      distribution_method: editMethod,
+      distribution_method: editMethod || 'handout',
       target_type: editTargetType,
       target_destination: targetDest,
       custom_spotted_photo_url: isVehicleMode ? (editSpottedPhoto || null) : null,
       custom_spotted_title: isVehicleMode ? (editSpottedTitle || vehicleTitle || null) : (isBusinessMode ? (editBusinessName || null) : (isPersonMode ? (editPersonName || null) : null)),
       custom_spotted_note: editSpottedNote || null,
       recipient_name: isPersonMode ? (editPersonName || null) : null,
+      referrer_name: memberName,
+      referrer_id: user?.uid || null,
       unclaimed_vehicle_id: newUnclaimedVehId,
       unclaimed_business_id: isBusinessMode ? stagedBizId : null,
       unclaimed_year: isVehicleMode ? editYear : '',
@@ -458,19 +462,32 @@ function JoinPageContent() {
       last_scanned_at: new Date().toISOString(),
     };
 
-    setTagRecord(updated);
+    if (rawTagId) {
+      setTagRecord(updated);
+    }
 
     try {
-      // Use setDoc without merge so old vehicle fields are explicitly overwritten when switching target types
-      await setDoc(doc(db, 'physical_tags', `tag_${rawTagId}`), updated);
-      showToast({
-        title: 'PHYSICAL CARD BOUND & INVITATION ACTIVE! ⚡',
-        message: `Card #${rawTagId} is now configured as a ${editTargetType} invitation!`,
-        icon: '⚡',
-      });
+      await setDoc(doc(db, 'physical_tags', `tag_${effectiveTagId}`), updated);
+
+      if (!rawTagId) {
+        // Virtual VIP share link created on raw /join — copy link to clipboard!
+        const shareUrl = `${window.location.origin}/join?tag=${effectiveTagId}&ref=${encodeURIComponent(memberName)}`;
+        navigator.clipboard.writeText(shareUrl);
+        showToast({
+          title: 'CUSTOM VIP SHARE LINK CREATED & COPIED! 📋',
+          message: `Your share link for ${displayTitle} was copied to your clipboard!`,
+          icon: '📋',
+        });
+      } else {
+        showToast({
+          title: 'PHYSICAL CARD BOUND & INVITATION ACTIVE! ⚡',
+          message: `Card #${rawTagId} is now configured as a ${editTargetType} invitation!`,
+          icon: '⚡',
+        });
+      }
       setShowAdminWizard(false);
     } catch (err: any) {
-      console.error('Failed to bind tag:', err);
+      console.error('Failed to bind or create tag:', err);
     }
   };
 
@@ -588,32 +605,24 @@ function JoinPageContent() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {/* Universal Referral Link Creation for All Members */}
+              <div className={`grid grid-cols-1 ${rawTagId && isAdmin ? 'sm:grid-cols-2' : ''} gap-2`}>
+                {/* Configure & Create Share Link via Setup Wizard */}
                 <button
-                  onClick={createAndCopyShareableLink}
+                  onClick={() => setShowAdminWizard(true)}
                   className="w-full py-2.5 bg-neutral-800 hover:bg-neutral-700 text-blue-400 border border-blue-500/30 font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5"
                 >
                   <Copy className="w-3.5 h-3.5" />
-                  <span>📋 Create VIP Share Link</span>
+                  <span>📋 Configure & Create VIP Share Link</span>
                 </button>
 
-                {/* Admin Card Binding Controller (Super Admin Role) */}
-                {isAdmin && (
+                {/* Admin Card Binding Controller (Super Admin Role on Real Scanned Card) */}
+                {isAdmin && rawTagId && (
                   <button
-                    onClick={() => {
-                      if (!rawTagId) {
-                        const inputId = prompt('Enter Physical QR Card ID to Configure (e.g. 250):');
-                        if (!inputId) return;
-                        window.location.href = `/join?tag=${inputId.trim()}`;
-                      } else {
-                        setShowAdminWizard(true);
-                      }
-                    }}
+                    onClick={() => setShowAdminWizard(true)}
                     className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-mono font-black text-xs uppercase rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
-                    <span>⚡ Configure Card {rawTagId ? `#${rawTagId}` : ''}</span>
+                    <span>⚡ Configure Card #{rawTagId}</span>
                   </button>
                 )}
               </div>
@@ -901,16 +910,16 @@ function JoinPageContent() {
 
       </div>
 
-      {/* ADMIN TAG BINDING WIZARD MODAL (Strict Invariant: Requires real scanned rawTagId!) */}
-      {showAdminWizard && rawTagId && (
+      {/* ADMIN TAG BINDING & VIP SHARE LINK SETUP WIZARD */}
+      {showAdminWizard && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="bg-white text-neutral-900 border border-neutral-300 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl font-sans max-h-[90vh] overflow-y-auto">
             
             <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
               <div>
                 <h2 className="font-black text-sm uppercase text-neutral-900 flex items-center gap-2">
-                  <span>⚡ BINDING PHYSICAL CARD</span>
-                  <span className="font-mono text-[#ff3b30]">#{rawTagId}</span>
+                  <span>{rawTagId ? '⚡ BINDING PHYSICAL CARD' : '📋 CONFIGURE VIP SHARE LINK'}</span>
+                  {rawTagId && <span className="font-mono text-[#ff3b30]">#{rawTagId}</span>}
                 </h2>
                 <p className="text-[10px] text-neutral-500 font-mono">Assign card target destination & personalized invitation.</p>
               </div>
@@ -922,7 +931,7 @@ function JoinPageContent() {
             {/* Target Type Selector */}
             <div className="space-y-2">
               <label className="block text-[10px] font-black uppercase text-neutral-700">
-                What Would You Like to Assign to Card #{rawTagId}?
+                {rawTagId ? `What Would You Like to Assign to Card #${rawTagId}?` : 'What Would You Like to Invite or Share?'}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -1232,7 +1241,7 @@ function JoinPageContent() {
                   type="submit"
                   className="px-4 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-sm"
                 >
-                  Save & Bind Card #{rawTagId} ➔
+                  {rawTagId ? `Save & Bind Card #${rawTagId} ➔` : 'Save & Create VIP Share Link ➔'}
                 </button>
               </div>
             </form>
