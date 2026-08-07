@@ -208,8 +208,18 @@ export default function AdminFeaturesPage() {
     setShowAddModal(false);
   };
 
+  // Deduplicate features by unique module_key, route_path, or name
+  const uniqueFeaturesMap = new Map<string, AdminFeature>();
+  features.forEach((f) => {
+    const key = (f.module_key || f.route_path || f.name || f.id).toLowerCase();
+    if (!uniqueFeaturesMap.has(key)) {
+      uniqueFeaturesMap.set(key, f);
+    }
+  });
+  const uniqueFeatures = Array.from(uniqueFeaturesMap.values());
+
   // Filtered Data
-  const filteredFeatures = features.filter((f) => {
+  const filteredFeatures = uniqueFeatures.filter((f) => {
     if (activeFilter === 'saas_modules' && !f.is_saas_module) return false;
     if (activeFilter === 'live' && f.status !== 'live') return false;
     if (activeFilter === 'beta' && f.status !== 'beta') return false;
@@ -351,13 +361,13 @@ export default function AdminFeaturesPage() {
     },
   ];
 
-  const saasModulesCount = features.filter((f) => f.is_saas_module).length;
-  const liveCount = features.filter((f) => f.status === 'live').length;
-  const betaCount = features.filter((f) => f.status === 'beta').length;
-  const ideaCount = features.filter((f) => f.status === 'idea').length;
+  const saasModulesCount = uniqueFeatures.filter((f) => f.is_saas_module).length;
+  const liveCount = uniqueFeatures.filter((f) => f.status === 'live').length;
+  const betaCount = uniqueFeatures.filter((f) => f.status === 'beta').length;
+  const ideaCount = uniqueFeatures.filter((f) => f.status === 'idea').length;
 
   const filterCategories = [
-    { label: 'All', key: 'all', count: features.length },
+    { label: 'All', key: 'all', count: uniqueFeatures.length },
     { label: '⚡ SaaS Modules', key: 'saas_modules', count: saasModulesCount },
     { label: 'Live Online', key: 'live', count: liveCount },
     { label: 'Beta', key: 'beta', count: betaCount },
