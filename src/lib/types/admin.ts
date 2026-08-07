@@ -47,6 +47,26 @@ export interface SOPGuide {
   created_at: string;
 }
 
+export interface AgentStaff {
+  id: string;
+  name: string;
+  role_code: 'architect' | 'aiseo_expert' | 'user_panel' | 'site_auditor' | 'mobile_expert' | 'financial_expert' | 'traffic_expert' | 'git_expert' | 'tester' | 'gm';
+  title: string;
+  icon: string;
+  category: string;
+  status: 'ACTIVE' | 'TRAINING' | 'STANDBY' | 'PAUSED';
+  llm_model: string;
+  system_prompt?: string;
+  api_key_name?: string;
+  credentials_configured?: boolean;
+  tickets_completed?: number;
+  sops_count?: number;
+  last_active_at?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type StagingClass =
   | 'stock'
   | 'modified'
