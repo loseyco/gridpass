@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   title: "Gridpass | One Tag for Everything",
   manifest: "/manifest.json",
   icons: {
-    icon: [{ url: '/gridpass_logo.png', type: 'image/png' }],
-    apple: [{ url: '/gridpass_logo.png', type: 'image/png' }],
+    icon: [{ url: '/gridpass_emblem.jpg', type: 'image/jpeg' }, { url: '/favicon.ico' }],
+    apple: [{ url: '/gridpass_emblem.jpg', type: 'image/jpeg' }],
   },
   description: "Whether you race it, show it, cook it, or capture it—Gridpass brings your world together with one universal QR tag for vehicles, events, food trucks, vendors, spotters, and venues.",
   keywords: ["gridpass", "one tag", "vehicles", "events", "vendors", "venues", "food trucks", "spotters", "qr tag", "digital passport"],
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/opengraph-image",
+        url: "https://gridpass.app/gridpass_emblem.jpg",
         width: 1200,
         height: 630,
         alt: "Gridpass | One Tag for Everything",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Gridpass | One Tag for Everything",
     description: "Whether you race it, show it, cook it, or capture it—Gridpass brings your world together.",
-    images: ["/opengraph-image"],
+    images: ["https://gridpass.app/gridpass_emblem.jpg"],
   }
 };
 
