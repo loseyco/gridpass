@@ -12,6 +12,22 @@ interface AdminVehicleSupportDrawerProps {
   onArchiveToggle: (id: string, currentArchived: boolean) => Promise<void>;
 }
 
+const safeString = (val: any, fallback = ''): string => {
+  if (val === undefined || val === null) return fallback;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if (typeof val === 'object') {
+    if (val.seconds !== undefined) {
+      return new Date(val.seconds * 1000).toISOString().split('T')[0];
+    }
+    if (val.toDate && typeof val.toDate === 'function') {
+      return val.toDate().toISOString().split('T')[0];
+    }
+    return fallback;
+  }
+  return String(val);
+};
+
 export function AdminVehicleSupportDrawer({
   isOpen,
   vehicle,
@@ -38,13 +54,13 @@ export function AdminVehicleSupportDrawer({
   useEffect(() => {
     if (vehicle) {
       setYear(vehicle.year || 2024);
-      setMake(vehicle.make || '');
-      setModel(vehicle.model || '');
-      setTrim(vehicle.trim || '');
-      setVin(vehicle.vin || '');
-      setOwnerId(vehicle.owner_id || '');
-      setOwnerName(vehicle.owner_name || 'PJ Losey');
-      setTagId(vehicle.tag_id || vehicle.qr_tag_id || '');
+      setMake(safeString(vehicle.make));
+      setModel(safeString(vehicle.model));
+      setTrim(safeString(vehicle.trim));
+      setVin(safeString(vehicle.vin));
+      setOwnerId(safeString(vehicle.owner_id));
+      setOwnerName(safeString(vehicle.owner_name, 'PJ Losey'));
+      setTagId(safeString(vehicle.tag_id || vehicle.qr_tag_id));
       setStagingClass((vehicle.staging_class as StagingClass) || 'stock');
       setVinVerified(!!vehicle.vin_verified);
     }
@@ -103,7 +119,7 @@ export function AdminVehicleSupportDrawer({
                 {year} {make} {model}
               </h2>
               <p className="text-xs text-neutral-500 font-mono">
-                ID: {vehicle.id} • Owner: <span className="font-bold text-neutral-900">{ownerName}</span>
+                ID: {safeString(vehicle.id)} • Owner: <span className="font-bold text-neutral-900">{ownerName}</span>
               </p>
             </div>
           </div>
@@ -313,8 +329,8 @@ export function AdminVehicleSupportDrawer({
               <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2">
                 <span className="text-xs font-black uppercase text-neutral-900 block">Audit Log & System Metadata</span>
                 <div className="space-y-1 text-xs text-neutral-600 font-mono">
-                  <p>Document ID: {vehicle.id}</p>
-                  <p>Created: {vehicle.created_at || 'N/A'}</p>
+                  <p>Document ID: {safeString(vehicle.id)}</p>
+                  <p>Created: {safeString(vehicle.created_at, 'N/A')}</p>
                   <p>Service Logs Count: {vehicle.service_logs_count || 0}</p>
                   <p>Visibility State: {vehicle.is_hidden ? '🙈 Hidden' : '🟢 Public Live'}</p>
                   <p>Archival State: {vehicle.archived ? '📦 Soft Archived' : '✅ Active'}</p>

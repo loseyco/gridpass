@@ -8,6 +8,21 @@ import { GarageVehicle, StagingClass } from '@/lib/types/admin';
 import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 import { AdminVehicleSupportDrawer } from '@/components/admin/AdminVehicleSupportDrawer';
 
+const formatTimestamp = (val: any): string => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    if (val.seconds !== undefined) {
+      return new Date(val.seconds * 1000).toISOString().split('T')[0];
+    }
+    if (val.toDate && typeof val.toDate === 'function') {
+      return val.toDate().toISOString().split('T')[0];
+    }
+  }
+  return '';
+};
+
 export default function AdminVehiclesWorksheetPage() {
   const [vehicles, setVehicles] = useState<GarageVehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,9 +54,27 @@ export default function AdminVehiclesWorksheetPage() {
 
           list.push({
             id: docSnap.id,
-            ...data,
+            year: Number(data.year) || 2024,
+            make: String(data.make || ''),
+            model: String(data.model || ''),
+            trim: String(data.trim || ''),
+            vin: String(data.vin || ''),
+            photo_url: String(data.photo_url || ''),
+            tag_id: String(data.tag_id || data.qr_tag_id || ''),
+            qr_tag_id: String(data.qr_tag_id || data.tag_id || ''),
+            staging_class: (data.staging_class as StagingClass) || 'stock',
+            vin_verified: !!data.vin_verified,
+            vin_verified_at: formatTimestamp(data.vin_verified_at),
+            is_hidden: !!data.is_hidden,
+            archived: !!data.archived,
+            archived_at: formatTimestamp(data.archived_at),
+            archived_by: String(data.archived_by || ''),
+            service_logs_count: Number(data.service_logs_count) || 0,
+            created_at: formatTimestamp(data.created_at) || new Date().toISOString().split('T')[0],
+            updated_at: formatTimestamp(data.updated_at),
+            owner_id: String(data.owner_id || 'YOYN2HDCwqXc3OYsHd8mdJIwr9K2'),
             owner_name: ownerName,
-          } as GarageVehicle);
+          });
         });
         setVehicles(list);
         setLoading(false);
