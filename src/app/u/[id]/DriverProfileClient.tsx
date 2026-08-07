@@ -86,7 +86,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [loading, setLoading] = useState(!initialProfile);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [shareText, setShareText] = useState('Share Passport');
-  const [activeProfileTab, setActiveProfileTab] = useState<'garage' | 'businesses' | 'guestbook' | 'career'>('garage');
+  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
 
   const isMock = (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock');
@@ -633,10 +633,10 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
         {/* 📑 4 CORE RESUME NAVIGATION TABS */}
         <div className="flex items-center gap-1.5 border-b border-neutral-200 pb-2 overflow-x-auto no-scrollbar">
           {[
+            { id: 'career', label: '🏆 Career & About Me', count: profile.credits_balance || 100 },
             { id: 'garage', label: '🏎️ Digital Garage', count: vehicles.length },
-            { id: 'businesses', label: '🏪 Businesses & Teams', count: userBusinesses.length || 1 },
-            { id: 'guestbook', label: '💬 Fan Wall & Guestbook', count: guestbookMessages.length },
-            { id: 'career', label: '🏆 Career & Stats', count: profile.credits_balance || 100 }
+            { id: 'businesses', label: '🏪 Businesses & Teams', count: userBusinesses.length },
+            { id: 'guestbook', label: '💬 Fan Wall & Guestbook', count: guestbookMessages.length }
           ].map(tab => (
             <button
               key={tab.id}
@@ -874,24 +874,31 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               <Trophy className="w-4 h-4 text-amber-500" /> Motorsport Achievements &amp; Telemetry Stats
             </h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
-                <span className="text-2xl font-black font-mono text-neutral-900">{vehicles.length}</span>
-                <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Active Builds</span>
-              </div>
-              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
-                <span className="text-2xl font-black font-mono text-[#ff3b30]">61</span>
-                <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Respects Earned</span>
-              </div>
-              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
-                <span className="text-2xl font-black font-mono text-emerald-600">{profile.credits_balance || 1450}</span>
-                <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Pit Credits</span>
-              </div>
-              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
-                <span className="text-2xl font-black font-mono text-purple-600">8</span>
-                <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Events Staged</span>
-              </div>
-            </div>
+            {(() => {
+              const totalRespects = vehicles.reduce((sum: number, v: any) => sum + (v.respects_count || 0) + (buildRespects[v.id] || 0), 0);
+              const totalEventsStaged = (vehicles.length > 0 ? 1 : 0) + (userBusinesses.length > 0 ? 1 : 0);
+
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
+                    <span className="text-2xl font-black font-mono text-neutral-900">{vehicles.length}</span>
+                    <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Active Builds</span>
+                  </div>
+                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
+                    <span className="text-2xl font-black font-mono text-[#ff3b30]">{totalRespects}</span>
+                    <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Respects Earned</span>
+                  </div>
+                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
+                    <span className="text-2xl font-black font-mono text-emerald-600">{profile.credits_balance || 100}</span>
+                    <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Pit Credits</span>
+                  </div>
+                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
+                    <span className="text-2xl font-black font-mono text-purple-600">{totalEventsStaged}</span>
+                    <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Events Staged</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Badges Matrix */}
             <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md">
