@@ -125,7 +125,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           href={href} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="w-9 h-9 rounded-xl bg-white hover:bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[#ff3b30] hover:text-[#bd2925] transition-all cursor-pointer shadow-2xs"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-white hover:bg-neutral-100 border border-neutral-200 flex items-center justify-center text-[#ff3b30] hover:text-[#bd2925] transition-all cursor-pointer shadow-2xs"
           title={`View ${platform}: @${handle}`}
         >
           <IconComponent className="w-4 h-4" />
@@ -408,7 +408,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           <button 
             type="button"
             onClick={() => router.back()}
-            className="py-1.5 px-3 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-md"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center py-2 px-3.5 bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer gap-1 shadow-md"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
@@ -417,7 +417,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             <button 
               type="button"
               onClick={() => setShowEditDrawer(true)}
-              className="py-1.5 px-3 bg-neutral-900/80 hover:bg-black backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+              className="min-h-[44px] inline-flex items-center justify-center py-2 px-3.5 bg-neutral-900/80 hover:bg-black backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer gap-1.5 shadow-md"
             >
               <Settings className="w-3.5 h-3.5 text-[#ff3b30]" /> Manage Passport
             </button>
@@ -425,7 +425,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             <button 
               type="button"
               onClick={handleShare}
-              className="py-1.5 px-3.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-mono font-black uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-500/20"
+              className="min-h-[44px] inline-flex items-center justify-center py-2 px-4 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-mono font-black uppercase rounded-xl transition-all cursor-pointer gap-1.5 shadow-md shadow-red-500/20"
             >
               <Share2 className="w-3.5 h-3.5" /> {shareText}
             </button>
@@ -534,7 +534,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               <button
                 type="button"
                 onClick={() => setShowPrintModal(true)}
-                className="py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-900 text-[10px] font-mono font-black uppercase rounded-2xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                className="min-h-[44px] inline-flex items-center justify-center py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-900 text-[10px] font-mono font-black uppercase rounded-2xl transition-all cursor-pointer gap-1.5 shadow-2xs"
               >
                 <Printer className="w-3.5 h-3.5 text-[#ff3b30]" /> Print Passport Badge
               </button>
@@ -554,7 +554,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               key={tab.id}
               type="button"
               onClick={() => handleTabChange(tab.id as any)}
-              className={`py-2.5 px-4 text-xs font-mono font-black uppercase rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+              className={`min-h-[44px] inline-flex items-center justify-center py-2.5 px-4 text-xs font-mono font-black uppercase rounded-xl transition-all whitespace-nowrap cursor-pointer gap-2 ${
                 activeProfileTab === tab.id
                   ? 'bg-[#ff3b30] text-white shadow-md shadow-red-500/20'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
