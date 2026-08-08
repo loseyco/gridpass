@@ -10,7 +10,8 @@ import {
   Instagram, Youtube, Compass, MapPin, 
   CarFront, Loader2, ArrowLeft, Heart, ShieldCheck, Printer, Sparkles, UserCircle,
   Facebook, Twitter, Globe, Share2, MessageSquare, Send, Store, Trophy,
-  Calendar, CheckCircle2, Award, Flame, Download, Camera, Copy, Plus, X, Settings, Briefcase
+  Calendar, CheckCircle2, Award, Flame, Download, Camera, Copy, Plus, X, Settings, Briefcase,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import GridpassQRCode, { downloadGridpassQR } from '@/components/qr/GridpassQRCode';
@@ -93,6 +94,22 @@ const DEFAULT_PJ_EXPERIENCES = [
       {
         url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
         caption: 'Executive Resume & Technical Architecture Workshop'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+        caption: 'Hardware Sensor Bench Testing & Telemetry Logging'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80',
+        caption: 'Track Day Telemetry Data Visualization'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+        caption: 'Enthusiast Paddock Setup & Dyno Calibration'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+        caption: 'Supercar Performance Testing & Lap Record'
       }
     ]
   },
@@ -178,7 +195,38 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [shareText, setShareText] = useState('Share Passport');
   const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
-  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; caption?: string } | null>(null);
+  const [activeLightboxGallery, setActiveLightboxGallery] = useState<any[] | null>(null);
+  const [activeLightboxImageIndex, setActiveLightboxImageIndex] = useState<number>(0);
+
+  const handlePrevLightboxImage = () => {
+    if (!activeLightboxGallery || activeLightboxGallery.length === 0) return;
+    setActiveLightboxImageIndex((prev) => (prev - 1 + activeLightboxGallery.length) % activeLightboxGallery.length);
+  };
+
+  const handleNextLightboxImage = () => {
+    if (!activeLightboxGallery || activeLightboxGallery.length === 0) return;
+    setActiveLightboxImageIndex((prev) => (prev + 1) % activeLightboxGallery.length);
+  };
+
+  useEffect(() => {
+    if (!activeLightboxGallery) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevLightboxImage();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNextLightboxImage();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setActiveLightboxGallery(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeLightboxGallery]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -508,6 +556,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           <div className="flex items-center gap-2">
             <button 
               type="button"
+              data-testid="edit-passport-btn"
               onClick={() => setShowEditDrawer(true)}
               className="min-h-[44px] inline-flex items-center justify-center py-2 px-3.5 bg-neutral-900/80 hover:bg-black backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer gap-1.5 shadow-md"
             >
@@ -983,11 +1032,31 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
 
                         {/* 📷 Portfolio Photo Gallery Thumbnails */}
                         {exp.gallery && exp.gallery.length > 0 && (
-                          <div className="pt-2.5 space-y-1.5 border-t border-neutral-200/70">
-                            <span className="text-[10px] font-mono font-bold uppercase text-neutral-500 block">
-                              📷 Portfolio &amp; Proof Gallery
-                            </span>
-                            <div className="flex flex-wrap items-center gap-2">
+                          <div className="pt-2.5 space-y-2 border-t border-neutral-200/70">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-mono font-bold uppercase text-neutral-500 block">
+                                📷 Portfolio &amp; Proof Gallery ({exp.gallery.length})
+                              </span>
+                              {exp.gallery.length > 4 && (
+                                <button
+                                  type="button"
+                                  data-testid="view-all-photos-badge"
+                                  onClick={() => {
+                                    setActiveLightboxImageIndex(0);
+                                    setActiveLightboxGallery(exp.gallery);
+                                  }}
+                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1.5 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 border border-[#ff3b30]/30 rounded-xl text-[11px] font-mono font-bold text-[#ff3b30] transition-all cursor-pointer shadow-2xs"
+                                  aria-label={`View all ${exp.gallery.length} photos badge`}
+                                >
+                                  View All ({exp.gallery.length} Photos)
+                                </button>
+                              )}
+                            </div>
+
+                            <div 
+                              data-testid="portfolio-gallery-strip" 
+                              className="flex items-center gap-2.5 overflow-x-auto scroll-smooth scrollbar-thin py-1 no-scrollbar"
+                            >
                               {exp.gallery.map((photo: any, pIdx: number) => {
                                 const photoUrl = typeof photo === 'string' ? photo : photo.url;
                                 const photoCaption = typeof photo === 'string' ? `${exp.title} Proof` : photo.caption;
@@ -996,8 +1065,12 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                                   <button
                                     key={pIdx}
                                     type="button"
-                                    onClick={() => setActiveLightboxImage({ url: photoUrl, caption: photoCaption })}
-                                    className="min-h-[44px] min-w-[44px] relative w-20 h-20 rounded-xl overflow-hidden border border-neutral-300 hover:border-[#ff3b30] hover:scale-105 transition-all cursor-pointer group shadow-2xs"
+                                    data-testid={`portfolio-photo-thumbnail-${pIdx}`}
+                                    onClick={() => {
+                                      setActiveLightboxImageIndex(pIdx);
+                                      setActiveLightboxGallery(exp.gallery);
+                                    }}
+                                    className="min-h-[44px] min-w-[44px] relative w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-neutral-300 hover:border-[#ff3b30] hover:scale-105 transition-all cursor-pointer group shadow-2xs"
                                     title="Click to view image in Lightbox preview"
                                     aria-label={`View photo thumbnail: ${photoCaption}`}
                                   >
@@ -1108,42 +1181,82 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
       )}
 
       {/* 📸 PORTFOLIO PHOTO GALLERY LIGHTBOX ZOOM MODAL PREVIEW */}
-      {activeLightboxImage && (
-        <div 
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
-          onClick={() => setActiveLightboxImage(null)}
-        >
+      {activeLightboxGallery && activeLightboxGallery.length > 0 && (() => {
+        const currentPhoto = activeLightboxGallery[activeLightboxImageIndex];
+        const photoUrl = typeof currentPhoto === 'string' ? currentPhoto : currentPhoto?.url;
+        const photoCaption = typeof currentPhoto === 'string' ? 'Gallery Preview' : currentPhoto?.caption;
+
+        return (
           <div 
-            className="relative max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
+            data-testid="lightbox-modal"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+            onClick={() => setActiveLightboxGallery(null)}
           >
-            <button
-              type="button"
-              onClick={() => setActiveLightboxImage(null)}
-              className="absolute top-4 right-4 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-black/70 hover:bg-black text-white text-base font-bold rounded-full transition-all cursor-pointer border border-white/20 z-10"
-              aria-label="Close Lightbox Preview"
+            <div 
+              className="relative max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
             >
-              ✕
-            </button>
+              {/* Top Header: Counter Badge & Close Button */}
+              <div className="w-full p-4 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between z-10">
+                <span 
+                  data-testid="lightbox-counter"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-1.5 bg-neutral-800 border border-neutral-700 rounded-xl text-xs font-mono font-bold text-white uppercase tracking-wider"
+                >
+                  Photo {activeLightboxImageIndex + 1} of {activeLightboxGallery.length}
+                </span>
 
-            <div className="w-full max-h-[75vh] flex items-center justify-center overflow-hidden bg-black p-2">
-              <img
-                src={activeLightboxImage.url}
-                alt={activeLightboxImage.caption || 'Lightbox Zoom Preview'}
-                className="max-w-full max-h-[70vh] object-contain rounded-xl"
-              />
-            </div>
-
-            {activeLightboxImage.caption && (
-              <div className="w-full p-4 bg-neutral-950 border-t border-neutral-800 text-center">
-                <p className="text-xs font-mono font-bold text-neutral-300 uppercase tracking-wide flex items-center justify-center gap-1.5">
-                  <Camera className="w-3.5 h-3.5 text-[#ff3b30]" /> {activeLightboxImage.caption}
-                </p>
+                <button
+                  type="button"
+                  data-testid="lightbox-close-btn"
+                  onClick={() => setActiveLightboxGallery(null)}
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-neutral-800 hover:bg-neutral-700 text-white text-base font-bold rounded-full transition-all cursor-pointer border border-neutral-700"
+                  aria-label="Close Lightbox Preview"
+                >
+                  ✕
+                </button>
               </div>
-            )}
+
+              {/* Main Viewport & Chevron Navigation */}
+              <div className="relative w-full max-h-[70vh] flex items-center justify-center overflow-hidden bg-black p-4">
+                <button
+                  type="button"
+                  data-testid="lightbox-prev-btn"
+                  onClick={handlePrevLightboxImage}
+                  className="absolute left-4 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-black/70 hover:bg-black text-white rounded-full p-3 transition-all cursor-pointer border border-white/20 z-10 shadow-lg"
+                  aria-label="Previous Photo"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                <img
+                  src={photoUrl}
+                  alt={photoCaption || 'Lightbox Zoom Preview'}
+                  className="max-w-full max-h-[65vh] object-contain rounded-xl transition-all duration-200"
+                />
+
+                <button
+                  type="button"
+                  data-testid="lightbox-next-btn"
+                  onClick={handleNextLightboxImage}
+                  className="absolute right-4 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-black/70 hover:bg-black text-white rounded-full p-3 transition-all cursor-pointer border border-white/20 z-10 shadow-lg"
+                  aria-label="Next Photo"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Bottom Caption Footer */}
+              {photoCaption && (
+                <div className="w-full p-4 bg-neutral-950 border-t border-neutral-800 text-center">
+                  <p className="text-xs font-mono font-bold text-neutral-300 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5 text-[#ff3b30]" /> {photoCaption}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ⚙️ SELF-SERVICE PASSPORT & CAREER MANAGEMENT DRAWER */}
       <EditPassportDrawer
