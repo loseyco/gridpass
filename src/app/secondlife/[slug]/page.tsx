@@ -3790,6 +3790,426 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
           </div>
         )}
 
+        {/* Tab Content: DJ & Host Job Application Engine */}
+        {activeTab === 'apply' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-neutral-900 text-white rounded-3xl border border-neutral-800 shadow-2xl space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+                <div>
+                  <h3 className="text-xl font-black uppercase tracking-tight text-white flex items-center gap-2">
+                    <Music className="w-5 h-5 text-[#ff3b30]" /> ~SDI~ Staff Job Application Engine
+                  </h3>
+                  <p className="text-xs text-neutral-400 font-mono mt-1">
+                    Apply to join the official Skinny Dip Inn staff as a Resident DJ or Event Host!
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 bg-neutral-800 p-1 rounded-xl border border-neutral-700">
+                  <button
+                    onClick={() => setApplyPosition('dj')}
+                    className={`px-4 py-2 rounded-lg font-black uppercase text-xs transition-all min-h-[44px] ${
+                      applyPosition === 'dj' ? 'bg-[#ff3b30] text-white shadow' : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    🎧 DJ Application
+                  </button>
+                  <button
+                    onClick={() => setApplyPosition('host')}
+                    className={`px-4 py-2 rounded-lg font-black uppercase text-xs transition-all min-h-[44px] ${
+                      applyPosition === 'host' ? 'bg-[#ff3b30] text-white shadow' : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    🎙️ Host Application
+                  </button>
+                </div>
+              </div>
+
+              {applySubmitted ? (
+                <div className="p-8 bg-neutral-800/80 rounded-2xl border border-emerald-500/30 text-center space-y-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-lg font-black uppercase text-white">Application Received!</h4>
+                  <p className="text-xs text-neutral-300 max-w-md mx-auto">
+                    Thank you for applying to join the SDI crew as a <span className="font-bold text-[#ff3b30]">{applyPosition.toUpperCase()}</span>. Our management team will review your application and contact you in Second Life!
+                  </p>
+                  <button
+                    onClick={() => setApplySubmitted(false)}
+                    className="px-5 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white font-black uppercase text-xs rounded-xl transition-all min-h-[44px]"
+                  >
+                    Submit Another Application
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitApplication} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                        Avatar LEGACY Name * (e.g. losey.resident)
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. JohnResident"
+                        value={applyLegacyName}
+                        onChange={(e) => setApplyLegacyName(e.target.value)}
+                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                        Avatar DISPLAY Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Johnny Sparkle"
+                        value={applyDisplayName}
+                        onChange={(e) => setApplyDisplayName(e.target.value)}
+                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs font-bold text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                        Avatar Born Date
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 01/15/2020"
+                        value={applyBornDate}
+                        onChange={(e) => setApplyBornDate(e.target.value)}
+                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                        Time Zone / RL Country (e.g. USA - EST / SLT+3)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. USA - EST (SLT+3)"
+                        value={applyTimezone}
+                        onChange={(e) => setApplyTimezone(e.target.value)}
+                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                      {applyPosition === 'dj' ? 'SL DJ Experience & Past Clubs' : 'SL Host Experience & Past Clubs'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="List previous clubs, venues, and duration..."
+                      value={applyPreviousClubs}
+                      onChange={(e) => setApplyPreviousClubs(e.target.value)}
+                      className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                        Preferred Music Genres / Theme
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Rock, Pop, EDM, Country, 80s"
+                        value={applyGenres}
+                        onChange={(e) => setApplyGenres(e.target.value)}
+                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                        Stream Format / Bitrate (e.g. 128-320 kbps Stereo MP3)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 320 kbps MP3 Stream"
+                        value={applyStreamQuality}
+                        onChange={(e) => setApplyStreamQuality(e.target.value)}
+                        className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-black uppercase text-neutral-400 block mb-1">
+                      Sample Mix or Recording Link (Mixcloud / SoundCloud / YouTube)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://mixcloud.com/yourname/sample-set..."
+                      value={applyMixUrl}
+                      onChange={(e) => setApplyMixUrl(e.target.value)}
+                      className="w-full p-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingApp}
+                    className="w-full py-4 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black uppercase text-xs tracking-wider rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all min-h-[44px]"
+                  >
+                    {isSubmittingApp ? 'Submitting Application...' : `🚀 Submit ${applyPosition.toUpperCase()} Application`}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab Content: Public Staff Roster & Tip Jar Hub */}
+        {activeTab === 'staff' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-neutral-50 rounded-2xl border border-neutral-200 space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-[#1c1c1e] flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#ff3b30]" /> Official ~SDI~ Resort Staff Roster
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Recognizing our resort owners, administrators, resident DJs, and party hosts for <span className="font-bold text-[#1c1c1e]">{venueTitle}</span>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(venueTelemetry?.staffMembers && venueTelemetry.staffMembers.length > 0 ? venueTelemetry.staffMembers : [
+                  { name: 'PJ Losey', slKey: '549d8555-43c5-46ed-8c65-33489c7ea2f0', role: 'owner', legacyName: 'losey.resident' },
+                  { name: 'DJ Merf', slKey: 'dd25fcaa-6081-4489-b589-31eebd6fbbbf', role: 'dj', legacyName: 'merf.resident' }
+                ]).map((staff: any, idx: number) => {
+                  const isOnline = resolvedVisitors.some(v => v.name?.toLowerCase().includes(staff.name?.toLowerCase()) && v.status === 'ONLINE')
+                  return (
+                    <div key={idx} className="p-5 bg-white rounded-2xl border border-neutral-200 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${staff.legacyName || staff.name}`}
+                            alt={staff.name}
+                            className="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-300 object-cover shrink-0"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-sm text-[#1c1c1e]">{staff.name}</span>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
+                                staff.role === 'owner' ? 'bg-amber-500/10 text-amber-700 border-amber-500/30' :
+                                staff.role === 'superadmin' ? 'bg-purple-500/10 text-purple-700 border-purple-500/30' :
+                                staff.role === 'dj' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                                staff.role === 'host' ? 'bg-rose-500/10 text-rose-600 border-rose-500/30' :
+                                'bg-neutral-100 text-neutral-700 border-neutral-300'
+                              }`}>
+                                {staff.role === 'owner' ? '👑 Owner' : staff.role === 'dj' ? '🎧 Resident DJ' : staff.role === 'host' ? '🎙️ Host' : '💼 Staff'}
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-mono text-neutral-500 block mt-0.5">
+                              Legacy: {staff.legacyName || staff.name}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase ${
+                          isOnline ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' : 'bg-neutral-100 text-neutral-500 border border-neutral-200'
+                        }`}>
+                          {isOnline ? '🟢 In Sim' : '⚪ Offline'}
+                        </span>
+                      </div>
+
+                      {staff.slKey && (
+                        <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                          <span className="text-[10px] font-mono text-neutral-400">
+                            Tips are 100% direct to staff
+                          </span>
+                          <a
+                            href={`secondlife:///app/agent/${staff.slKey}/about`}
+                            className="px-3 py-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow transition-all flex items-center gap-1 min-h-[36px]"
+                          >
+                            <Coins className="w-3.5 h-3.5" /> Send L$ Tip Jar
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Content: Party Schedule & Google Calendar Sync */}
+        {activeTab === 'schedule' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-neutral-50 rounded-2xl border border-neutral-200 space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-[#1c1c1e] flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-[#ff3b30]" /> ~SDI~ Live Party & DJ Shift Schedule
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Live schedule of upcoming DJ sets, theme nights, and party events for <span className="font-bold text-[#1c1c1e]">{venueTitle}</span>.
+                  </p>
+                </div>
+
+                <span className="px-3 py-1.5 bg-neutral-900 text-white font-mono text-xs font-bold rounded-xl border border-neutral-800">
+                  🕒 SLT Timezone (PST / SLT+0)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(venueTelemetry?.scheduleEvents && venueTelemetry.scheduleEvents.length > 0 ? venueTelemetry.scheduleEvents : [
+                  { title: '🎧 DJ Merf Live Sunset Party', subtitle: 'Fridays 8:00 PM SLT (11 PM EST)', badge: 'LIVE DJ SET' },
+                  { title: '🎙️ Weekend Nude Beach Bash', subtitle: 'Saturdays 6:00 PM SLT (9 PM EST)', badge: 'RESORT PARTY' },
+                  { title: '🎶 Sunday Afternoon Lounge', subtitle: 'Sundays 2:00 PM SLT (5 PM EST)', badge: 'AFTERNOON CHILL' }
+                ]).map((evt: any, idx: number) => {
+                  const googleCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(evt.title)}&details=${encodeURIComponent('Live party at Skinny Dip Inn! ' + (evt.subtitle || ''))}&location=${encodeURIComponent('Second Life: Skinny Dip Islands')}`
+
+                  return (
+                    <div key={idx} className="p-5 bg-white rounded-2xl border border-neutral-200 shadow-sm space-y-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-[#ff3b30]/10 text-[#ff3b30] border border-[#ff3b30]/20 text-[9px] font-black uppercase tracking-wider">
+                            {evt.badge || 'PARTY EVENT'}
+                          </span>
+                          <span className="text-[10px] font-mono text-neutral-400">SDI Event</span>
+                        </div>
+                        <h4 className="font-black text-sm text-[#1c1c1e] uppercase">{evt.title}</h4>
+                        <p className="text-xs text-neutral-500 font-medium mt-1">{evt.subtitle}</p>
+                      </div>
+
+                      <a
+                        href={googleCalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2.5 bg-neutral-900 hover:bg-black text-white font-black uppercase text-[10px] tracking-wider rounded-xl transition-all shadow flex items-center justify-center gap-1.5 min-h-[44px] mt-4"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-rose-400" /> Add to Google Calendar
+                      </a>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Content: Admin Job Applications Inbox */}
+        {activeTab === 'applications' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-neutral-50 rounded-2xl border border-neutral-200 space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-[#1c1c1e] flex items-center gap-2">
+                    <Music className="w-5 h-5 text-[#ff3b30]" /> Admin Applications Inbox ({applicationsList.length})
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Review and approve incoming DJ & Host job applications for <span className="font-bold text-[#1c1c1e]">{venueTitle}</span>.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-neutral-200 p-1 rounded-xl">
+                  <button
+                    onClick={() => setAppFilter('pending')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all min-h-[36px] ${
+                      appFilter === 'pending' ? 'bg-[#1c1c1e] text-white' : 'text-neutral-600 hover:text-black font-bold'
+                    }`}
+                  >
+                    ⏳ Pending
+                  </button>
+                  <button
+                    onClick={() => setAppFilter('approved')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all min-h-[36px] ${
+                      appFilter === 'approved' ? 'bg-emerald-600 text-white' : 'text-neutral-600 hover:text-black font-bold'
+                    }`}
+                  >
+                    🟢 Approved
+                  </button>
+                  <button
+                    onClick={() => setAppFilter('rejected')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all min-h-[36px] ${
+                      appFilter === 'rejected' ? 'bg-rose-600 text-white' : 'text-neutral-600 hover:text-black font-bold'
+                    }`}
+                  >
+                    🔴 Rejected
+                  </button>
+                </div>
+              </div>
+
+              {applicationsList.filter(a => a.status === appFilter).length === 0 ? (
+                <div className="p-12 text-center bg-white rounded-2xl border border-neutral-200">
+                  <Music className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                  <p className="text-sm font-black uppercase text-neutral-700">No {appFilter.toUpperCase()} Applications</p>
+                  <p className="text-xs text-neutral-500 mt-1">
+                    No applications currently match status filter '{appFilter}'.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {applicationsList.filter(a => a.status === appFilter).map((app, idx) => (
+                    <div key={idx} className="p-5 bg-white rounded-2xl border border-neutral-200 shadow-sm space-y-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                            app.position === 'dj' ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-700 border border-rose-500/20'
+                          }`}>
+                            {app.position === 'dj' ? '🎧 DJ Applicant' : '🎙️ Host Applicant'}
+                          </span>
+                          <div>
+                            <h4 className="font-black text-sm text-[#1c1c1e]">{app.displayName || app.legacyName}</h4>
+                            <span className="text-[10px] font-mono text-neutral-500">Legacy Name: {app.legacyName}</span>
+                          </div>
+                        </div>
+
+                        {app.status === 'pending' && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleApproveApplication(app)}
+                              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase rounded-xl shadow transition-all min-h-[44px]"
+                            >
+                              🟢 Approve & Grant Role
+                            </button>
+                            <button
+                              onClick={() => handleRejectApplication(app.id)}
+                              className="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-xs uppercase rounded-xl transition-all min-h-[44px]"
+                            >
+                              🔴 Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-neutral-600">
+                        <div><span className="font-bold text-neutral-900 block">Timezone:</span> {app.timezone || 'N/A'}</div>
+                        <div><span className="font-bold text-neutral-900 block">Genres:</span> {app.genres || 'N/A'}</div>
+                        <div><span className="font-bold text-neutral-900 block">Stream Quality:</span> {app.streamQuality || 'N/A'}</div>
+                      </div>
+
+                      {app.mixUrl && (
+                        <div className="pt-2 border-t border-neutral-100">
+                          <a
+                            href={app.mixUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-[#ff3b30] hover:underline flex items-center gap-1 font-mono"
+                          >
+                            🔗 Sample Mix Link: {app.mixUrl} <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Tab Content: LSL Prim Setup Kit */}
         {activeTab === 'lsl' && (
           <div className="p-6 bg-neutral-900 text-white rounded-2xl border border-neutral-800 space-y-4">
