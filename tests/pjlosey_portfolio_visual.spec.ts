@@ -185,4 +185,114 @@ test.describe('Gridpass Driver Passport - Portfolio Photo Gallery & E2E Visual T
     }
   });
 
+  test('5. Experience External Link Pills (e.g. Live Demo, LoseyCo Platform, GitHub Repo) render cleanly under work experience cards', async ({ page }) => {
+    await page.goto('http://localhost:3000/u/pjlosey');
+
+    // Experience 0 link pills container
+    const linkPillsContainer = page.locator('[data-testid="experience-links-0"]');
+    await expect(linkPillsContainer).toBeVisible();
+
+    // Live Demo pill
+    const liveDemoPill = page.locator('[data-testid="experience-link-pill-0-0"]');
+    await expect(liveDemoPill).toBeVisible();
+    await expect(liveDemoPill).toContainText('Live Demo');
+
+    // LoseyCo Platform pill
+    const loseyCoPill = page.locator('[data-testid="experience-link-pill-0-1"]');
+    await expect(loseyCoPill).toBeVisible();
+    await expect(loseyCoPill).toContainText('LoseyCo Platform');
+
+    // GitHub Repo pill
+    const githubPill = page.locator('[data-testid="experience-link-pill-0-2"]');
+    await expect(githubPill).toBeVisible();
+    await expect(githubPill).toContainText('GitHub Repo');
+  });
+
+  test('6. External link pills open external links in a new tab (target="_blank" rel="noopener noreferrer")', async ({ page, context }) => {
+    await page.goto('http://localhost:3000/u/pjlosey');
+
+    const liveDemoPill = page.locator('[data-testid="experience-link-pill-0-0"]');
+    await expect(liveDemoPill).toBeVisible();
+
+    // Verify HTML attributes for security & opening in new tab
+    const targetAttr = await liveDemoPill.getAttribute('target');
+    const relAttr = await liveDemoPill.getAttribute('rel');
+    expect(targetAttr).toBe('_blank');
+    expect(relAttr).toContain('noopener');
+    expect(relAttr).toContain('noreferrer');
+
+    // Verify popup behavior on click
+    const pagePromise = context.waitForEvent('page');
+    await liveDemoPill.click();
+    const newPage = await pagePromise;
+    expect(newPage.url()).toContain('gridpass.app');
+    await newPage.close();
+  });
+
+  test('7. EditPassportDrawer includes Link Title & URL inputs with "+ Add Link" button and >= 44px delete targets', async ({ page }) => {
+    await page.goto('http://localhost:3000/u/pjlosey');
+
+    // Open EditPassportDrawer
+    await page.locator('[data-testid="edit-passport-btn"]').first().click();
+
+    // Switch to Work & Career tab
+    const careerTab = page.locator('button', { hasText: 'Work & Career' });
+    await expect(careerTab).toBeVisible();
+    await careerTab.click();
+
+    // Verify Link Title & Link URL inputs exist
+    const titleInput = page.locator('[data-testid="exp-link-title-input"]');
+    const urlInput = page.locator('[data-testid="exp-link-url-input"]');
+    const addLinkBtn = page.locator('[data-testid="add-exp-link-btn"]');
+
+    await expect(titleInput).toBeVisible();
+    await expect(urlInput).toBeVisible();
+    await expect(addLinkBtn).toBeVisible();
+
+    // Fill link title & URL
+    await titleInput.fill('V4 Release Notes');
+    await urlInput.fill('https://gridpass.app/v4');
+
+    // Click "+ Add Link" button
+    await addLinkBtn.click();
+
+    // Verify pending link pill was created
+    const pendingList = page.locator('[data-testid="pending-exp-links-list"]');
+    await expect(pendingList).toBeVisible();
+    await expect(pendingList).toContainText('V4 Release Notes');
+
+    // Verify Delete target touch target size is >= 44px x 44px
+    const deleteBtn = pendingList.locator('[data-testid^="delete-link-btn-"]').first();
+    await expect(deleteBtn).toBeVisible();
+    const deleteBox = await deleteBtn.boundingBox();
+    expect(deleteBox).not.toBeNull();
+    if (deleteBox) {
+      expect(deleteBox.width).toBeGreaterThanOrEqual(44);
+      expect(deleteBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    // Delete link
+    await deleteBtn.click();
+    await expect(pendingList).not.toContainText('V4 Release Notes');
+  });
+
+  test('8. All interactive link pills and controls have touch targets >= 44px', async ({ page }) => {
+    await page.goto('http://localhost:3000/u/pjlosey');
+
+    // Check Experience external link pill touch target dimensions
+    const linkPills = page.locator('[data-testid^="experience-link-pill-"]');
+    const count = await linkPills.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const pillBox = await linkPills.nth(i).boundingBox();
+      expect(pillBox).not.toBeNull();
+      if (pillBox) {
+        expect(pillBox.width).toBeGreaterThanOrEqual(44);
+        expect(pillBox.height).toBeGreaterThanOrEqual(44);
+      }
+    }
+  });
+
 });
+

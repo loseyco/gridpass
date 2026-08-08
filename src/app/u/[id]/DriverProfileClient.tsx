@@ -86,6 +86,11 @@ const DEFAULT_PJ_EXPERIENCES = [
     endDate: 'Present',
     description: 'Spearheaded full-stack platform architecture for digital vehicle passports, telemetry tracking engine, and executive resume integration.',
     skills: ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Tailwind CSS', '⚡ Firebase'],
+    links: [
+      { id: 'link-1', title: 'Live Demo', url: 'https://gridpass.app' },
+      { id: 'link-2', title: 'LoseyCo Platform', url: 'https://loseyco.com' },
+      { id: 'link-3', title: 'GitHub Repo', url: 'https://github.com/loseyco/gridpass' }
+    ],
     gallery: [
       {
         url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80',
@@ -122,6 +127,10 @@ const DEFAULT_PJ_EXPERIENCES = [
     endDate: '2021-12',
     description: 'Engineered telemetry data ingestion infrastructure, vehicle passport logbooks, and mobile-first touch UI.',
     skills: ['⚡ System Architecture', '⚡ Node.js', '⚡ WebSockets', '⚡ PostgreSQL', '⚡ Playwright E2E'],
+    links: [
+      { id: 'link-4', title: 'Telemetry Docs', url: 'https://enthusiastmotors.com/docs' },
+      { id: 'link-5', title: 'GitHub Repo', url: 'https://github.com/enthusiast-motors' }
+    ],
     gallery: [
       {
         url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
@@ -1025,6 +1034,25 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                                 >
                                   {s}
                                 </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* 🔗 Experience External Link Pills */}
+                          {exp.links && exp.links.length > 0 && (
+                            <div className="pt-2 flex flex-wrap items-center gap-2" data-testid={`experience-links-${idx}`}>
+                              {exp.links.map((link: { id?: string; title: string; url: string }, lIdx: number) => (
+                                <a
+                                  key={lIdx}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  data-testid={`experience-link-pill-${idx}-${lIdx}`}
+                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl text-xs font-mono font-bold text-neutral-900 transition-all cursor-pointer shadow-2xs hover:border-neutral-400"
+                                  aria-label={`External link pill: ${link.title}`}
+                                >
+                                  <span>🔗 {link.title} ↗</span>
+                                </a>
                               ))}
                             </div>
                           )}

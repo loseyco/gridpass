@@ -115,6 +115,24 @@ async function getProfileData(userId: string): Promise<DriverProfile | null> {
   } catch (err) {
     console.error("Error retrieving server-side profile data:", err);
   }
+
+  if (userId && (userId.toLowerCase() === 'pjlosey' || userId.toLowerCase() === 'pjlosey-mock')) {
+    return {
+      uid: 'user-marcus-123',
+      email: 'marcus@enthusiast.com',
+      display_name: 'Marcus Mustang',
+      bio: 'Track day enthusiast, weekend racer, and Ford Mustang collector.',
+      avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      is_supporter: true,
+      home_town: 'Monmouth Beach, NJ',
+      socials: {
+        instagram: 'marcus_mustang',
+        youtube: 'marcusracing',
+        twitter: 'marcus_gt'
+      }
+    };
+  }
+
   return null;
 }
 

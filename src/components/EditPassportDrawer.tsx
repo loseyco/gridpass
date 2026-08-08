@@ -40,6 +40,9 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
   const [expCompany, setExpCompany] = useState('');
   const [expYears, setExpYears] = useState('');
   const [expCategory, setExpCategory] = useState('performance_shop');
+  const [expLinkTitle, setExpLinkTitle] = useState('');
+  const [expLinkUrl, setExpLinkUrl] = useState('');
+  const [expLinks, setExpLinks] = useState<{ id: string; title: string; url: string }[]>([]);
 
   // Story / Build Log Form State
   const [storyTitle, setStoryTitle] = useState('');
@@ -155,6 +158,26 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
     }
   };
 
+  const handleAddExpLink = () => {
+    if (!expLinkTitle || !expLinkUrl) {
+      showToast({ title: "Incomplete Link", message: "Please enter both link title and URL.", icon: "⚠️" });
+      return;
+    }
+    const newLink = {
+      id: `link_${Date.now()}`,
+      title: expLinkTitle,
+      url: expLinkUrl
+    };
+    setExpLinks(prev => [...prev, newLink]);
+    setExpLinkTitle('');
+    setExpLinkUrl('');
+    showToast({ title: "🔗 Link Added", message: `Added "${expLinkTitle}" link pill!`, icon: "✅" });
+  };
+
+  const handleRemoveExpLink = (linkId: string) => {
+    setExpLinks(prev => prev.filter(l => l.id !== linkId));
+  };
+
   const handleAddExperience = () => {
     if (!expTitle || !expCompany) {
       showToast({ title: "Incomplete Field", message: "Please fill in job title and company name.", icon: "⚠️" });
@@ -165,12 +188,14 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
       title: expTitle,
       company: expCompany,
       years: expYears || 'Present',
-      category: expCategory
+      category: expCategory,
+      links: expLinks
     };
     setExperiences([...experiences, newExp]);
     setExpTitle('');
     setExpCompany('');
     setExpYears('');
+    setExpLinks([]);
     showToast({ title: "💼 Career Entry Added", message: `${expTitle} at ${expCompany} added to resume!`, icon: "✅" });
   };
 
@@ -502,13 +527,69 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                       className="flex-1 p-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-mono text-neutral-900"
                       placeholder="Years Active (e.g. 2021 - Present)"
                     />
-                    <button
-                      type="button"
-                      onClick={handleAddExperience}
-                      className="py-2.5 px-4 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer"
-                    >
-                      Add Entry
-                    </button>
+                  </div>
+
+                  {/* 🔗 External Links Builder inside Experience Form */}
+                  <div className="pt-2 border-t border-neutral-200 space-y-2">
+                    <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase block">
+                      🔗 External Link Pills (e.g. Live Demo, GitHub Repo, Platform)
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        data-testid="exp-link-title-input"
+                        value={expLinkTitle}
+                        onChange={e => setExpLinkTitle(e.target.value)}
+                        className="p-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900"
+                        placeholder="Link Title (e.g. Live Demo)"
+                      />
+                      <input
+                        type="url"
+                        data-testid="exp-link-url-input"
+                        value={expLinkUrl}
+                        onChange={e => setExpLinkUrl(e.target.value)}
+                        className="p-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-mono text-neutral-900"
+                        placeholder="Link URL (https://...)"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        data-testid="add-exp-link-btn"
+                        onClick={handleAddExpLink}
+                        className="min-h-[44px] min-w-[44px] py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-2xs"
+                      >
+                        <Plus className="w-4 h-4 text-[#ff3b30]" /> + Add Link
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleAddExperience}
+                        className="min-h-[44px] min-w-[44px] py-2.5 px-5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer inline-flex items-center justify-center shadow-md"
+                      >
+                        Add Entry
+                      </button>
+                    </div>
+
+                    {/* Pending Links List */}
+                    {expLinks.length > 0 && (
+                      <div className="pt-2 flex flex-wrap gap-2" data-testid="pending-exp-links-list">
+                        {expLinks.map(link => (
+                          <div key={link.id} className="flex items-center gap-2 pl-3 pr-1 py-1 bg-white border border-neutral-300 rounded-xl text-xs font-mono font-bold text-neutral-800">
+                            <span>🔗 {link.title}</span>
+                            <button
+                              type="button"
+                              data-testid={`delete-link-btn-${link.id}`}
+                              onClick={() => handleRemoveExpLink(link.id)}
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-all cursor-pointer"
+                              aria-label={`Delete link ${link.title}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -523,11 +604,22 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                         <div>
                           <h5 className="text-xs font-black uppercase text-neutral-900">{exp.title}</h5>
                           <p className="text-[11px] text-neutral-600 font-medium">{exp.company} • <span className="font-mono text-neutral-400">{exp.years}</span></p>
+                          {exp.links && exp.links.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {exp.links.map((l: any, lIdx: number) => (
+                                <span key={lIdx} className="text-[10px] font-mono text-neutral-500 bg-neutral-100 px-1.5 py-0.5 rounded">
+                                  🔗 {l.title}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <button
                           type="button"
+                          data-testid={`delete-exp-btn-${exp.id}`}
                           onClick={() => handleRemoveExperience(exp.id)}
-                          className="p-1.5 text-neutral-400 hover:text-red-600 transition-all cursor-pointer"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-all cursor-pointer"
+                          aria-label={`Delete experience entry ${exp.title}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
