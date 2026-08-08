@@ -4153,10 +4153,10 @@ default
                 <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200">
                   <span className="text-[9px] font-black uppercase text-neutral-400 block mb-0.5">Lifetime Visit History</span>
                   <span className="font-mono font-bold text-sm text-emerald-600 block uppercase">
-                    📊 {Math.max(1, Math.round((selectedAvatarDetail.dwellMinutes || 10) / 45))} Visits
+                    📊 {selectedAvatarDetail.visitCount || 1} Visits
                   </span>
                   <span className="text-[9px] text-neutral-500 font-medium block mt-0.5">
-                    Total: {((selectedAvatarDetail.dwellMinutes || 10) / 60).toFixed(1)} hrs logged
+                    Total: {((selectedAvatarDetail.dwellMinutes || 0) / 60).toFixed(1)} hrs logged
                   </span>
                 </div>
               </div>
