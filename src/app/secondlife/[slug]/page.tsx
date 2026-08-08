@@ -4544,6 +4544,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                     return (
                       <button
                         key={cat}
+                        data-testid={`category-filter-btn-${cat.replace(/[\s&]+/g, '-').toLowerCase()}`}
                         onClick={() => setGalleryCategoryFilter(cat)}
                         className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 min-h-[44px] min-w-[44px] ${
                           isActive
