@@ -29,6 +29,7 @@ interface DriverProfile {
   is_supporter?: boolean;
   role?: string;
   experiences?: any[];
+  skills?: string[];
   socials?: {
     instagram?: string;
     youtube?: string;
@@ -74,6 +75,92 @@ interface DriverProfileClientProps {
 
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1600&q=80';
 
+const DEFAULT_PJ_EXPERIENCES = [
+  {
+    id: 'exp-1',
+    title: 'Founder & Lead Systems Architect',
+    company: 'Gridpass & Losey.co',
+    location: 'Chicago, IL',
+    startDate: '2022-01',
+    endDate: 'Present',
+    description: 'Spearheaded full-stack platform architecture for digital vehicle passports, telemetry tracking engine, and executive resume integration.',
+    skills: ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Tailwind CSS', '⚡ Firebase'],
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80',
+        caption: 'Gridpass Telemetry Engine & Mobile Viewport Architecture'
+      },
+      {
+        url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+        caption: 'Executive Resume & Technical Architecture Workshop'
+      }
+    ]
+  },
+  {
+    id: 'exp-2',
+    title: 'Principal Software Engineer',
+    company: 'Enthusiast Motors & Telemetry Labs',
+    location: 'Monmouth Beach, NJ',
+    startDate: '2019-06',
+    endDate: '2021-12',
+    description: 'Engineered telemetry data ingestion infrastructure, vehicle passport logbooks, and mobile-first touch UI.',
+    skills: ['⚡ System Architecture', '⚡ Node.js', '⚡ WebSockets', '⚡ PostgreSQL', '⚡ Playwright E2E'],
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+        caption: 'Hardware Sensor Bench Testing & Telemetry Logging'
+      }
+    ]
+  }
+];
+
+function formatExperienceDuration(startDateStr?: string, endDateStr?: string, fallbackYears?: string): string {
+  if (!startDateStr && !fallbackYears) return '';
+  if (!startDateStr && fallbackYears) return fallbackYears;
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  const parseDate = (dStr: string) => {
+    if (!dStr || dStr.toLowerCase() === 'present') return { date: new Date(), isPresent: true };
+    const ymMatch = dStr.match(/^(\d{4})-(\d{1,2})/);
+    if (ymMatch) {
+      return { date: new Date(parseInt(ymMatch[1], 10), parseInt(ymMatch[2], 10) - 1, 1), isPresent: false };
+    }
+    const parsed = new Date(dStr);
+    if (!isNaN(parsed.getTime())) {
+      return { date: parsed, isPresent: false };
+    }
+    return { date: new Date(), isPresent: false };
+  };
+
+  const startInfo = parseDate(startDateStr!);
+  const endInfo = parseDate(endDateStr || 'Present');
+
+  const startMonthStr = monthNames[startInfo.date.getMonth()];
+  const startYearStr = startInfo.date.getFullYear();
+  const startFormatted = `${startMonthStr} ${startYearStr}`;
+
+  const isPresent = endInfo.isPresent || !endDateStr || endDateStr.toLowerCase() === 'present';
+  const endFormatted = isPresent
+    ? 'Present'
+    : `${monthNames[endInfo.date.getMonth()]} ${endInfo.date.getFullYear()}`;
+
+  const end = isPresent ? new Date() : endInfo.date;
+
+  let totalMonths = (end.getFullYear() - startInfo.date.getFullYear()) * 12 + (end.getMonth() - startInfo.date.getMonth()) + 1;
+  if (totalMonths < 1) totalMonths = 1;
+
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  const durationParts = [];
+  if (years > 0) durationParts.push(`${years} yr${years > 1 ? 's' : ''}`);
+  if (months > 0) durationParts.push(`${months} mo${months > 1 ? 's' : ''}`);
+
+  const durationStr = durationParts.join(' ');
+  return `${startFormatted} – ${endFormatted}${durationStr ? ` • ${durationStr}` : ''}`;
+}
+
 export function DriverProfileClient({ initialProfile, userId }: DriverProfileClientProps) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -91,6 +178,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [shareText, setShareText] = useState('Share Passport');
   const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
+  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; caption?: string } | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -264,6 +352,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             role: 'SUPER ADMIN & FOUNDER',
             tagId: 'GP-DRV-MARCUS',
             home_town: 'Monmouth Beach, NJ',
+            experiences: DEFAULT_PJ_EXPERIENCES,
+            skills: ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture'],
             socials: {
               instagram: 'marcus_mustang',
               youtube: 'marcusracing',
@@ -302,6 +392,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             avatar_url: uData.avatar_url || uData.photoURL || '',
             is_supporter: uData.is_supporter === true,
             role: uData.role || (uData.email?.includes('loseyp') ? 'SUPER ADMIN & FOUNDER' : ''),
+            experiences: (uData.experiences && uData.experiences.length > 0) ? uData.experiences : DEFAULT_PJ_EXPERIENCES,
+            skills: (uData.skills && uData.skills.length > 0) ? uData.skills : ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture'],
             socials: {
               instagram: uData.social_instagram || uData.socials?.instagram || '',
               youtube: uData.social_youtube || uData.socials?.youtube || '',
@@ -526,6 +618,23 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                 {renderSocialIcon('TikTok', profile.socials?.tiktok, `https://tiktok.com/@${profile.socials?.tiktok}`, Globe)}
                 {renderSocialIcon('Facebook', profile.socials?.facebook, `https://facebook.com/${profile.socials?.facebook}`, Facebook)}
                 {renderSocialIcon('Twitter', profile.socials?.twitter, `https://twitter.com/${profile.socials?.twitter}`, Twitter)}
+              </div>
+
+              {/* ⚡ Profile Interactive Skills Tag Pills */}
+              <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                {(profile.skills && profile.skills.length > 0
+                  ? profile.skills
+                  : ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture']
+                ).map((skill: string, sIdx: number) => (
+                  <button
+                    key={sIdx}
+                    type="button"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-full text-xs font-mono font-bold text-neutral-800 transition-all cursor-pointer gap-1 shadow-2xs hover:scale-105 active:scale-95"
+                    aria-label={`Skill tag pill: ${skill}`}
+                  >
+                    {skill}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -813,7 +922,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             })()}
 
             {/* Work & Career Experience Section */}
-            <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md">
+            <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-4 shadow-md">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
                   <Briefcase className="w-4 h-4 text-blue-600" /> Work Experience &amp; Motorsport Career History
@@ -821,23 +930,90 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                 <button
                   type="button"
                   onClick={() => setShowEditDrawer(true)}
-                  className="text-[10px] font-mono font-bold text-[#ff3b30] hover:underline cursor-pointer"
+                  className="min-h-[44px] inline-flex items-center text-[10px] font-mono font-bold text-[#ff3b30] hover:underline cursor-pointer"
                 >
                   + Manage History
                 </button>
               </div>
 
               {profile.experiences && profile.experiences.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {profile.experiences.map((exp: any, idx: number) => (
-                    <div key={idx} className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h5 className="text-xs font-black uppercase text-neutral-900">{exp.title}</h5>
-                        <span className="text-[9px] font-mono font-bold text-neutral-500">{exp.years}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {profile.experiences.map((exp: any, idx: number) => {
+                    const formattedDuration = formatExperienceDuration(exp.startDate, exp.endDate, exp.years);
+
+                    return (
+                      <div key={idx} className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-3 shadow-2xs hover:border-neutral-300 transition-all flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <h5 className="text-xs font-black uppercase text-neutral-900 leading-tight">{exp.title}</h5>
+                            </div>
+                            <span className="text-[10px] font-mono font-bold text-[#ff3b30] bg-red-50 border border-red-200 px-2.5 py-1 rounded-md inline-self-start">
+                              {formattedDuration}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs font-bold text-neutral-700">
+                            <span>{exp.company}</span>
+                            {exp.location && <span className="text-neutral-500 font-mono text-[10px]">{exp.location}</span>}
+                          </div>
+
+                          {exp.description && (
+                            <p className="text-xs text-neutral-600 font-medium leading-relaxed">
+                              {exp.description}
+                            </p>
+                          )}
+
+                          {/* ⚡ Interactive Skills Tag Pills */}
+                          {exp.skills && exp.skills.length > 0 && (
+                            <div className="pt-1 flex flex-wrap items-center gap-1.5">
+                              {exp.skills.map((s: string, sIdx: number) => (
+                                <button
+                                  key={sIdx}
+                                  type="button"
+                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1.5 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-xl text-[11px] font-mono font-bold text-neutral-700 transition-all cursor-pointer hover:border-neutral-400"
+                                  aria-label={`Experience skill pill: ${s}`}
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 📷 Portfolio Photo Gallery Thumbnails */}
+                        {exp.gallery && exp.gallery.length > 0 && (
+                          <div className="pt-2.5 space-y-1.5 border-t border-neutral-200/70">
+                            <span className="text-[10px] font-mono font-bold uppercase text-neutral-500 block">
+                              📷 Portfolio &amp; Proof Gallery
+                            </span>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {exp.gallery.map((photo: any, pIdx: number) => {
+                                const photoUrl = typeof photo === 'string' ? photo : photo.url;
+                                const photoCaption = typeof photo === 'string' ? `${exp.title} Proof` : photo.caption;
+
+                                return (
+                                  <button
+                                    key={pIdx}
+                                    type="button"
+                                    onClick={() => setActiveLightboxImage({ url: photoUrl, caption: photoCaption })}
+                                    className="min-h-[44px] min-w-[44px] relative w-20 h-20 rounded-xl overflow-hidden border border-neutral-300 hover:border-[#ff3b30] hover:scale-105 transition-all cursor-pointer group shadow-2xs"
+                                    title="Click to view image in Lightbox preview"
+                                    aria-label={`View photo thumbnail: ${photoCaption}`}
+                                  >
+                                    <img src={photoUrl} alt={photoCaption || 'Gallery thumbnail'} className="w-full h-full object-cover group-hover:opacity-90" />
+                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                      <Camera className="w-4 h-4 text-white drop-shadow" />
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-[11px] font-bold text-neutral-700">{exp.company}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="p-4 bg-neutral-50 border border-dashed border-neutral-200 rounded-2xl text-center">
@@ -891,7 +1067,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             <button
               type="button"
               onClick={() => setShowPrintModal(false)}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900 text-sm font-bold p-1 cursor-pointer"
+              className="absolute top-4 right-4 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-neutral-400 hover:text-neutral-900 text-base font-bold cursor-pointer rounded-full hover:bg-neutral-100"
+              aria-label="Close Print Badge Modal"
             >
               ✕
             </button>
@@ -926,6 +1103,44 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             >
               <Download className="w-4 h-4" /> Download High-Res QR Passport Badge
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📸 PORTFOLIO PHOTO GALLERY LIGHTBOX ZOOM MODAL PREVIEW */}
+      {activeLightboxImage && (
+        <div 
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setActiveLightboxImage(null)}
+        >
+          <div 
+            className="relative max-w-4xl w-full bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setActiveLightboxImage(null)}
+              className="absolute top-4 right-4 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-black/70 hover:bg-black text-white text-base font-bold rounded-full transition-all cursor-pointer border border-white/20 z-10"
+              aria-label="Close Lightbox Preview"
+            >
+              ✕
+            </button>
+
+            <div className="w-full max-h-[75vh] flex items-center justify-center overflow-hidden bg-black p-2">
+              <img
+                src={activeLightboxImage.url}
+                alt={activeLightboxImage.caption || 'Lightbox Zoom Preview'}
+                className="max-w-full max-h-[70vh] object-contain rounded-xl"
+              />
+            </div>
+
+            {activeLightboxImage.caption && (
+              <div className="w-full p-4 bg-neutral-950 border-t border-neutral-800 text-center">
+                <p className="text-xs font-mono font-bold text-neutral-300 uppercase tracking-wide flex items-center justify-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-[#ff3b30]" /> {activeLightboxImage.caption}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

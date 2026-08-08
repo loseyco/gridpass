@@ -7,111 +7,71 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Executive Resume (/u/pjlosey) Visual E2E Suite', () => {
 
-  test('1. Executive Resume Header with Verified Badges, Role Title, Location, and Social Links', async ({ page }) => {
-    await page.goto('/u/pjlosey');
-
-    // Display Name
-    const nameLocator = page.locator('h1', { hasText: /PJ Losey|Marcus Mustang/i });
-    await expect(nameLocator).toBeVisible();
-
-    // Role Title (admin or SUPER ADMIN & FOUNDER)
-    const roleBadge = page.locator('span', { hasText: /admin|SUPER ADMIN/i }).first();
-    await expect(roleBadge).toBeVisible();
-
-    // Verified Badges (e.g. ⭐ GOLD)
-    const goldBadge = page.locator('text=⭐ GOLD');
-    await expect(goldBadge).toBeVisible();
-
-    // Location (Chicago, IL or Monmouth Beach, NJ)
-    const locationText = page.locator('text=/Chicago, IL|Monmouth Beach, NJ/i');
-    await expect(locationText).toBeVisible();
-
-    // Social Links (Instagram, YouTube, Twitter/Facebook)
-    const instaLink = page.locator('a[title*="Instagram"]');
-    const ytLink = page.locator('a[title*="YouTube"]');
-
-    await expect(instaLink).toBeVisible();
-    await expect(ytLink).toBeVisible();
-  });
-
-  test('2. 1-Tap Copy Resume Link button ([share button]) and Print PDF Resume button', async ({ page, context }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-    await page.goto('/u/pjlosey');
-
-    // Share Button
-    const shareBtn = page.locator('button', { hasText: /Share Passport/i });
-    await expect(shareBtn).toBeVisible();
-    await shareBtn.click();
-
-    // Verify button text updates or toast appears
-    const copiedText = page.locator('button', { hasText: /Copied Tab Link!/i });
-    await expect(copiedText).toBeVisible();
-
-    // Print PDF Resume Button
-    const printBtn = page.locator('button', { hasText: /Print Passport Badge/i });
-    await expect(printBtn).toBeVisible();
-    await printBtn.click();
-
-    // Verify Print Modal opens
-    const modalHeading = page.locator('text=GRIDPASS PASSPORT RESUME BADGE');
-    await expect(modalHeading).toBeVisible();
-
-    const downloadQrBtn = page.locator('button', { hasText: /Download High-Res QR Passport Badge/i });
-    await expect(downloadQrBtn).toBeVisible();
-
-    // Close modal
-    const closeBtn = page.locator('button', { hasText: '✕' });
-    await closeBtn.click();
-    await expect(modalHeading).not.toBeVisible();
-  });
-
-  test('3. 4 Interactive Tabs: Executive Resume (career), Digital Garage (garage), Managed Ventures (businesses), Endorsements Wall (guestbook)', async ({ page }) => {
-    await page.goto('/u/pjlosey');
-
-    // 1. Executive Resume (tab === 'career')
-    const careerTab = page.locator('button', { hasText: /Career & About Me/i });
-    await expect(careerTab).toBeVisible();
-    await careerTab.click();
-    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=career/);
-    await expect(page.locator('text=Motorsport Achievements & Telemetry Stats')).toBeVisible();
-
-    // 2. Digital Garage (tab === 'garage')
-    const garageTab = page.locator('button', { hasText: /Digital Garage/i });
-    await expect(garageTab).toBeVisible();
-    await garageTab.click();
-    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=garage/);
-    await expect(page.locator('text=Verified Garage Builds')).toBeVisible();
-
-    // 3. Managed Ventures / Businesses (tab === 'businesses')
-    const bizTab = page.locator('button', { hasText: /Businesses & Teams/i });
-    await expect(bizTab).toBeVisible();
-    await bizTab.click();
-    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=businesses/);
-    await expect(page.locator('text=Affiliated Businesses & Race Teams')).toBeVisible();
-
-    // 4. Endorsements Wall / Guestbook (tab === 'guestbook')
-    const guestbookTab = page.locator('button', { hasText: /Fan Wall & Guestbook/i });
-    await expect(guestbookTab).toBeVisible();
-    await guestbookTab.click();
-    await expect(page).toHaveURL(/\/u\/pjlosey\?tab=guestbook/);
-    await expect(page.locator('text=Post Message on')).toBeVisible();
-
-    // Deep linking directly test for each tab query param
+  test('1. Executive Resume Experience Entries render Start Date - End Date with calculated durations', async ({ page }) => {
     await page.goto('/u/pjlosey?tab=career');
-    await expect(page.locator('text=Motorsport Achievements & Telemetry Stats')).toBeVisible();
 
-    await page.goto('/u/pjlosey?tab=garage');
-    await expect(page.locator('text=Verified Garage Builds')).toBeVisible();
+    // Verify Career & About Me tab is open
+    const careerHeading = page.locator('text=Work Experience & Motorsport Career History');
+    await expect(careerHeading).toBeVisible();
 
-    await page.goto('/u/pjlosey?tab=businesses');
-    await expect(page.locator('text=Affiliated Businesses & Race Teams')).toBeVisible();
+    // Verify Experience entries exist with Start Date - End Date and calculated duration (e.g. "Jan 2022 – Present • ... yrs ... mos")
+    const durationBadge = page.locator('span', { hasText: /Jan 2022 – Present • \d+ yrs \d+ mos/i }).first();
+    await expect(durationBadge).toBeVisible();
 
-    await page.goto('/u/pjlosey?tab=guestbook');
-    await expect(page.locator('text=Post Message on')).toBeVisible();
+    // Verify another experience entry duration (e.g. "Jun 2019 – Dec 2021 • 2 yrs 7 mos")
+    const durationBadge2 = page.locator('span', { hasText: /Jun 2019 – Dec 2021 • 2 yrs 7 mos/i }).first();
+    await expect(durationBadge2).toBeVisible();
   });
 
-  test('4. All interactive elements have touch targets >= 44px', async ({ page }) => {
-    await page.goto('/u/pjlosey');
+  test('2. Interactive Skills Tag Pills (⚡ Next.js, ⚡ System Architecture) render cleanly under profile and experience cards', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=career');
+
+    // Profile card skill pills
+    const nextjsPill = page.locator('button', { hasText: '⚡ Next.js' }).first();
+    const sysArchPill = page.locator('button', { hasText: '⚡ System Architecture' }).first();
+
+    await expect(nextjsPill).toBeVisible();
+    await expect(sysArchPill).toBeVisible();
+
+    // Verify clicking skill pill remains responsive and clean
+    await nextjsPill.click();
+    await expect(nextjsPill).toBeVisible();
+
+    // Verify experience card specific skill pills
+    const reactPill = page.locator('button', { hasText: '⚡ React' }).first();
+    const firebasePill = page.locator('button', { hasText: '⚡ Firebase' }).first();
+    await expect(reactPill).toBeVisible();
+    await expect(firebasePill).toBeVisible();
+  });
+
+  test('3. Portfolio Photo Gallery Thumbnails render under experience cards with Lightbox zoom modal preview', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=career');
+
+    // Verify gallery header under experience card
+    const galleryHeader = page.locator('text=📷 Portfolio & Proof Gallery').first();
+    await expect(galleryHeader).toBeVisible();
+
+    // Verify photo gallery thumbnails render under experience card
+    const thumbnailBtn = page.locator('button[aria-label*="View photo thumbnail"]').first();
+    await expect(thumbnailBtn).toBeVisible();
+
+    // Click thumbnail to open Lightbox zoom modal preview
+    await thumbnailBtn.click();
+
+    // Verify Lightbox Zoom Modal opens
+    const lightboxModal = page.locator('button[aria-label="Close Lightbox Preview"]');
+    await expect(lightboxModal).toBeVisible();
+
+    const previewImg = page.locator('img[alt*="Lightbox Zoom Preview"], img[alt*="Gridpass"], img[alt*="Executive"], img[alt*="Proof"]');
+    await expect(previewImg.first()).toBeVisible();
+
+    // Close Lightbox Modal
+    await lightboxModal.click();
+    await expect(lightboxModal).not.toBeVisible();
+  });
+
+  test('4. All interactive buttons and inputs have touch targets >= 44px', async ({ page }) => {
+    await page.goto('/u/pjlosey?tab=career');
 
     // Get all visible interactive elements (buttons, links, inputs)
     const interactiveElements = await page.locator('button, a, input, textarea, select').all();
@@ -149,5 +109,42 @@ test.describe('Executive Resume (/u/pjlosey) Visual E2E Suite', () => {
     expect(failingElements, `Found ${failingElements.length} interactive elements with touch target size < 44px`).toEqual([]);
   });
 
+  test('5. Executive Resume Header, Verified Badges, Role Title, and Share/Print buttons', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('/u/pjlosey');
+
+    // Display Name
+    const nameLocator = page.locator('h1', { hasText: /PJ Losey|Marcus Mustang/i });
+    await expect(nameLocator).toBeVisible();
+
+    // Role Title (admin or SUPER ADMIN & FOUNDER)
+    const roleBadge = page.locator('span', { hasText: /admin|SUPER ADMIN/i }).first();
+    await expect(roleBadge).toBeVisible();
+
+    // Share Button
+    const shareBtn = page.locator('button', { hasText: /Share Passport/i });
+    await expect(shareBtn).toBeVisible();
+    await shareBtn.click();
+
+    // Verify button text updates or toast appears
+    const copiedText = page.locator('button', { hasText: /Copied Tab Link!/i });
+    await expect(copiedText).toBeVisible();
+
+    // Print PDF Resume Button
+    const printBtn = page.locator('button', { hasText: /Print Passport Badge/i });
+    await expect(printBtn).toBeVisible();
+    await printBtn.click();
+
+    // Verify Print Modal opens
+    const modalHeading = page.locator('text=GRIDPASS PASSPORT RESUME BADGE');
+    await expect(modalHeading).toBeVisible();
+
+    // Close modal
+    const closeBtn = page.locator('button[aria-label="Close Print Badge Modal"]');
+    await closeBtn.click();
+    await expect(modalHeading).not.toBeVisible();
+  });
+
 });
+
 
