@@ -175,6 +175,20 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
   const [albumNameInput, setAlbumNameInput] = useState<string>('')
   const [albumDescInput, setAlbumDescInput] = useState<string>('')
 
+  // Live Audio Player State
+  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false)
+  const [isMutedAudio, setIsMutedAudio] = useState<boolean>(false)
+  const [audioVolume, setAudioVolume] = useState<number>(0.8)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Broadcast Shouter State
+  const [broadcastMessage, setBroadcastMessage] = useState<string>('')
+  const [isSendingBroadcast, setIsSendingBroadcast] = useState<boolean>(false)
+
+  // 2D Sim Minimap Radar Grid State
+  const [radarZoomLevel, setRadarZoomLevel] = useState<number>(1)
+  const [selectedRadarAvatar, setSelectedRadarAvatar] = useState<any | null>(null)
+
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>(DEFAULT_GALLERY_PHOTOS)
   const [galleryCategoryFilter, setGalleryCategoryFilter] = useState<string>('All')
   const [lightboxPhoto, setLightboxPhoto] = useState<GalleryPhoto | null>(null)
@@ -247,6 +261,57 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
       title: '🗑️ Album Deleted',
       message: `Deleted album "${targetAlbum.name}".`
     })
+  }
+
+  const handleSendBroadcast = async (msg: string) => {
+    const trimmed = msg.trim()
+    if (!trimmed) {
+      showToast({ title: '⚠️ Message Empty', message: 'Please enter a message to broadcast.' })
+      return
+    }
+    setIsSendingBroadcast(true)
+    try {
+      const senderName = displayName || legacyName || 'Super Admin'
+      const broadcastLog = {
+        timestamp: new Date().toISOString(),
+        category: 'broadcast',
+        type: 'SIM_BROADCAST',
+        title: '📡 LIVE SIM BROADCAST SHOUT',
+        summary: `"${trimmed}" — Sent by ${senderName}`,
+        fps: venueTelemetry?.fps || 45.0,
+        timeDilation: venueTelemetry?.timeDilation || 1.0,
+        agentCount: resolvedVisitors.length || 1,
+        regionName: venueTelemetry?.regionName || 'Skinny Dip Islands',
+        parcelName: venueTelemetry?.parcelName || 'Skinny Dip Resort',
+        musicUrl: venueTelemetry?.musicUrl || '',
+        nowPlaying: venueTelemetry?.nowPlaying || ''
+      }
+      await setDoc(doc(db, 'users', `venue_telemetry_${slug}`), {
+        latestBroadcast: {
+          message: trimmed,
+          sender: senderName,
+          timestamp: new Date().toISOString()
+        }
+      }, { merge: true })
+      
+      try {
+        await addDoc(collection(db, 'sl_venues', slug, 'telemetry_logs'), broadcastLog)
+      } catch (e) {
+        console.warn("Notice adding broadcast telemetry log:", e)
+      }
+
+      setBroadcastMessage('')
+      showToast({
+        icon: '📡',
+        title: '📡 Broadcast Sent!',
+        message: `In-world shout dispatched: "${trimmed}"`
+      })
+    } catch (err) {
+      console.error("Error broadcasting message:", err)
+      showToast({ title: '❌ Broadcast Failed', message: 'Could not dispatch broadcast to prim bridge.' })
+    } finally {
+      setIsSendingBroadcast(false)
+    }
   }
 
   const handleFileSelected = (file: File, isEdit: boolean = false) => {
@@ -1774,6 +1839,252 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
         {/* Tab Content: Sim Destination Home Page */}
         {activeTab === 'home' && (
           <div className="space-y-6">
+            {/* 🎵 Live DJ Stream Audio Player & Track Listener */}
+            <div data-testid="live-audio-player-bar" className="bg-neutral-950 text-white rounded-3xl p-5 sm:p-6 border border-neutral-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+              <div className="flex items-center gap-4">
+                <button
+                  data-testid="audio-play-pause-btn"
+                  onClick={() => {
+                    if (!audioRef.current) return
+                    if (isPlayingAudio) {
+                      audioRef.current.pause()
+                      setIsPlayingAudio(false)
+                    } else {
+                      audioRef.current.play().then(() => setIsPlayingAudio(true)).catch((e) => console.warn("Audio stream playback error:", e))
+                    }
+                  }}
+                  className="w-14 h-14 rounded-2xl bg-[#ff3b30] hover:bg-[#bd2925] text-white flex items-center justify-center shadow-lg shadow-[#ff3b30]/30 transition-all shrink-0 min-h-[44px] min-w-[44px]"
+                  aria-label={isPlayingAudio ? "Pause Audio Stream" : "Play Audio Stream"}
+                >
+                  {isPlayingAudio ? (
+                    <span className="text-xl font-bold">⏸</span>
+                  ) : (
+                    <span className="text-xl font-bold ml-1">▶</span>
+                  )}
+                </button>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> STREAM LIVE
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 text-[10px] font-mono border border-neutral-800">
+                      🎧 320kbps MP3 HD
+                    </span>
+                  </div>
+                  <h3 className="text-base font-black uppercase text-white tracking-tight line-clamp-1">
+                    {venueTelemetry?.nowPlaying || 'Skinny Dip Resort Live DJ Parcel Stream'}
+                  </h3>
+                  <p className="text-xs text-neutral-400 font-mono line-clamp-1">
+                    {venueTelemetry?.musicUrl || 'http://stream.skinnydipinn.sl:8000/live'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Player Controls: Mute & Volume Slider */}
+              <div className="flex items-center gap-4 w-full md:w-auto bg-neutral-900 p-3 rounded-2xl border border-neutral-800 shrink-0">
+                <button
+                  data-testid="audio-mute-btn"
+                  onClick={() => {
+                    if (!audioRef.current) return
+                    audioRef.current.muted = !isMutedAudio
+                    setIsMutedAudio(!isMutedAudio)
+                  }}
+                  className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Toggle Mute"
+                >
+                  <span className="text-base">{isMutedAudio ? '🔇' : '🔊'}</span>
+                </button>
+
+                <div className="flex items-center gap-2 flex-1 md:w-32">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    data-testid="audio-volume-slider"
+                    value={isMutedAudio ? 0 : audioVolume}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value)
+                      setAudioVolume(val)
+                      if (audioRef.current) {
+                        audioRef.current.volume = val
+                        audioRef.current.muted = val === 0
+                        setIsMutedAudio(val === 0)
+                      }
+                    }}
+                    className="w-full accent-[#ff3b30] cursor-pointer min-h-[44px]"
+                  />
+                  <span className="text-xs font-mono font-bold text-neutral-400 w-9 text-right">
+                    {isMutedAudio ? '0%' : `${Math.round(audioVolume * 100)}%`}
+                  </span>
+                </div>
+              </div>
+
+              <audio
+                ref={audioRef}
+                src={venueTelemetry?.musicUrl || 'https://stream.skinnydipinn.sl:8000/live'}
+                preload="none"
+              />
+            </div>
+
+            {/* 🏆 Top Resident Dwell Champions Podium */}
+            <div data-testid="top-dwell-champions-podium" className="bg-neutral-950 text-white rounded-3xl p-6 border border-neutral-800 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🏆</span>
+                  <div>
+                    <h3 className="text-base font-black uppercase text-white tracking-tight">
+                      Top Resident Dwell Champions
+                    </h3>
+                    <p className="text-xs text-neutral-400">
+                      Most active Monthly Residents & VIP Supporters based on total verified sim dwell time.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleTabChange('analytics')}
+                  className="text-xs font-bold text-[#ff3b30] hover:underline uppercase shrink-0"
+                >
+                  Full Leaderboard →
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* 🥇 1st Place */}
+                {(() => {
+                  const sorted = [...resolvedVisitors].sort((a, b) => (b.totalLifetimeMinutes || b.dwellMinutes || 0) - (a.totalLifetimeMinutes || a.dwellMinutes || 0))
+                  const p1 = sorted[0] || { name: 'PJ Losey', dwellMinutes: 2550, avatarImageUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=PJ%20Losey', status: 'ONLINE' }
+                  const p2 = sorted[1] || { name: 'DJ Merf', dwellMinutes: 1840, avatarImageUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=DJ%20Merf', status: 'OFFLINE' }
+                  const p3 = sorted[2] || { name: 'Kristina', dwellMinutes: 1210, avatarImageUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=Kristina', status: 'OFFLINE' }
+
+                  return (
+                    <>
+                      {/* Gold 1st Place */}
+                      <div
+                        data-testid="podium-card-1st"
+                        onClick={() => setSelectedAvatarDetail(p1)}
+                        className="bg-gradient-to-b from-amber-500/20 to-neutral-900 border-2 border-amber-500/60 rounded-2xl p-4 text-center cursor-pointer hover:border-amber-400 transition-all flex flex-col items-center justify-between shadow-lg relative overflow-hidden"
+                      >
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-amber-500 text-black font-black text-[10px] uppercase rounded-full">
+                          🥇 1st Place
+                        </div>
+                        <div className="w-16 h-16 rounded-2xl bg-neutral-900 border-2 border-amber-400 overflow-hidden mb-3 shadow-md mt-2">
+                          <img src={p1.avatarImageUrl} alt={p1.name} className="w-full h-full object-cover" />
+                        </div>
+                        <h4 className="font-black text-sm text-white truncate max-w-full">{p1.name}</h4>
+                        <span className="text-xs font-mono text-amber-300 font-bold mt-1">
+                          ⏱️ {((p1.totalLifetimeMinutes || p1.dwellMinutes || 0) / 60).toFixed(1)} hrs logged
+                        </span>
+                      </div>
+
+                      {/* Silver 2nd Place */}
+                      <div
+                        data-testid="podium-card-2nd"
+                        onClick={() => setSelectedAvatarDetail(p2)}
+                        className="bg-gradient-to-b from-slate-400/20 to-neutral-900 border border-slate-400/50 rounded-2xl p-4 text-center cursor-pointer hover:border-slate-300 transition-all flex flex-col items-center justify-between shadow-lg relative overflow-hidden"
+                      >
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-slate-400 text-black font-black text-[10px] uppercase rounded-full">
+                          🥈 2nd Place
+                        </div>
+                        <div className="w-14 h-14 rounded-2xl bg-neutral-900 border-2 border-slate-300 overflow-hidden mb-3 shadow-md mt-2">
+                          <img src={p2.avatarImageUrl} alt={p2.name} className="w-full h-full object-cover" />
+                        </div>
+                        <h4 className="font-bold text-sm text-white truncate max-w-full">{p2.name}</h4>
+                        <span className="text-xs font-mono text-slate-300 font-bold mt-1">
+                          ⏱️ {((p2.totalLifetimeMinutes || p2.dwellMinutes || 0) / 60).toFixed(1)} hrs logged
+                        </span>
+                      </div>
+
+                      {/* Bronze 3rd Place */}
+                      <div
+                        data-testid="podium-card-3rd"
+                        onClick={() => setSelectedAvatarDetail(p3)}
+                        className="bg-gradient-to-b from-amber-800/20 to-neutral-900 border border-amber-800/50 rounded-2xl p-4 text-center cursor-pointer hover:border-amber-700 transition-all flex flex-col items-center justify-between shadow-lg relative overflow-hidden"
+                      >
+                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-amber-800 text-white font-black text-[10px] uppercase rounded-full">
+                          🥉 3rd Place
+                        </div>
+                        <div className="w-14 h-14 rounded-2xl bg-neutral-900 border-2 border-amber-700 overflow-hidden mb-3 shadow-md mt-2">
+                          <img src={p3.avatarImageUrl} alt={p3.name} className="w-full h-full object-cover" />
+                        </div>
+                        <h4 className="font-bold text-sm text-white truncate max-w-full">{p3.name}</h4>
+                        <span className="text-xs font-mono text-amber-500 font-bold mt-1">
+                          ⏱️ {((p3.totalLifetimeMinutes || p3.dwellMinutes || 0) / 60).toFixed(1)} hrs logged
+                        </span>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+
+            {/* 🗺️ Interactive 2D Sim Minimap Radar Grid */}
+            <div data-testid="2d-sim-minimap-radar-grid" className="bg-neutral-950 text-white rounded-3xl p-6 border border-neutral-800 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-[#ff3b30]" />
+                  <div>
+                    <h3 className="text-base font-black uppercase text-white tracking-tight">
+                      256m Sim Minimap Radar Grid
+                    </h3>
+                    <p className="text-xs text-neutral-400">
+                      Real-time 2D spatial coordinate plot of avatars & prim landmarks across <span className="text-white font-bold">{venueTelemetry?.regionName || 'Skinny Dip Islands'}</span>.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    data-testid="radar-zoom-out-btn"
+                    onClick={() => setRadarZoomLevel(prev => Math.max(0.8, prev - 0.2))}
+                    className="p-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 min-h-[44px] min-w-[44px] flex items-center justify-center font-bold"
+                  >
+                    -
+                  </button>
+                  <button
+                    data-testid="radar-zoom-in-btn"
+                    onClick={() => setRadarZoomLevel(prev => Math.min(2.0, prev + 0.2))}
+                    className="p-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 min-h-[44px] min-w-[44px] flex items-center justify-center font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* 256x256 Spatial Canvas */}
+              <div className="relative aspect-square max-w-md mx-auto w-full bg-neutral-900 rounded-2xl border-2 border-neutral-800 overflow-hidden p-4 shadow-inner" style={{ transform: `scale(${radarZoomLevel})`, transformOrigin: 'center center', transition: 'transform 0.2s ease-out' }}>
+                {/* 256m Grid Lines */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)] bg-[size:25%_25%]" />
+                
+                {/* Radar Grid Center Crosshair */}
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-[#ff3b30]/30" />
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-[#ff3b30]/30" />
+
+                {/* Avatar Dots */}
+                {resolvedVisitors.map((visitor, idx) => {
+                  const xPct = Math.min(95, Math.max(5, (visitor.posX !== undefined ? visitor.posX : 128) / 255 * 100))
+                  const yPct = Math.min(95, Math.max(5, (255 - (visitor.posY !== undefined ? visitor.posY : 128)) / 255 * 100))
+                  const isStaffMember = visitor.role === 'owner' || visitor.role === 'manager' || visitor.role === 'dj' || visitor.role === 'host'
+
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedAvatarDetail(visitor)}
+                      style={{ left: `${xPct}%`, top: `${yPct}%` }}
+                      className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10"
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 border-black flex items-center justify-center shadow-lg transition-transform group-hover:scale-150 ${
+                        isStaffMember ? 'bg-red-500 animate-pulse' : visitor.isRegistered ? 'bg-emerald-500' : 'bg-white'
+                      }`} />
+                      <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-neutral-900 text-white rounded-xl border border-neutral-700 text-[10px] font-mono whitespace-nowrap shadow-2xl z-50">
+                        <span className="font-bold block">{visitor.name}</span>
+                        <span className="text-neutral-400 block">Pos: ({visitor.posX || 128}, {visitor.posY || 128})</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
             {/* Sim Info Grid: Schedule & Guidelines */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Event Schedule & DJ Roster */}
@@ -3522,6 +3833,44 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                 >
                   {venueTelemetry?.isTestMode !== false ? 'Switch to LIVE Production' : 'Switch to TEST Mode (PJ Losey Only)'}
                 </button>
+              </div>
+            )}
+
+            {/* 💬 Live Sim Event Broadcast Shouter card */}
+            {isStaff && (
+              <div data-testid="live-sim-broadcast-shouter-card" className="p-5 bg-white rounded-2xl border border-neutral-200 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-neutral-200 pb-3">
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-[#1c1c1e] tracking-wider flex items-center gap-1.5">
+                      <Radio className="w-4 h-4 text-[#ff3b30]" /> 💬 Live Sim Event Broadcast Shouter
+                    </h4>
+                    <span className="text-[10px] text-neutral-500 font-medium">
+                      Dispatch live in-world region shouts and notifications directly to in-world avatars and prim beacons.
+                    </span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono text-[10px] font-bold uppercase border border-emerald-200">
+                    📡 LSL Shouter Active
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="w-full relative">
+                    <input
+                      type="text"
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      placeholder="Type broadcast message to shout across region..."
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold text-[#1c1c1e] focus:outline-none focus:border-[#ff3b30]"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleSendBroadcast(broadcastMessage)}
+                    disabled={isSendingBroadcast}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow transition-all shrink-0 flex items-center justify-center gap-1.5"
+                  >
+                    {isSendingBroadcast ? 'Sending...' : '📢 Send Broadcast Shout'}
+                  </button>
+                </div>
               </div>
             )}
 
