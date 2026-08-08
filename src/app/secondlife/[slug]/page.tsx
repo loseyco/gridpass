@@ -1966,9 +1966,11 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
           })
 
           displayList = [...displayList].sort((a, b) => {
-            // ALWAYS pin ONLINE avatars to the top
-            if (a.status === 'ONLINE' && b.status !== 'ONLINE') return -1
-            if (a.status !== 'ONLINE' && b.status === 'ONLINE') return 1
+            // Only pin ONLINE avatars to top when sort order is explicitly 'online_recent' and not in pure time leaderboard modes
+            if (analyticsSortOrder === 'online_recent' && analyticsSubTab !== 'top_total_time' && analyticsSubTab !== 'longest_single_session') {
+              if (a.status === 'ONLINE' && b.status !== 'ONLINE') return -1
+              if (a.status !== 'ONLINE' && b.status === 'ONLINE') return 1
+            }
 
             if (analyticsSortOrder === 'total_time' || analyticsSubTab === 'top_total_time') {
               return (b.totalLifetimeMinutes || b.dwellMinutes || 0) - (a.totalLifetimeMinutes || a.dwellMinutes || 0)
@@ -1992,6 +1994,8 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
             }
 
             // Default: 'online_recent' (Online avatars first, then by most recently seen)
+            if (a.status === 'ONLINE' && b.status !== 'ONLINE') return -1
+            if (a.status !== 'ONLINE' && b.status === 'ONLINE') return 1
             const tsA = new Date(a.lastSeen || a.offlineAt || a.onlineSince || 0).getTime()
             const tsB = new Date(b.lastSeen || b.offlineAt || b.onlineSince || 0).getTime()
             return tsB - tsA
@@ -2540,7 +2544,10 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       All Avatars ({displayList.length})
                     </button>
                     <button
-                      onClick={() => setAnalyticsSubTab('online_now')}
+                      onClick={() => {
+                        setAnalyticsSubTab('online_now');
+                        setAnalyticsSortOrder('online_recent');
+                      }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                         analyticsSubTab === 'online_now'
                           ? 'bg-emerald-600 text-white shadow-md'
@@ -2550,7 +2557,10 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       🟢 Online Now ({onlineCount})
                     </button>
                     <button
-                      onClick={() => setAnalyticsSubTab('top_total_time')}
+                      onClick={() => {
+                        setAnalyticsSubTab('top_total_time');
+                        setAnalyticsSortOrder('total_time');
+                      }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                         analyticsSubTab === 'top_total_time'
                           ? 'bg-amber-600 text-white shadow-md'
@@ -2560,7 +2570,10 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       🏆 All-Time Total Sim Time
                     </button>
                     <button
-                      onClick={() => setAnalyticsSubTab('longest_single_session')}
+                      onClick={() => {
+                        setAnalyticsSubTab('longest_single_session');
+                        setAnalyticsSortOrder('single_session');
+                      }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                         analyticsSubTab === 'longest_single_session'
                           ? 'bg-blue-600 text-white shadow-md'
@@ -2570,7 +2583,10 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       ⏱️ Longest Single Session
                     </button>
                     <button
-                      onClick={() => setAnalyticsSubTab('high_arc')}
+                      onClick={() => {
+                        setAnalyticsSubTab('high_arc');
+                        setAnalyticsSortOrder('arc');
+                      }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                         analyticsSubTab === 'high_arc'
                           ? 'bg-purple-700 text-white shadow-md'
