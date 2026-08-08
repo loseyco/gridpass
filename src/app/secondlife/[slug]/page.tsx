@@ -1822,12 +1822,22 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
               longestSessionMinutes = Math.max(longestSessionMinutes, maxMins)
             }
 
+            // Only evaluate active Date.now() duration if avatar is currently ONLINE!
             if (v.onlineSince) {
               const startMs = new Date(v.onlineSince).getTime()
               if (!isNaN(startMs)) {
-                const currentSessionMins = Math.max(1, Math.round((Date.now() - startMs) / (1000 * 60)))
-                longestSessionMinutes = Math.max(longestSessionMinutes, currentSessionMins)
-                totalLifetimeMinutes = Math.max(totalLifetimeMinutes, currentSessionMins)
+                const isOnline = v.status === 'ONLINE'
+                const endMs = isOnline ? Date.now() : new Date(v.offlineAt || v.lastSeen || v.onlineSince).getTime()
+                const currentSessionMins = Math.max(1, Math.round(Math.abs(endMs - startMs) / (1000 * 60)))
+                
+                // For online avatars, update active session metrics. For offline, cap session at last seen duration.
+                if (isOnline) {
+                  longestSessionMinutes = Math.max(longestSessionMinutes, currentSessionMins)
+                  totalLifetimeMinutes = Math.max(totalLifetimeMinutes, currentSessionMins)
+                } else if (currentSessionMins > 0 && currentSessionMins < 1440) {
+                  longestSessionMinutes = Math.max(longestSessionMinutes, currentSessionMins)
+                  totalLifetimeMinutes = Math.max(totalLifetimeMinutes, currentSessionMins)
+                }
               }
             }
 
