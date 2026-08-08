@@ -283,8 +283,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     const telemetryRef = doc(db, 'users', `venue_telemetry_${slug}`)
 
     const currentStaff = venueTelemetry?.staffMembers || [
-      { name: 'PJ Losey', slKey: '549d8555-43c5-46ed-8c65-33489c7ea2f0', role: 'owner', legacyName: 'losey.resident' },
-      { name: 'Merf', slKey: 'dd25fcaa-6081-4489-[#bd2925]589-31eebd6fbbbf', role: 'superadmin', legacyName: 'merf.resident' }
+      { name: 'PJ Losey', slKey: '549d8555-43c5-46ed-8c65-33489c7ea2f0', role: 'owner', legacyName: 'losey.resident' }
     ]
 
     const existingIndex = currentStaff.findIndex((s: any) =>
@@ -3488,10 +3487,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
 
                   <div className="space-y-3">
                     {(venueTelemetry?.staffMembers && venueTelemetry.staffMembers.length > 0 ? venueTelemetry.staffMembers : [
-                      { name: 'PJ Losey', slKey: '549d8555-43c5-46ed-8c65-33489c7ea2f0', role: 'owner', legacyName: 'losey.resident' },
-                      { name: 'Merf', slKey: 'dd25fcaa-6081-4489-b589-31eebd6fbbbf', role: 'superadmin', legacyName: 'merf.resident' }
+                      { name: 'PJ Losey', slKey: '549d8555-43c5-46ed-8c65-33489c7ea2f0', role: 'owner', legacyName: 'losey.resident' }
                     ]).map((staff: any, idx: number) => {
-                      const isOwner = staff.name.toLowerCase().includes('losey') || staff.name.toLowerCase().includes('merf')
+                      const isOwner = staff.name.toLowerCase().includes('losey')
                       return (
                         <div key={idx} className="p-4 bg-neutral-50 rounded-xl border border-neutral-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
