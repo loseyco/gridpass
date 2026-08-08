@@ -10,7 +10,7 @@ import {
   KeyRound, ShieldCheck, Sparkles, User, Coins, MapPin, 
   Radio, Download, Copy, CheckCircle2, Cpu, Music, Calendar, Clock, ArrowRight, UserCheck, Users,
   BarChart2, TrendingUp, Activity, Award, Zap, Compass, ExternalLink, Share2, Navigation, Check, Flame,
-  Camera, Image, Plus, X, Eye, Tag, Filter
+  Camera, Image, Plus, X, Eye, EyeOff, Tag, Filter, ChevronLeft, ChevronRight, Heart, Star, Pencil, Trash2
 } from 'lucide-react'
 
 interface GalleryPhoto {
@@ -22,6 +22,8 @@ interface GalleryPhoto {
   uploadedBy: string
   uploadedAt: string
   likes?: number
+  isPinned?: boolean
+  isHidden?: boolean
 }
 
 const DEFAULT_GALLERY_PHOTOS: GalleryPhoto[] = [
@@ -162,6 +164,143 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
   const [newPhotoCategory, setNewPhotoCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
   const [newPhotoCaption, setNewPhotoCaption] = useState<string>('')
   const [newPhotoUploader, setNewPhotoUploader] = useState<string>('')
+
+  // Gallery Edit Modal State
+  const [editingPhoto, setEditingPhoto] = useState<GalleryPhoto | null>(null)
+  const [editTitle, setEditTitle] = useState<string>('')
+  const [editCaption, setEditCaption] = useState<string>('')
+  const [editCategory, setEditCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
+
+  // Lightbox Carousel Helpers & Keyboard Event Handler
+  const currentFilteredGalleryList = galleryPhotos.filter(p => galleryCategoryFilter === 'All' || p.category === galleryCategoryFilter)
+  const currentLightboxIndex = lightboxPhoto ? currentFilteredGalleryList.findIndex(p => p.id === lightboxPhoto.id) : -1
+
+  const handlePrevPhoto = () => {
+    if (!lightboxPhoto || currentFilteredGalleryList.length === 0) return
+    const currentIdx = currentFilteredGalleryList.findIndex(p => p.id === lightboxPhoto.id)
+    const prevIdx = (currentIdx - 1 + currentFilteredGalleryList.length) % currentFilteredGalleryList.length
+    setLightboxPhoto(currentFilteredGalleryList[prevIdx])
+  }
+
+  const handleNextPhoto = () => {
+    if (!lightboxPhoto || currentFilteredGalleryList.length === 0) return
+    const currentIdx = currentFilteredGalleryList.findIndex(p => p.id === lightboxPhoto.id)
+    const nextIdx = (currentIdx + 1) % currentFilteredGalleryList.length
+    setLightboxPhoto(currentFilteredGalleryList[nextIdx])
+  }
+
+  useEffect(() => {
+    if (!lightboxPhoto) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevPhoto()
+      } else if (e.key === 'ArrowRight') {
+        handleNextPhoto()
+      } else if (e.key === 'Escape') {
+        setLightboxPhoto(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [lightboxPhoto, galleryPhotos, galleryCategoryFilter])
+
+  const handleUpvotePhoto = (photoId: string) => {
+    const targetPhoto = galleryPhotos.find(p => p.id === photoId)
+    if (!targetPhoto) return
+    const targetTitle = targetPhoto.title
+    const newLikes = (targetPhoto.likes || 0) + 1
+
+    setGalleryPhotos(prev => prev.map(p => p.id === photoId ? { ...p, likes: newLikes } : p))
+    if (lightboxPhoto && lightboxPhoto.id === photoId) {
+      setLightboxPhoto(prev => prev ? { ...prev, likes: newLikes } : null)
+    }
+    showToast({ icon: '❤️', title: '❤️ Photo Upvoted!', message: `You upvoted "${targetTitle}" (+1)` })
+  }
+
+  const handleTogglePinPhoto = (photoId: string) => {
+    const targetPhoto = galleryPhotos.find(p => p.id === photoId)
+    if (!targetPhoto) return
+    const newPinned = !targetPhoto.isPinned
+    const targetTitle = targetPhoto.title
+
+    setGalleryPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isPinned: newPinned } : p))
+    if (lightboxPhoto && lightboxPhoto.id === photoId) {
+      setLightboxPhoto(prev => prev ? { ...prev, isPinned: newPinned } : null)
+    }
+    showToast({
+      icon: newPinned ? '⭐' : '📌',
+      title: newPinned ? '⭐ Photo Pinned' : '📌 Photo Unpinned',
+      message: `"${targetTitle}" ${newPinned ? 'pinned to top' : 'unpinned'}`
+    })
+  }
+
+  const handleToggleHidePhoto = (photoId: string) => {
+    const targetPhoto = galleryPhotos.find(p => p.id === photoId)
+    if (!targetPhoto) return
+    const newHidden = !targetPhoto.isHidden
+    const targetTitle = targetPhoto.title
+
+    setGalleryPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isHidden: newHidden } : p))
+    if (lightboxPhoto && lightboxPhoto.id === photoId) {
+      setLightboxPhoto(prev => prev ? { ...prev, isHidden: newHidden } : null)
+    }
+    showToast({
+      icon: '👁️',
+      title: newHidden ? '👁️ Photo Hidden' : '👁️ Photo Unhidden',
+      message: `"${targetTitle}" is now ${newHidden ? 'hidden' : 'visible'}`
+    })
+  }
+
+  const handleDeletePhoto = (photoId: string) => {
+    const targetPhoto = galleryPhotos.find(p => p.id === photoId)
+    setGalleryPhotos(prev => prev.filter(p => p.id !== photoId))
+    if (lightboxPhoto && lightboxPhoto.id === photoId) {
+      setLightboxPhoto(null)
+    }
+    showToast({
+      icon: '🗑️',
+      title: '🗑️ Photo Deleted',
+      message: `Deleted "${targetPhoto?.title || 'Photo'}"`
+    })
+  }
+
+  const handleStartEditPhoto = (photo: GalleryPhoto) => {
+    setEditingPhoto(photo)
+    setEditTitle(photo.title)
+    setEditCaption(photo.caption)
+    setEditCategory(photo.category)
+  }
+
+  const handleSavePhotoEdit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingPhoto) return
+    const updatedTitle = editTitle.trim() || editingPhoto.title
+    const updatedCaption = editCaption.trim() || editingPhoto.caption
+    setGalleryPhotos(prev => prev.map(p => {
+      if (p.id === editingPhoto.id) {
+        return {
+          ...p,
+          title: updatedTitle,
+          caption: updatedCaption,
+          category: editCategory
+        }
+      }
+      return p
+    }))
+    if (lightboxPhoto && lightboxPhoto.id === editingPhoto.id) {
+      setLightboxPhoto(prev => prev ? {
+        ...prev,
+        title: updatedTitle,
+        caption: updatedCaption,
+        category: editCategory
+      } : null)
+    }
+    showToast({
+      title: '✏️ Photo Updated',
+      message: `Updated details for "${updatedTitle}"`
+    })
+    setEditingPhoto(null)
+  }
 
   const handleAddPhotoSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -4405,14 +4544,16 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   {galleryPhotos
                     .filter(p => galleryCategoryFilter === 'All' || p.category === galleryCategoryFilter)
+                    .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0))
                     .map((photo) => (
                       <div
                         key={photo.id}
-                        onClick={() => setLightboxPhoto(photo)}
-                        className="bg-neutral-950 rounded-2xl border border-neutral-800 overflow-hidden group hover:border-[#ff3b30]/60 transition-all shadow-lg flex flex-col cursor-pointer"
+                        className={`bg-neutral-950 rounded-2xl border overflow-hidden group transition-all shadow-lg flex flex-col relative ${
+                          photo.isPinned ? 'border-amber-500/80 shadow-amber-500/10' : photo.isHidden ? 'border-neutral-800 opacity-60' : 'border-neutral-800 hover:border-[#ff3b30]/60'
+                        }`}
                       >
-                        {/* Image Container with Category Badge */}
-                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
+                        {/* Image Container with Badges - Click to open Lightbox */}
+                        <div onClick={() => setLightboxPhoto(photo)} className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900 cursor-pointer">
                           <img
                             src={photo.url}
                             alt={photo.title}
@@ -4421,18 +4562,32 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
                             }}
                           />
-                          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-white/10 flex items-center gap-1">
-                            <Tag className="w-3 h-3 text-[#ff3b30]" /> {photo.category}
+                          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+                            <div className="bg-black/75 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-white/10 flex items-center gap-1">
+                              <Tag className="w-3 h-3 text-[#ff3b30]" /> {photo.category}
+                            </div>
+                            {photo.isPinned && (
+                              <div className="bg-amber-500/90 backdrop-blur-md text-black text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
+                                <Star className="w-3 h-3 fill-black text-black" /> Pinned
+                              </div>
+                            )}
+                            {photo.isHidden && (
+                              <div className="bg-neutral-800/90 backdrop-blur-md text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 border border-amber-500/30">
+                                <EyeOff className="w-3 h-3 text-amber-400" /> Hidden
+                              </div>
+                            )}
                           </div>
+
+                          {/* Hover Lightbox Overlay */}
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-black uppercase text-xs tracking-wider">
                             <Eye className="w-5 h-5 text-[#ff3b30]" /> Lightbox Preview
                           </div>
                         </div>
 
                         {/* Info Body */}
-                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                           <div>
-                            <h4 className="font-bold text-sm text-white group-hover:text-[#ff3b30] transition-colors line-clamp-1">
+                            <h4 onClick={() => setLightboxPhoto(photo)} className="font-bold text-sm text-white group-hover:text-[#ff3b30] transition-colors line-clamp-1 cursor-pointer">
                               {photo.title}
                             </h4>
                             <p className="text-xs text-neutral-400 mt-1 line-clamp-2">
@@ -4440,11 +4595,78 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                             </p>
                           </div>
 
-                          <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
-                            <span className="flex items-center gap-1">
-                              <User className="w-3.5 h-3.5 text-blue-400" /> {photo.uploadedBy}
-                            </span>
-                            <span>{formatRelativeTime(photo.uploadedAt)}</span>
+                          <div className="pt-3 border-t border-neutral-800 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {/* Interactive Heart Upvoting */}
+                              <button
+                                aria-label="Upvote Photo"
+                                data-testid={`upvote-btn-${photo.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpvotePhoto(photo.id)
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold transition-all min-h-[30px]"
+                              >
+                                <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500" />
+                                <span>{photo.likes || 0}</span>
+                              </button>
+
+                              <span className="flex items-center gap-1 text-[11px] text-neutral-400 font-mono">
+                                <User className="w-3.5 h-3.5 text-blue-400" /> {photo.uploadedBy}
+                              </span>
+                            </div>
+
+                            {/* Staff Admin Operations Toolbar */}
+                            <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800 z-10" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                title={photo.isPinned ? "Unpin Photo" : "Pin Photo"}
+                                aria-label="Pin Photo"
+                                data-testid={`pin-btn-${photo.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleTogglePinPhoto(photo.id)
+                                }}
+                                className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${photo.isPinned ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                              >
+                                <Star className={`w-3.5 h-3.5 ${photo.isPinned ? 'fill-amber-400 text-amber-400' : ''}`} />
+                              </button>
+                              <button
+                                title={photo.isHidden ? "Unhide Photo" : "Hide Photo"}
+                                aria-label={photo.isHidden ? "Unhide Photo" : "Hide Photo"}
+                                data-testid={`hide-btn-${photo.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleToggleHidePhoto(photo.id)
+                                }}
+                                className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${photo.isHidden ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                              >
+                                {photo.isHidden ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                title="Edit Photo"
+                                aria-label="Edit Photo"
+                                data-testid={`edit-btn-${photo.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleStartEditPhoto(photo)
+                                }}
+                                className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-blue-400 rounded-lg transition-colors min-h-[28px]"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                title="Delete Photo"
+                                aria-label="Delete Photo"
+                                data-testid={`delete-btn-${photo.id}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeletePhoto(photo.id)
+                                }}
+                                className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-red-400 rounded-lg transition-colors min-h-[28px]"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -4457,6 +4679,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
             {lightboxPhoto && (
               <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4" data-testid="lightbox-modal">
                 <div className="relative max-w-4xl w-full bg-neutral-900 rounded-3xl border border-neutral-800 overflow-hidden shadow-2xl space-y-4 p-4 sm:p-6 text-white animate-in fade-in zoom-in duration-200">
+                  {/* Modal Header */}
                   <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
                     <div className="flex items-center gap-3">
                       <span className="bg-[#ff3b30]/20 text-[#ff3b30] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-[#ff3b30]/30">
@@ -4465,17 +4688,34 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       <h3 className="text-lg font-black uppercase tracking-tight text-white">
                         {lightboxPhoto.title}
                       </h3>
+                      {/* Photo Counter */}
+                      <span data-testid="lightbox-counter" className="text-xs font-mono text-neutral-400 bg-neutral-800 px-2.5 py-1 rounded-full border border-neutral-700">
+                        Photo {currentLightboxIndex >= 0 ? currentLightboxIndex + 1 : 1} of {currentFilteredGalleryList.length}
+                      </span>
                     </div>
+
                     <button
                       onClick={() => setLightboxPhoto(null)}
                       className="w-9 h-9 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[36px]"
                       aria-label="Close Lightbox"
+                      data-testid="lightbox-close-btn"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
 
+                  {/* Image Container with Prev / Next Buttons */}
                   <div className="relative w-full max-h-[60vh] bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-neutral-800">
+                    {/* Previous Button */}
+                    <button
+                      aria-label="Previous Photo"
+                      data-testid="lightbox-prev-btn"
+                      onClick={handlePrevPhoto}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-[#ff3b30] text-white p-3 rounded-full backdrop-blur-md transition-all border border-white/10 z-20 flex items-center justify-center min-h-[44px] min-w-[44px] shadow-lg"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+
                     <img
                       src={lightboxPhoto.url}
                       alt={lightboxPhoto.title}
@@ -4484,17 +4724,165 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
                       }}
                     />
+
+                    {/* Next Button */}
+                    <button
+                      aria-label="Next Photo"
+                      data-testid="lightbox-next-btn"
+                      onClick={handleNextPhoto}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-[#ff3b30] text-white p-3 rounded-full backdrop-blur-md transition-all border border-white/10 z-20 flex items-center justify-center min-h-[44px] min-w-[44px] shadow-lg"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
                   </div>
 
-                  <div className="space-y-2 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                  {/* Caption & Actions */}
+                  <div className="space-y-3 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
                     <p className="text-xs sm:text-sm text-neutral-300 font-medium">
                       {lightboxPhoto.caption}
                     </p>
-                    <div className="flex items-center justify-between text-xs text-neutral-400 font-mono pt-2 border-t border-neutral-800">
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-400 font-mono pt-3 border-t border-neutral-800">
                       <span>Uploaded by: <strong className="text-white">{lightboxPhoto.uploadedBy}</strong></span>
-                      <span>{new Date(lightboxPhoto.uploadedAt).toLocaleDateString()}</span>
+
+                      <div className="flex items-center gap-3">
+                        {/* Interactive Upvote in Lightbox */}
+                        <button
+                          aria-label="Upvote Photo Lightbox"
+                          data-testid="lightbox-upvote-btn"
+                          onClick={() => handleUpvotePhoto(lightboxPhoto.id)}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all min-h-[34px]"
+                        >
+                          <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                          <span>{lightboxPhoto.likes || 0} Upvotes</span>
+                        </button>
+
+                        {/* Lightbox Admin Toolbar */}
+                        <div className="flex items-center gap-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+                          <button
+                            title={lightboxPhoto.isPinned ? "Unpin Photo" : "Pin Photo"}
+                            aria-label="Pin Photo"
+                            onClick={() => handleTogglePinPhoto(lightboxPhoto.id)}
+                            className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${lightboxPhoto.isPinned ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                          >
+                            <Star className={`w-3.5 h-3.5 ${lightboxPhoto.isPinned ? 'fill-amber-400 text-amber-400' : ''}`} />
+                          </button>
+                          <button
+                            title={lightboxPhoto.isHidden ? "Unhide Photo" : "Hide Photo"}
+                            aria-label={lightboxPhoto.isHidden ? "Unhide Photo" : "Hide Photo"}
+                            onClick={() => handleToggleHidePhoto(lightboxPhoto.id)}
+                            className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${lightboxPhoto.isHidden ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                          >
+                            {lightboxPhoto.isHidden ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                          <button
+                            title="Edit Photo"
+                            aria-label="Edit Photo"
+                            onClick={() => handleStartEditPhoto(lightboxPhoto)}
+                            className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-blue-400 rounded-lg transition-colors min-h-[28px]"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            title="Delete Photo"
+                            aria-label="Delete Photo"
+                            onClick={() => handleDeletePhoto(lightboxPhoto.id)}
+                            className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-red-400 rounded-lg transition-colors min-h-[28px]"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit Photo Modal */}
+            {editingPhoto && (
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" data-testid="edit-photo-modal">
+                <div className="bg-neutral-900 rounded-3xl max-w-lg w-full p-6 border border-neutral-800 shadow-2xl space-y-5 text-white animate-in fade-in zoom-in duration-200">
+                  <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-5 h-5 text-blue-400" />
+                      <h3 className="text-lg font-black uppercase tracking-tight text-white">
+                        Edit Photo Details
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setEditingPhoto(null)}
+                      className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[32px]"
+                      aria-label="Close Edit Photo Modal"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSavePhotoEdit} className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Photo Title *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        placeholder="Photo Title"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                        data-testid="edit-photo-title-input"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Category
+                      </label>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value as any)}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                        data-testid="edit-photo-category-select"
+                      >
+                        <option value="Beach & Pool">Beach & Pool</option>
+                        <option value="DJ & Parties">DJ & Parties</option>
+                        <option value="Resort Grounds">Resort Grounds</option>
+                        <option value="VIP Cabanas">VIP Cabanas</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Caption
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={editCaption}
+                        onChange={(e) => setEditCaption(e.target.value)}
+                        placeholder="Photo description / caption"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                        data-testid="edit-photo-caption-input"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPhoto(null)}
+                        className="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs uppercase rounded-xl transition-colors min-h-[40px]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        data-testid="save-edit-photo-btn"
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase rounded-xl transition-colors min-h-[40px] shadow-lg shadow-blue-500/20"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}

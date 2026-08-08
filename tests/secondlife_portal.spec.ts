@@ -5,6 +5,8 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       (window as any).__PLAYWRIGHT_MOCK__ = true;
+      localStorage.setItem('gp_rules_accepted_skinny-dip-inn_guest', new Date().toISOString());
+      localStorage.setItem('gp_rules_accepted_skinny-dip-inn_', new Date().toISOString());
     });
   });
 
@@ -77,17 +79,17 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await expect(page.getByRole('button', { name: /VIP Cabanas/i })).toBeVisible();
 
     // Verify photo grid items are visible
-    await expect(page.getByText('Sunset Beach Deck & Pool')).toBeVisible();
-    await expect(page.getByText('Friday Night Live DJ Set')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sunset Beach Deck & Pool' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Friday Night Live DJ Set' })).toBeVisible();
 
     // Category filtering test
-    await page.getByRole('button', { name: /DJ & Parties/i }).click();
-    await expect(page.getByText('Friday Night Live DJ Set')).toBeVisible();
-    await expect(page.getByText('Sunset Beach Deck & Pool')).not.toBeVisible();
+    await page.getByRole('button', { name: /^DJ & Parties/i }).click();
+    await expect(page.getByRole('heading', { name: 'Friday Night Live DJ Set' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sunset Beach Deck & Pool' })).not.toBeVisible();
 
     // Reset filter
-    await page.getByRole('button', { name: /All/i }).first().click();
-    await expect(page.getByText('Sunset Beach Deck & Pool')).toBeVisible();
+    await page.getByRole('button', { name: /^All\b/i }).click();
+    await expect(page.getByRole('heading', { name: 'Sunset Beach Deck & Pool' })).toBeVisible();
   });
 
   test('Skinny Dip Inn - Lightbox modal preview interaction', async ({ page }) => {
@@ -95,7 +97,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await page.waitForLoadState('networkidle');
 
     // Click on photo card
-    await page.getByText('Sunset Beach Deck & Pool').click();
+    await page.getByRole('heading', { name: 'Sunset Beach Deck & Pool' }).click();
 
     // Lightbox modal should open
     const modal = page.locator('[data-testid="lightbox-modal"]');
@@ -128,7 +130,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await expect(addModal).not.toBeVisible();
 
     // New photo visible in grid
-    await expect(page.getByText('E2E Sunset Paradise')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'E2E Sunset Paradise' })).toBeVisible();
   });
 
 });
