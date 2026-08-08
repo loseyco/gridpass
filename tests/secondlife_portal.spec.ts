@@ -13,7 +13,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await page.waitForLoadState('networkidle');
 
     // Title / Header verification
-    await expect(page.locator('h1, h2, h3')).toContainText(/Skinny Dip Inn/i);
+    await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
     // Tab active button check
     const applyTabBtn = page.getByRole('button', { name: /Apply \(DJ \/ Host\)/i });
@@ -27,7 +27,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=staff');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('h1, h2, h3')).toContainText(/Skinny Dip Inn/i);
+    await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
     const staffTabBtn = page.getByRole('button', { name: /Staff Roster/i });
     await expect(staffTabBtn).toBeVisible();
@@ -40,7 +40,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=schedule');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('h1, h2, h3')).toContainText(/Skinny Dip Inn/i);
+    await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
     const scheduleTabBtn = page.getByRole('button', { name: /Party Schedule/i });
     await expect(scheduleTabBtn).toBeVisible();
@@ -53,7 +53,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=applications');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('h1, h2, h3')).toContainText(/Skinny Dip Inn/i);
+    await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
     const appsBtn = page.getByRole('button', { name: /Applications/i });
     await expect(appsBtn).toBeVisible();

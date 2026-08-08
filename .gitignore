@@ -48,10 +48,17 @@ test-results/
 tests/screenshots/
 tests/.auth/
 
-# scratch and local debug scripts
-scratch/
-*.mjs
-focus-chrome.ps1
-list-windows.js
+# turbo cache
+.turbo/
+*.turbo/
+
+# deploy logs
+deploy_*.log
+deploy_*.txt
+deploy_error_log.txt
+
+# scratch & generated artifacts
+Gemini_*.jpg
+
 
 
