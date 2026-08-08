@@ -202,11 +202,12 @@ test.describe('Skinny Dip Inn - Resort Photo Gallery E2E Visual Tests', () => {
     await expect(page.getByText('Resort Photo Gallery')).toBeVisible();
 
     // Check category filter buttons
-    const filterButtons = page.locator('button:has-text("Beach & Pool"), button:has-text("DJ & Parties"), button:has-text("VIP Cabanas")');
+    const filterButtons = page.locator('[data-testid^="category-filter-btn-"]');
     const filterCount = await filterButtons.count();
     for (let i = 0; i < filterCount; i++) {
-      const box = await filterButtons.nth(i).boundingBox();
-      expect(box).not.toBeNull();
+      const btn = filterButtons.nth(i);
+      await expect(btn).toBeVisible();
+      const box = await btn.boundingBox();
       if (box) {
         expect(box.width).toBeGreaterThanOrEqual(44);
         expect(box.height).toBeGreaterThanOrEqual(44);
@@ -255,12 +256,152 @@ test.describe('Skinny Dip Inn - Resort Photo Gallery E2E Visual Tests', () => {
       expect(cancelBtnBox.height).toBeGreaterThanOrEqual(44);
     }
 
-    const uploadBtnBox = await addModal.locator('button:has-text("Upload Photo")').boundingBox();
+    const uploadBtnBox = await addModal.locator('button:has-text("Add Photo"), button[type="submit"]').boundingBox();
     expect(uploadBtnBox).not.toBeNull();
     if (uploadBtnBox) {
       expect(uploadBtnBox.width).toBeGreaterThanOrEqual(44);
       expect(uploadBtnBox.height).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  test('7. Staff Admin Album Management (Create, Edit, Delete albums & Dynamic Category Filter Pills updates)', async ({ page }) => {
+    await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=gallery');
+    await expect(page.getByText('Resort Photo Gallery')).toBeVisible();
+
+    // 1. Verify Manage Albums CTA button is visible & touch target >= 44px
+    const manageAlbumsBtn = page.locator('[data-testid="manage-albums-btn"]');
+    await expect(manageAlbumsBtn).toBeVisible();
+
+    // 2. Open Manage Albums Modal cleanly
+    await manageAlbumsBtn.click();
+    const albumsModal = page.locator('[data-testid="manage-albums-modal"]');
+    await expect(albumsModal).toBeVisible();
+
+    const manageBtnBox = await manageAlbumsBtn.boundingBox();
+    if (manageBtnBox) {
+      expect(manageBtnBox.width).toBeGreaterThanOrEqual(44);
+      expect(manageBtnBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    // Verify modal close button touch target >= 44px
+    const closeBtn = albumsModal.locator('[data-testid="close-albums-modal-btn"]');
+    await expect(closeBtn).toBeVisible();
+    const closeBox = await closeBtn.boundingBox();
+    expect(closeBox).not.toBeNull();
+    if (closeBox) {
+      expect(closeBox.width).toBeGreaterThanOrEqual(44);
+      expect(closeBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    // 3. Album Creation (➕ Create Album)
+    const createAlbumBtn = albumsModal.locator('[data-testid="create-album-btn"]');
+    await expect(createAlbumBtn).toBeVisible();
+    const createBtnBox = await createAlbumBtn.boundingBox();
+    expect(createBtnBox).not.toBeNull();
+    if (createBtnBox) {
+      expect(createBtnBox.width).toBeGreaterThanOrEqual(44);
+      expect(createBtnBox.height).toBeGreaterThanOrEqual(44);
+    }
+    await createAlbumBtn.click();
+
+    // Fill form and check inputs >= 44px
+    const nameInput = albumsModal.locator('[data-testid="album-name-input"]');
+    const descInput = albumsModal.locator('[data-testid="album-desc-input"]');
+    const saveAlbumBtn = albumsModal.locator('[data-testid="save-album-btn"]');
+
+    await expect(nameInput).toBeVisible();
+    const nameBox = await nameInput.boundingBox();
+    if (nameBox) {
+      expect(nameBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    await nameInput.fill('Poolside VIP Parties');
+    await descInput.fill('Exclusive nighttime poolside party snapshots');
+
+    const saveBox = await saveAlbumBtn.boundingBox();
+    if (saveBox) {
+      expect(saveBox.width).toBeGreaterThanOrEqual(44);
+      expect(saveBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    await saveAlbumBtn.click();
+
+    // Verify toast notice
+    await expect(page.getByText('📁 Album Created!')).toBeVisible();
+
+    // Close Manage Albums Modal
+    await closeBtn.click();
+    await expect(albumsModal).not.toBeVisible();
+
+    // Verify dynamic filter pill updated dynamically
+    const newFilterPill = page.locator('[data-testid="category-filter-btn-poolside-vip-parties"]');
+    await expect(newFilterPill).toBeVisible();
+    await expect(newFilterPill).toContainText('Poolside VIP Parties');
+
+    // Verify new filter pill touch target >= 44px
+    const newPillBox = await newFilterPill.boundingBox();
+    if (newPillBox) {
+      expect(newPillBox.width).toBeGreaterThanOrEqual(44);
+      expect(newPillBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    // Click dynamic filter pill
+    await newFilterPill.click();
+
+    // 4. Album Edit (✏️ Edit Album)
+    await manageAlbumsBtn.click();
+    await expect(albumsModal).toBeVisible();
+
+    const createdAlbumItem = albumsModal.locator('[data-testid^="album-item-"]').filter({ hasText: 'Poolside VIP Parties' });
+    await expect(createdAlbumItem).toBeVisible();
+
+    const editAlbumBtn = createdAlbumItem.locator('[data-testid^="edit-album-btn-"]');
+    await expect(editAlbumBtn).toBeVisible();
+    const editBox = await editAlbumBtn.boundingBox();
+    if (editBox) {
+      expect(editBox.width).toBeGreaterThanOrEqual(44);
+      expect(editBox.height).toBeGreaterThanOrEqual(44);
+    }
+    await editAlbumBtn.click();
+
+    await expect(nameInput).toBeVisible();
+    await nameInput.clear();
+    await nameInput.fill('VIP Ocean Sunsets');
+    await saveAlbumBtn.click();
+
+    await expect(page.getByText('✏️ Album Updated!')).toBeVisible();
+
+    // Close modal and verify updated category filter pill
+    await closeBtn.click();
+    await expect(albumsModal).not.toBeVisible();
+
+    const editedFilterPill = page.locator('[data-testid="category-filter-[#vip-ocean-sunsets]"], [data-testid="category-filter-btn-vip-ocean-sunsets"]');
+    await expect(editedFilterPill).toBeVisible();
+    await expect(editedFilterPill).toContainText('VIP Ocean Sunsets');
+
+    // 5. Album Delete (🗑️ Delete Album)
+    await manageAlbumsBtn.click();
+    await expect(albumsModal).toBeVisible();
+
+    const editedAlbumItem = albumsModal.locator('[data-testid^="album-item-"]').filter({ hasText: 'VIP Ocean Sunsets' });
+    await expect(editedAlbumItem).toBeVisible();
+
+    const deleteAlbumBtn = editedAlbumItem.locator('[data-testid^="delete-album-btn-"]');
+    await expect(deleteAlbumBtn).toBeVisible();
+    const deleteBox = await deleteAlbumBtn.boundingBox();
+    if (deleteBox) {
+      expect(deleteBox.width).toBeGreaterThanOrEqual(44);
+      expect(deleteBox.height).toBeGreaterThanOrEqual(44);
+    }
+    await deleteAlbumBtn.click();
+
+    await expect(page.getByText('🗑️ Album Deleted')).toBeVisible();
+
+    // Close modal and verify category filter pill was removed dynamically
+    await closeBtn.click();
+    await expect(albumsModal).not.toBeVisible();
+
+    await expect(editedFilterPill).not.toBeVisible();
   });
 
 });

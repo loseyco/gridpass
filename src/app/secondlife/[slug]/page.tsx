@@ -10,14 +10,14 @@ import {
   KeyRound, ShieldCheck, Sparkles, User, Coins, MapPin, 
   Radio, Download, Copy, CheckCircle2, Cpu, Music, Calendar, Clock, ArrowRight, UserCheck, Users,
   BarChart2, TrendingUp, Activity, Award, Zap, Compass, ExternalLink, Share2, Navigation, Check, Flame,
-  Camera, Image, Plus, X, Eye, EyeOff, Tag, Filter, ChevronLeft, ChevronRight, Heart, Star, Pencil, Trash2, Upload
+  Camera, Image, Plus, X, Eye, EyeOff, Tag, Filter, ChevronLeft, ChevronRight, Heart, Star, Pencil, Trash2, Upload, FolderPlus
 } from 'lucide-react'
 
 interface GalleryPhoto {
   id: string
   url: string
   title: string
-  category: 'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'
+  category: string
   caption: string
   uploadedBy: string
   uploadedAt: string
@@ -25,6 +25,19 @@ interface GalleryPhoto {
   isPinned?: boolean
   isHidden?: boolean
 }
+
+interface GalleryAlbum {
+  id: string
+  name: string
+  description?: string
+}
+
+const DEFAULT_ALBUMS: GalleryAlbum[] = [
+  { id: 'album-1', name: 'Beach & Pool', description: 'Infinity pool and ocean lounge photos' },
+  { id: 'album-2', name: 'DJ & Parties', description: 'Main stage and nightlife events' },
+  { id: 'album-3', name: 'Resort Grounds', description: 'Lush tropical greenery and pathways' },
+  { id: 'album-4', name: 'VIP Cabanas', description: 'Private oceanfront lounge seating' },
+]
 
 const DEFAULT_GALLERY_PHOTOS: GalleryPhoto[] = [
   {
@@ -154,14 +167,21 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications', 'gallery'].includes(tabParam) ? tabParam : 'home'
   )
 
-  // Gallery State
+  // Gallery & Album State
+  const [albums, setAlbums] = useState<GalleryAlbum[]>(DEFAULT_ALBUMS)
+  const [showManageAlbumsModal, setShowManageAlbumsModal] = useState<boolean>(false)
+  const [showCreateAlbumForm, setShowCreateAlbumForm] = useState<boolean>(false)
+  const [editingAlbumId, setEditingAlbumId] = useState<string | null>(null)
+  const [albumNameInput, setAlbumNameInput] = useState<string>('')
+  const [albumDescInput, setAlbumDescInput] = useState<string>('')
+
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>(DEFAULT_GALLERY_PHOTOS)
-  const [galleryCategoryFilter, setGalleryCategoryFilter] = useState<'All' | 'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('All')
+  const [galleryCategoryFilter, setGalleryCategoryFilter] = useState<string>('All')
   const [lightboxPhoto, setLightboxPhoto] = useState<GalleryPhoto | null>(null)
   const [showAddPhotoModal, setShowAddPhotoModal] = useState<boolean>(false)
   const [newPhotoUrl, setNewPhotoUrl] = useState<string>('')
   const [newPhotoTitle, setNewPhotoTitle] = useState<string>('')
-  const [newPhotoCategory, setNewPhotoCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
+  const [newPhotoCategory, setNewPhotoCategory] = useState<string>('Beach & Pool')
   const [newPhotoCaption, setNewPhotoCaption] = useState<string>('')
   const [newPhotoUploader, setNewPhotoUploader] = useState<string>('')
   const [addPhotoDragging, setAddPhotoDragging] = useState<boolean>(false)
@@ -172,11 +192,62 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
   const [editingPhoto, setEditingPhoto] = useState<GalleryPhoto | null>(null)
   const [editTitle, setEditTitle] = useState<string>('')
   const [editCaption, setEditCaption] = useState<string>('')
-  const [editCategory, setEditCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
+  const [editCategory, setEditCategory] = useState<string>('Beach & Pool')
   const [editPhotoUrl, setEditPhotoUrl] = useState<string>('')
   const [editPhotoDragging, setEditPhotoDragging] = useState<boolean>(false)
   const [editPhotoFileName, setEditPhotoFileName] = useState<string>('')
   const editPhotoFileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleCreateAlbum = (name: string, description: string) => {
+    const trimmedName = name.trim()
+    if (!trimmedName) return
+    const newAlbum: GalleryAlbum = {
+      id: `album-${Date.now()}`,
+      name: trimmedName,
+      description: description.trim()
+    }
+    setAlbums(prev => [...prev, newAlbum])
+    showToast({
+      icon: '📁',
+      title: '📁 Album Created!',
+      message: `Album "${trimmedName}" created successfully.`
+    })
+  }
+
+  const handleUpdateAlbum = (id: string, newName: string, newDesc: string) => {
+    const trimmedName = newName.trim()
+    if (!trimmedName) return
+    const targetAlbum = albums.find(a => a.id === id)
+    if (!targetAlbum) return
+    const oldName = targetAlbum.name
+
+    setAlbums(prev => prev.map(a => a.id === id ? { ...a, name: trimmedName, description: newDesc.trim() } : a))
+    setGalleryPhotos(prev => prev.map(p => p.category === oldName ? { ...p, category: trimmedName } : p))
+
+    if (galleryCategoryFilter === oldName) {
+      setGalleryCategoryFilter(trimmedName)
+    }
+
+    showToast({
+      icon: '✏️',
+      title: '✏️ Album Updated!',
+      message: `Album updated to "${trimmedName}".`
+    })
+  }
+
+  const handleDeleteAlbum = (id: string) => {
+    const targetAlbum = albums.find(a => a.id === id)
+    if (!targetAlbum) return
+    setAlbums(prev => prev.filter(a => a.id !== id))
+    if (galleryCategoryFilter === targetAlbum.name) {
+      setGalleryCategoryFilter('All')
+    }
+    showToast({
+      icon: '🗑️',
+      title: '🗑️ Album Deleted',
+      message: `Deleted album "${targetAlbum.name}".`
+    })
+  }
 
   const handleFileSelected = (file: File, isEdit: boolean = false) => {
     if (!file) return
@@ -4523,13 +4594,22 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                   </p>
                 </div>
 
-                <button
-                  data-testid="add-photo-btn"
-                  onClick={() => setShowAddPhotoModal(true)}
-                  className="px-5 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all flex items-center justify-center gap-2 shrink-0 min-h-[44px] min-w-[44px]"
-                >
-                  <Plus className="w-4 h-4" /> Add Photo
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    data-testid="manage-albums-btn"
+                    onClick={() => setShowManageAlbumsModal(true)}
+                    className="px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-black text-xs uppercase tracking-wider rounded-xl border border-neutral-700 transition-all flex items-center justify-center gap-2 min-h-[44px] min-w-[44px]"
+                  >
+                    <FolderPlus className="w-4 h-4 text-purple-400" /> Manage Albums
+                  </button>
+                  <button
+                    data-testid="add-photo-btn"
+                    onClick={() => setShowAddPhotoModal(true)}
+                    className="px-5 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all flex items-center justify-center gap-2 min-h-[44px] min-w-[44px]"
+                  >
+                    <Plus className="w-4 h-4" /> Add Photo
+                  </button>
+                </div>
               </div>
 
               {/* Category Pills Bar */}
@@ -4538,13 +4618,14 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                   <Filter className="w-3.5 h-3.5 text-[#ff3b30]" /> Filter Category:
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {(['All', 'Beach & Pool', 'DJ & Parties', 'Resort Grounds', 'VIP Cabanas'] as const).map((cat) => {
+                  {['All', ...albums.map(a => a.name)].map((cat) => {
                     const isActive = galleryCategoryFilter === cat
                     const count = cat === 'All' ? galleryPhotos.length : galleryPhotos.filter(p => p.category === cat).length
+                    const testId = `category-filter-btn-${cat.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
                     return (
                       <button
                         key={cat}
-                        data-testid={`category-filter-btn-${cat.replace(/[\s&]+/g, '-').toLowerCase()}`}
+                        data-testid={testId}
                         onClick={() => setGalleryCategoryFilter(cat)}
                         className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 min-h-[44px] min-w-[44px] ${
                           isActive
@@ -4939,7 +5020,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         <option value="Beach & Pool">Beach & Pool</option>
                         <option value="DJ & Parties">DJ & Parties</option>
                         <option value="Resort Grounds">Resort Grounds</option>
-                        <option value="VIP Cabanas">VIP Cabanas</option>
+                        {albums.map((album) => (
+                          <option key={album.id} value={album.name}>{album.name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -4974,6 +5057,185 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {/* Staff Admin Manage Albums Modal */}
+            {showManageAlbumsModal && (
+              <div
+                data-testid="manage-albums-modal"
+                className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+              >
+                <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6 my-auto relative text-white animate-in fade-in zoom-in duration-200">
+                  <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+                    <div className="flex items-center gap-2">
+                      <FolderPlus className="w-6 h-6 text-purple-400" />
+                      <h3 className="text-xl font-black uppercase text-white tracking-tight">
+                        Manage Photo Albums
+                      </h3>
+                    </div>
+                    <button
+                      data-testid="close-albums-modal-btn"
+                      onClick={() => {
+                        setShowManageAlbumsModal(false)
+                        setEditingAlbumId(null)
+                        setShowCreateAlbumForm(false)
+                        setAlbumNameInput('')
+                        setAlbumDescInput('')
+                      }}
+                      className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="Close Manage Albums Modal"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Action Header: Create Album CTA */}
+                  {!showCreateAlbumForm && !editingAlbumId && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Album Categories</h4>
+                        <p className="text-xs text-neutral-400">Organize resort gallery photos into custom albums.</p>
+                      </div>
+                      <button
+                        data-testid="create-album-btn"
+                        onClick={() => {
+                          setShowCreateAlbumForm(true)
+                          setEditingAlbumId(null)
+                          setAlbumNameInput('')
+                          setAlbumDescInput('')
+                        }}
+                        className="px-5 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] shrink-0"
+                      >
+                        <Plus className="w-4 h-4" /> Create Album
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Create / Edit Album Form */}
+                  {(showCreateAlbumForm || editingAlbumId) && (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        if (!albumNameInput.trim()) return
+                        if (editingAlbumId) {
+                          handleUpdateAlbum(editingAlbumId, albumNameInput, albumDescInput)
+                        } else {
+                          handleCreateAlbum(albumNameInput, albumDescInput)
+                        }
+                        setShowCreateAlbumForm(false)
+                        setEditingAlbumId(null)
+                        setAlbumNameInput('')
+                        setAlbumDescInput('')
+                      }}
+                      className="bg-neutral-950 p-5 rounded-2xl border border-purple-500/40 space-y-4"
+                    >
+                      <h4 className="text-sm font-black uppercase text-purple-400">
+                        {editingAlbumId ? '✏️ Edit Album' : '➕ Create New Album'}
+                      </h4>
+                      <div>
+                        <label className="block text-xs font-bold uppercase text-neutral-400 mb-1">
+                          Album Name *
+                        </label>
+                        <input
+                          type="text"
+                          data-testid="album-name-input"
+                          value={albumNameInput}
+                          onChange={(e) => setAlbumNameInput(e.target.value)}
+                          placeholder="e.g. Poolside VIP Parties"
+                          required
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 min-h-[44px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold uppercase text-neutral-400 mb-1">
+                          Description (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          data-testid="album-desc-input"
+                          value={albumDescInput}
+                          onChange={(e) => setAlbumDescInput(e.target.value)}
+                          placeholder="Brief summary of album contents..."
+                          className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 min-h-[44px]"
+                        />
+                      </div>
+                      <div className="flex items-center justify-end gap-2 pt-2">
+                        <button
+                          type="button"
+                          data-testid="cancel-album-btn"
+                          onClick={() => {
+                            setShowCreateAlbumForm(false)
+                            setEditingAlbumId(null)
+                            setAlbumNameInput('')
+                            setAlbumDescInput('')
+                          }}
+                          className="px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs uppercase rounded-xl transition-colors min-h-[44px] min-w-[44px]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          data-testid="save-album-btn"
+                          className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all min-h-[44px] min-w-[44px]"
+                        >
+                          {editingAlbumId ? 'Save Changes' : 'Create Album'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Album List */}
+                  <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                    {albums.map((album) => {
+                      const photoCount = galleryPhotos.filter(p => p.category === album.name).length
+                      return (
+                        <div
+                          key={album.id}
+                          data-testid={`album-item-${album.id}`}
+                          className="flex items-center justify-between bg-neutral-950 p-4 rounded-2xl border border-neutral-800 hover:border-neutral-700 transition-all gap-4"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-white">{album.name}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-neutral-800 text-[10px] font-mono text-neutral-400">
+                                {photoCount} {photoCount === 1 ? 'photo' : 'photos'}
+                              </span>
+                            </div>
+                            {album.description && (
+                              <p className="text-xs text-neutral-400 mt-0.5">{album.description}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              title="Edit Album"
+                              aria-label="Edit Album"
+                              data-testid={`edit-album-btn-${album.id}`}
+                              onClick={() => {
+                                setEditingAlbumId(album.id)
+                                setAlbumNameInput(album.name)
+                                setAlbumDescInput(album.description || '')
+                                setShowCreateAlbumForm(false)
+                              }}
+                              className="p-3 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-blue-400 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center border border-neutral-800"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              title="Delete Album"
+                              aria-label="Delete Album"
+                              data-testid={`delete-album-btn-${album.id}`}
+                              onClick={() => handleDeleteAlbum(album.id)}
+                              className="p-3 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-red-400 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center border border-neutral-800"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -5076,13 +5338,12 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         </label>
                         <select
                           value={newPhotoCategory}
-                          onChange={(e) => setNewPhotoCategory(e.target.value as any)}
+                          onChange={(e) => setNewPhotoCategory(e.target.value)}
                           className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                         >
-                          <option value="Beach & Pool">Beach & Pool</option>
-                          <option value="DJ & Parties">DJ & Parties</option>
-                          <option value="Resort Grounds">Resort Grounds</option>
-                          <option value="VIP Cabanas">VIP Cabanas</option>
+                          {albums.map((album) => (
+                            <option key={album.id} value={album.name}>{album.name}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
