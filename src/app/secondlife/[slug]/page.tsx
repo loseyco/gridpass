@@ -9,8 +9,84 @@ import { useToast } from '@/components/ToastContext'
 import { 
   KeyRound, ShieldCheck, Sparkles, User, Coins, MapPin, 
   Radio, Download, Copy, CheckCircle2, Cpu, Music, Calendar, Clock, ArrowRight, UserCheck, Users,
-  BarChart2, TrendingUp, Activity, Award, Zap, Compass, ExternalLink, Share2, Navigation, Check, Flame
+  BarChart2, TrendingUp, Activity, Award, Zap, Compass, ExternalLink, Share2, Navigation, Check, Flame,
+  Camera, Image, Plus, X, Eye, Tag, Filter
 } from 'lucide-react'
+
+interface GalleryPhoto {
+  id: string
+  url: string
+  title: string
+  category: 'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'
+  caption: string
+  uploadedBy: string
+  uploadedAt: string
+  likes?: number
+}
+
+const DEFAULT_GALLERY_PHOTOS: GalleryPhoto[] = [
+  {
+    id: 'photo-1',
+    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    title: 'Sunset Beach Deck & Pool',
+    category: 'Beach & Pool',
+    caption: 'Golden hour at the main resort infinity pool and ocean lounge.',
+    uploadedBy: 'PJ Losey',
+    uploadedAt: '2026-08-01T18:00:00Z',
+    likes: 42
+  },
+  {
+    id: 'photo-2',
+    url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+    title: 'Friday Night Live DJ Set',
+    category: 'DJ & Parties',
+    caption: 'Packed dance floor at Skinny Dip Main Stage with Resident DJ.',
+    uploadedBy: 'Kiki Star',
+    uploadedAt: '2026-08-03T22:30:00Z',
+    likes: 68
+  },
+  {
+    id: 'photo-3',
+    url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80',
+    title: 'VIP Oceanfront Cabana',
+    category: 'VIP Cabanas',
+    caption: 'Private lounge seating with full resort amenities and tropical drinks.',
+    uploadedBy: 'Losey Resident',
+    uploadedAt: '2026-08-04T15:20:00Z',
+    likes: 31
+  },
+  {
+    id: 'photo-4',
+    url: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1200&q=80',
+    title: 'Tropical Palms Walkway',
+    category: 'Resort Grounds',
+    caption: 'Lush greenery path connecting the welcome prim landing to beach bar.',
+    uploadedBy: 'Alex Waves',
+    uploadedAt: '2026-08-05T11:10:00Z',
+    likes: 24
+  },
+  {
+    id: 'photo-5',
+    url: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1200&q=80',
+    title: 'Midnight Foam Party',
+    category: 'DJ & Parties',
+    caption: 'Electric nightlife foam bath celebration under neon resort lights.',
+    uploadedBy: 'DJ Pulse',
+    uploadedAt: '2026-08-06T02:45:00Z',
+    likes: 89
+  },
+  {
+    id: 'photo-6',
+    url: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1200&q=80',
+    title: 'Sunrise Water Lounge',
+    category: 'Beach & Pool',
+    caption: 'Quiet morning view of the sim water loungers before the afternoon crowd.',
+    uploadedBy: 'Sari Island',
+    uploadedAt: '2026-08-07T07:15:00Z',
+    likes: 19
+  }
+]
+
 
 function formatRelativeTime(isoTimestamp?: string): string {
   if (!isoTimestamp) return 'Recently'
@@ -67,14 +143,53 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
   const displayName = searchParams.get('displayName') || legacyName || ''
   const region = searchParams.get('region') || ''
   const parcel = searchParams.get('parcel') || ''
-  const tabParam = searchParams.get('tab') as 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications' | null
+  const tabParam = searchParams.get('tab') as 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications' | 'gallery' | null
   const venueTitle = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
   const [session, setSession] = useState<SLAvatarSession | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const [activeTab, setActiveTab] = useState<'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications'>(
-    tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications'].includes(tabParam) ? tabParam : 'home'
+  const [activeTab, setActiveTab] = useState<'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications' | 'gallery'>(
+    tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications', 'gallery'].includes(tabParam) ? tabParam : 'home'
   )
+
+  // Gallery State
+  const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>(DEFAULT_GALLERY_PHOTOS)
+  const [galleryCategoryFilter, setGalleryCategoryFilter] = useState<'All' | 'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('All')
+  const [lightboxPhoto, setLightboxPhoto] = useState<GalleryPhoto | null>(null)
+  const [showAddPhotoModal, setShowAddPhotoModal] = useState<boolean>(false)
+  const [newPhotoUrl, setNewPhotoUrl] = useState<string>('')
+  const [newPhotoTitle, setNewPhotoTitle] = useState<string>('')
+  const [newPhotoCategory, setNewPhotoCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
+  const [newPhotoCaption, setNewPhotoCaption] = useState<string>('')
+  const [newPhotoUploader, setNewPhotoUploader] = useState<string>('')
+
+  const handleAddPhotoSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newPhotoTitle.trim()) {
+      showToast({ title: '⚠️ Title Required', message: 'Please provide a title for the photo.' })
+      return
+    }
+    const photoToAdd: GalleryPhoto = {
+      id: `photo-${Date.now()}`,
+      url: newPhotoUrl.trim() || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      title: newPhotoTitle.trim(),
+      category: newPhotoCategory,
+      caption: newPhotoCaption.trim() || 'Resort photo upload',
+      uploadedBy: newPhotoUploader.trim() || displayName || legacyName || 'Resident Guest',
+      uploadedAt: new Date().toISOString(),
+      likes: 0
+    }
+    setGalleryPhotos(prev => [photoToAdd, ...prev])
+    setShowAddPhotoModal(false)
+    setNewPhotoUrl('')
+    setNewPhotoTitle('')
+    setNewPhotoCaption('')
+    setNewPhotoUploader('')
+    showToast({
+      title: '📸 Photo Added!',
+      message: `"${photoToAdd.title}" uploaded to Resort Photo Gallery!`
+    })
+  }
 
   // SDI Job Application Form State
   const [applyPosition, setApplyPosition] = useState<'dj' | 'host'>('dj')
@@ -499,14 +614,14 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
 
   // Sync tab state when URL tabParam changes
   useEffect(() => {
-    if (tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications'].includes(tabParam)) {
+    if (tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications', 'gallery'].includes(tabParam)) {
       setActiveTab(tabParam)
     }
   }, [tabParam])
 
   const tabContentRef = useRef<HTMLDivElement>(null)
 
-  const handleTabChange = (newTab: 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications') => {
+  const handleTabChange = (newTab: 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications' | 'gallery') => {
     setActiveTab(newTab)
     const current = new URLSearchParams(Array.from(searchParams.entries()))
     current.set('tab', newTab)
@@ -532,6 +647,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
       telemetry: `LSL Prim Telemetry & Sim Health | ${venueTitle} | Gridpass`,
       staff: `Venue Staff & Role Manager | ${venueTitle} | Gridpass`,
       logs: `Sim Event Logs | ${venueTitle} | Gridpass`,
+      gallery: `Resort Photo Gallery | ${venueTitle} | Gridpass`,
     }
     if (titleMap[activeTab]) {
       document.title = titleMap[activeTab]
@@ -1254,6 +1370,17 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
               }`}
             >
               <Calendar className="w-4 h-4 text-rose-400" /> Party Schedule
+            </button>
+
+            <button
+              onClick={() => handleTabChange('gallery')}
+              className={`px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'gallery'
+                  ? 'bg-[#ff3b30] text-white shadow-lg shadow-[#ff3b30]/30 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-900 font-bold'
+              }`}
+            >
+              <Camera className="w-4 h-4 text-purple-400" /> Photo Gallery
             </button>
 
             <button
@@ -4207,6 +4334,279 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                 </div>
               )}
             </div>
+        {/* Tab Content: Resort Photo Gallery */}
+        {activeTab === 'gallery' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-neutral-900 text-white rounded-3xl border border-neutral-800 space-y-6 shadow-2xl">
+              {/* Header & Add Photo CTA */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-800 pb-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Camera className="w-6 h-6 text-[#ff3b30]" />
+                    <h3 className="text-xl font-black uppercase tracking-tight text-white">
+                      Resort Photo Gallery
+                    </h3>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Community snapshots, party highlights & guest photos from <span className="text-white font-bold">{venueTitle}</span>.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowAddPhotoModal(true)}
+                  className="px-5 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all flex items-center gap-2 shrink-0 min-h-[44px]"
+                >
+                  <Plus className="w-4 h-4" /> Add Photo
+                </button>
+              </div>
+
+              {/* Category Pills Bar */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-[#ff3b30]" /> Filter Category:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {(['All', 'Beach & Pool', 'DJ & Parties', 'Resort Grounds', 'VIP Cabanas'] as const).map((cat) => {
+                    const isActive = galleryCategoryFilter === cat
+                    const count = cat === 'All' ? galleryPhotos.length : galleryPhotos.filter(p => p.category === cat).length
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setGalleryCategoryFilter(cat)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 min-h-[40px] ${
+                          isActive
+                            ? 'bg-[#ff3b30] text-white shadow-md shadow-[#ff3b30]/30 scale-[1.02]'
+                            : 'bg-neutral-950 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800'
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-neutral-800 text-neutral-400'
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Photo Grid */}
+              {galleryPhotos.filter(p => galleryCategoryFilter === 'All' || p.category === galleryCategoryFilter).length === 0 ? (
+                <div className="p-12 text-center bg-neutral-950 rounded-2xl border border-neutral-800">
+                  <Camera className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
+                  <p className="text-sm font-black uppercase text-neutral-300">No Photos Found</p>
+                  <p className="text-xs text-neutral-500 mt-1">No photos match the selected category '{galleryCategoryFilter}'.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {galleryPhotos
+                    .filter(p => galleryCategoryFilter === 'All' || p.category === galleryCategoryFilter)
+                    .map((photo) => (
+                      <div
+                        key={photo.id}
+                        onClick={() => setLightboxPhoto(photo)}
+                        className="bg-neutral-950 rounded-2xl border border-neutral-800 overflow-hidden group hover:border-[#ff3b30]/60 transition-all shadow-lg flex flex-col cursor-pointer"
+                      >
+                        {/* Image Container with Category Badge */}
+                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
+                          <img
+                            src={photo.url}
+                            alt={photo.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
+                            }}
+                          />
+                          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-white/10 flex items-center gap-1">
+                            <Tag className="w-3 h-3 text-[#ff3b30]" /> {photo.category}
+                          </div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-black uppercase text-xs tracking-wider">
+                            <Eye className="w-5 h-5 text-[#ff3b30]" /> Lightbox Preview
+                          </div>
+                        </div>
+
+                        {/* Info Body */}
+                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                          <div>
+                            <h4 className="font-bold text-sm text-white group-hover:text-[#ff3b30] transition-colors line-clamp-1">
+                              {photo.title}
+                            </h4>
+                            <p className="text-xs text-neutral-400 mt-1 line-clamp-2">
+                              {photo.caption}
+                            </p>
+                          </div>
+
+                          <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400 font-mono">
+                            <span className="flex items-center gap-1">
+                              <User className="w-3.5 h-3.5 text-blue-400" /> {photo.uploadedBy}
+                            </span>
+                            <span>{formatRelativeTime(photo.uploadedAt)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Lightbox Modal Preview */}
+            {lightboxPhoto && (
+              <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4" data-testid="lightbox-modal">
+                <div className="relative max-w-4xl w-full bg-neutral-900 rounded-3xl border border-neutral-800 overflow-hidden shadow-2xl space-y-4 p-4 sm:p-6 text-white animate-in fade-in zoom-in duration-200">
+                  <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="bg-[#ff3b30]/20 text-[#ff3b30] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-[#ff3b30]/30">
+                        {lightboxPhoto.category}
+                      </span>
+                      <h3 className="text-lg font-black uppercase tracking-tight text-white">
+                        {lightboxPhoto.title}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setLightboxPhoto(null)}
+                      className="w-9 h-9 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[36px]"
+                      aria-label="Close Lightbox"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="relative w-full max-h-[60vh] bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-neutral-800">
+                    <img
+                      src={lightboxPhoto.url}
+                      alt={lightboxPhoto.title}
+                      className="max-h-[60vh] w-auto object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                    <p className="text-xs sm:text-sm text-neutral-300 font-medium">
+                      {lightboxPhoto.caption}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-neutral-400 font-mono pt-2 border-t border-neutral-800">
+                      <span>Uploaded by: <strong className="text-white">{lightboxPhoto.uploadedBy}</strong></span>
+                      <span>{new Date(lightboxPhoto.uploadedAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Add Photo Modal */}
+            {showAddPhotoModal && (
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" data-testid="add-photo-modal">
+                <div className="bg-neutral-900 rounded-3xl max-w-lg w-full p-6 border border-neutral-800 shadow-2xl space-y-5 text-white animate-in fade-in zoom-in duration-200">
+                  <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Camera className="w-5 h-5 text-[#ff3b30]" />
+                      <h3 className="text-lg font-black uppercase tracking-tight text-white">
+                        Add Resort Photo
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setShowAddPhotoModal(false)}
+                      className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[32px]"
+                      aria-label="Close Add Photo Modal"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleAddPhotoSubmit} className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Photo Image URL
+                      </label>
+                      <input
+                        type="url"
+                        value={newPhotoUrl}
+                        onChange={(e) => setNewPhotoUrl(e.target.value)}
+                        placeholder="https://images.unsplash.com/..."
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                          Photo Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newPhotoTitle}
+                          onChange={(e) => setNewPhotoTitle(e.target.value)}
+                          placeholder="e.g. VIP Sunset Party"
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                          Category
+                        </label>
+                        <select
+                          value={newPhotoCategory}
+                          onChange={(e) => setNewPhotoCategory(e.target.value as any)}
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                        >
+                          <option value="Beach & Pool">Beach & Pool</option>
+                          <option value="DJ & Parties">DJ & Parties</option>
+                          <option value="Resort Grounds">Resort Grounds</option>
+                          <option value="VIP Cabanas">VIP Cabanas</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Caption / Description
+                      </label>
+                      <textarea
+                        value={newPhotoCaption}
+                        onChange={(e) => setNewPhotoCaption(e.target.value)}
+                        rows={2}
+                        placeholder="Describe the photo snapshot..."
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Uploader Avatar Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newPhotoUploader}
+                        onChange={(e) => setNewPhotoUploader(e.target.value)}
+                        placeholder={displayName || legacyName || 'PJ Losey'}
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                      />
+                    </div>
+
+                    <div className="pt-2 flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddPhotoModal(false)}
+                        className="w-1/2 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold uppercase text-xs rounded-xl transition-all min-h-[44px]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="w-1/2 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black uppercase text-xs rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all min-h-[44px]"
+                      >
+                        Upload Photo
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
