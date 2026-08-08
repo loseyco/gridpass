@@ -10,7 +10,7 @@ import {
   KeyRound, ShieldCheck, Sparkles, User, Coins, MapPin, 
   Radio, Download, Copy, CheckCircle2, Cpu, Music, Calendar, Clock, ArrowRight, UserCheck, Users,
   BarChart2, TrendingUp, Activity, Award, Zap, Compass, ExternalLink, Share2, Navigation, Check, Flame,
-  Camera, Image, Plus, X, Eye, EyeOff, Tag, Filter, ChevronLeft, ChevronRight, Heart, Star, Pencil, Trash2
+  Camera, Image, Plus, X, Eye, EyeOff, Tag, Filter, ChevronLeft, ChevronRight, Heart, Star, Pencil, Trash2, Upload
 } from 'lucide-react'
 
 interface GalleryPhoto {
@@ -164,12 +164,35 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
   const [newPhotoCategory, setNewPhotoCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
   const [newPhotoCaption, setNewPhotoCaption] = useState<string>('')
   const [newPhotoUploader, setNewPhotoUploader] = useState<string>('')
+  const [addPhotoDragging, setAddPhotoDragging] = useState<boolean>(false)
+  const [addPhotoFileName, setAddPhotoFileName] = useState<string>('')
+  const addPhotoFileInputRef = useRef<HTMLInputElement>(null)
 
   // Gallery Edit Modal State
   const [editingPhoto, setEditingPhoto] = useState<GalleryPhoto | null>(null)
   const [editTitle, setEditTitle] = useState<string>('')
   const [editCaption, setEditCaption] = useState<string>('')
   const [editCategory, setEditCategory] = useState<'Beach & Pool' | 'DJ & Parties' | 'Resort Grounds' | 'VIP Cabanas'>('Beach & Pool')
+  const [editPhotoUrl, setEditPhotoUrl] = useState<string>('')
+  const [editPhotoDragging, setEditPhotoDragging] = useState<boolean>(false)
+  const [editPhotoFileName, setEditPhotoFileName] = useState<string>('')
+  const editPhotoFileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelected = (file: File, isEdit: boolean = false) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const result = e.target?.result as string
+      if (isEdit) {
+        setEditPhotoUrl(result)
+        setEditPhotoFileName(file.name)
+      } else {
+        setNewPhotoUrl(result)
+        setAddPhotoFileName(file.name)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
 
   // Lightbox Carousel Helpers & Keyboard Event Handler
   const currentFilteredGalleryList = galleryPhotos.filter(p => galleryCategoryFilter === 'All' || p.category === galleryCategoryFilter)
@@ -269,6 +292,8 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     setEditTitle(photo.title)
     setEditCaption(photo.caption)
     setEditCategory(photo.category)
+    setEditPhotoUrl(photo.url)
+    setEditPhotoFileName('')
   }
 
   const handleSavePhotoEdit = (e: React.FormEvent) => {
@@ -276,10 +301,12 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     if (!editingPhoto) return
     const updatedTitle = editTitle.trim() || editingPhoto.title
     const updatedCaption = editCaption.trim() || editingPhoto.caption
+    const updatedUrl = editPhotoUrl || editingPhoto.url
     setGalleryPhotos(prev => prev.map(p => {
       if (p.id === editingPhoto.id) {
         return {
           ...p,
+          url: updatedUrl,
           title: updatedTitle,
           caption: updatedCaption,
           category: editCategory
@@ -290,6 +317,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     if (lightboxPhoto && lightboxPhoto.id === editingPhoto.id) {
       setLightboxPhoto(prev => prev ? {
         ...prev,
+        url: updatedUrl,
         title: updatedTitle,
         caption: updatedCaption,
         category: editCategory
@@ -324,6 +352,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     setNewPhotoTitle('')
     setNewPhotoCaption('')
     setNewPhotoUploader('')
+    setAddPhotoFileName('')
     showToast({
       title: '📸 Photo Added!',
       message: `"${photoToAdd.title}" uploaded to Resort Photo Gallery!`
@@ -4495,8 +4524,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                 </div>
 
                 <button
+                  data-testid="add-photo-btn"
                   onClick={() => setShowAddPhotoModal(true)}
-                  className="px-5 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all flex items-center gap-2 shrink-0 min-h-[44px]"
+                  className="px-5 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all flex items-center justify-center gap-2 shrink-0 min-h-[44px] min-w-[44px]"
                 >
                   <Plus className="w-4 h-4" /> Add Photo
                 </button>
@@ -4515,7 +4545,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       <button
                         key={cat}
                         onClick={() => setGalleryCategoryFilter(cat)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 min-h-[40px] ${
+                        className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 min-h-[44px] min-w-[44px] ${
                           isActive
                             ? 'bg-[#ff3b30] text-white shadow-md shadow-[#ff3b30]/30 scale-[1.02]'
                             : 'bg-neutral-950 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800'
@@ -4605,9 +4635,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                                   e.stopPropagation()
                                   handleUpvotePhoto(photo.id)
                                 }}
-                                className="flex items-center gap-1.5 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs font-bold transition-all min-h-[30px]"
+                                className="flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-xs font-bold transition-all min-h-[44px] min-w-[44px]"
                               >
-                                <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500" />
+                                <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                                 <span>{photo.likes || 0}</span>
                               </button>
 
@@ -4626,9 +4656,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                                   e.stopPropagation()
                                   handleTogglePinPhoto(photo.id)
                                 }}
-                                className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${photo.isPinned ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                                className={`p-3 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${photo.isPinned ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
                               >
-                                <Star className={`w-3.5 h-3.5 ${photo.isPinned ? 'fill-amber-400 text-amber-400' : ''}`} />
+                                <Star className={`w-4 h-4 ${photo.isPinned ? 'fill-amber-400 text-amber-400' : ''}`} />
                               </button>
                               <button
                                 title={photo.isHidden ? "Unhide Photo" : "Hide Photo"}
@@ -4638,9 +4668,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                                   e.stopPropagation()
                                   handleToggleHidePhoto(photo.id)
                                 }}
-                                className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${photo.isHidden ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                                className={`p-3 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${photo.isHidden ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
                               >
-                                {photo.isHidden ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5" />}
+                                {photo.isHidden ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4" />}
                               </button>
                               <button
                                 title="Edit Photo"
@@ -4650,9 +4680,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                                   e.stopPropagation()
                                   handleStartEditPhoto(photo)
                                 }}
-                                className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-blue-400 rounded-lg transition-colors min-h-[28px]"
+                                className="p-3 hover:bg-neutral-800 text-neutral-400 hover:text-blue-400 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                               >
-                                <Pencil className="w-3.5 h-3.5" />
+                                <Pencil className="w-4 h-4" />
                               </button>
                               <button
                                 title="Delete Photo"
@@ -4662,9 +4692,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                                   e.stopPropagation()
                                   handleDeletePhoto(photo.id)
                                 }}
-                                className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-red-400 rounded-lg transition-colors min-h-[28px]"
+                                className="p-3 hover:bg-neutral-800 text-neutral-400 hover:text-red-400 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           </div>
@@ -4696,7 +4726,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
 
                     <button
                       onClick={() => setLightboxPhoto(null)}
-                      className="w-9 h-9 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[36px]"
+                      className="w-11 h-11 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[44px] min-w-[44px]"
                       aria-label="Close Lightbox"
                       data-testid="lightbox-close-btn"
                     >
@@ -4751,7 +4781,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                           aria-label="Upvote Photo Lightbox"
                           data-testid="lightbox-upvote-btn"
                           onClick={() => handleUpvotePhoto(lightboxPhoto.id)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all min-h-[34px]"
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-all min-h-[44px] min-w-[44px]"
                         >
                           <Heart className="w-4 h-4 fill-red-500 text-red-500" />
                           <span>{lightboxPhoto.likes || 0} Upvotes</span>
@@ -4763,33 +4793,33 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                             title={lightboxPhoto.isPinned ? "Unpin Photo" : "Pin Photo"}
                             aria-label="Pin Photo"
                             onClick={() => handleTogglePinPhoto(lightboxPhoto.id)}
-                            className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${lightboxPhoto.isPinned ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                            className={`p-3 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${lightboxPhoto.isPinned ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
                           >
-                            <Star className={`w-3.5 h-3.5 ${lightboxPhoto.isPinned ? 'fill-amber-400 text-amber-400' : ''}`} />
+                            <Star className={`w-4 h-4 ${lightboxPhoto.isPinned ? 'fill-amber-400 text-amber-400' : ''}`} />
                           </button>
                           <button
                             title={lightboxPhoto.isHidden ? "Unhide Photo" : "Hide Photo"}
                             aria-label={lightboxPhoto.isHidden ? "Unhide Photo" : "Hide Photo"}
                             onClick={() => handleToggleHidePhoto(lightboxPhoto.id)}
-                            className={`p-1.5 rounded-lg transition-colors min-h-[28px] ${lightboxPhoto.isHidden ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                            className={`p-3 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${lightboxPhoto.isHidden ? 'bg-amber-500/20 text-amber-400' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
                           >
-                            {lightboxPhoto.isHidden ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5" />}
+                            {lightboxPhoto.isHidden ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4" />}
                           </button>
                           <button
                             title="Edit Photo"
                             aria-label="Edit Photo"
                             onClick={() => handleStartEditPhoto(lightboxPhoto)}
-                            className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-blue-400 rounded-lg transition-colors min-h-[28px]"
+                            className="p-3 hover:bg-neutral-800 text-neutral-400 hover:text-blue-400 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             title="Delete Photo"
                             aria-label="Delete Photo"
                             onClick={() => handleDeletePhoto(lightboxPhoto.id)}
-                            className="p-1.5 hover:bg-neutral-800 text-neutral-400 hover:text-red-400 rounded-lg transition-colors min-h-[28px]"
+                            className="p-3 hover:bg-neutral-800 text-neutral-400 hover:text-red-400 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -4801,8 +4831,8 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
 
             {/* Edit Photo Modal */}
             {editingPhoto && (
-              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" data-testid="edit-photo-modal">
-                <div className="bg-neutral-900 rounded-3xl max-w-lg w-full p-6 border border-neutral-800 shadow-2xl space-y-5 text-white animate-in fade-in zoom-in duration-200">
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto" data-testid="edit-photo-modal">
+                <div className="bg-neutral-900 rounded-3xl max-w-lg w-full p-6 border border-neutral-800 shadow-2xl space-y-5 text-white animate-in fade-in zoom-in duration-200 my-8">
                   <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
                     <div className="flex items-center gap-2">
                       <Pencil className="w-5 h-5 text-blue-400" />
@@ -4812,14 +4842,74 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                     </div>
                     <button
                       onClick={() => setEditingPhoto(null)}
-                      className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[32px]"
+                      className="w-11 h-11 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[44px] min-w-[44px]"
                       aria-label="Close Edit Photo Modal"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
 
+                  {/* Edit Photo Form */}
                   <form onSubmit={handleSavePhotoEdit} className="space-y-4">
+                    {/* Preview Thumbnail */}
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Photo Preview Thumbnail
+                      </label>
+                      <div data-testid="edit-photo-preview-thumbnail" className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-neutral-800">
+                        <img
+                          src={editPhotoUrl || editingPhoto.url}
+                          alt="Preview Thumbnail"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Edit Dropzone */}
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Replace Photo File / Dropzone
+                      </label>
+                      <div
+                        data-testid="edit-photo-dropzone"
+                        onClick={() => editPhotoFileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setEditPhotoDragging(true) }}
+                        onDragLeave={() => setEditPhotoDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          setEditPhotoDragging(false)
+                          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                            handleFileSelected(e.dataTransfer.files[0], true)
+                          }
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[90px] ${
+                          editPhotoDragging
+                            ? 'border-blue-500 bg-blue-500/10 text-white'
+                            : 'border-neutral-800 hover:border-blue-500/60 bg-neutral-950/60 text-neutral-400 hover:text-white'
+                        }`}
+                      >
+                        <input
+                          ref={editPhotoFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          data-testid="edit-photo-file-input"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleFileSelected(e.target.files[0], true)
+                            }
+                          }}
+                        />
+                        <Upload className="w-5 h-5 mb-1 text-blue-400" />
+                        <p className="text-xs font-bold uppercase tracking-wide">
+                          {editPhotoFileName ? `Selected: ${editPhotoFileName}` : 'Drag & drop replacement image or click to browse'}
+                        </p>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
                         Photo Title *
@@ -4830,7 +4920,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
                         placeholder="Photo Title"
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 min-h-[44px]"
                         data-testid="edit-photo-title-input"
                       />
                     </div>
@@ -4842,7 +4932,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       <select
                         value={editCategory}
                         onChange={(e) => setEditCategory(e.target.value as any)}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 min-h-[44px]"
                         data-testid="edit-photo-category-select"
                       >
                         <option value="Beach & Pool">Beach & Pool</option>
@@ -4861,7 +4951,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         value={editCaption}
                         onChange={(e) => setEditCaption(e.target.value)}
                         placeholder="Photo description / caption"
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 min-h-[44px]"
                         data-testid="edit-photo-caption-input"
                       />
                     </div>
@@ -4870,14 +4960,14 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       <button
                         type="button"
                         onClick={() => setEditingPhoto(null)}
-                        className="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs uppercase rounded-xl transition-colors min-h-[40px]"
+                        className="px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs uppercase rounded-xl transition-colors min-h-[44px] min-w-[44px]"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         data-testid="save-edit-photo-btn"
-                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase rounded-xl transition-colors min-h-[40px] shadow-lg shadow-blue-500/20"
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase rounded-xl transition-colors min-h-[44px] min-w-[44px] shadow-lg shadow-blue-500/20"
                       >
                         Save Changes
                       </button>
@@ -4889,8 +4979,8 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
 
             {/* Add Photo Modal */}
             {showAddPhotoModal && (
-              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4" data-testid="add-photo-modal">
-                <div className="bg-neutral-900 rounded-3xl max-w-lg w-full p-6 border border-neutral-800 shadow-2xl space-y-5 text-white animate-in fade-in zoom-in duration-200">
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto" data-testid="add-photo-modal">
+                <div className="bg-neutral-900 rounded-3xl max-w-lg w-full p-6 border border-neutral-800 shadow-2xl space-y-5 text-white animate-in fade-in zoom-in duration-200 my-8">
                   <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
                     <div className="flex items-center gap-2">
                       <Camera className="w-5 h-5 text-[#ff3b30]" />
@@ -4900,24 +4990,67 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                     </div>
                     <button
                       onClick={() => setShowAddPhotoModal(false)}
-                      className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[32px]"
+                      className="w-11 h-11 rounded-full bg-neutral-800 hover:bg-[#ff3b30] text-white flex items-center justify-center transition-colors min-h-[44px] min-w-[44px]"
                       aria-label="Close Add Photo Modal"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
 
                   <form onSubmit={handleAddPhotoSubmit} className="space-y-4">
+                    {/* Direct File Dropzone */}
                     <div>
                       <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
-                        Photo Image URL
+                        Direct File Upload / Dropzone
+                      </label>
+                      <div
+                        data-testid="add-photo-dropzone"
+                        onClick={() => addPhotoFileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setAddPhotoDragging(true) }}
+                        onDragLeave={() => setAddPhotoDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          setAddPhotoDragging(false)
+                          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                            handleFileSelected(e.dataTransfer.files[0], false)
+                          }
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[110px] ${
+                          addPhotoDragging
+                            ? 'border-[#ff3b30] bg-[#ff3b30]/10 text-white'
+                            : 'border-neutral-800 hover:border-[#ff3b30]/60 bg-neutral-950/60 text-neutral-400 hover:text-white'
+                        }`}
+                      >
+                        <input
+                          ref={addPhotoFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          data-testid="add-photo-file-input"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleFileSelected(e.target.files[0], false)
+                            }
+                          }}
+                        />
+                        <Upload className="w-6 h-6 mb-1 text-[#ff3b30]" />
+                        <p className="text-xs font-bold uppercase tracking-wide">
+                          {addPhotoFileName ? `Selected: ${addPhotoFileName}` : 'Drag & drop image file or click to browse'}
+                        </p>
+                        <p className="text-[10px] text-neutral-500 mt-0.5">PNG, JPG, WEBP, GIF supported</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                        Or Image URL
                       </label>
                       <input
                         type="url"
                         value={newPhotoUrl}
                         onChange={(e) => setNewPhotoUrl(e.target.value)}
                         placeholder="https://images.unsplash.com/..."
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                       />
                     </div>
 
@@ -4932,7 +5065,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                           value={newPhotoTitle}
                           onChange={(e) => setNewPhotoTitle(e.target.value)}
                           placeholder="e.g. VIP Sunset Party"
-                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                         />
                       </div>
 
@@ -4943,7 +5076,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         <select
                           value={newPhotoCategory}
                           onChange={(e) => setNewPhotoCategory(e.target.value as any)}
-                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                         >
                           <option value="Beach & Pool">Beach & Pool</option>
                           <option value="DJ & Parties">DJ & Parties</option>
@@ -4962,7 +5095,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         onChange={(e) => setNewPhotoCaption(e.target.value)}
                         rows={2}
                         placeholder="Describe the photo snapshot..."
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                       />
                     </div>
 
@@ -4975,7 +5108,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                         value={newPhotoUploader}
                         onChange={(e) => setNewPhotoUploader(e.target.value)}
                         placeholder={displayName || legacyName || 'PJ Losey'}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30]"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                       />
                     </div>
 
@@ -4983,13 +5116,13 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                       <button
                         type="button"
                         onClick={() => setShowAddPhotoModal(false)}
-                        className="w-1/2 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold uppercase text-xs rounded-xl transition-all min-h-[44px]"
+                        className="w-1/2 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-bold uppercase text-xs rounded-xl transition-all min-h-[44px] min-w-[44px]"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="w-1/2 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black uppercase text-xs rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all min-h-[44px]"
+                        className="w-1/2 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white font-black uppercase text-xs rounded-xl shadow-lg shadow-[#ff3b30]/30 transition-all min-h-[44px] min-w-[44px]"
                       >
                         Upload Photo
                       </button>
