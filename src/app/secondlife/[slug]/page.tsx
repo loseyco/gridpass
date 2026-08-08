@@ -4334,6 +4334,9 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                 </div>
               )}
             </div>
+          </div>
+        )}
+
         {/* Tab Content: Resort Photo Gallery */}
         {activeTab === 'gallery' && (
           <div className="space-y-6">
