@@ -146,6 +146,15 @@ export const INITIAL_PLATFORM_FEATURES: InitialFeature[] = [
 
 export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
   {
+    version: 'v4.8.0',
+    title: 'Second Life SaaS Venue Portal Engine, Live Audio Player, Photo Gallery & Telemetry v4.8',
+    category: 'feature',
+    description: 'Released the complete Second Life Virtual Real Estate & Venue SaaS Engine (/secondlife). Features 22-field DJ and Host job application forms, public staff roster & tip jars, party schedule with 1-tap Google Calendar export, interactive resort photo gallery with lightbox carousel and heart upvoting, direct Firebase Storage file uploader, dynamic venue albums manager, live DJ parcel audio player, top resident dwell champions podium, 2D sim minimap radar grid, in-world event broadcast shouter, and LSL sim bridge telemetry.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/secondlife/[slug]',
+  },
+  {
     version: 'v4.3.2',
     title: 'Food Truck Mobile Menus, 10% Platform Fee Split, PEV Staging Classes & 9:16 Story Exporter',
     category: 'feature',
