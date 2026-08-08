@@ -94,6 +94,11 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     1. Universal feedback trigger (`FloatingFeedbackDrawer.tsx`) MUST anchor at bottom-right (`bottom-20 right-4`) away from inline table action buttons (`VIEW`, `EDIT`).
     2. Features a one-tap `⎯` minimize toggle allowing users to collapse the badge into a tiny 36px `💬` icon bubble.
 
+*   **STRICT VISUAL DOM RENDER & TAB COVERAGE INVARIANT**:
+    1. **ZERO UNRENDERED TAB / ROUTE BRANCHES**: Whenever introducing new tabs, sub-tabs, filter options, or route search parameters (e.g. `?tab=...`), subagents MUST implement the corresponding child JSX rendering block in the main page body before declaring work complete.
+    2. **MANDATORY VISUAL HEADED SMOKE TEST**: `tester` and `site_auditor` MUST execute automated Playwright visual tests that explicitly navigate to **every single tab variant** (`?tab=home`, `?tab=passport`, `?tab=apply`, `?tab=staff`, `?tab=schedule`, `?tab=applications`, `?tab=admin`, `?tab=logs`, `?tab=rules`, `?tab=lsl`) and assert that the tab content container has visible, non-zero height DOM child elements.
+    3. **AUTOMATED BLACK-SCREEN PREVENTION**: Automated E2E tests MUST assert `expect(page.locator('#tab-content-container')).toBeVisible()` and fail if any tab selection renders an empty container (`height === 0` or `children.length === 0`).
+
 *   **MANDATORY AUTOMATIC EXECUTION TICKET & SOP LOGGING INVARIANT**:
     1. EVERY task, feature request, bug fix, layout adjustment, or architectural refactor discussed between PJ Losey and GM MUST generate an official Execution Ticket (`TICK-...`) logged to `agent_tickets` in Firestore AND added to `DEFAULT_AGENT_TICKETS` in `src/app/admin/tickets/page.tsx`.
     2. Subagents MUST document problem statement (`issue_description`), root cause analysis (`root_cause`), resolution summary (`resolution_summary`), verification proof (`verification_proof`), and step-by-step SOP steps before completing any task.
