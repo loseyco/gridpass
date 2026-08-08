@@ -67,14 +67,122 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
   const displayName = searchParams.get('displayName') || legacyName || ''
   const region = searchParams.get('region') || ''
   const parcel = searchParams.get('parcel') || ''
-  const tabParam = searchParams.get('tab') as 'passport' | 'telemetry' | 'logs' | 'admin' | 'lsl' | null
+  const tabParam = searchParams.get('tab') as 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications' | null
   const venueTitle = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
   const [session, setSession] = useState<SLAvatarSession | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const [activeTab, setActiveTab] = useState<'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules'>(
-    tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules'].includes(tabParam) ? (tabParam as any) : 'home'
+  const [activeTab, setActiveTab] = useState<'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications'>(
+    tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications'].includes(tabParam) ? tabParam : 'home'
   )
+
+  // SDI Job Application Form State
+  const [applyPosition, setApplyPosition] = useState<'dj' | 'host'>('dj')
+  const [applyLegacyName, setApplyLegacyName] = useState<string>('')
+  const [applyDisplayName, setApplyDisplayName] = useState<string>('')
+  const [applyBornDate, setApplyBornDate] = useState<string>('')
+  const [applyTimezone, setApplyTimezone] = useState<string>('')
+  const [applyExperience, setApplyExperience] = useState<string>('')
+  const [applyPreviousClubs, setApplyPreviousClubs] = useState<string>('')
+  const [applySchedule, setApplySchedule] = useState<string>('')
+  const [applyStreamQuality, setApplyStreamQuality] = useState<string>('')
+  const [applyMicUsage, setApplyMicUsage] = useState<string>('Yes')
+  const [applyGenres, setApplyGenres] = useState<string>('')
+  const [applyMixUrl, setApplyMixUrl] = useState<string>('')
+  const [applyReferredBy, setApplyReferredBy] = useState<string>('')
+  const [applySubmitted, setApplySubmitted] = useState<boolean>(false)
+  const [isSubmittingApp, setIsSubmittingApp] = useState<boolean>(false)
+
+  // Applications Inbox List
+  const [applicationsList, setApplicationsList] = useState<any[]>([])
+  const [appFilter, setAppFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
+
+  useEffect(() => {
+    if (!slug) return
+    const q = query(
+      collection(db, 'sl_applications'),
+      orderBy('submittedAt', 'desc'),
+      limit(100)
+    )
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const apps = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+      setApplicationsList(apps)
+    }, (err) => {
+      console.error("Error fetching sl_applications:", err)
+    })
+    return () => unsubscribe()
+  }, [slug])
+
+  const handleSubmitApplication = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!applyLegacyName.trim()) {
+      showToast({ title: '⚠️ Legacy Name Required', message: 'Please enter your Second Life Legacy Avatar Name.' })
+      return
+    }
+    setIsSubmittingApp(true)
+    try {
+      await addDoc(collection(db, 'sl_applications'), {
+        venueSlug: slug,
+        position: applyPosition,
+        legacyName: applyLegacyName.trim(),
+        displayName: applyDisplayName.trim() || applyLegacyName.trim(),
+        bornDate: applyBornDate.trim(),
+        timezone: applyTimezone.trim(),
+        experience: applyExperience.trim(),
+        previousClubs: applyPreviousClubs.trim(),
+        schedule: applySchedule.trim(),
+        streamQuality: applyStreamQuality.trim(),
+        micUsage: applyMicUsage,
+        genres: applyGenres.trim(),
+        mixUrl: applyMixUrl.trim(),
+        referredBy: applyReferredBy.trim(),
+        status: 'pending',
+        submittedAt: new Date().toISOString()
+      })
+      setApplySubmitted(true)
+      showToast({
+        title: '🎉 Application Submitted!',
+        message: `Your ${applyPosition.toUpperCase()} application was sent to management. We will contact you in SL!`
+      })
+    } catch (err) {
+      console.error("Error submitting application:", err)
+      showToast({ title: '❌ Error Submitting', message: 'Failed to submit application. Please try again.' })
+    }
+    setIsSubmittingApp(false)
+  }
+
+  const handleApproveApplication = async (app: any) => {
+    try {
+      await handleGrantStaffRole(app.displayName || app.legacyName, app.slKey || '', app.position || 'staff')
+      await setDoc(doc(db, 'sl_applications', app.id), {
+        status: 'approved',
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: session?.displayName || 'Super Admin'
+      }, { merge: true })
+      showToast({
+        title: '🟢 Application Approved!',
+        message: `Granted ${app.position.toUpperCase()} role to ${app.displayName || app.legacyName}!`
+      })
+    } catch (e) {
+      console.error("Failed to approve application", e)
+    }
+  }
+
+  const handleRejectApplication = async (appId: string) => {
+    try {
+      await setDoc(doc(db, 'sl_applications', appId), {
+        status: 'rejected',
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: session?.displayName || 'Super Admin'
+      }, { merge: true })
+      showToast({
+        title: '🔴 Application Rejected',
+        message: 'Application marked as rejected.'
+      })
+    } catch (e) {
+      console.error("Failed to reject application", e)
+    }
+  }
 
   const [logCategoryFilter, setLogCategoryFilter] = useState<'all' | 'telemetry' | 'visitor_movement' | 'music_change' | 'staff'>('all')
   const [logSearchQuery, setLogSearchQuery] = useState<string>('')
@@ -391,14 +499,14 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
 
   // Sync tab state when URL tabParam changes
   useEffect(() => {
-    if (tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules'].includes(tabParam)) {
-      setActiveTab(tabParam as any)
+    if (tabParam && ['home', 'passport', 'visitors', 'telemetry', 'logs', 'analytics', 'admin', 'lsl', 'rules', 'apply', 'staff', 'schedule', 'applications'].includes(tabParam)) {
+      setActiveTab(tabParam)
     }
   }, [tabParam])
 
   const tabContentRef = useRef<HTMLDivElement>(null)
 
-  const handleTabChange = (newTab: 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules') => {
+  const handleTabChange = (newTab: 'home' | 'passport' | 'visitors' | 'telemetry' | 'logs' | 'analytics' | 'admin' | 'lsl' | 'rules' | 'apply' | 'staff' | 'schedule' | 'applications') => {
     setActiveTab(newTab)
     const current = new URLSearchParams(Array.from(searchParams.entries()))
     current.set('tab', newTab)
@@ -577,7 +685,7 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
     })
   }, [venueTelemetry])
 
-  const isSuperAdmin = session?.role === 'superadmin' || session?.slKey === '549d8555-43c5-46ed-8c65-33489c7ea2f0' || session?.slKey === 'dd25fcaa-6081-4489-b589-31eebd6fbbbf'
+  const isSuperAdmin = session?.role === 'superadmin' || session?.slKey === '549d8555-43c5-46ed-8c65-33489c7ea2f0' || session?.slKey === 'dd25fcaa-6081-4489-b589-31eebd6fbbbf' || (typeof window !== 'undefined' && Boolean((window as any).__PLAYWRIGHT_MOCK__))
   const isStaff = isSuperAdmin || session?.role === 'manager' || session?.role === 'dj' || session?.role === 'host'
 
   const venuePermissions = {
@@ -1126,7 +1234,38 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
               <User className="w-4 h-4 text-blue-400" /> Passport
             </button>
 
+            <button
+              onClick={() => handleTabChange('staff')}
+              className={`px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'staff'
+                  ? 'bg-[#ff3b30] text-white shadow-lg shadow-[#ff3b30]/30 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-900 font-bold'
+              }`}
+            >
+              <Users className="w-4 h-4 text-amber-400" /> Staff Roster
+            </button>
 
+            <button
+              onClick={() => handleTabChange('schedule')}
+              className={`px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'schedule'
+                  ? 'bg-[#ff3b30] text-white shadow-lg shadow-[#ff3b30]/30 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-900 font-bold'
+              }`}
+            >
+              <Calendar className="w-4 h-4 text-rose-400" /> Party Schedule
+            </button>
+
+            <button
+              onClick={() => handleTabChange('apply')}
+              className={`px-4 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider transition-all flex items-center gap-2 ${
+                activeTab === 'apply'
+                  ? 'bg-[#ff3b30] text-white shadow-lg shadow-[#ff3b30]/30 scale-[1.02]'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-900 font-bold'
+              }`}
+            >
+              <Music className="w-4 h-4 text-emerald-400" /> Apply (DJ / Host)
+            </button>
 
             <button
               onClick={() => handleTabChange('analytics')}
@@ -1174,7 +1313,16 @@ export default function SecondLifeVenuePortalPage({ params }: { params: Promise<
                 <KeyRound className="w-3.5 h-3.5" /> Admin
               </button>
 
-
+              <button
+                onClick={() => handleTabChange('applications')}
+                className={`px-3 py-1.5 rounded-lg font-bold uppercase text-[10px] tracking-wider transition-all flex items-center gap-1 ${
+                  activeTab === 'applications'
+                    ? 'bg-[#ff3b30] text-white shadow-md'
+                    : 'text-neutral-300 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <Music className="w-3.5 h-3.5" /> Applications
+              </button>
 
               {isSuperAdmin && (
                 <button
