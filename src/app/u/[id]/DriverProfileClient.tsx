@@ -79,7 +79,7 @@ const DEFAULT_COVER = '/images/profile/pjlosey_cover.jpg';
 
 const DEFAULT_PJ_EXPERIENCES = [
   {
-    id: 'exp-1',
+    id: 'exp-hrc-2021',
     title: 'Honda Racing / HRC Trackside Engineer',
     company: 'Honda Racing Corporation (HRC)',
     location: 'Indianapolis, IN / Trackside',
@@ -184,7 +184,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ]
   },
   {
-    id: 'exp-6',
+    id: 'exp-gridpass-2024',
     title: 'Gridpass Platform & Waterway Radar',
     company: 'Gridpass.app',
     location: 'Monmouth Beach, NJ',
@@ -512,6 +512,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               ? uData.experiences.map((exp: any, i: number) => ({
                   ...DEFAULT_PJ_EXPERIENCES[i],
                   ...exp,
+                  id: exp.id || DEFAULT_PJ_EXPERIENCES[i]?.id || `exp-${i + 1}`,
                   links: (exp.links && exp.links.length > 0) ? exp.links : DEFAULT_PJ_EXPERIENCES[i]?.links || []
                 }))
               : DEFAULT_PJ_EXPERIENCES,
@@ -1195,6 +1196,17 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                             </div>
                           </div>
                         )}
+
+                        {/* View Full Experience Asset Link Button */}
+                        <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-end">
+                          <Link
+                            href={`/exp/${exp.id || 'exp-' + (idx + 1)}`}
+                            data-testid={`view-experience-asset-btn-${idx}`}
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-4 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-2xs gap-1"
+                          >
+                            View Full Experience Asset ➔
+                          </Link>
+                        </div>
                       </div>
                     );
                   })}
