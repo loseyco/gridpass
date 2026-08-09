@@ -122,7 +122,7 @@ async function getProfileData(userId: string): Promise<DriverProfile | null> {
       email: 'pj@losey.co',
       display_name: 'PJ Losey',
       bio: 'Clinical Precision. Motorsport Velocity. Proprietary systems architecture, telemetry extraction, IoT hardware, and custom enterprise SaaS by PJ Losey.',
-      avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      avatar_url: '/images/profile/pjlosey_avatar.jpg',
       is_supporter: true,
       home_town: 'Monmouth Beach, NJ',
       social_facebook: 'pjlosey',

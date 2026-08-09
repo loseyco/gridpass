@@ -75,7 +75,7 @@ interface DriverProfileClientProps {
   userId: string;
 }
 
-const DEFAULT_COVER = 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1600&q=80';
+const DEFAULT_COVER = '/images/profile/pjlosey_cover.jpg';
 
 const DEFAULT_PJ_EXPERIENCES = [
   {
@@ -94,7 +94,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ],
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80',
+        url: '/images/profile/hrc_telemetry.jpg',
         caption: 'HRC Telemetry Extraction & Lap Delta Visualization'
       }
     ]
@@ -115,7 +115,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ],
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+        url: '/images/profile/siemens_proton.jpg',
         caption: 'Clinical Precision Beam Architecture'
       }
     ]
@@ -136,7 +136,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ],
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+        url: '/images/profile/davidson_paddock.jpg',
         caption: '$5M+ Elite Racing Collection & Paddock Ops'
       }
     ]
@@ -157,7 +157,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ],
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
+        url: '/images/profile/davidson_paddock.jpg',
         caption: 'UpfittersOS Enterprise Fleet Dashboard'
       }
     ]
@@ -178,7 +178,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ],
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80',
+        url: '/images/profile/hrc_telemetry.jpg',
         caption: 'srcommander 60Hz Telemetry Daemon & Tire Heatmaps'
       }
     ]
@@ -200,7 +200,7 @@ const DEFAULT_PJ_EXPERIENCES = [
     ],
     gallery: [
       {
-        url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+        url: '/images/profile/pjlosey_cover.jpg',
         caption: 'Gridpass Motorsport Telemetry & Waterway GPS Radar'
       }
     ]
@@ -470,8 +470,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             display_name: 'PJ Losey',
             username: 'pjlosey',
             bio: 'Clinical Precision. Motorsport Velocity. Proprietary systems architecture, telemetry extraction, IoT hardware, and custom enterprise SaaS by PJ Losey.',
-            avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-            cover_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1200&q=80',
+            avatar_url: '/images/profile/pjlosey_avatar.jpg',
+            cover_url: '/images/profile/pjlosey_cover.jpg',
             is_supporter: true,
             role: 'Founder & Chief Systems Architect',
             tagId: 'GP-DRV-PJLOSEY',
