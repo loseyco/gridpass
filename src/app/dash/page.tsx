@@ -174,6 +174,47 @@ function DashboardContent() {
         }
       ]);
 
+      setExperiences([
+        {
+          id: 'exp-hrc-2021',
+          user_id: user?.uid || 'pjlosey',
+          title: 'Honda Racing / HRC Trackside Engineer',
+          company: 'Honda Racing Corporation',
+          category: 'Engineering',
+          date_range: '2021 - Present',
+          description: 'Trackside telemetry, engine tuning, and ECU calibration.'
+        },
+        {
+          id: 'exp-water-mobile',
+          user_id: user?.uid || 'pjlosey',
+          title: 'Gridpass Platform & Waterway Radar',
+          company: 'Losey Tech Solutions',
+          category: 'Driver',
+          date_range: '2023 - Present',
+          description: 'Full-stack platform architecture and marine navigation engines.'
+        },
+        {
+          id: 'exp-siemens-2020',
+          user_id: user?.uid || 'pjlosey',
+          title: 'Siemens Healthineers Project Engineer',
+          company: 'Siemens Healthineers',
+          category: 'Engineering',
+          date_range: '2019 - 2023',
+          description: 'Proton therapy equipment installation and precision alignment.'
+        }
+      ]);
+
+      setSpaces([
+        {
+          id: 'space-1',
+          user_id: user?.uid || 'pjlosey',
+          name: "Kristina's Garage",
+          space_type: 'Residential Garage',
+          location_name: 'Grayslake, IL',
+          sqft: '600'
+        }
+      ]);
+
       setLoading(false);
       return;
     }
