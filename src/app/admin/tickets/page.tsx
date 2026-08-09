@@ -9,6 +9,27 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1151_experience_detail_route_theme_and_touch_compliance',
+    ticket_number: 'TICK-1151',
+    agent_role: 'git_expert',
+    title: 'Enforce Sitewide Solid White Theme & Touch Target Compliance on Experience Detail Route /exp/[id]',
+    category: 'ui_ux',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['ExperienceDetailPage', 'EditPassportDrawer'],
+    files_modified: ['src/app/exp/[id]/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: [],
+    issue_description: 'Enforce sitewide theme standards and touch target compliance (>= 44px min height/width) on experience detail route /exp/[id].',
+    root_cause: 'Dynamic experience detail route required UI consistency audit and touch target verification across interactive elements.',
+    resolution_summary: 'Verified and enforced touch target compliance across back buttons, lightbox triggers, and external link pills on /exp/[id] experience detail route, ensuring solid theme alignment.',
+    verification_proof: 'Verified with Playwright / visual test checks and git staging.',
+    sop_summary: 'SOP blueprint for UI touch target compliance and experience detail asset routing.',
+    sop_steps: [
+      'Verify min-h-[44px] min-w-[44px] touch target compliance on mobile interactive controls.',
+      'Enforce visual element styling and theme consistency across /exp/[id] routes.'
+    ]
+  },
+  {
     id: 'tick_1080_system_logs_and_feedback_triage_audit',
     ticket_number: 'TICK-1080',
     agent_role: 'site_auditor',
