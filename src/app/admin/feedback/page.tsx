@@ -66,6 +66,14 @@ const DEFAULT_FEEDBACK_ITEMS: UserFeedbackItem[] = [
   },
 ];
 
+const formatCreatedAt = (val: any): string => {
+  if (!val) return new Date().toISOString();
+  if (typeof val === 'string') return val;
+  if (typeof val?.toDate === 'function') return val.toDate().toISOString();
+  if (typeof val?.seconds === 'number') return new Date(val.seconds * 1000).toISOString();
+  return new Date().toISOString();
+};
+
 const normalizeFeedbackDoc = (id: string, data: any): UserFeedbackItem => {
   let pageUrl = data.page_url || data.metadata?.path || data.metadata?.url || 'http://localhost:3000/feedback';
   let pageRoute = data.page_route || '/feedback';
@@ -106,7 +114,7 @@ const normalizeFeedbackDoc = (id: string, data: any): UserFeedbackItem => {
     page_url: pageUrl,
     page_route: pageRoute,
     status,
-    created_at: data.created_at || data.createdAt || new Date().toISOString(),
+    created_at: formatCreatedAt(data.created_at || data.createdAt),
     promoted_ticket_number: data.promoted_ticket_number,
     user_agent: data.user_agent || data.metadata?.userAgent,
     source_collection: data.source_collection || 'user_feedback',
@@ -338,11 +346,14 @@ export default function AdminFeedbackTriagePage() {
     {
       key: 'created_at',
       label: 'SUBMITTED',
-      render: (row) => (
-        <span className="text-[11px] font-mono text-neutral-600 font-bold">
-          {(row.created_at || '').split('T')[0]}
-        </span>
-      ),
+      render: (row) => {
+        const dateStr = formatCreatedAt(row.created_at);
+        return (
+          <span className="text-[11px] font-mono text-neutral-600 font-bold">
+            {dateStr.split('T')[0]}
+          </span>
+        );
+      },
     },
     {
       key: 'category',
