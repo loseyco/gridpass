@@ -154,9 +154,10 @@ function DashboardContent() {
 
       const storedBusinesses = localStorage.getItem('__mock_businesses__');
       if (storedBusinesses) {
-        setBusinesses(JSON.parse(storedBusinesses));
+        const parsed = JSON.parse(storedBusinesses);
+        setBusinesses(parsed.filter((b: any) => !b.is_unclaimed && b.status !== 'unclaimed'));
       } else {
-        const defaultBusinesses: BusinessProfile[] = [
+        const defaultBusinesses: (BusinessProfile & { is_unclaimed?: boolean })[] = [
           {
             id: 'nielsens',
             owner_uid: user?.uid || 'pjlosey',
@@ -171,19 +172,20 @@ function DashboardContent() {
             name: 'Monarch Defender',
             description: 'Custom Land Rover & Utility Vehicle Restoration',
             category: 'shop_garage',
-            location_name: 'Monmouth, IL'
+            location_name: 'Monmouth, IL',
+            is_unclaimed: true
           },
           {
             id: 'shaw-daddys-bbq',
             owner_uid: user?.uid || 'pjlosey',
             name: "Shaw Daddy's BBQ",
             description: 'Trackside Catering & Event Food Service',
-            category: 'food_beverage',
+            category: 'food_truck',
             location_name: 'Monmouth, IL'
           }
         ];
         localStorage.setItem('__mock_businesses__', JSON.stringify(defaultBusinesses));
-        setBusinesses(defaultBusinesses);
+        setBusinesses(defaultBusinesses.filter((b: any) => !b.is_unclaimed && b.status !== 'unclaimed'));
       }
 
       setEvents([
