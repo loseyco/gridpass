@@ -701,20 +701,13 @@ function DashboardContent() {
                   >
                     Inventory →
                   </Link>
-                  <button
-                    type="button"
+                  <Link
+                    href={`/dash/space/${space.id}/edit`}
                     data-testid={`edit-space-${space.id}`}
-                    onClick={() => {
-                      setEditingSpace(space);
-                      setSpaceName(space.name);
-                      setSpaceType(space.type);
-                      setSpaceLocation(space.location);
-                      setShowSpaceModal(true);
-                    }}
                     className="min-h-[44px] min-w-[44px] px-4 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> Edit
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     data-testid={`delete-space-${space.id}`}

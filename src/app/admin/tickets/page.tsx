@@ -9,6 +9,36 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1155_canonical_storage_space_edit_route',
+    ticket_number: 'TICK-1155',
+    agent_role: 'git_expert',
+    title: 'Implement Canonical Full-Page Storage Space Edit Route',
+    category: 'ui_design',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['EditSpacePage', 'DashboardContent'],
+    files_modified: [
+      'src/app/dash/space/[id]/edit/page.tsx',
+      'src/app/dash/page.tsx',
+      'src/app/admin/tickets/page.tsx'
+    ],
+    schema_changes: [],
+    issue_description: 'Implement full-page canonical storage space edit route at /dash/space/[id]/edit with Firestore integration and complete CRUD actions.',
+    root_cause: 'Physical space management required full-page edit capabilities matching single canonical edit route invariant.',
+    resolution_summary: 'Created /dash/space/[id]/edit route with form state management, Firestore loading, update, and delete actions, and registered ticket entry.',
+    verification_proof: 'Full-page space edit route created, dashboard links wired, and local build verified.',
+    sop_summary: 'SOP blueprint for physical space canonical edit route handlers.',
+    sop_steps: [
+      'Create /dash/space/[id]/edit/page.tsx client route handler.',
+      'Connect Firestore doc fetch, updateDoc, and deleteDoc operations.',
+      'Link dashboard space cards to /dash/space/[id]/edit.'
+    ],
+    created_at: '2026-08-09',
+    verified_by_agent: 'git_expert',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1154_full_page_edit_routes_and_drawer_purge',
     ticket_number: 'TICK-1154',
     agent_role: 'git_expert',
