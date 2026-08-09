@@ -68,7 +68,7 @@ export default function GarageManagerPage() {
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [milestoneTitle, setMilestoneTitle] = useState('');
   const [milestoneCategory, setMilestoneCategory] = useState<TransformationCategory>('Initial Survey');
-  const [milestoneDateStr, setMilestoneDateStr] = useState(new Date().toISOString().split('T')[0]);
+  const [milestoneDateStr, setMilestoneDateStr] = useState('');
   const [milestoneNotes, setMilestoneNotes] = useState('');
   const [milestoneSoldCount, setMilestoneSoldCount] = useState<number | ''>('');
   const [milestoneScrappedCount, setMilestoneScrappedCount] = useState<number | ''>('');
@@ -126,7 +126,7 @@ export default function GarageManagerPage() {
         let loadedZones: GarageZone[] = [];
         let loadedMilestones: GarageTransformationMilestone[] = [];
 
-        if (user) {
+        if (user && !isMock) {
           try {
             // Query items
             const itemsQuery = query(collection(db, 'garage_items'), where('owner_uid', '==', user.uid));
@@ -151,8 +151,8 @@ export default function GarageManagerPage() {
         const userUid = user?.uid || 'user-pjlosey-123';
         if (isMock && loadedItems.length === 0) {
           loadedZones = [
-            { id: 'zone-1', garage_id: 'default', owner_uid: userUid, name: 'Engine Bay & Racks', description: 'Heavy parts shelving', created_at: new Date().toISOString() },
-            { id: 'zone-2', garage_id: 'default', owner_uid: userUid, name: 'Telemetry & Electronics', description: 'Precision IoT & sensors', created_at: new Date().toISOString() }
+            { id: 'zone-1', garage_id: 'default', owner_uid: userUid, name: 'Engine Bay & Racks', description: 'Heavy parts shelving', created_at: '2026-08-01T00:00:00.000Z' },
+            { id: 'zone-2', garage_id: 'default', owner_uid: userUid, name: 'Telemetry & Electronics', description: 'Precision IoT & sensors', created_at: '2026-08-01T00:00:00.000Z' }
           ];
           loadedItems = [
             {
@@ -170,8 +170,8 @@ export default function GarageManagerPage() {
               qr_code_tag: 'GP-GAR-INTAKE50',
               description: 'OEM 5.0L Coyote Intake Manifold in flawless condition.',
               specs: 'Part # 5.0-V8-2024, OEM Ford, Anodized Black',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              created_at: '2026-08-01T00:00:00.000Z',
+              updated_at: '2026-08-01T00:00:00.000Z'
             },
             {
               id: 'mock-item-2',
@@ -187,8 +187,8 @@ export default function GarageManagerPage() {
               location: { zone_id: 'zone-2', zone_name: 'Telemetry & Electronics', shelf: 'Shelf B', bin_id: 'BIN-08' },
               qr_code_tag: 'GP-GAR-TELHUB',
               description: '60Hz telemetry extraction hub with CAN bus adapter.',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              created_at: '2026-08-01T00:00:00.000Z',
+              updated_at: '2026-08-01T00:00:00.000Z'
             },
             {
               id: 'mock-item-3',
@@ -204,8 +204,8 @@ export default function GarageManagerPage() {
               sale_price: 950,
               location: { zone_id: 'zone-1', zone_name: 'Engine Bay & Racks', shelf: 'Shelf C', bin_id: 'BIN-12' },
               qr_code_tag: 'GP-GAR-BREMBO6P',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              created_at: '2026-08-01T00:00:00.000Z',
+              updated_at: '2026-08-01T00:00:00.000Z'
             }
           ];
         }
@@ -224,7 +224,7 @@ export default function GarageManagerPage() {
               items_discarded_count: 2,
               items_kept_count: 12,
               cash_recovered: 950,
-              created_at: new Date().toISOString()
+              created_at: '2026-08-01T00:00:00.000Z'
             }
           ];
         }
@@ -525,7 +525,7 @@ CONTACT: Serious inquiries only. DM for quick response!`;
   };
 
   const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
-  if (loading && !isMock) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white text-neutral-900 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
