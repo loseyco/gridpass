@@ -54,6 +54,7 @@ interface UserProfile {
 
 interface ExperienceAsset {
   id: string;
+  owner_uid?: string;
   title: string;
   company: string;
   category: string;
@@ -65,6 +66,7 @@ interface ExperienceAsset {
 
 interface PhysicalSpace {
   id: string;
+  owner_uid?: string;
   name: string;
   type: string;
   location: string;
@@ -177,7 +179,7 @@ function DashboardContent() {
       setExperiences([
         {
           id: 'exp-hrc-2021',
-          user_id: user?.uid || 'pjlosey',
+          owner_uid: user?.uid || 'pjlosey',
           title: 'Honda Racing / HRC Trackside Engineer',
           company: 'Honda Racing Corporation',
           category: 'Engineering',
@@ -186,7 +188,7 @@ function DashboardContent() {
         },
         {
           id: 'exp-water-mobile',
-          user_id: user?.uid || 'pjlosey',
+          owner_uid: user?.uid || 'pjlosey',
           title: 'Gridpass Platform & Waterway Radar',
           company: 'Losey Tech Solutions',
           category: 'Driver',
@@ -195,7 +197,7 @@ function DashboardContent() {
         },
         {
           id: 'exp-siemens-2020',
-          user_id: user?.uid || 'pjlosey',
+          owner_uid: user?.uid || 'pjlosey',
           title: 'Siemens Healthineers Project Engineer',
           company: 'Siemens Healthineers',
           category: 'Engineering',
@@ -207,10 +209,10 @@ function DashboardContent() {
       setSpaces([
         {
           id: 'space-1',
-          user_id: user?.uid || 'pjlosey',
+          owner_uid: user?.uid || 'pjlosey',
           name: "Kristina's Garage",
-          space_type: 'Residential Garage',
-          location_name: 'Grayslake, IL',
+          type: 'Residential Garage',
+          location: 'Grayslake, IL',
           sqft: '600'
         }
       ]);
