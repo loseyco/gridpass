@@ -95,11 +95,13 @@ service cloud.firestore {
     match /physical_tags/{id} { allow read, write: if true; }
     match /tag_scans/{id} { allow read, write: if true; }
 
-    // Garage Manager & Liquidation Engine
+    // Garage Manager, Multi-Space Storage & Experience Assets
     match /garages/{id} { allow read, write: if true; }
     match /garage_zones/{id} { allow read, write: if true; }
     match /garage_items/{id} { allow read, write: if true; }
     match /garage_sales/{id} { allow read, write: if true; }
+    match /garage_spaces/{id} { allow read, write: if true; }
+    match /experiences/{id} { allow read, write: if true; }
 
     // Universal Dynamic update exception / fallback
     match /{collection}/{document} {
