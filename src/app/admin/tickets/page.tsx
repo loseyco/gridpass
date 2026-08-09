@@ -13,7 +13,7 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     ticket_number: 'TICK-1151',
     agent_role: 'git_expert',
     title: 'Enforce Sitewide Solid White Theme & Touch Target Compliance on Experience Detail Route /exp/[id]',
-    category: 'ui_ux',
+    category: 'ui_design',
     status: 'VERIFIED',
     priority: 'high',
     components_used: ['ExperienceDetailPage', 'EditPassportDrawer'],
@@ -27,7 +27,11 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     sop_steps: [
       'Verify min-h-[44px] min-w-[44px] touch target compliance on mobile interactive controls.',
       'Enforce visual element styling and theme consistency across /exp/[id] routes.'
-    ]
+    ],
+    created_at: '2026-08-09',
+    verified_by_agent: 'site_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
   },
   {
     id: 'tick_1080_system_logs_and_feedback_triage_audit',
