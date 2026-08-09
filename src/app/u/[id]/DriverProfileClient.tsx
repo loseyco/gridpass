@@ -464,7 +464,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
         }
 
         const isPlaywrightMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ === true;
-        if (!uData && isPlaywrightMock) {
+        if (!uData && isPlaywrightMock && (userId === 'pjlosey' || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId?.includes('mock') || userId?.includes('pjlosey'))) {
           const mockDriverProfile: DriverProfile = {
             uid: 'user-pjlosey-123',
             email: 'pj@losey.co',
@@ -600,7 +600,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </div>
           <div className="space-y-1.5">
             <span className="text-[10px] font-mono font-black uppercase text-[#ff3b30] tracking-widest block">
-              Passport Missing
+              ⚪ Member Passport Not Found
             </span>
             <h2 className="text-xl font-bold tracking-tight text-neutral-900 font-sans">
               Member Passport Not Found
@@ -613,7 +613,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             href="/" 
             className="min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-2xl transition-all cursor-pointer gap-2 shadow-md hover:scale-105 active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4" /> Return to Paddock
+            <ArrowLeft className="w-4 h-4" /> Back to Safety
           </Link>
         </div>
       </div>

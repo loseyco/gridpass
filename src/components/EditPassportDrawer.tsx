@@ -79,6 +79,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusText, setUploadStatusText] = useState('');
   const [uploadedFilesList, setUploadedFilesList] = useState<string[]>([]);
+  const [editingExpId, setEditingExpId] = useState<string | null>(null);
 
   const processFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
@@ -203,8 +204,6 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
     setExpLinks(prev => prev.filter(l => l.id !== linkId));
   };
 
-  const [editingExpId, setEditingExpId] = useState<string | null>(null);
-
   const handleStartEditExperience = (exp: any) => {
     setEditingExpId(exp.id);
     setExpTitle(exp.title || '');
@@ -309,7 +308,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
           <button 
             type="button" 
             onClick={onClose}
-            className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-all cursor-pointer"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -329,7 +328,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`py-2 px-3 text-[11px] font-mono font-black uppercase rounded-xl transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                className={`min-h-[44px] py-2 px-3.5 text-[11px] font-mono font-black uppercase rounded-xl transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
                   isActive ? 'bg-neutral-900 text-white shadow-md' : 'text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
@@ -414,7 +413,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                       <button
                         type="button"
                         onClick={() => handleRemoveSkill(tag)}
-                        className="min-h-[44px] min-w-[44px] sm:min-h-[24px] sm:min-w-[24px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
                         title="Remove tag"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -831,14 +830,14 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold uppercase rounded-xl transition-all cursor-pointer"
+              className="min-h-[44px] min-w-[44px] py-2.5 px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold uppercase rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="py-2.5 px-6 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-500/20 disabled:opacity-50"
+              className="min-h-[44px] min-w-[44px] py-2.5 px-6 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-md shadow-red-500/20 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
             </button>
