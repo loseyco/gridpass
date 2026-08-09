@@ -9,7 +9,7 @@ import { collection, query, where, getDocs, doc, getDoc, addDoc } from 'firebase
 import { 
   Instagram, Youtube, Compass, MapPin, 
   CarFront, Loader2, ArrowLeft, Heart, ShieldCheck, Printer, Sparkles, UserCircle,
-  Facebook, Twitter, Globe, Share2, MessageSquare, Send, Store, Trophy,
+  Facebook, Twitter, Linkedin, Globe, Share2, MessageSquare, Send, Store, Trophy,
   Calendar, CheckCircle2, Award, Flame, Download, Camera, Copy, Plus, X, Settings, Briefcase,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -37,6 +37,7 @@ interface DriverProfile {
     tiktok?: string;
     facebook?: string;
     twitter?: string;
+    linkedin?: string;
   };
   tagId?: string;
   badges?: string[];
@@ -79,62 +80,128 @@ const DEFAULT_COVER = 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab
 const DEFAULT_PJ_EXPERIENCES = [
   {
     id: 'exp-1',
-    title: 'Founder & Lead Systems Architect',
-    company: 'Gridpass & Losey.co',
-    location: 'Chicago, IL',
-    startDate: '2022-01',
-    endDate: 'Present',
-    description: 'Spearheaded full-stack platform architecture for digital vehicle passports, telemetry tracking engine, and executive resume integration.',
-    skills: ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Tailwind CSS', '⚡ Firebase'],
+    title: 'Honda Racing / HRC Trackside Engineer',
+    company: 'Honda Racing Corporation (HRC)',
+    location: 'Indianapolis, IN / Trackside',
+    startDate: '2021-01',
+    endDate: '2023-12',
+    category: 'motorsport_event',
+    entryType: 'motorsport_event',
+    description: 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization for IndyCar operations.',
+    skills: ['⚡ Telemetry Extraction', '⚡ IndyCar Sensors', '⚡ Race Strategy', '⚡ JSON Sensor Payloads'],
     links: [
-      { id: 'link-1', title: 'Live Demo', url: 'https://gridpass.app' },
-      { id: 'link-2', title: 'LoseyCo Platform', url: 'https://loseyco.com' },
-      { id: 'link-3', title: 'GitHub Repo', url: 'https://github.com/loseyco/gridpass' }
+      { id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }
     ],
     gallery: [
       {
         url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80',
-        caption: 'Gridpass Telemetry Engine & Mobile Viewport Architecture'
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
-        caption: 'Executive Resume & Technical Architecture Workshop'
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
-        caption: 'Hardware Sensor Bench Testing & Telemetry Logging'
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80',
-        caption: 'Track Day Telemetry Data Visualization'
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-        caption: 'Enthusiast Paddock Setup & Dyno Calibration'
-      },
-      {
-        url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
-        caption: 'Supercar Performance Testing & Lap Record'
+        caption: 'HRC Telemetry Extraction & Lap Delta Visualization'
       }
     ]
   },
   {
     id: 'exp-2',
-    title: 'Principal Software Engineer',
-    company: 'Enthusiast Motors & Telemetry Labs',
-    location: 'Monmouth Beach, NJ',
-    startDate: '2019-06',
-    endDate: '2021-12',
-    description: 'Engineered telemetry data ingestion infrastructure, vehicle passport logbooks, and mobile-first touch UI.',
-    skills: ['⚡ System Architecture', '⚡ Node.js', '⚡ WebSockets', '⚡ PostgreSQL', '⚡ Playwright E2E'],
+    title: 'Siemens Healthineers Project Engineer',
+    company: 'Siemens Healthineers',
+    location: 'Chicago, IL',
+    startDate: '2018-06',
+    endDate: '2021-01',
+    category: 'full_time',
+    entryType: 'full_time',
+    description: 'Proton accelerator beam engineering, clinical precision systems, and high-reliability medical hardware.',
+    skills: ['⚡ Proton Accelerators', '⚡ Medical Systems', '⚡ Clinical Engineering', '⚡ Hardware IoT'],
     links: [
-      { id: 'link-4', title: 'Telemetry Docs', url: 'https://enthusiastmotors.com/docs' },
-      { id: 'link-5', title: 'GitHub Repo', url: 'https://github.com/enthusiast-motors' }
+      { id: 'link-2', title: 'Siemens Healthineers', url: 'https://siemens-healthineers.com' }
+    ],
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80',
+        caption: 'Clinical Precision Beam Architecture'
+      }
+    ]
+  },
+  {
+    id: 'exp-3',
+    title: 'Managed $5M+ Elite Racing Operations',
+    company: 'Davidson Racing Collection',
+    location: 'Monmouth, IL',
+    startDate: '2020-01',
+    endDate: 'Present',
+    category: 'motorsport_event',
+    entryType: 'motorsport_event',
+    description: 'Full operations manager for $5M+ Davidson collection, race team logistics, and paddock operations.',
+    skills: ['⚡ Fleet Operations', '⚡ Paddock Logistics', '⚡ High-Valuation Assets', '⚡ Race Management'],
+    links: [
+      { id: 'link-3', title: 'Losey.co Profile', url: 'https://losey.co' }
+    ],
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+        caption: '$5M+ Elite Racing Collection & Paddock Ops'
+      }
+    ]
+  },
+  {
+    id: 'exp-4',
+    title: 'UpfittersOS — Enterprise Fleet Upfitting & Shop OS',
+    company: 'UpfittersOS',
+    location: 'Monmouth Beach, NJ',
+    startDate: '2023-01',
+    endDate: 'Present',
+    category: 'special_project',
+    entryType: 'special_project',
+    description: 'Shop scheduling, interactive assembly steps, barcode inventory tracking, PDF timecards, and client quoting.',
+    skills: ['⚡ Next.js', '⚡ SaaS Architecture', '⚡ Barcode Inventory', '⚡ Fleet Upfitting'],
+    links: [
+      { id: 'link-4', title: 'UpfittersOS Live', url: 'https://upfittersos.com' }
     ],
     gallery: [
       {
         url: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80',
-        caption: 'Hardware Sensor Bench Testing & Telemetry Logging'
+        caption: 'UpfittersOS Enterprise Fleet Dashboard'
+      }
+    ]
+  },
+  {
+    id: 'exp-5',
+    title: 'srcommander — iRacing Telemetry & Performance Suite',
+    company: 'srcommander',
+    location: 'Chicago, IL',
+    startDate: '2022-01',
+    endDate: 'Present',
+    category: 'special_project',
+    entryType: 'special_project',
+    description: '60Hz telemetry ingestion daemon, tire heatmaps, lap comparisons, and automated league credit rewards.',
+    skills: ['⚡ 60Hz Telemetry', '⚡ Python Daemon', '⚡ Tire Heatmaps', '⚡ iRacing API'],
+    links: [
+      { id: 'link-5', title: 'srcommander Suite', url: 'https://iracing-commander.losey.co' }
+    ],
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80',
+        caption: 'srcommander 60Hz Telemetry Daemon & Tire Heatmaps'
+      }
+    ]
+  },
+  {
+    id: 'exp-6',
+    title: 'Gridpass Platform & Waterway Radar',
+    company: 'Gridpass.app',
+    location: 'Monmouth Beach, NJ',
+    startDate: '2024-01',
+    endDate: 'Present',
+    category: 'special_project',
+    entryType: 'special_project',
+    description: 'Dynamic QR code portfolios for drivers, vehicles, events, team task boards, and live waterway marine GPS radar.',
+    skills: ['⚡ Systems Architecture', '⚡ Next.js', '⚡ Firebase', '⚡ Marine GPS', '⚡ QR Passports'],
+    links: [
+      { id: 'link-6', title: 'Gridpass Platform', url: 'https://gridpass.app' },
+      { id: 'link-7', title: 'Live Waterway Radar', url: 'https://gridpass.app/water' }
+    ],
+    gallery: [
+      {
+        url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+        caption: 'Gridpass Motorsport Telemetry & Waterway GPS Radar'
       }
     ]
   }
@@ -396,25 +463,28 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           }
         }
 
-        if (!uData && (isMock || userId === 'pjlosey' || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock'))) {
+        if (!uData && (isMock || userId === 'pjlosey' || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock') || userId?.includes('losey'))) {
           const mockDriverProfile: DriverProfile = {
-            uid: 'user-marcus-123',
-            email: 'marcus@enthusiast.com',
-            display_name: 'Marcus Mustang',
-            username: 'pjlosey-mock',
-            bio: 'Track day enthusiast, weekend racer, and Ford Mustang collector.',
+            uid: 'user-pjlosey-123',
+            email: 'pj@losey.co',
+            display_name: 'PJ Losey',
+            username: 'pjlosey',
+            bio: 'Clinical Precision. Motorsport Velocity. Proprietary systems architecture, telemetry extraction, IoT hardware, and custom enterprise SaaS by PJ Losey.',
             avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
             cover_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1200&q=80',
             is_supporter: true,
-            role: 'SUPER ADMIN & FOUNDER',
-            tagId: 'GP-DRV-MARCUS',
+            role: 'Founder & Chief Systems Architect',
+            tagId: 'GP-DRV-PJLOSEY',
             home_town: 'Monmouth Beach, NJ',
+            website: 'https://losey.co',
+            website_url: 'https://losey.co',
             experiences: DEFAULT_PJ_EXPERIENCES,
-            skills: ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture'],
+            skills: ['⚡ Systems Architecture', '⚡ Telemetry Extraction', '⚡ Next.js', '⚡ TypeScript', '⚡ Full-Stack SaaS', '⚡ IoT Hardware'],
             socials: {
-              instagram: 'marcus_mustang',
-              youtube: 'marcusracing',
-              twitter: 'marcus_gt'
+              instagram: 'pjlosey',
+              facebook: 'pjlosey',
+              linkedin: 'pjlosey',
+              twitter: 'pjlosey'
             }
           };
           const mockDriverVehicles: Vehicle[] = [
@@ -449,7 +519,13 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             avatar_url: uData.avatar_url || uData.photoURL || '',
             is_supporter: uData.is_supporter === true,
             role: uData.role || (uData.email?.includes('loseyp') ? 'SUPER ADMIN & FOUNDER' : ''),
-            experiences: (uData.experiences && uData.experiences.length > 0) ? uData.experiences : DEFAULT_PJ_EXPERIENCES,
+            experiences: (uData.experiences && uData.experiences.length > 0)
+              ? uData.experiences.map((exp: any, i: number) => ({
+                  ...DEFAULT_PJ_EXPERIENCES[i],
+                  ...exp,
+                  links: (exp.links && exp.links.length > 0) ? exp.links : DEFAULT_PJ_EXPERIENCES[i]?.links || []
+                }))
+              : DEFAULT_PJ_EXPERIENCES,
             skills: (uData.skills && uData.skills.length > 0) ? uData.skills : ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture'],
             socials: {
               instagram: uData.social_instagram || uData.socials?.instagram || '',
@@ -666,12 +742,13 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-black text-white text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all shadow-2xs"
+                    className="min-h-[44px] min-w-[44px] px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-black text-white text-[10px] font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs"
                   >
                     <Globe className="w-3.5 h-3.5 text-[#ff3b30]" /> Website
                   </a>
                 )}
                 {renderSocialIcon('Instagram', profile.socials?.instagram, `https://instagram.com/${profile.socials?.instagram}`, Instagram)}
+                {renderSocialIcon('LinkedIn', profile.socials?.linkedin, `https://linkedin.com/in/${profile.socials?.linkedin}`, Linkedin)}
                 {renderSocialIcon('YouTube', profile.socials?.youtube, `https://youtube.com/@${profile.socials?.youtube}`, Youtube)}
                 {renderSocialIcon('TikTok', profile.socials?.tiktok, `https://tiktok.com/@${profile.socials?.tiktok}`, Globe)}
                 {renderSocialIcon('Facebook', profile.socials?.facebook, `https://facebook.com/${profile.socials?.facebook}`, Facebook)}
