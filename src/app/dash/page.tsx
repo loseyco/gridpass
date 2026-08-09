@@ -13,7 +13,7 @@ import {
 import { 
   Car, Plus, Wrench, Heart, ShieldCheck, Loader2, User, MapPin, 
   Printer, Sparkles, CheckCircle, Share2, Compass, QrCode, 
-  Building2, Calendar, Briefcase, Warehouse, Trash2, Edit3, Eye, X
+  Building2, Calendar, Briefcase, Warehouse, Trash2, Edit3, Eye, X, ExternalLink
 } from 'lucide-react';
 import { BusinessProfile } from '@/lib/types/business';
 import { GridpassEvent } from '@/lib/types/events';
@@ -545,14 +545,13 @@ function DashboardContent() {
               </h2>
               <p className="text-[10px] text-neutral-500 font-mono">Manage motorsport gigs, roles, and engineering projects</p>
             </div>
-            <button
-              type="button"
+            <Link
+              href="/exp/new"
               data-testid="create-experience-asset-btn"
-              onClick={handleCreateExperience}
               className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4" /> + Create New Experience Asset
-            </button>
+            </Link>
           </div>
 
           <div className="space-y-3">
@@ -572,36 +571,26 @@ function DashboardContent() {
                     </h3>
                   </div>
                   <p className="text-xs font-bold text-neutral-600 uppercase">
-                    {exp.company} {exp.date_range && `• ${exp.date_range}`}
+                    {exp.company} • <span className="font-mono text-neutral-400">{exp.date_range}</span>
                   </p>
-                  <p className="text-xs text-neutral-500 leading-relaxed">
+                  <p className="text-xs text-neutral-500 line-clamp-2">
                     {exp.description}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                   <Link
                     href={`/exp/${exp.id}`}
-                    data-testid={`view-exp-${exp.id}`}
-                    className="min-h-[44px] min-w-[44px] px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
+                    className="min-h-[44px] min-w-[44px] px-4 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
-                    <Eye className="w-3.5 h-3.5" /> View
+                    <ExternalLink className="w-3.5 h-3.5" /> View
                   </Link>
-                  <button
-                    type="button"
-                    data-testid={`edit-exp-${exp.id}`}
-                    onClick={() => {
-                      setEditingExp(exp);
-                      setExpTitle(exp.title);
-                      setExpCompany(exp.company);
-                      setExpCategory(exp.category);
-                      setExpDesc(exp.description);
-                      setShowExpModal(true);
-                    }}
+                  <Link
+                    href={`/exp/${exp.id}/edit`}
                     className="min-h-[44px] min-w-[44px] px-4 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> Edit
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     data-testid={`delete-exp-${exp.id}`}
@@ -627,14 +616,13 @@ function DashboardContent() {
               </h2>
               <p className="text-[10px] text-neutral-500 font-mono">Manage workshops, garages, trailers, and storage locations</p>
             </div>
-            <button
-              type="button"
+            <Link
+              href="/dash/space/new"
               data-testid="add-physical-space-btn"
-              onClick={handleCreateSpace}
               className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4" /> + Add Physical Space
-            </button>
+            </Link>
           </div>
 
           <div className="space-y-3">

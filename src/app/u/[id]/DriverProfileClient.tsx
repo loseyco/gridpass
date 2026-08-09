@@ -646,14 +646,13 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </button>
           
           <div className="flex items-center gap-2">
-            <button 
-              type="button"
+            <Link 
+              href="/dash/edit-profile"
               data-testid="edit-passport-btn"
-              onClick={() => setShowEditDrawer(true)}
               className="min-h-[44px] inline-flex items-center justify-center py-2 px-3.5 bg-neutral-900/80 hover:bg-black backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer gap-1.5 shadow-md"
             >
               <Settings className="w-3.5 h-3.5 text-[#ff3b30]" /> Manage Passport
-            </button>
+            </Link>
 
             <button 
               type="button"

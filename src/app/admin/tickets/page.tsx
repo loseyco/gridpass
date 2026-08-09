@@ -9,6 +9,41 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1154_full_page_edit_routes_and_drawer_purge',
+    ticket_number: 'TICK-1154',
+    agent_role: 'git_expert',
+    title: 'Convert Profile and Asset Management to Dedicated Full-Page Edit Routes and Purge Modal Drawers',
+    category: 'refactor',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['EditProfilePage', 'DriverProfileClient', 'DashboardContent'],
+    files_modified: [
+      'src/app/dash/edit-profile/page.tsx',
+      'src/app/u/[id]/edit/page.tsx',
+      'src/app/exp/new/page.tsx',
+      'src/app/exp/[id]/edit/page.tsx',
+      'src/app/dash/space/new/page.tsx',
+      'src/app/u/[id]/DriverProfileClient.tsx',
+      'src/app/dash/page.tsx',
+      'src/app/admin/tickets/page.tsx'
+    ],
+    schema_changes: [],
+    issue_description: 'Convert profile and experience asset management to dedicated full-page edit routes (/dash/edit-profile, /u/[id]/edit, /exp/new, /exp/[id]/edit, /dash/space/new) and purge modal overlay drawers.',
+    root_cause: 'Modal overlay drawers caused cluttered UI state on mobile viewport; full-page routes provide cleaner layout and bookmarkable URLs.',
+    resolution_summary: 'Created dedicated full-page edit routes for user profile, experience assets, and physical spaces, updating navigation links and purging slide-over edit modal drawers across dashboard client views.',
+    verification_proof: 'Full-page routes implemented, interactive links updated, local build verified, and git staging confirmed.',
+    sop_summary: 'SOP blueprint for replacing overlay slide-out modal drawers with dedicated full-page Next.js route handlers.',
+    sop_steps: [
+      'Create dedicated full-page edit routes under /exp, /dash, and /u route trees.',
+      'Replace drawer trigger buttons with Next.js Link components targeting dedicated route paths.',
+      'Purge slide-out drawer modal overlay code and transient drawer states.'
+    ],
+    created_at: '2026-08-09',
+    verified_by_agent: 'git_expert',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1150_dashboard_tabbed_framework_and_multi_space_engine',
     ticket_number: 'TICK-1150',
     agent_role: 'architect',
