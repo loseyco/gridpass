@@ -72,6 +72,7 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     *   **`tester`**: Automated Playwright E2E visual browser testing (`npm run test:headed`) & auth session persistence (`tests/.auth/user.json`).
     *   **`firebase_expert`**: Firebase Cloud Deployments, Cloud Functions, Firestore Security Rules (`firestore.rules`), and Strict Zero Auto-Deploy Invariant.
     *   **`source_of_truth`**: Database Source of Truth Enforcement, Zero Synthetic Fallbacks, Zero Fake Data, Raw Firestore Evaluation.
+    *   **`rules_auditor`**: System Rules & Compliance Auditor. Performs strict post-execution audits of code, UI theme, touch targets, and git commits against `AGENTS.md` guardrails.
 
 *   **SUPER ADMIN AUTH GATE GUARD INVARIANT (`/admin/layout.tsx`)**:
     1. All `/admin` layout wrappers MUST evaluate `useAuth()` state BEFORE mounting child pages or attaching real-time Firestore `onSnapshot` listeners.
