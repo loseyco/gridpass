@@ -50,7 +50,7 @@ export default function GarageManagerPage() {
   const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<'inventory' | 'storyboard'>('inventory');
+  const [activeSubTab, setActiveSubTab] = useState<'inventory' | 'storyboard' | 'qr-tags' | 'insurance'>('inventory');
 
   // Inventory State
   const [items, setItems] = useState<GarageItem[]>([]);
@@ -561,8 +561,8 @@ CONTACT: Serious inquiries only. DM for quick response!`;
               <span className="text-[9px] font-mono font-black text-[#ff3b30] uppercase tracking-widest block">
                 GRIDPASS MOTORSPORT SAAS
               </span>
-              <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
-                <Warehouse className="w-6 h-6 text-[#ff3b30]" /> Garage Manager &amp; Liquidation Engine
+              <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2" data-testid="inventory-hq-header">
+                <Warehouse className="w-6 h-6 text-[#ff3b30]" /> INVENTORY HQ
               </h1>
             </div>
           </div>
@@ -601,19 +601,19 @@ CONTACT: Serious inquiries only. DM for quick response!`;
         
         {/* SUB-TAB SELECTOR & TOP ACTIVE SPACE SELECTOR */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-200 pb-3" data-testid="garage-sub-tab-selector">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               data-testid="subtab-inventory"
               onClick={() => setActiveSubTab('inventory')}
-              className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
+              className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
                 activeSubTab === 'inventory'
                   ? 'bg-neutral-900 text-white shadow-md'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
               <Package className="w-4 h-4 text-[#ff3b30]" />
-              <span>📦 Inventory &amp; Pipeline</span>
+              <span>Inventory</span>
               <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-white">
                 {items.length}
               </span>
@@ -623,19 +623,47 @@ CONTACT: Serious inquiries only. DM for quick response!`;
               type="button"
               data-testid="subtab-storyboard"
               onClick={() => setActiveSubTab('storyboard')}
-              className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
+              className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
                 activeSubTab === 'storyboard'
                   ? 'bg-[#ff3b30] text-white shadow-md shadow-red-500/20'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>📖 Transformation Story</span>
+              <span>Storyboard</span>
               <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
                 activeSubTab === 'storyboard' ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-700'
               }`}>
                 {milestones.length}
               </span>
+            </button>
+
+            <button
+              type="button"
+              data-testid="subtab-qr-tags"
+              onClick={() => setActiveSubTab('qr-tags')}
+              className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
+                activeSubTab === 'qr-tags'
+                  ? 'bg-neutral-900 text-white shadow-md'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
+            >
+              <QrCode className="w-4 h-4 text-amber-400" />
+              <span>QR Tags</span>
+            </button>
+
+            <button
+              type="button"
+              data-testid="subtab-insurance"
+              onClick={() => setActiveSubTab('insurance')}
+              className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
+                activeSubTab === 'insurance'
+                  ? 'bg-emerald-700 text-white shadow-md'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Insurance</span>
             </button>
           </div>
 
@@ -963,6 +991,96 @@ CONTACT: Serious inquiries only. DM for quick response!`;
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* SUB-TAB 3: QR TAGS MANAGEMENT */}
+        {activeSubTab === 'qr-tags' && (
+          <div className="space-y-6 animate-in fade-in duration-200" data-testid="qr-tags-section">
+            <div className="bg-neutral-900 text-white p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[9px] font-mono font-black text-[#ff3b30] uppercase tracking-widest block">
+                  ASSET QR BADGE SYSTEM
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                  <QrCode className="w-6 h-6 text-amber-400" /> Universal QR Tags &amp; Barcode Index
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1 max-w-xl">
+                  Scan and generate universal QR tags for staged inventory, tool chests, and physical storage bins.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {items.length > 0 ? (
+                items.map(item => (
+                  <div key={item.id} className="p-5 bg-white border border-neutral-200 rounded-3xl shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold text-neutral-500 uppercase">{item.category}</span>
+                      <span className="px-2 py-0.5 bg-neutral-100 text-neutral-800 text-[10px] font-mono font-bold rounded-md">{item.condition}</span>
+                    </div>
+                    <h3 className="text-sm font-black uppercase text-neutral-900 line-clamp-1">{item.title}</h3>
+                    <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveQRItem(item);
+                          setShowQRModal(true);
+                        }}
+                        className="min-h-[44px] px-4 py-2 bg-neutral-900 text-white text-xs font-mono font-bold rounded-xl flex items-center gap-2 hover:bg-black transition-all cursor-pointer"
+                      >
+                        <QrCode className="w-4 h-4 text-amber-400" /> View Asset QR Tag
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full p-12 bg-neutral-50 border border-dashed border-neutral-200 rounded-3xl text-center space-y-3">
+                  <QrCode className="w-12 h-12 mx-auto text-neutral-300" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-700">⚪ No items staged for QR tagging</h3>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* SUB-TAB 4: INSURANCE SCHEDULE */}
+        {activeSubTab === 'insurance' && (
+          <div className="space-y-6 animate-in fade-in duration-200" data-testid="insurance-schedule-section">
+            <div className="bg-neutral-900 text-white p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[9px] font-mono font-black text-emerald-400 uppercase tracking-widest block">
+                  VALUATION &amp; COMPLIANCE
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+                  <ShieldCheck className="w-6 h-6 text-emerald-400" /> Insurance Schedule &amp; Asset Valuation
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1 max-w-xl">
+                  Comprehensive audit trail of staged equipment, serial numbers, replacement costs, and insured property valuation.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                data-testid="export-insurance-schedule-btn-tab"
+                onClick={() => setShowInsuranceModal(true)}
+                className="min-h-[44px] px-6 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-mono font-black uppercase rounded-2xl transition-all cursor-pointer flex items-center gap-2 shrink-0 shadow-lg"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-200" /> Export Schedule (PDF)
+              </button>
+            </div>
+
+            <div className="p-6 bg-white border border-neutral-200 rounded-3xl shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                <span className="text-xs font-mono font-bold text-neutral-500 uppercase">Estimated Portfolio Replacement Valuation</span>
+                <span className="text-2xl font-black font-mono text-emerald-600">
+                  ${items.reduce((acc, curr) => acc + (curr.replacement_value || curr.list_price || 0), 0).toLocaleString()}
+                </span>
+              </div>
+              <p className="text-xs text-neutral-600">
+                Total staged items: {items.length}. All serial numbers and asset tags are timestamped for claim filing.
+              </p>
+            </div>
           </div>
         )}
       </div>

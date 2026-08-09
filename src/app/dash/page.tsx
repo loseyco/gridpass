@@ -826,7 +826,7 @@ function DashboardContent() {
 
                 <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
                   <Link
-                    href="/dash/garage"
+                    href="/inventory"
                     data-testid={`manage-space-${space.id}`}
                     className="min-h-[44px] min-w-[44px] px-4 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
