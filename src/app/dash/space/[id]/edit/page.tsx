@@ -31,6 +31,24 @@ export default function EditSpacePage() {
 
     const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
     if (isMock) {
+      const storedSpaces = localStorage.getItem('__mock_spaces__');
+      if (storedSpaces) {
+        try {
+          const parsed = JSON.parse(storedSpaces);
+          const found = parsed.find((s: any) => s.id === id);
+          if (found) {
+            setName(found.name || '');
+            setType(found.type || 'Storage Unit');
+            setSqft(found.sqft || '');
+            setLocation(found.location || '');
+            setAccessCodeNotes(found.access_code_notes || '');
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing stored mock spaces:', e);
+        }
+      }
       if (id === 'space-1') {
         setName("Kristina's Garage");
         setType('Garage');
