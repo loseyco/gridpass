@@ -59,6 +59,33 @@ export default function CreateSpacePage() {
 
     setSaving(true);
     try {
+      const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
+      if (isMock) {
+        const mockId = `u-haul-storage-hub-${Date.now()}`;
+        const newSpace = {
+          id: mockId,
+          user_id: user?.uid || 'pjlosey',
+          owner_uid: user?.uid || 'pjlosey',
+          name: name.trim(),
+          type,
+          location: location.trim() || 'Elkhart Lake, WI',
+          sqft: sqft.trim() ? (sqft.includes('sq') ? sqft.trim() : `${sqft.trim()} sqft`) : '1,200 sqft',
+          photo_url: photoUrl.trim() || '',
+          item_count: 0,
+        };
+        const storedSpaces = localStorage.getItem('__mock_spaces__');
+        const existingSpaces = storedSpaces ? JSON.parse(storedSpaces) : [
+          { id: 'space-1', owner_uid: 'pjlosey', name: "Kristina's Garage", type: 'Residential Garage', location: 'Grayslake, IL', sqft: '600' },
+          { id: 'space-2', owner_uid: 'pjlosey', name: 'Monmouth Beach Self-Storage Unit #402', type: 'Storage Unit', location: 'Monmouth Beach, NJ', sqft: '200' },
+          { id: 'space-3', owner_uid: 'pjlosey', name: 'Rented Workshop Room', type: 'Rented Room', location: 'Chicago, IL', sqft: '400' },
+          { id: 'space-4', owner_uid: 'pjlosey', name: "7'x14' Enclosed Utility Trailer", type: 'Utility Trailer', location: 'Grayslake, IL', sqft: '98' },
+          { id: 'space-5', owner_uid: 'pjlosey', name: "Kristina's House", type: 'Residence', location: 'Grayslake, IL', sqft: '2400' }
+        ];
+        localStorage.setItem('__mock_spaces__', JSON.stringify([...existingSpaces, newSpace]));
+        router.push(`/dash/space/${mockId}/edit`);
+        return;
+      }
+
       if (user?.uid) {
         const docRef = await addDoc(collection(db, 'garage_spaces'), {
           user_id: user.uid,

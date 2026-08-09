@@ -206,48 +206,55 @@ function DashboardContent() {
         }
       ]);
 
-      setSpaces([
-        {
-          id: 'space-1',
-          owner_uid: user?.uid || 'pjlosey',
-          name: "Kristina's Garage",
-          type: 'Residential Garage',
-          location: 'Grayslake, IL',
-          sqft: '600'
-        },
-        {
-          id: 'space-2',
-          owner_uid: user?.uid || 'pjlosey',
-          name: 'Monmouth Beach Self-Storage Unit #402',
-          type: 'Storage Unit',
-          location: 'Monmouth Beach, NJ',
-          sqft: '200'
-        },
-        {
-          id: 'space-3',
-          owner_uid: user?.uid || 'pjlosey',
-          name: 'Rented Workshop Room',
-          type: 'Rented Room',
-          location: 'Chicago, IL',
-          sqft: '400'
-        },
-        {
-          id: 'space-4',
-          owner_uid: user?.uid || 'pjlosey',
-          name: "7'x14' Enclosed Utility Trailer",
-          type: 'Utility Trailer',
-          location: 'Grayslake, IL',
-          sqft: '98'
-        },
-        {
-          id: 'space-5',
-          owner_uid: user?.uid || 'pjlosey',
-          name: "Kristina's House",
-          type: 'Residence',
-          location: 'Grayslake, IL',
-          sqft: '2400'
-        }
-      ]);
+      const storedSpaces = localStorage.getItem('__mock_spaces__');
+      if (storedSpaces) {
+        setSpaces(JSON.parse(storedSpaces));
+      } else {
+        const defaultSpaces = [
+          {
+            id: 'space-1',
+            owner_uid: user?.uid || 'pjlosey',
+            name: "Kristina's Garage",
+            type: 'Residential Garage',
+            location: 'Grayslake, IL',
+            sqft: '600'
+          },
+          {
+            id: 'space-2',
+            owner_uid: user?.uid || 'pjlosey',
+            name: 'Monmouth Beach Self-Storage Unit #402',
+            type: 'Storage Unit',
+            location: 'Monmouth Beach, NJ',
+            sqft: '200'
+          },
+          {
+            id: 'space-3',
+            owner_uid: user?.uid || 'pjlosey',
+            name: 'Rented Workshop Room',
+            type: 'Rented Room',
+            location: 'Chicago, IL',
+            sqft: '400'
+          },
+          {
+            id: 'space-4',
+            owner_uid: user?.uid || 'pjlosey',
+            name: "7'x14' Enclosed Utility Trailer",
+            type: 'Utility Trailer',
+            location: 'Grayslake, IL',
+            sqft: '98'
+          },
+          {
+            id: 'space-5',
+            owner_uid: user?.uid || 'pjlosey',
+            name: "Kristina's House",
+            type: 'Residence',
+            location: 'Grayslake, IL',
+            sqft: '2400'
+          }
+        ];
+        localStorage.setItem('__mock_spaces__', JSON.stringify(defaultSpaces));
+        setSpaces(defaultSpaces);
+      }
 
       setLoading(false);
       return;
