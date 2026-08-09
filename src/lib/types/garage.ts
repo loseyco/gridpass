@@ -44,6 +44,10 @@ export interface GarageItem {
   
   status: ItemStatus;
   
+  make?: string;
+  model?: string;
+  website_url?: string;
+  
   serial_number?: string;
   replacement_value?: number;
   is_insured?: boolean;

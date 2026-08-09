@@ -89,6 +89,9 @@ export default function GarageManagerPage() {
 
   // Item Form State
   const [itemTitle, setItemTitle] = useState('');
+  const [itemMake, setItemMake] = useState('');
+  const [itemModel, setItemModel] = useState('');
+  const [itemWebsiteUrl, setItemWebsiteUrl] = useState('');
   const [itemCategory, setItemCategory] = useState<ItemCategory>('Engine & Drivetrain');
   const [itemCondition, setItemCondition] = useState<ItemCondition>('Good');
   const [itemCostPrice, setItemCostPrice] = useState<number | ''>('');
@@ -274,6 +277,9 @@ export default function GarageManagerPage() {
   const handleOpenNewItemModal = () => {
     setEditingItem(null);
     setItemTitle('');
+    setItemMake('');
+    setItemModel('');
+    setItemWebsiteUrl('');
     setItemCategory('Engine & Drivetrain');
     setItemCondition('Good');
     setItemCostPrice('');
@@ -293,6 +299,9 @@ export default function GarageManagerPage() {
   const handleOpenEditItemModal = (item: GarageItem) => {
     setEditingItem(item);
     setItemTitle(item.title);
+    setItemMake(item.make || '');
+    setItemModel(item.model || '');
+    setItemWebsiteUrl(item.website_url || '');
     setItemCategory(item.category);
     setItemCondition(item.condition);
     setItemCostPrice(item.cost_price || '');
@@ -399,6 +408,9 @@ export default function GarageManagerPage() {
     const itemData = {
       owner_uid: user.uid,
       title: itemTitle.trim(),
+      make: itemMake.trim(),
+      model: itemModel.trim(),
+      website_url: itemWebsiteUrl.trim(),
       category: itemCategory,
       condition: itemCondition,
       cost_price: Number(itemCostPrice) || 0,
@@ -448,8 +460,7 @@ export default function GarageManagerPage() {
 PRICE: $${item.list_price.toLocaleString()} (Cash / Zelle / Venmo)
 CONDITION: ${item.condition}
 CATEGORY: ${item.category}
-${item.serial_number ? `SERIAL #: ${item.serial_number}\n` : ''}
-${item.description ? `DETAILS:\n${item.description}\n\n` : ''}${item.specs ? `SPECS:\n${item.specs}\n\n` : ''}PADDOCK QR TAG: ${item.qr_code_tag || 'GP-GAR-TAG'}
+${item.make ? `MAKE/BRAND: ${item.make}\n` : ''}${item.model ? `MODEL/PART #: ${item.model}\n` : ''}${item.serial_number ? `SERIAL #: ${item.serial_number}\n` : ''}${item.website_url ? `PRODUCT LINK: ${item.website_url}\n` : ''}${item.description ? `DETAILS:\n${item.description}\n\n` : ''}${item.specs ? `SPECS:\n${item.specs}\n\n` : ''}PADDOCK QR TAG: ${item.qr_code_tag || 'GP-GAR-TAG'}
 LOCATION: ${item.location?.zone_name || 'Garage HQ'} (Local Pickup Available)
 CONTACT: Serious inquiries only. DM for quick response!`;
 
@@ -765,10 +776,25 @@ CONTACT: Serious inquiries only. DM for quick response!`;
                             ${item.list_price.toLocaleString()}
                           </span>
                         </div>
+                        {(item.make || item.model) && (
+                          <div className="text-[10px] font-mono font-bold text-neutral-700 bg-neutral-100 px-2.5 py-1 rounded-md border border-neutral-200 inline-block mr-1">
+                            {[item.make, item.model].filter(Boolean).join(' • ')}
+                          </div>
+                        )}
                         {item.serial_number && (
-                          <div className="text-[10px] font-mono font-bold text-neutral-500 bg-neutral-50 px-2.5 py-1 rounded-md border border-neutral-200 inline-block">
+                          <div className="text-[10px] font-mono font-bold text-neutral-500 bg-neutral-50 px-2.5 py-1 rounded-md border border-neutral-200 inline-block mr-1">
                             SN: {item.serial_number}
                           </div>
+                        )}
+                        {item.website_url && (
+                          <a
+                            href={item.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-mono font-bold text-[#ff3b30] hover:underline inline-flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-md border border-red-200 inline-block"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Product Link
+                          </a>
                         )}
                         {item.description && (
                           <p className="text-xs text-neutral-600 font-medium line-clamp-2">
@@ -977,6 +1003,33 @@ CONTACT: Serious inquiries only. DM for quick response!`;
                 />
               </div>
 
+              {/* Make & Model */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase">Make / Brand</label>
+                  <input
+                    type="text"
+                    data-testid="item-make-input"
+                    value={itemMake}
+                    onChange={e => setItemMake(e.target.value)}
+                    placeholder="e.g. Ford, Holley, Milwaukee"
+                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase">Model / Part Number</label>
+                  <input
+                    type="text"
+                    data-testid="item-model-input"
+                    value={itemModel}
+                    onChange={e => setItemModel(e.target.value)}
+                    placeholder="e.g. Mustang GT 5.0, M18 FUEL"
+                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase">Category</label>
@@ -1061,6 +1114,19 @@ CONTACT: Serious inquiries only. DM for quick response!`;
                     className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                   />
                 </div>
+              </div>
+
+              {/* Website / Product Link */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase">Website / Product Link</label>
+                <input
+                  type="url"
+                  data-testid="item-website-url-input"
+                  value={itemWebsiteUrl}
+                  onChange={e => setItemWebsiteUrl(e.target.value)}
+                  placeholder="https://www.fordperformance.com/part/M-6007-D50"
+                  className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                />
               </div>
 
               <div className="pt-4 border-t border-neutral-100 flex items-center justify-end gap-3">
