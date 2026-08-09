@@ -463,7 +463,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           }
         }
 
-        if (!uData && (isMock || userId === 'pjlosey' || userId === 'pjlosey-mock' || userId === 'mock-driver' || userId === 'user-marcus-123' || userId?.includes('mock') || userId?.includes('losey'))) {
+        const isPlaywrightMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ === true;
+        if (!uData && (isPlaywrightMock || userId === 'pjlosey' || userId === 'pjlosey-mock')) {
           const mockDriverProfile: DriverProfile = {
             uid: 'user-pjlosey-123',
             email: 'pj@losey.co',

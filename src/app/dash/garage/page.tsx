@@ -104,8 +104,8 @@ export default function GarageManagerPage() {
           console.warn("Firestore garage fetch warning, fallback check:", dbErr);
         }
 
-        const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
-        if ((isMock || loadedItems.length === 0) && (isMock || user.uid === 'pjlosey' || user.uid?.includes('mock') || user.uid?.includes('user'))) {
+        const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ === true;
+        if (isMock && loadedItems.length === 0) {
           loadedZones = [
             { id: 'zone-1', garage_id: 'default', owner_uid: user.uid, name: 'Engine Bay & Racks', description: 'Heavy parts shelving', created_at: new Date().toISOString() },
             { id: 'zone-2', garage_id: 'default', owner_uid: user.uid, name: 'Telemetry & Electronics', description: 'Precision IoT & sensors', created_at: new Date().toISOString() }

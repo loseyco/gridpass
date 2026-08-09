@@ -116,7 +116,7 @@ async function getProfileData(userId: string): Promise<DriverProfile | null> {
     console.error("Error retrieving server-side profile data:", err);
   }
 
-  if (userId && (userId.toLowerCase() === 'pjlosey' || userId.toLowerCase() === 'pjlosey-mock' || userId.toLowerCase().includes('losey'))) {
+  if (userId && (userId.toLowerCase() === 'pjlosey' || userId.toLowerCase() === 'pjlosey-mock')) {
     return {
       uid: 'user-pjlosey-123',
       email: 'pj@losey.co',
