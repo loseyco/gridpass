@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase/config';
 import { 
-  collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp 
+  collection, query, where, onSnapshot, doc, updateDoc, addDoc, deleteDoc, serverTimestamp 
 } from 'firebase/firestore';
 import { 
   Car, Plus, Wrench, Heart, ShieldCheck, Loader2, User, MapPin, 
   Printer, Sparkles, CheckCircle, Share2, Compass, QrCode, 
-  Building2, Calendar 
+  Building2, Calendar, Briefcase, Warehouse, Trash2, Edit3, Eye, X
 } from 'lucide-react';
 import { BusinessProfile } from '@/lib/types/business';
 import { GridpassEvent } from '@/lib/types/events';
@@ -52,11 +52,35 @@ interface UserProfile {
   social_twitter?: string;
 }
 
-export default function Dashboard() {
+interface ExperienceAsset {
+  id: string;
+  title: string;
+  company: string;
+  category: string;
+  description: string;
+  date_range?: string;
+  photos?: string[];
+  external_links?: { title: string; url: string }[];
+}
+
+interface PhysicalSpace {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  sqft?: string;
+  item_count?: number;
+  notes?: string;
+}
+
+function DashboardContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
 
+  const [activeTab, setActiveTab] = useState<string>('vehicles');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [vehicles, setVehicles] = useState<DashboardVehicle[]>([]);
   const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
@@ -64,14 +88,111 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
+  // Experience Assets State
+  const [experiences, setExperiences] = useState<ExperienceAsset[]>([]);
+  const [showExpModal, setShowExpModal] = useState(false);
+  const [editingExp, setEditingExp] = useState<ExperienceAsset | null>(null);
+  const [expTitle, setExpTitle] = useState('');
+  const [expCompany, setExpCompany] = useState('');
+  const [expCategory, setExpCategory] = useState('MOTORSPORT GIG');
+  const [expDesc, setExpDesc] = useState('');
+
+  // Physical Spaces State
+  const [spaces, setSpaces] = useState<PhysicalSpace[]>([]);
+  const [showSpaceModal, setShowSpaceModal] = useState(false);
+  const [editingSpace, setEditingSpace] = useState<PhysicalSpace | null>(null);
+  const [spaceName, setSpaceName] = useState('');
+  const [spaceType, setSpaceType] = useState('Residential Workshop');
+  const [spaceLocation, setSpaceLocation] = useState('Grayslake, IL');
+  const [spaceSqft, setSpaceSqft] = useState('500');
 
   useEffect(() => {
-    if (!user) return;
+    const tabParam = searchParams?.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!authLoading && !user && !isMock) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router, isMock]);
+
+  useEffect(() => {
+    if (!user && !isMock) return;
+
+    // Load Experience Assets default mock / state
+    const defaultExperiences: ExperienceAsset[] = [
+      {
+        id: 'exp-hrc-2021',
+        title: 'Honda Racing / HRC Trackside Engineer',
+        company: 'Honda Racing Corporation (HRC)',
+        category: 'MOTORSPORT GIG',
+        description: 'High-speed telemetry extraction and real-time engine tuning across championship rounds.',
+        date_range: '2021 - Present'
+      },
+      {
+        id: 'exp-gridpass-2024',
+        title: 'Gridpass Platform & Waterway Radar',
+        company: 'Gridpass Technologies',
+        category: 'SPECIAL PROJECT',
+        description: 'Dynamic QR code portfolios, physical venue check-ins, and live telemetry.',
+        date_range: '2024 - Present'
+      },
+      {
+        id: 'exp-siemens-2022',
+        title: 'Siemens Healthineers Project Engineer',
+        company: 'Siemens Healthineers',
+        category: 'FULL-TIME ROLE',
+        description: 'Precision medical imaging hardware engineering and quality systems architecture.',
+        date_range: '2022 - 2024'
+      }
+    ];
+
+    // Load Physical Spaces default mock / state
+    const defaultSpaces: PhysicalSpace[] = [
+      {
+        id: 'space-1',
+        name: "Kristina's Garage",
+        type: 'Residential Workshop',
+        location: 'Grayslake, IL',
+        sqft: '528 sq ft',
+        item_count: 12
+      },
+      {
+        id: 'space-2',
+        name: "Monmouth Beach Self-Storage Unit #402",
+        type: 'Storage Unit',
+        location: 'Monmouth Beach, NJ',
+        sqft: '200 sq ft',
+        item_count: 8
+      },
+      {
+        id: 'space-3',
+        name: "Rented Workshop Room",
+        type: 'Commercial Bay',
+        location: 'Lake Villa, IL',
+        sqft: '800 sq ft',
+        item_count: 15
+      },
+      {
+        id: 'space-4',
+        name: "7'x14' Enclosed Utility Trailer",
+        type: 'Mobile Enclosed Trailer',
+        location: 'Grayslake, IL',
+        sqft: '98 sq ft',
+        item_count: 5
+      },
+      {
+        id: 'space-5',
+        name: "Kristina's House",
+        type: 'Staging & Storage',
+        location: 'Grayslake, IL',
+        sqft: '350 sq ft',
+        item_count: 4
+      }
+    ];
 
     if (isMock) {
       setProfile({
@@ -81,7 +202,6 @@ export default function Dashboard() {
         location: 'Grayslake, IL'
       });
       
-      // Load vehicles from mock local storage or defaults
       const storedVehicles = localStorage.getItem('__mock_vehicles__');
       if (storedVehicles) {
         setVehicles(JSON.parse(storedVehicles));
@@ -101,48 +221,38 @@ export default function Dashboard() {
         setVehicles(defaultMock);
       }
 
-      // Load businesses from mock local storage or defaults
-      const storedBiz = localStorage.getItem('__mock_businesses__');
-      if (storedBiz) {
-        setBusinesses(JSON.parse(storedBiz));
-      } else {
-        setBusinesses([
-          {
-            id: 'nielsens',
-            owner_uid: user.uid,
-            name: 'NIELSEN ENTERPRISES',
-            description: 'Powersports and Marine Dealership',
-            category: 'dealership',
-            location_name: 'Lake Villa, IL'
-          }
-        ]);
-      }
+      setBusinesses([
+        {
+          id: 'nielsens',
+          owner_uid: user?.uid || 'pjlosey',
+          name: 'NIELSEN ENTERPRISES',
+          description: 'Powersports and Marine Dealership',
+          category: 'dealership',
+          location_name: 'Lake Villa, IL'
+        }
+      ]);
 
-      // Load events from mock local storage or defaults
-      const storedEvts = localStorage.getItem('__mock_events__');
-      if (storedEvts) {
-        setEvents(JSON.parse(storedEvts));
-      } else {
-        setEvents([
-          {
-            id: 'maple-city-cruise',
-            host_uid: user.uid,
-            title: '27TH ANNUAL CRUISE NIGHT IN THE MAPLE CITY',
-            description: 'Monmouth\'s legendary Cruise Night!',
-            frequency: 'one_time',
-            location_name: 'Monmouth Public Square',
-            require_waiver: true,
-            require_tech_check: false,
-            staging_groups: ['Classics', 'Muscle']
-          }
-        ]);
-      }
+      setEvents([
+        {
+          id: 'maple-city-cruise',
+          host_uid: user?.uid || 'pjlosey',
+          title: '27TH ANNUAL CRUISE NIGHT IN THE MAPLE CITY',
+          description: 'Monmouth\'s legendary Cruise Night!',
+          frequency: 'one_time',
+          location_name: 'Monmouth Public Square',
+          require_waiver: true,
+          require_tech_check: false,
+          staging_groups: ['Classics', 'Muscle']
+        }
+      ]);
 
+      setExperiences(defaultExperiences);
+      setSpaces(defaultSpaces);
       setLoading(false);
       return;
     }
 
-    // Bind real Firebase Firestore snapshot listeners
+    if (!user) return;
     const profileRef = doc(db, 'users', user.uid);
     const unsubProfile = onSnapshot(profileRef, (snap) => {
       if (snap.exists()) {
@@ -172,6 +282,9 @@ export default function Dashboard() {
     }, (err) => {
       console.error("Error loading vehicles snapshot:", err);
     });
+
+    setExperiences(defaultExperiences);
+    setSpaces(defaultSpaces);
 
     const businessesQuery = collection(db, 'businesses');
     const unsubBusinesses = onSnapshot(businessesQuery, (snap) => {
@@ -217,14 +330,94 @@ export default function Dashboard() {
     };
   }, [user, isMock]);
 
+  const handleTabSelect = (tabKey: string) => {
+    setActiveTab(tabKey);
+    router.push(`/dash?tab=${tabKey}`);
+  };
+
+  const handleCreateExperience = () => {
+    setEditingExp(null);
+    setExpTitle('');
+    setExpCompany('');
+    setExpCategory('MOTORSPORT GIG');
+    setExpDesc('');
+    setShowExpModal(true);
+  };
+
+  const handleSaveExperience = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expTitle.trim()) return;
+
+    if (editingExp) {
+      setExperiences(prev => prev.map(exp => exp.id === editingExp.id ? {
+        ...exp,
+        title: expTitle,
+        company: expCompany,
+        category: expCategory,
+        description: expDesc
+      } : exp));
+    } else {
+      const newExp: ExperienceAsset = {
+        id: `exp-${Date.now()}`,
+        title: expTitle,
+        company: expCompany || 'Gridpass Member',
+        category: expCategory,
+        description: expDesc
+      };
+      setExperiences(prev => [newExp, ...prev]);
+    }
+    setShowExpModal(false);
+  };
+
+  const handleDeleteExperience = (id: string) => {
+    setExperiences(prev => prev.filter(e => e.id !== id));
+  };
+
+  const handleCreateSpace = () => {
+    setEditingSpace(null);
+    setSpaceName('');
+    setSpaceType('Residential Workshop');
+    setSpaceLocation('Grayslake, IL');
+    setSpaceSqft('500');
+    setShowSpaceModal(true);
+  };
+
+  const handleSaveSpace = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!spaceName.trim()) return;
+
+    if (editingSpace) {
+      setSpaces(prev => prev.map(sp => sp.id === editingSpace.id ? {
+        ...sp,
+        name: spaceName,
+        type: spaceType,
+        location: spaceLocation,
+        sqft: `${spaceSqft} sq ft`
+      } : sp));
+    } else {
+      const newSpace: PhysicalSpace = {
+        id: `space-${Date.now()}`,
+        name: spaceName,
+        type: spaceType,
+        location: spaceLocation,
+        sqft: `${spaceSqft} sq ft`,
+        item_count: 0
+      };
+      setSpaces(prev => [...prev, newSpace]);
+    }
+    setShowSpaceModal(false);
+  };
+
+  const handleDeleteSpace = (id: string) => {
+    setSpaces(prev => prev.filter(s => s.id !== id));
+  };
+
   const handleBecomeSupporter = async () => {
     if (!user) return;
-    
     if (isMock) {
       setProfile(prev => prev ? { ...prev, is_supporter: true } : null);
       return;
     }
-
     try {
       const profileRef = doc(db, 'users', user.uid);
       await updateDoc(profileRef, { is_supporter: true });
@@ -268,6 +461,15 @@ export default function Dashboard() {
     other: 'Partner Business'
   };
 
+  const tabsList = [
+    { id: 'vehicles', label: 'Vehicles', icon: Car },
+    { id: 'experiences', label: 'Experiences', icon: Briefcase },
+    { id: 'spaces', label: 'Spaces', icon: Warehouse },
+    { id: 'businesses', label: 'Businesses', icon: Building2 },
+    { id: 'events', label: 'Hosted Events', icon: Calendar },
+    { id: 'membership', label: 'Membership', icon: ShieldCheck },
+  ];
+
   return (
     <div className="flex-1 bg-white text-neutral-900 flex flex-col max-w-4xl mx-auto w-full p-4 space-y-6">
       
@@ -302,353 +504,683 @@ export default function Dashboard() {
           <div className="text-[9px] font-mono font-bold text-[#ff3b30] flex gap-3 items-center">
             <Link 
               href="/dash/edit-profile"
-              className="hover:underline uppercase tracking-wider text-neutral-500 font-bold"
+              className="hover:underline uppercase tracking-wider text-neutral-500 font-bold min-h-[44px] flex items-center"
             >
               Edit Profile
             </Link>
             <span className="text-neutral-300">|</span>
-            <Link href={profile?.username ? `/u/${profile.username}` : `/u/${user?.uid || ''}`} className="hover:underline uppercase tracking-wider text-[#ff3b30] font-bold">
+            <Link href={profile?.username ? `/u/${profile.username}` : `/u/${user?.uid || ''}`} className="hover:underline uppercase tracking-wider text-[#ff3b30] font-bold min-h-[44px] flex items-center">
               Public Profile
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Grid Credits & WoW-Style Achievements + Leaderboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <Link
-          href="/dash/achievements"
-          className="bg-neutral-900 text-white p-4 rounded-2xl border border-neutral-800 shadow-md flex items-center justify-between hover:bg-black transition-all group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#ff3b30] text-white flex items-center justify-center text-xl font-black shrink-0">
-              🏆
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-black text-xs uppercase text-white tracking-wider">
-                  Achievements & Credits HQ
-                </h3>
-                <span className="text-[8px] font-black uppercase bg-[#ff3b30] text-white px-1.5 py-0.2 rounded-full">
-                  HQ
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">
-                Earn Grid Credits (100 = $1.00 USD), unlock Feats & claim Perks!
-              </p>
-            </div>
-          </div>
-
-          <span className="text-xs font-black text-[#ff3b30] group-hover:translate-x-1 transition-transform shrink-0">
-            HQ →
-          </span>
-        </Link>
-
-        <Link
-          href="/leaderboard"
-          className="bg-neutral-900 text-white p-4 rounded-2xl border border-neutral-800 shadow-md flex items-center justify-between hover:bg-black transition-all group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 text-neutral-950 flex items-center justify-center text-xl font-black shrink-0">
-              🥇
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-black text-xs uppercase text-white tracking-wider">
-                  Member Leaderboard
-                </h3>
-                <span className="text-[8px] font-black uppercase bg-amber-500 text-neutral-950 px-1.5 py-0.2 rounded-full">
-                  Ranks
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">
-                Compare Grid Credits, top Feats, and Garage builds!
-              </p>
-            </div>
-          </div>
-
-          <span className="text-xs font-black text-amber-400 group-hover:translate-x-1 transition-transform shrink-0">
-            View →
-          </span>
-        </Link>
-      </div>
-
-
-      {/* Digital Garage Section */}
-      <section className="space-y-3 text-left">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
-            Digital Garage
-          </h2>
-          <button 
-            onClick={() => router.push('/v/create')}
-            className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-          >
-            <Plus className="w-3 h-3" /> Add Vehicle
-          </button>
-        </div>
-
-        {vehicles.length === 0 ? (
-          <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-xl text-center space-y-3">
-            <Car className="w-8 h-8 text-neutral-400 mx-auto" />
-            <h3 className="text-xs font-bold text-neutral-900 uppercase">Your garage is empty</h3>
-            <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
-              Add vehicles to configure digital mod catalogs and generate printable decals.
-            </p>
-          </div>
-        ) : (
-          /* Simple Vertical Compact Rows */
-          <div className="border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-200">
-            {vehicles.map((v) => (
-              <div key={v.id} className="flex items-center justify-between p-3.5 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Photo on the left */}
-                  <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                    {v.photo_url ? (
-                      <img src={v.photo_url} alt={`${v.make} ${v.model}`} className="w-full h-full object-cover" />
-                    ) : (
-                      <Car className="w-4 h-4 text-neutral-400" />
-                    )}
-                  </div>
-
-                  {/* Year, Make, Model, Trim */}
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-[9px] font-mono font-bold text-[#ff3b30]">{v.year}</span>
-                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate animate-fade-in">
-                        {v.make} {v.model}
-                      </h3>
-                    </div>
-                    {v.trim && (
-                      <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase">
-                        {v.trim}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-1.5 shrink-0">
-                  <Link
-                    href={`/v/${v.id}`}
-                    className="text-[9px] font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-700 px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
-                  >
-                    View
-                  </Link>
-                  <Link
-                    href={`/dash/vehicles/edit?id=${v.id}`}
-                    className="text-[9px] font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Business Section */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#ff3b30]" />
-            My Businesses
-          </h2>
-          <button 
-            onClick={() => router.push('/b/create')}
-            className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-          >
-            <Plus className="w-3 h-3" /> Add Business
-          </button>
-        </div>
-
-        {businesses.length === 0 ? (
-          <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-xl text-center space-y-3">
-            <Building2 className="w-8 h-8 text-neutral-400 mx-auto" />
-            <h3 className="text-xs font-bold text-neutral-900 uppercase">No businesses added</h3>
-            <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
-              Add powersport dealerships, service shops, or tracks to start hosting digital event staging.
-            </p>
-          </div>
-        ) : (
-          <div className="border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-200">
-            {businesses.map((biz) => (
-              <div key={biz.id} className="flex items-center justify-between p-3.5 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                    {biz.logo_url ? (
-                      <img src={biz.logo_url} alt={biz.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Building2 className="w-4 h-4 text-neutral-400" />
-                    )}
-                  </div>
-
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">
-                        {businessCategoryLabels[biz.category] || 'Biz'}
-                      </span>
-                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
-                        {biz.name}
-                      </h3>
-                    </div>
-                    <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-0.5">
-                      <MapPin className="w-2.5 h-2.5 text-neutral-400" /> {biz.location_name}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-1.5 shrink-0">
-                  <Link
-                    href={`/b/${biz.id}`}
-                    className="text-[9px] font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-700 px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
-                  >
-                    View
-                  </Link>
-                  <Link
-                    href={`/dash/businesses/edit?id=${biz.id}`}
-                    className="text-[9px] font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* My Hosted Events Section */}
-      <div className="space-y-3 text-left">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
-            My Hosted Events
-          </h2>
-          <button 
-            onClick={() => router.push('/events/create')}
-            className="flex items-center gap-1 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-          >
-            <Plus className="w-3 h-3" /> Host Event
-          </button>
-        </div>
-
-        {events.length === 0 ? (
-          <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-xl text-center space-y-3">
-            <Calendar className="w-8 h-8 text-neutral-400 mx-auto" />
-            <h3 className="text-xs font-bold text-neutral-900 uppercase">No active events hosted</h3>
-            <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
-              Publish single meets, repeating autocrosses, or offroad park times and track staging rosters.
-            </p>
-          </div>
-        ) : (
-          <div className="border border-neutral-200 rounded-xl overflow-hidden divide-y divide-neutral-200">
-            {events.map((evt) => (
-              <div key={evt.id} className="flex items-center justify-between p-3.5 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-[#ff3b30]" />
-                  </div>
-
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">
-                        {evt.frequency === 'one_time' ? 'One-Time' : evt.frequency === 'repeating' ? 'Repeating' : 'Venue'}
-                      </span>
-                      <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
-                        {evt.title}
-                      </h3>
-                    </div>
-                    <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-0.5">
-                      <MapPin className="w-2.5 h-2.5 text-neutral-400" /> {evt.location_name}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-1.5 shrink-0">
-                  <Link
-                    href={`/events/${evt.id}`}
-                    className="text-[9px] font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-700 px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
-                  >
-                    View
-                  </Link>
-                  <Link
-                    href={`/events/create?id=${evt.id}`}
-                    className="text-[9px] font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-3.5 py-1.5 rounded-lg transition-colors uppercase tracking-wider"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Membership Stack */}
-      <div className="space-y-3 text-left">
-        <h3 className="text-xs font-black uppercase text-neutral-900 tracking-wider">Membership</h3>
-        <div className="bg-neutral-50 border border-neutral-200 rounded-xl divide-y divide-neutral-200 overflow-hidden">
-          
-          {/* Support row - visible only under test mock environments */}
-          {isMock && (
-            <div className="p-3.5 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide">Supporter Tier</span>
-                <span className={`text-[9px] font-mono font-bold uppercase ${isSupporter ? 'text-yellow-600' : 'text-neutral-400'}`}>
-                  {isSupporter ? 'Supporter Active' : 'Standard'}
-                </span>
-              </div>
-              <p className="text-[10px] text-neutral-500 leading-normal">
-                {isSupporter 
-                  ? 'Thank you for backing the universal registry. Your gold pass border is active.' 
-                  : 'Help fund development starting from $5 to unlock a lifetime backer badge.'}
-              </p>
-              {!isSupporter && (
-                <button 
-                  onClick={handleBecomeSupporter}
-                  className="mt-1 w-full py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[10px] font-bold uppercase rounded-lg transition-colors"
-                >
-                  Pledge Support
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Badges row */}
-          {profile?.badges && profile.badges.length > 0 && (
-            <div className="p-3.5 space-y-2">
-              <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide block">Unlocked Badges</span>
-              <div className="flex flex-wrap gap-1.5">
-                {profile.badges.map((badge, idx) => (
-                  <span 
-                    key={idx}
-                    className="text-[8px] font-mono font-bold uppercase bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded"
-                  >
-                    {badge.replace('-', ' ')}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Invite row */}
-          <div className="p-3.5 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide block">Invite Member</span>
-              <p className="text-[9px] text-neutral-500 truncate">Share your invite link with other members</p>
-            </div>
-            <button 
-              onClick={handleCopyInviteLink}
-              className="px-3 py-1.5 bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white text-[9px] font-bold uppercase rounded-lg transition-colors shrink-0"
+      {/* 6 DASHBOARD TAB PILLS */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-neutral-200 no-scrollbar" data-testid="dashboard-tab-pills">
+        {tabsList.map(t => {
+          const IconComp = t.icon;
+          const isActive = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              data-testid={`dash-tab-${t.id}`}
+              onClick={() => handleTabSelect(t.id)}
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                isActive
+                  ? 'bg-[#ff3b30] text-white shadow-md shadow-red-500/20'
+                  : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              }`}
             >
-              {copied ? 'Copied' : 'Invite'}
+              <IconComp className="w-4 h-4" />
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* TAB 1: VEHICLES (DIGITAL GARAGE) */}
+      {activeTab === 'vehicles' && (
+        <section className="space-y-4 text-left animate-in fade-in duration-200" data-testid="dashboard-vehicles-manager">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
+              Digital Garage
+            </h2>
+            <button 
+              onClick={() => router.push('/v/create')}
+              className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Vehicle
             </button>
           </div>
 
+          {vehicles.length === 0 ? (
+            <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-2xl text-center space-y-3">
+              <Car className="w-8 h-8 text-neutral-400 mx-auto" />
+              <h3 className="text-xs font-bold text-neutral-900 uppercase">Your garage is empty</h3>
+              <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
+                Add vehicles to configure digital mod catalogs and generate printable decals.
+              </p>
+            </div>
+          ) : (
+            <div className="border border-neutral-200 rounded-2xl overflow-hidden divide-y divide-neutral-200 shadow-sm">
+              {vehicles.map((v) => (
+                <div key={v.id} className="flex items-center justify-between p-4 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-16 h-12 rounded-xl overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                      {v.photo_url ? (
+                        <img src={v.photo_url} alt={`${v.make} ${v.model}`} className="w-full h-full object-cover" />
+                      ) : (
+                        <Car className="w-5 h-5 text-neutral-400" />
+                      )}
+                    </div>
+
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-mono font-bold text-[#ff3b30]">{v.year}</span>
+                        <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
+                          {v.make} {v.model}
+                        </h3>
+                      </div>
+                      {v.trim && (
+                        <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase">
+                          {v.trim}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 shrink-0">
+                    <Link
+                      href={`/v/${v.id}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-800 px-4 rounded-xl transition-colors uppercase"
+                    >
+                      View
+                    </Link>
+                    <Link
+                      href={`/dash/vehicles/edit?id=${v.id}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-4 rounded-xl transition-colors uppercase"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* TAB 2: EXPERIENCES (DASHBOARD EXPERIENCE MANAGER) */}
+      {activeTab === 'experiences' && (
+        <section className="space-y-4 text-left animate-in fade-in duration-200" data-testid="dashboard-experience-manager">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-[#ff3b30]" /> Experience Assets
+              </h2>
+              <p className="text-[10px] text-neutral-500 font-mono">Manage motorsport gigs, roles, and engineering projects</p>
+            </div>
+            <button
+              type="button"
+              data-testid="create-experience-asset-btn"
+              onClick={handleCreateExperience}
+              className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-md"
+            >
+              <Plus className="w-4 h-4" /> + Create New Experience Asset
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {experiences.map((exp) => (
+              <div 
+                key={exp.id} 
+                className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                data-testid={`experience-asset-card-${exp.id}`}
+              >
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 bg-neutral-900 text-white rounded-md">
+                      {exp.category}
+                    </span>
+                    <h3 className="text-sm font-black text-neutral-900 uppercase tracking-tight">
+                      {exp.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs font-bold text-neutral-600 uppercase">
+                    {exp.company} {exp.date_range && `• ${exp.date_range}`}
+                  </p>
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    {exp.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                  <Link
+                    href={`/exp/${exp.id}`}
+                    data-testid={`view-exp-${exp.id}`}
+                    className="min-h-[44px] min-w-[44px] px-4 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> View
+                  </Link>
+                  <button
+                    type="button"
+                    data-testid={`edit-exp-${exp.id}`}
+                    onClick={() => {
+                      setEditingExp(exp);
+                      setExpTitle(exp.title);
+                      setExpCompany(exp.company);
+                      setExpCategory(exp.category);
+                      setExpDesc(exp.description);
+                      setShowExpModal(true);
+                    }}
+                    className="min-h-[44px] min-w-[44px] px-4 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit
+                  </button>
+                  <button
+                    type="button"
+                    data-testid={`delete-exp-${exp.id}`}
+                    onClick={() => handleDeleteExperience(exp.id)}
+                    className="min-h-[44px] min-w-[44px] p-3 text-neutral-400 hover:text-red-600 transition-all rounded-xl border border-neutral-200 flex items-center justify-center"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* TAB 3: SPACES (DASHBOARD SPACE MANAGER) */}
+      {activeTab === 'spaces' && (
+        <section className="space-y-4 text-left animate-in fade-in duration-200" data-testid="dashboard-space-manager">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider flex items-center gap-2">
+                <Warehouse className="w-4 h-4 text-[#ff3b30]" /> Registered Physical Spaces
+              </h2>
+              <p className="text-[10px] text-neutral-500 font-mono">Manage workshops, garages, trailers, and storage locations</p>
+            </div>
+            <button
+              type="button"
+              data-testid="add-physical-space-btn"
+              onClick={handleCreateSpace}
+              className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer shadow-md"
+            >
+              <Plus className="w-4 h-4" /> + Add Physical Space
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {spaces.map((space) => (
+              <div 
+                key={space.id} 
+                className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                data-testid={`physical-space-card-${space.id}`}
+              >
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 bg-amber-500 text-neutral-950 rounded-md">
+                      {space.type}
+                    </span>
+                    <h3 className="text-sm font-black text-neutral-900 uppercase tracking-tight">
+                      {space.name}
+                    </h3>
+                  </div>
+                  <div className="text-xs font-mono text-neutral-500 flex items-center gap-2 flex-wrap">
+                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#ff3b30]" /> {space.location}</span>
+                    {space.sqft && <span>• {space.sqft}</span>}
+                    {space.item_count !== undefined && <span>• {space.item_count} items staged</span>}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                  <Link
+                    href="/dash/garage"
+                    data-testid={`manage-space-${space.id}`}
+                    className="min-h-[44px] min-w-[44px] px-4 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
+                  >
+                    Inventory →
+                  </Link>
+                  <button
+                    type="button"
+                    data-testid={`edit-space-${space.id}`}
+                    onClick={() => {
+                      setEditingSpace(space);
+                      setSpaceName(space.name);
+                      setSpaceType(space.type);
+                      setSpaceLocation(space.location);
+                      setShowSpaceModal(true);
+                    }}
+                    className="min-h-[44px] min-w-[44px] px-4 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit
+                  </button>
+                  <button
+                    type="button"
+                    data-testid={`delete-space-${space.id}`}
+                    onClick={() => handleDeleteSpace(space.id)}
+                    className="min-h-[44px] min-w-[44px] p-3 text-neutral-400 hover:text-red-600 transition-all rounded-xl border border-neutral-200 flex items-center justify-center"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* TAB 4: BUSINESSES */}
+      {activeTab === 'businesses' && (
+        <section className="space-y-4 text-left animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#ff3b30]" />
+              My Businesses
+            </h2>
+            <button 
+              onClick={() => router.push('/b/create')}
+              className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Business
+            </button>
+          </div>
+
+          {businesses.length === 0 ? (
+            <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-2xl text-center space-y-3">
+              <Building2 className="w-8 h-8 text-neutral-400 mx-auto" />
+              <h3 className="text-xs font-bold text-neutral-900 uppercase">No businesses added</h3>
+              <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
+                Add powersport dealerships, service shops, or tracks to start hosting digital event staging.
+              </p>
+            </div>
+          ) : (
+            <div className="border border-neutral-200 rounded-2xl overflow-hidden divide-y divide-neutral-200 shadow-sm">
+              {businesses.map((biz) => (
+                <div key={biz.id} className="flex items-center justify-between p-4 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-16 h-12 rounded-xl overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                      {biz.logo_url ? (
+                        <img src={biz.logo_url} alt={biz.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Building2 className="w-5 h-5 text-neutral-400" />
+                      )}
+                    </div>
+
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">
+                          {businessCategoryLabels[biz.category] || 'Biz'}
+                        </span>
+                        <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
+                          {biz.name}
+                        </h3>
+                      </div>
+                      <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-0.5">
+                        <MapPin className="w-2.5 h-2.5 text-neutral-400" /> {biz.location_name}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 shrink-0">
+                    <Link
+                      href={`/b/${biz.id}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-800 px-4 rounded-xl transition-colors uppercase"
+                    >
+                      View
+                    </Link>
+                    <Link
+                      href={`/dash/businesses/edit?id=${biz.id}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-4 rounded-xl transition-colors uppercase"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* TAB 5: HOSTED EVENTS */}
+      {activeTab === 'events' && (
+        <section className="space-y-4 text-left animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase text-neutral-900 tracking-wider">
+              My Hosted Events
+            </h2>
+            <button 
+              onClick={() => router.push('/events/create')}
+              className="min-h-[44px] flex items-center gap-1.5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase px-4 py-2 rounded-xl transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Host Event
+            </button>
+          </div>
+
+          {events.length === 0 ? (
+            <div className="bg-neutral-50 border border-neutral-200 p-8 rounded-2xl text-center space-y-3">
+              <Calendar className="w-8 h-8 text-neutral-400 mx-auto" />
+              <h3 className="text-xs font-bold text-neutral-900 uppercase">No active events hosted</h3>
+              <p className="text-[10px] text-neutral-500 max-w-xs mx-auto leading-normal">
+                Publish single meets, repeating autocrosses, or offroad park times and track staging rosters.
+              </p>
+            </div>
+          ) : (
+            <div className="border border-neutral-200 rounded-2xl overflow-hidden divide-y divide-neutral-200 shadow-sm">
+              {events.map((evt) => (
+                <div key={evt.id} className="flex items-center justify-between p-4 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-16 h-12 rounded-xl overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-[#ff3b30]" />
+                    </div>
+
+                    <div className="space-y-0.5 min-w-0">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">
+                          {evt.frequency === 'one_time' ? 'One-Time' : evt.frequency === 'repeating' ? 'Repeating' : 'Venue'}
+                        </span>
+                        <h3 className="text-xs font-extrabold text-neutral-900 uppercase truncate">
+                          {evt.title}
+                        </h3>
+                      </div>
+                      <div className="text-[9px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-0.5">
+                        <MapPin className="w-2.5 h-2.5 text-neutral-400" /> {evt.location_name}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 shrink-0">
+                    <Link
+                      href={`/events/${evt.id}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-800 px-4 rounded-xl transition-colors uppercase"
+                    >
+                      View
+                    </Link>
+                    <Link
+                      href={`/events/create?id=${evt.id}`}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-4 rounded-xl transition-colors uppercase"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* TAB 6: MEMBERSHIP & ACHIEVEMENTS */}
+      {activeTab === 'membership' && (
+        <section className="space-y-6 text-left animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <Link
+              href="/dash/achievements"
+              className="bg-neutral-900 text-white p-5 rounded-2xl border border-neutral-800 shadow-md flex items-center justify-between hover:bg-black transition-all group min-h-[44px]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#ff3b30] text-white flex items-center justify-center text-xl font-black shrink-0">
+                  🏆
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-black text-xs uppercase text-white tracking-wider">
+                      Achievements & Credits HQ
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">
+                    Earn Grid Credits, unlock Feats & claim Perks!
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-black text-[#ff3b30] group-hover:translate-x-1 transition-transform shrink-0">HQ →</span>
+            </Link>
+
+            <Link
+              href="/leaderboard"
+              className="bg-neutral-900 text-white p-5 rounded-2xl border border-neutral-800 shadow-md flex items-center justify-between hover:bg-black transition-all group min-h-[44px]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-neutral-950 flex items-center justify-center text-xl font-black shrink-0">
+                  🥇
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-black text-xs uppercase text-white tracking-wider">
+                      Member Leaderboard
+                    </h3>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 mt-0.5 leading-snug">
+                    Compare Grid Credits, top Feats, and Garage builds!
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-black text-amber-400 group-hover:translate-x-1 transition-transform shrink-0">View →</span>
+            </Link>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-xs font-black uppercase text-neutral-900 tracking-wider">Membership Perks</h3>
+            <div className="bg-neutral-50 border border-neutral-200 rounded-2xl divide-y divide-neutral-200 overflow-hidden">
+              {isMock && (
+                <div className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide">Supporter Tier</span>
+                    <span className={`text-[9px] font-mono font-bold uppercase ${isSupporter ? 'text-amber-600' : 'text-neutral-400'}`}>
+                      {isSupporter ? 'Supporter Active' : 'Standard'}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-neutral-500 leading-normal">
+                    {isSupporter 
+                      ? 'Thank you for backing the universal registry. Your gold pass border is active.' 
+                      : 'Help fund development starting from $5 to unlock a lifetime backer badge.'}
+                  </p>
+                  {!isSupporter && (
+                    <button 
+                      onClick={handleBecomeSupporter}
+                      className="min-h-[44px] mt-1 w-full py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-bold uppercase rounded-xl transition-colors"
+                    >
+                      Pledge Support
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="p-4 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <span className="text-xs font-semibold text-neutral-800 uppercase tracking-wide block">Invite Member</span>
+                  <p className="text-[9px] text-neutral-500 truncate">Share your invite link with other members</p>
+                </div>
+                <button 
+                  onClick={handleCopyInviteLink}
+                  className="min-h-[44px] min-w-[44px] px-4 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl transition-colors shrink-0"
+                >
+                  {copied ? 'Copied' : 'Invite'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CREATE / EDIT EXPERIENCE MODAL */}
+      {showExpModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl text-left border border-neutral-200">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <h3 className="text-base font-black uppercase text-neutral-900">
+                {editingExp ? 'Edit Experience Asset' : '+ Create New Experience Asset'}
+              </h3>
+              <button 
+                onClick={() => setShowExpModal(false)}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-neutral-400 hover:text-black"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveExperience} className="space-y-4">
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Title</label>
+                <input
+                  type="text"
+                  value={expTitle}
+                  onChange={(e) => setExpTitle(e.target.value)}
+                  placeholder="e.g. Trackside Engineer"
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Company / Organization</label>
+                <input
+                  type="text"
+                  value={expCompany}
+                  onChange={(e) => setExpCompany(e.target.value)}
+                  placeholder="e.g. Honda Racing Corporation"
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Category</label>
+                <select
+                  value={expCategory}
+                  onChange={(e) => setExpCategory(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                >
+                  <option value="MOTORSPORT GIG">MOTORSPORT GIG</option>
+                  <option value="SPECIAL PROJECT">SPECIAL PROJECT</option>
+                  <option value="FULL-TIME ROLE">FULL-TIME ROLE</option>
+                  <option value="VENDOR SERVICE">VENDOR SERVICE</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Description</label>
+                <textarea
+                  value={expDesc}
+                  onChange={(e) => setExpDesc(e.target.value)}
+                  placeholder="Describe your responsibilities and achievements..."
+                  rows={3}
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-medium text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
+                />
+              </div>
+              <div className="flex items-center gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowExpModal(false)}
+                  className="min-h-[44px] px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="min-h-[44px] px-5 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase rounded-xl shadow-md"
+                >
+                  Save Experience
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* CREATE / EDIT PHYSICAL SPACE MODAL */}
+      {showSpaceModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl text-left border border-neutral-200">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+              <h3 className="text-base font-black uppercase text-neutral-900">
+                {editingSpace ? 'Edit Physical Space' : '+ Add Physical Space'}
+              </h3>
+              <button 
+                onClick={() => setShowSpaceModal(false)}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center text-neutral-400 hover:text-black"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveSpace} className="space-y-4">
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Space Name</label>
+                <input
+                  type="text"
+                  value={spaceName}
+                  onChange={(e) => setSpaceName(e.target.value)}
+                  placeholder="e.g. Kristina's Garage"
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Space Type</label>
+                <select
+                  value={spaceType}
+                  onChange={(e) => setSpaceType(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                >
+                  <option value="Residential Workshop">Residential Workshop</option>
+                  <option value="Storage Unit">Storage Unit</option>
+                  <option value="Commercial Bay">Commercial Bay</option>
+                  <option value="Mobile Enclosed Trailer">Mobile Enclosed Trailer</option>
+                  <option value="Staging & Storage">Staging & Storage</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Location</label>
+                <input
+                  type="text"
+                  value={spaceLocation}
+                  onChange={(e) => setSpaceLocation(e.target.value)}
+                  placeholder="e.g. Grayslake, IL"
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-neutral-600 uppercase block mb-1">Approx Size (sq ft)</label>
+                <input
+                  type="text"
+                  value={spaceSqft}
+                  onChange={(e) => setSpaceSqft(e.target.value)}
+                  placeholder="500"
+                  className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                />
+              </div>
+              <div className="flex items-center gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSpaceModal(false)}
+                  className="min-h-[44px] px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="min-h-[44px] px-5 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase rounded-xl shadow-md"
+                >
+                  Save Space
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

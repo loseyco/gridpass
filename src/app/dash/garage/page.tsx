@@ -12,7 +12,7 @@ import {
   Wrench, Warehouse, Package, DollarSign, Layers, Plus, Search, Filter, 
   Copy, QrCode, Tag, Camera, CheckCircle2, ChevronRight, X, ArrowLeft, Loader2,
   Trash2, ExternalLink, Sparkles, AlertCircle, ShoppingBag, HardDrive,
-  ShieldCheck, Printer, BookOpen, Calendar, Image as ImageIcon, Recycle, Trophy
+  ShieldCheck, Printer, BookOpen, Calendar, Image as ImageIcon, Recycle, Trophy, MapPin
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import GridpassQRCode, { downloadGridpassQR } from '@/components/qr/GridpassQRCode';
@@ -111,11 +111,11 @@ export default function GarageManagerPage() {
 
   // Load Firestore Data
   useEffect(() => {
-    if (authLoading) return;
+    const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
+    if (authLoading && !isMock) return;
     let isMounted = true;
 
     async function loadGarageData() {
-      const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ === true;
       if (!user && !isMock) {
         if (isMounted) setLoading(false);
         return;
@@ -524,7 +524,8 @@ CONTACT: Serious inquiries only. DM for quick response!`;
     }
   };
 
-  if (loading || authLoading) {
+  const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
+  if (loading && !isMock) {
     return (
       <div className="min-h-screen bg-white text-neutral-900 flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
@@ -587,43 +588,66 @@ CONTACT: Serious inquiries only. DM for quick response!`;
       {/* 📊 MAIN CONTAINER */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 py-8 space-y-8 flex-1">
         
-        {/* SUB-TAB SELECTOR */}
-        <div className="flex items-center gap-2 border-b border-neutral-200 pb-3" data-testid="garage-sub-tab-selector">
-          <button
-            type="button"
-            data-testid="subtab-inventory"
-            onClick={() => setActiveSubTab('inventory')}
-            className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === 'inventory'
-                ? 'bg-neutral-900 text-white shadow-md'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
-          >
-            <Package className="w-4 h-4 text-[#ff3b30]" />
-            <span>📦 Inventory &amp; Pipeline</span>
-            <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-white">
-              {items.length}
-            </span>
-          </button>
+        {/* SUB-TAB SELECTOR & TOP ACTIVE SPACE SELECTOR */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-200 pb-3" data-testid="garage-sub-tab-selector">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid="subtab-inventory"
+              onClick={() => setActiveSubTab('inventory')}
+              className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
+                activeSubTab === 'inventory'
+                  ? 'bg-neutral-900 text-white shadow-md'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
+            >
+              <Package className="w-4 h-4 text-[#ff3b30]" />
+              <span>📦 Inventory &amp; Pipeline</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] bg-neutral-800 text-white">
+                {items.length}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            data-testid="subtab-storyboard"
-            onClick={() => setActiveSubTab('storyboard')}
-            className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === 'storyboard'
-                ? 'bg-[#ff3b30] text-white shadow-md shadow-red-500/20'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>📖 Transformation Story</span>
-            <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
-              activeSubTab === 'storyboard' ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-700'
-            }`}>
-              {milestones.length}
-            </span>
-          </button>
+            <button
+              type="button"
+              data-testid="subtab-storyboard"
+              onClick={() => setActiveSubTab('storyboard')}
+              className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-mono font-black uppercase transition-all flex items-center gap-2 cursor-pointer ${
+                activeSubTab === 'storyboard'
+                  ? 'bg-[#ff3b30] text-white shadow-md shadow-red-500/20'
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>📖 Transformation Story</span>
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
+                activeSubTab === 'storyboard' ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-700'
+              }`}>
+                {milestones.length}
+              </span>
+            </button>
+          </div>
+
+          {/* Top Active Space Selector Dropdown */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="space-selector" className="text-xs font-mono font-bold text-neutral-600 uppercase flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-[#ff3b30]" /> Space:
+            </label>
+            <select
+              id="space-selector"
+              data-testid="space-selector-dropdown"
+              value={selectedZoneId}
+              onChange={(e) => setSelectedZoneId(e.target.value)}
+              className="min-h-[44px] px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] cursor-pointer min-w-[220px]"
+            >
+              <option value="All">All Physical Spaces</option>
+              <option value="kristina-garage">Kristina's Garage</option>
+              <option value="monmouth-storage">Monmouth Beach Self-Storage Unit #402</option>
+              <option value="rented-workshop">Rented Workshop Room</option>
+              <option value="utility-trailer">7'x14' Enclosed Utility Trailer</option>
+              <option value="kristina-house">Kristina's House</option>
+            </select>
+          </div>
         </div>
 
         {/* SUB-TAB 1: INVENTORY & PIPELINE */}
