@@ -854,7 +854,7 @@ function DashboardContent() {
 
       {/* TAB 4: BUSINESSES */}
       {activeTab === 'businesses' && (
-        <section className="space-y-4 text-left animate-in fade-in duration-200">
+        <section className="space-y-4 text-left animate-in fade-in duration-200" data-testid="dashboard-businesses-manager">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-extrabold text-neutral-900 uppercase tracking-wider flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#ff3b30]" />
@@ -879,7 +879,7 @@ function DashboardContent() {
           ) : (
             <div className="border border-neutral-200 rounded-2xl overflow-hidden divide-y divide-neutral-200 shadow-sm">
               {businesses.map((biz) => (
-                <div key={biz.id} className="flex items-center justify-between p-4 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
+                <div key={biz.id} data-testid={`business-card-${biz.id}`} className="flex items-center justify-between p-4 bg-white hover:bg-neutral-50 transition-colors gap-3.5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-16 h-12 rounded-xl overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
                       {biz.logo_url ? (
@@ -907,12 +907,14 @@ function DashboardContent() {
                   <div className="flex gap-2 shrink-0">
                     <Link
                       href={`/b/${biz.id}`}
+                      data-testid={`view-business-${biz.id}`}
                       className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-neutral-200 hover:border-neutral-350 bg-white text-neutral-800 px-4 rounded-xl transition-colors uppercase"
                     >
                       View
                     </Link>
                     <Link
                       href={`/dash/businesses/edit?id=${biz.id}`}
+                      data-testid={`edit-business-${biz.id}`}
                       className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-[#ff3b30] hover:bg-[#ff3b30]/5 text-[#ff3b30] px-4 rounded-xl transition-colors uppercase"
                     >
                       Edit
