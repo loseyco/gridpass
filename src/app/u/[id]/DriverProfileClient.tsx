@@ -593,12 +593,29 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-white text-neutral-900 flex flex-col items-center justify-center space-y-4 p-6">
-        <UserCircle className="w-16 h-16 text-neutral-300" />
-        <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-800">Member Passport Not Found</h2>
-        <Link href="/" className="text-xs font-bold text-[#ff3b30] hover:underline flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to Safety
-        </Link>
+      <div className="min-h-screen bg-[#f5f5f7] text-neutral-900 flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-neutral-200/80 rounded-[32px] p-8 shadow-2xl space-y-5 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-400 shadow-inner">
+            <UserCircle className="w-10 h-10 stroke-[1.5]" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-mono font-black uppercase text-[#ff3b30] tracking-widest block">
+              Passport Missing
+            </span>
+            <h2 className="text-xl font-bold tracking-tight text-neutral-900 font-sans">
+              Member Passport Not Found
+            </h2>
+            <p className="text-xs text-neutral-500 font-medium leading-relaxed max-w-xs mx-auto">
+              This driver passport or profile handle does not exist, has been updated, or is currently unavailable.
+            </p>
+          </div>
+          <Link 
+            href="/" 
+            className="min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-2xl transition-all cursor-pointer gap-2 shadow-md hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4" /> Return to Paddock
+          </Link>
+        </div>
       </div>
     );
   }

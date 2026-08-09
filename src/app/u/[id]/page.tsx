@@ -124,46 +124,71 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const profile = await getProfileData(resolvedParams.id);
-  
-  if (!profile) {
+  try {
+    const resolvedParams = await params;
+    const id = resolvedParams?.id;
+    if (!id) {
+      return {
+        title: "Member Profile Not Found | Gridpass",
+        description: "This Gridpass member profile does not exist or has been moved."
+      };
+    }
+    const profile = await getProfileData(id);
+    
+    if (!profile) {
+      return {
+        title: "Member Profile Not Found | Gridpass",
+        description: "This Gridpass member profile does not exist or has been moved."
+      };
+    }
+
+    const title = `${profile.display_name.toUpperCase()} | Member Profile | Gridpass`;
+    const description = profile.bio 
+      ? `${profile.display_name}'s official Member Profile on Gridpass: "${profile.bio}"`
+      : `Check out ${profile.display_name}'s official Gridpass Member Profile. Connected vehicle, social links, and profile details.`;
+
+    const ogImages = profile.avatar_url ? [{ url: profile.avatar_url }] : [];
+
     return {
-      title: "Member Profile Not Found | Gridpass",
-      description: "This Gridpass member profile does not exist or has been moved."
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `https://gridpass.app/u/${id}`,
+        siteName: "Gridpass",
+        type: "profile",
+        images: ogImages
+      },
+      twitter: {
+        card: "summary",
+        title,
+        description,
+        images: profile.avatar_url ? [profile.avatar_url] : []
+      }
+    };
+  } catch (err) {
+    console.error("Error generating metadata for /u/[id]:", err);
+    return {
+      title: "Member Profile | Gridpass",
+      description: "Gridpass Member Profile Passport"
     };
   }
-
-  const title = `${profile.display_name.toUpperCase()} | Member Profile | Gridpass`;
-  const description = profile.bio 
-    ? `${profile.display_name}'s official Member Profile on Gridpass: "${profile.bio}"`
-    : `Check out ${profile.display_name}'s official Gridpass Member Profile. Connected vehicle, social links, and profile details.`;
-
-  const ogImages = profile.avatar_url ? [{ url: profile.avatar_url }] : [];
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `https://gridpass.app/u/${resolvedParams.id}`,
-      siteName: "Gridpass",
-      type: "profile",
-      images: ogImages
-    },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-      images: profile.avatar_url ? [profile.avatar_url] : []
-    }
-  };
 }
 
 export default async function Page({ params }: PageProps) {
-  const resolvedParams = await params;
-  const profile = await getProfileData(resolvedParams.id);
+  let profile: DriverProfile | null = null;
+  let userId = '';
+
+  try {
+    const resolvedParams = await params;
+    userId = resolvedParams?.id || '';
+    if (userId) {
+      profile = await getProfileData(userId);
+    }
+  } catch (err) {
+    console.error("Error rendering /u/[id] page:", err);
+  }
 
   const jsonLd = profile ? {
     '@context': 'https://schema.org',
@@ -192,7 +217,7 @@ export default async function Page({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <DriverProfileClient initialProfile={profile} userId={resolvedParams.id} />
+      <DriverProfileClient initialProfile={profile} userId={userId} />
     </>
   );
 }
