@@ -113,29 +113,26 @@ export default function ExperienceDetailPage() {
   const [activeLightboxIndex, setActiveLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (id && EXPERIENCES_DATABASE[id]) {
+    if (!id) return;
+
+    const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
+
+    if (isMock && EXPERIENCES_DATABASE[id]) {
       setExp(EXPERIENCES_DATABASE[id]);
-    } else if (id) {
-      // Fallback generator for dynamic IDs
+      return;
+    }
+
+    if (isMock && !EXPERIENCES_DATABASE[id]) {
       setExp({
         id: id,
-        title: id === 'exp-1' ? 'Honda Racing / HRC Trackside Engineer' : 'Gridpass Platform & Waterway Radar',
-        company: id === 'exp-1' ? 'Honda Racing Corporation (HRC)' : 'Gridpass.app',
+        title: id.includes('hrc') || id === 'exp-1' ? 'Honda Racing / HRC Trackside Engineer' : 'Gridpass Platform & Waterway Radar',
+        company: id.includes('hrc') || id === 'exp-1' ? 'Honda Racing Corporation (HRC)' : 'Gridpass.app',
         category: 'motorsport_event',
-        categoryPill: id === 'exp-1' ? 'MOTORSPORT GIG' : 'SPECIAL PROJECT',
-        description: id === 'exp-1' 
-          ? 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization for IndyCar operations.'
-          : 'Dynamic QR code portfolios for drivers, vehicles, events, team task boards, and live waterway marine GPS radar.',
+        categoryPill: id.includes('hrc') || id === 'exp-1' ? 'MOTORSPORT GIG' : 'SPECIAL PROJECT',
+        description: 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization.',
         skills: ['⚡ Telemetry', '⚡ Systems Architecture'],
-        links: [
-          { id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }
-        ],
-        gallery: [
-          {
-            url: id === 'exp-1' ? '/images/profile/hrc_telemetry.jpg' : '/images/profile/pjlosey_cover.jpg',
-            caption: 'Experience Asset Detail View'
-          }
-        ],
+        links: [{ id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }],
+        gallery: [{ url: '/images/profile/hrc_telemetry.jpg', caption: 'Experience Asset Detail View' }],
         owner: {
           name: 'PJ Losey',
           username: 'pjlosey',
@@ -145,14 +142,71 @@ export default function ExperienceDetailPage() {
           hometown: 'Monmouth Beach, NJ'
         }
       });
+      return;
     }
+
+    import('@/lib/firebase/config').then(({ db }) => {
+      import('firebase/firestore').then(({ doc, onSnapshot }) => {
+        const unsub = onSnapshot(doc(db, 'experiences', id), (snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            setExp({
+              id: snap.id,
+              title: data.title || 'Untitled Experience',
+              company: data.company || 'Organization',
+              location: data.location || '',
+              startDate: data.startDate || data.start_date || '',
+              endDate: data.endDate || data.end_date || 'Present',
+              category: data.category || 'special_project',
+              categoryPill: data.categoryPill || (data.category === 'motorsport_event' ? 'MOTORSPORT GIG' : 'SPECIAL PROJECT'),
+              description: data.description || '',
+              skills: data.skills || [],
+              links: data.links || [],
+              gallery: data.gallery || (data.cover_image_url ? [{ url: data.cover_image_url, caption: data.title }] : []),
+              owner: {
+                name: data.owner_display_name || 'PJ Losey',
+                username: 'pjlosey',
+                role: 'FOUNDER & LEAD ENGINEER',
+                avatarUrl: data.owner_avatar_url || '/images/profile/pjlosey_avatar.jpg',
+                profileUrl: `/u/${data.owner_uid || 'pjlosey'}`,
+                hometown: 'Monmouth Beach, NJ'
+              }
+            });
+          } else if (EXPERIENCES_DATABASE[id]) {
+            setExp(EXPERIENCES_DATABASE[id]);
+          } else {
+            setExp(null);
+          }
+        });
+        return () => unsub();
+      });
+    });
   }, [id]);
 
   if (!exp) {
     return (
-      <div className="min-h-screen bg-white text-neutral-900 flex items-center justify-center p-6">
-        <div className="text-center space-y-4 max-w-md">
-          <h1 className="text-xl font-mono font-bold text-neutral-400">Loading Experience Asset...</h1>
+      <div className="min-h-screen bg-[#f5f5f7] text-neutral-900 flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-neutral-200/80 rounded-[32px] p-8 shadow-2xl space-y-5 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-neutral-400 shadow-inner">
+            <Briefcase className="w-10 h-10 stroke-[1.5] text-neutral-400" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-mono font-black uppercase text-[#ff3b30] tracking-widest block">
+              ⚪ Experience Asset Not Found
+            </span>
+            <h2 className="text-xl font-bold tracking-tight text-neutral-900 font-sans">
+              Experience Asset Not Found
+            </h2>
+            <p className="text-xs text-neutral-500 font-medium leading-relaxed max-w-xs mx-auto">
+              This experience asset does not exist or has been removed from the platform.
+            </p>
+          </div>
+          <Link 
+            href="/dash" 
+            className="min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-2xl transition-all cursor-pointer gap-2 shadow-md hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+          </Link>
         </div>
       </div>
     );

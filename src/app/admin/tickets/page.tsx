@@ -9,6 +9,34 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1025)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1150_dashboard_tabbed_framework_and_multi_space_engine',
+    ticket_number: 'TICK-1150',
+    agent_role: 'architect',
+    title: 'Dashboard 6-Tab Navigation Framework, Experience Asset Hub, and Multi-Space Storage Engine',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'high',
+    components_used: ['DashboardContent', 'DashboardExperienceManager', 'DashboardSpaceManager', 'GarageManagerPage'],
+    files_modified: ['src/lib/types/garage.ts', 'src/app/dash/page.tsx', 'src/components/dash/DashboardExperienceManager.tsx', 'src/components/dash/DashboardSpaceManager.tsx', 'src/app/dash/garage/page.tsx', 'src/app/admin/tickets/page.tsx'],
+    schema_changes: ['Added GarageSpace & SpaceType to garage.ts', 'Added space_id to GarageItem', 'Created experiences and garage_spaces collections integration'],
+    issue_description: 'Re-architect /dash into 6-pill tabbed framework (?tab=vehicles, ?tab=businesses, ?tab=experiences, ?tab=spaces, ?tab=garage, ?tab=account), build Experience Asset Hub, and Multi-Space Storage Manager supporting garages, storage units, rented rooms, utility trailers, and residences.',
+    root_cause: 'Dashboard required tabbed navigation structure and multi-location physical space management engine.',
+    resolution_summary: 'Implemented 6-tab navigation framework on /dash, created DashboardExperienceManager for experience assets, created DashboardSpaceManager for physical spaces, and added active Space Selector dropdown to /dash/garage.',
+    verification_proof: '100% Playwright E2E visual tests passed (4/4) and npx tsc --noEmit passed with 0 errors.',
+    sop_summary: 'SOP blueprint for multi-tab dashboard navigation and physical space inventory filtering.',
+    sop_steps: [
+      'Parse useSearchParams for ?tab= parameter defaulting to vehicles.',
+      'Render 6 Apple-native tab pills with min-h-[44px] touch targets.',
+      'Build DashboardExperienceManager for managing /exp/[id] assets.',
+      'Build DashboardSpaceManager for registering storage units, rented rooms, trailers, and garages.',
+      'Add top active Space Selector dropdown to /dash/garage filtering item catalog and valuation schedules.'
+    ],
+    created_at: '2026-08-09',
+    verified_by_agent: 'rules_auditor',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
     id: 'tick_1151_experience_detail_route_theme_and_touch_compliance',
     ticket_number: 'TICK-1151',
     agent_role: 'git_expert',

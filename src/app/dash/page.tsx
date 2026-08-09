@@ -122,78 +122,6 @@ function DashboardContent() {
   useEffect(() => {
     if (!user && !isMock) return;
 
-    // Load Experience Assets default mock / state
-    const defaultExperiences: ExperienceAsset[] = [
-      {
-        id: 'exp-hrc-2021',
-        title: 'Honda Racing / HRC Trackside Engineer',
-        company: 'Honda Racing Corporation (HRC)',
-        category: 'MOTORSPORT GIG',
-        description: 'High-speed telemetry extraction and real-time engine tuning across championship rounds.',
-        date_range: '2021 - Present'
-      },
-      {
-        id: 'exp-gridpass-2024',
-        title: 'Gridpass Platform & Waterway Radar',
-        company: 'Gridpass Technologies',
-        category: 'SPECIAL PROJECT',
-        description: 'Dynamic QR code portfolios, physical venue check-ins, and live telemetry.',
-        date_range: '2024 - Present'
-      },
-      {
-        id: 'exp-siemens-2022',
-        title: 'Siemens Healthineers Project Engineer',
-        company: 'Siemens Healthineers',
-        category: 'FULL-TIME ROLE',
-        description: 'Precision medical imaging hardware engineering and quality systems architecture.',
-        date_range: '2022 - 2024'
-      }
-    ];
-
-    // Load Physical Spaces default mock / state
-    const defaultSpaces: PhysicalSpace[] = [
-      {
-        id: 'space-1',
-        name: "Kristina's Garage",
-        type: 'Residential Workshop',
-        location: 'Grayslake, IL',
-        sqft: '528 sq ft',
-        item_count: 12
-      },
-      {
-        id: 'space-2',
-        name: "Monmouth Beach Self-Storage Unit #402",
-        type: 'Storage Unit',
-        location: 'Monmouth Beach, NJ',
-        sqft: '200 sq ft',
-        item_count: 8
-      },
-      {
-        id: 'space-3',
-        name: "Rented Workshop Room",
-        type: 'Commercial Bay',
-        location: 'Lake Villa, IL',
-        sqft: '800 sq ft',
-        item_count: 15
-      },
-      {
-        id: 'space-4',
-        name: "7'x14' Enclosed Utility Trailer",
-        type: 'Mobile Enclosed Trailer',
-        location: 'Grayslake, IL',
-        sqft: '98 sq ft',
-        item_count: 5
-      },
-      {
-        id: 'space-5',
-        name: "Kristina's House",
-        type: 'Staging & Storage',
-        location: 'Grayslake, IL',
-        sqft: '350 sq ft',
-        item_count: 4
-      }
-    ];
-
     if (isMock) {
       setProfile({
         display_name: 'PJ LOSEY',
@@ -246,8 +174,6 @@ function DashboardContent() {
         }
       ]);
 
-      setExperiences(defaultExperiences);
-      setSpaces(defaultSpaces);
       setLoading(false);
       return;
     }
@@ -282,9 +208,6 @@ function DashboardContent() {
     }, (err) => {
       console.error("Error loading vehicles snapshot:", err);
     });
-
-    setExperiences(defaultExperiences);
-    setSpaces(defaultSpaces);
 
     const businessesQuery = collection(db, 'businesses');
     const unsubBusinesses = onSnapshot(businessesQuery, (snap) => {
