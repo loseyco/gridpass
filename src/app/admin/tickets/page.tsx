@@ -13,7 +13,7 @@ const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
     ticket_number: 'TICK-1154',
     agent_role: 'git_expert',
     title: 'Convert Profile and Asset Management to Dedicated Full-Page Edit Routes and Purge Modal Drawers',
-    category: 'refactor',
+    category: 'ui_design',
     status: 'VERIFIED',
     priority: 'high',
     components_used: ['EditProfilePage', 'DriverProfileClient', 'DashboardContent'],
