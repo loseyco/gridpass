@@ -203,29 +203,65 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
     setExpLinks(prev => prev.filter(l => l.id !== linkId));
   };
 
+  const [editingExpId, setEditingExpId] = useState<string | null>(null);
+
+  const handleStartEditExperience = (exp: any) => {
+    setEditingExpId(exp.id);
+    setExpTitle(exp.title || '');
+    setExpCompany(exp.company || '');
+    setExpYears(exp.years || '');
+    setExpCategory(exp.category || 'performance_shop');
+    setExpLinks(exp.links || []);
+    setActiveTab('career');
+    showToast({ title: "✏️ Editing Entry", message: `Editing "${exp.title}". Update details below.`, icon: "ℹ️" });
+  };
+
+  const handleCancelEditExperience = () => {
+    setEditingExpId(null);
+    setExpTitle('');
+    setExpCompany('');
+    setExpYears('');
+    setExpLinks([]);
+  };
+
   const handleAddExperience = () => {
     if (!expTitle || !expCompany) {
       showToast({ title: "Incomplete Field", message: "Please fill in job title and company name.", icon: "⚠️" });
       return;
     }
-    const newExp = {
-      id: `exp_${Date.now()}`,
-      title: expTitle,
-      company: expCompany,
-      years: expYears || 'Present',
-      category: expCategory,
-      links: expLinks
-    };
-    setExperiences([...experiences, newExp]);
-    setExpTitle('');
-    setExpCompany('');
-    setExpYears('');
-    setExpLinks([]);
-    showToast({ title: "💼 Career Entry Added", message: `${expTitle} at ${expCompany} added to resume!`, icon: "✅" });
+
+    if (editingExpId) {
+      setExperiences(prev => prev.map(e => e.id === editingExpId ? {
+        ...e,
+        title: expTitle,
+        company: expCompany,
+        years: expYears || 'Present',
+        category: expCategory,
+        links: expLinks
+      } : e));
+      showToast({ title: "✅ Experience Updated", message: `Updated "${expTitle}" at ${expCompany}!`, icon: "🏆" });
+      handleCancelEditExperience();
+    } else {
+      const newExp = {
+        id: `exp_${Date.now()}`,
+        title: expTitle,
+        company: expCompany,
+        years: expYears || 'Present',
+        category: expCategory,
+        links: expLinks
+      };
+      setExperiences(prev => [...prev, newExp]);
+      setExpTitle('');
+      setExpCompany('');
+      setExpYears('');
+      setExpLinks([]);
+      showToast({ title: "💼 Career Entry Added", message: `${expTitle} at ${expCompany} added to resume!`, icon: "✅" });
+    }
   };
 
   const handleRemoveExperience = (id: string) => {
     setExperiences(experiences.filter(e => e.id !== id));
+    if (editingExpId === id) handleCancelEditExperience();
   };
 
   const handlePublishStory = async () => {
@@ -581,9 +617,29 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
           {activeTab === 'career' && (
             <div className="space-y-6 animate-in fade-in duration-150">
               <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-3">
-                <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
-                  <Plus className="w-4 h-4 text-[#ff3b30]" /> Add Work Experience / Career Role
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
+                    {editingExpId ? (
+                      <>
+                        <Sparkles className="w-4 h-4 text-[#ff3b30]" /> ✏️ Edit Work Experience Entry
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 text-[#ff3b30]" /> Add Work Experience / Career Role
+                      </>
+                    )}
+                  </h4>
+
+                  {editingExpId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEditExperience}
+                      className="text-[10px] font-mono font-bold text-neutral-500 hover:text-neutral-900 underline cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
 
                 <div className="space-y-2">
                   <input 
@@ -648,7 +704,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                         onClick={handleAddExperience}
                         className="min-h-[44px] min-w-[44px] py-2.5 px-5 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer inline-flex items-center justify-center shadow-md"
                       >
-                        Add Entry
+                        {editingExpId ? '💾 Update Entry' : 'Add Entry'}
                       </button>
                     </div>
 
@@ -681,9 +737,9 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                 {experiences.length > 0 ? (
                   <div className="space-y-2">
                     {experiences.map((exp: any) => (
-                      <div key={exp.id} className="p-3 bg-white border border-neutral-200 rounded-2xl flex items-center justify-between">
-                        <div>
-                          <h5 className="text-xs font-black uppercase text-neutral-900">{exp.title}</h5>
+                      <div key={exp.id} className="p-3 bg-white border border-neutral-200 rounded-2xl flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h5 className="text-xs font-black uppercase text-neutral-900 truncate">{exp.title}</h5>
                           <p className="text-[11px] text-neutral-600 font-medium">{exp.company} • <span className="font-mono text-neutral-400">{exp.years}</span></p>
                           {exp.links && exp.links.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -695,15 +751,27 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                             </div>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          data-testid={`delete-exp-btn-${exp.id}`}
-                          onClick={() => handleRemoveExperience(exp.id)}
-                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-all cursor-pointer"
-                          aria-label={`Delete experience entry ${exp.title}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            data-testid={`edit-exp-btn-${exp.id}`}
+                            onClick={() => handleStartEditExperience(exp)}
+                            className="min-h-[44px] px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer"
+                          >
+                            ✏️ Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            data-testid={`delete-exp-btn-${exp.id}`}
+                            onClick={() => handleRemoveExperience(exp.id)}
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-all cursor-pointer"
+                            aria-label={`Delete experience entry ${exp.title}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
