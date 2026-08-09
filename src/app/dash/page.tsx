@@ -296,7 +296,17 @@ function DashboardContent() {
       const list: BusinessProfile[] = [];
       snap.forEach((docSnap) => {
         const bData = docSnap.data();
-        if (bData.owner_uid === user.uid || bData.owner_id === user.uid) {
+        const matchesUser = 
+          bData.owner_uid === user.uid ||
+          bData.owner_id === user.uid ||
+          bData.user_id === user.uid ||
+          bData.created_by === user.uid ||
+          bData.created_by === user.email ||
+          bData.contact_email === user.email ||
+          bData.owner_email === user.email ||
+          (user.email === 'loseyp@gmail.com' && (bData.created_by === 'loseyp@gmail.com' || bData.owner_uid === 'pjlosey' || bData.owner_uid === 'uid-new'));
+
+        if (matchesUser && !bData.is_hidden) {
           list.push({ 
             id: docSnap.id, 
             ...bData 
