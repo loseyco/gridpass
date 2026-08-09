@@ -320,6 +320,39 @@ function DashboardContent() {
       setLoading(false);
     });
 
+    const spacesQuery = collection(db, 'garage_spaces');
+    const unsubSpaces = onSnapshot(spacesQuery, (snap) => {
+      const list: PhysicalSpace[] = [];
+      snap.forEach((docSnap) => {
+        const sData = docSnap.data();
+        if (!sData.is_hidden && (sData.user_id === user.uid || sData.owner_uid === user.uid)) {
+          list.push({
+            id: docSnap.id,
+            ...sData,
+          } as PhysicalSpace);
+        }
+      });
+      setSpaces(list);
+    }, (err) => {
+      console.error("Error loading spaces snapshot:", err);
+    });
+
+    const unsubExp = onSnapshot(collection(db, 'experiences'), (snap) => {
+      const list: ExperienceAsset[] = [];
+      snap.forEach((docSnap) => {
+        const expData = docSnap.data();
+        if (expData.user_id === user.uid || expData.owner_uid === user.uid) {
+          list.push({
+            id: docSnap.id,
+            ...expData,
+          } as ExperienceAsset);
+        }
+      });
+      if (list.length > 0) setExperiences(list);
+    }, (err) => {
+      console.error("Error loading experiences snapshot:", err);
+    });
+
     return () => {
       unsubProfile();
       unsubVehicles();

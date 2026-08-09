@@ -60,7 +60,7 @@ export default function CreateSpacePage() {
     setSaving(true);
     try {
       if (user?.uid) {
-        await addDoc(collection(db, 'garage_spaces'), {
+        const docRef = await addDoc(collection(db, 'garage_spaces'), {
           user_id: user.uid,
           owner_uid: user.uid,
           name: name.trim(),
@@ -72,8 +72,10 @@ export default function CreateSpacePage() {
           created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
         });
+        router.push(`/dash/space/${docRef.id}/edit`);
+      } else {
+        router.push('/dash?tab=spaces');
       }
-      router.push('/dash?tab=spaces');
     } catch (err) {
       console.error('Error creating space:', err);
       setSaving(false);
