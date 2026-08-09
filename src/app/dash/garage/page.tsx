@@ -124,7 +124,8 @@ export default function GarageManagerPage() {
               qr_code_tag: 'GP-GAR-INTAKE50',
               description: 'OEM 5.0L Coyote Intake Manifold in flawless condition.',
               specs: 'Part # 5.0-V8-2024, OEM Ford, Anodized Black',
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             },
             {
               id: 'mock-item-2',
@@ -138,7 +139,8 @@ export default function GarageManagerPage() {
               location: { zone_id: 'zone-2', zone_name: 'Telemetry & Electronics', shelf: 'Shelf B', bin_id: 'BIN-08' },
               qr_code_tag: 'GP-GAR-TELHUB',
               description: '60Hz telemetry extraction hub with CAN bus adapter.',
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             },
             {
               id: 'mock-item-3',
@@ -152,7 +154,8 @@ export default function GarageManagerPage() {
               sale_price: 950,
               location: { zone_id: 'zone-1', zone_name: 'Engine Bay & Racks', shelf: 'Shelf C', bin_id: 'BIN-12' },
               qr_code_tag: 'GP-GAR-BREMBO6P',
-              created_at: new Date().toISOString()
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             }
           ];
         }
