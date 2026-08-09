@@ -405,6 +405,11 @@ export default function GarageManagerPage() {
     setSavingItem(true);
     const selectedZone = zones.find(z => z.id === itemZoneId);
 
+    const computedStatus: ItemStatus = 
+      editingItem?.status === 'Sold' ? 'Sold' :
+      (itemPhotos.length > 0 && (Number(itemListPrice) || 0) > 0) ? 'Listed' :
+      (itemPhotos.length > 0) ? 'Photographed' : 'Draft';
+
     const itemData = {
       owner_uid: user.uid,
       title: itemTitle.trim(),
@@ -419,7 +424,7 @@ export default function GarageManagerPage() {
       replacement_value: Number(itemReplacementValue) || Number(itemListPrice) || 0,
       description: itemDescription.trim(),
       specs: itemSpecs.trim(),
-      status: itemStatus,
+      status: computedStatus,
       photos: itemPhotos,
       primary_photo_url: itemPhotos[0] || '',
       location: {
@@ -1172,7 +1177,7 @@ CONTACT: Serious inquiries only. DM for quick response!`;
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase">Cost Basis ($)</label>
                   <input
@@ -1193,17 +1198,6 @@ CONTACT: Serious inquiries only. DM for quick response!`;
                     placeholder="250"
                     className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
                   />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold text-neutral-500 uppercase">Pipeline Status</label>
-                  <select
-                    value={itemStatus}
-                    onChange={e => setItemStatus(e.target.value as any)}
-                    className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
-                  >
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
                 </div>
               </div>
 
