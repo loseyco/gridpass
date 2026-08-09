@@ -34,6 +34,30 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
   const [twitter, setTwitter] = useState(profile?.socials?.twitter || '');
   const [website, setWebsite] = useState(profile?.website || '');
 
+  // Profile Skill Tags State
+  const [skills, setSkills] = useState<string[]>(
+    (profile?.skills && profile.skills.length > 0) 
+      ? profile.skills 
+      : ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture']
+  );
+  const [newSkillTag, setNewSkillTag] = useState('');
+
+  const handleAddSkill = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newSkillTag.trim()) return;
+    const tag = newSkillTag.trim().startsWith('⚡') ? newSkillTag.trim() : `⚡ ${newSkillTag.trim()}`;
+    if (!skills.includes(tag)) {
+      setSkills(prev => [...prev, tag]);
+      showToast({ title: "⚡ Skill Tag Added", message: `Added "${tag}" to your passport!`, icon: "✅" });
+    }
+    setNewSkillTag('');
+  };
+
+  const handleRemoveSkill = (tagToRemove: string) => {
+    setSkills(prev => prev.filter(s => s !== tagToRemove));
+    showToast({ title: "🗑️ Skill Tag Removed", message: `Removed "${tagToRemove}".`, icon: "✅" });
+  };
+
   // Career Work Experience Entry Form State
   const [experiences, setExperiences] = useState<any[]>(profile?.experiences || []);
   const [expTitle, setExpTitle] = useState('');
@@ -124,6 +148,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
         avatar_url: avatarUrl,
         cover_url: coverUrl,
         website_url: website,
+        skills,
         socials: { instagram, youtube, tiktok, twitter },
         experiences,
         updated_at: new Date().toISOString()
@@ -329,6 +354,62 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                   className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs font-medium text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
                   placeholder="Tell fans and sponsors about your motorsport history..."
                 />
+              </div>
+
+              {/* ⚡ Skill Tags & Specialization Manager */}
+              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold text-neutral-600 uppercase flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-[#ff3b30]" /> Skill Tags &amp; Technical Specializations
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-neutral-400">
+                    {skills.length} Tags
+                  </span>
+                </div>
+
+                {/* Existing Skill Tag Pills with Delete X */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {skills.map(tag => (
+                    <span 
+                      key={tag}
+                      className="px-3 py-1.5 bg-white border border-neutral-200 rounded-full text-xs font-mono font-bold text-neutral-800 flex items-center gap-2 shadow-2xs group"
+                    >
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(tag)}
+                        className="min-h-[44px] min-w-[44px] sm:min-h-[24px] sm:min-w-[24px] inline-flex items-center justify-center text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+                        title="Remove tag"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Add Tag Input */}
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="text"
+                    value={newSkillTag}
+                    onChange={e => setNewSkillTag(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddSkill();
+                      }
+                    }}
+                    placeholder="Add tag (e.g. Motorsport Telemetry, IoT Hardware)..."
+                    className="flex-1 p-2.5 bg-white border border-neutral-200 rounded-xl text-xs font-mono font-bold text-neutral-900 focus:outline-none focus:border-[#ff3b30] min-h-[44px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="min-h-[44px] px-4 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shrink-0"
+                  >
+                    + Add Tag
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1">
