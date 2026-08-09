@@ -464,7 +464,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
         }
 
         const isPlaywrightMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__ === true;
-        if (!uData && (isPlaywrightMock || userId === 'pjlosey' || userId === 'pjlosey-mock')) {
+        if (!uData && isPlaywrightMock) {
           const mockDriverProfile: DriverProfile = {
             uid: 'user-pjlosey-123',
             email: 'pj@losey.co',
@@ -488,21 +488,9 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               twitter: 'pjlosey'
             }
           };
-          const mockDriverVehicles: Vehicle[] = [
-            {
-              id: 'mock-v1',
-              tag_id: 'GP-MUSTANG-2024',
-              year: 2024,
-              make: 'Ford',
-              model: 'Mustang GT',
-              trim: '5.0 V8 Performance Pack',
-              photo_url: 'https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80',
-              respects_count: 42
-            }
-          ];
           if (isMounted) {
             setProfile(mockDriverProfile);
-            setVehicles(mockDriverVehicles);
+            setVehicles([]);
           }
           return;
         }
@@ -830,7 +818,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             {vehicles.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {vehicles.map((v) => {
-                  const currentRespects = (v.respects_count || 12) + (buildRespects[v.id] || 0);
+                  const currentRespects = (v.respects_count ?? 0) + (buildRespects[v.id] || 0);
 
                   return (
                     <div 

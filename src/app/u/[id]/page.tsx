@@ -116,27 +116,6 @@ async function getProfileData(userId: string): Promise<DriverProfile | null> {
     console.error("Error retrieving server-side profile data:", err);
   }
 
-  if (userId && (userId.toLowerCase() === 'pjlosey' || userId.toLowerCase() === 'pjlosey-mock')) {
-    return {
-      uid: 'user-pjlosey-123',
-      email: 'pj@losey.co',
-      display_name: 'PJ Losey',
-      bio: 'Clinical Precision. Motorsport Velocity. Proprietary systems architecture, telemetry extraction, IoT hardware, and custom enterprise SaaS by PJ Losey.',
-      avatar_url: '/images/profile/pjlosey_avatar.jpg',
-      is_supporter: true,
-      home_town: 'Monmouth Beach, NJ',
-      social_facebook: 'pjlosey',
-      social_twitter: 'pjlosey',
-      socials: {
-        instagram: 'pjlosey',
-        youtube: '',
-        tiktok: '',
-        facebook: 'pjlosey',
-        twitter: 'pjlosey'
-      }
-    };
-  }
-
   return null;
 }
 

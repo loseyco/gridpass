@@ -14,6 +14,13 @@ export type ItemCategory =
   | 'Accessories'
   | 'Other';
 
+export type TransformationCategory = 
+  | 'Initial Survey' 
+  | 'Work in Progress' 
+  | 'Major Sale Milestone' 
+  | 'Scrap & Recycling' 
+  | 'Final Clean Bay';
+
 export interface GarageLocation {
   zone_id?: string;
   zone_name?: string;
@@ -37,6 +44,11 @@ export interface GarageItem {
   
   status: ItemStatus;
   
+  serial_number?: string;
+  replacement_value?: number;
+  is_insured?: boolean;
+  insurance_policy_notes?: string;
+
   photos?: string[];
   primary_photo_url?: string;
   
@@ -47,6 +59,23 @@ export interface GarageItem {
   created_at: string;
   updated_at: string;
   sold_at?: string;
+}
+
+export interface GarageTransformationMilestone {
+  id: string;
+  garage_id?: string;
+  owner_uid: string;
+  title: string;
+  category: TransformationCategory;
+  date_str: string;
+  notes?: string;
+  items_sold_count?: number;
+  items_scrapped_count?: number;
+  items_discarded_count?: number;
+  items_kept_count?: number;
+  cash_recovered?: number;
+  photos?: string[];
+  created_at: string;
 }
 
 export interface GarageZone {
