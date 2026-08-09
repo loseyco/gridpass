@@ -42,67 +42,7 @@ interface ExperienceAsset {
   };
 }
 
-const EXPERIENCES_DATABASE: Record<string, ExperienceAsset> = {
-  'exp-hrc-2021': {
-    id: 'exp-hrc-2021',
-    title: 'Honda Racing / HRC Trackside Engineer',
-    company: 'Honda Racing Corporation (HRC)',
-    location: 'Indianapolis, IN / Trackside',
-    startDate: '2021-01',
-    endDate: '2023-12',
-    category: 'motorsport_event',
-    categoryPill: 'MOTORSPORT GIG',
-    description: 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization for IndyCar operations.',
-    skills: ['⚡ Telemetry Extraction', '⚡ IndyCar Sensors', '⚡ Race Strategy', '⚡ JSON Sensor Payloads'],
-    links: [
-      { id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/hrc_telemetry.jpg',
-        caption: 'HRC Telemetry Extraction & Lap Delta Visualization'
-      }
-    ],
-    owner: {
-      name: 'PJ Losey',
-      username: 'pjlosey',
-      role: 'FOUNDER & LEAD ENGINEER',
-      avatarUrl: '/images/profile/pjlosey_avatar.jpg',
-      profileUrl: '/u/pjlosey',
-      hometown: 'Monmouth Beach, NJ'
-    }
-  },
-  'exp-gridpass-2024': {
-    id: 'exp-gridpass-2024',
-    title: 'Gridpass Platform & Waterway Radar',
-    company: 'Gridpass.app',
-    location: 'Monmouth Beach, NJ',
-    startDate: '2024-01',
-    endDate: 'Present',
-    category: 'special_project',
-    categoryPill: 'SPECIAL PROJECT',
-    description: 'Dynamic QR code portfolios for drivers, vehicles, events, team task boards, and live waterway marine GPS radar.',
-    skills: ['⚡ Systems Architecture', '⚡ Next.js', '⚡ Firebase', '⚡ Marine GPS', '⚡ QR Passports'],
-    links: [
-      { id: 'link-6', title: 'Gridpass Platform', url: 'https://gridpass.app' },
-      { id: 'link-7', title: 'Live Waterway Radar', url: 'https://gridpass.app/water' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/pjlosey_cover.jpg',
-        caption: 'Gridpass Motorsport Telemetry & Waterway GPS Radar'
-      }
-    ],
-    owner: {
-      name: 'PJ Losey',
-      username: 'pjlosey',
-      role: 'FOUNDER & LEAD ENGINEER',
-      avatarUrl: '/images/profile/pjlosey_avatar.jpg',
-      profileUrl: '/u/pjlosey',
-      hometown: 'Monmouth Beach, NJ'
-    }
-  }
-};
+
 
 export default function ExperienceDetailPage() {
   const params = useParams();
@@ -117,12 +57,7 @@ export default function ExperienceDetailPage() {
 
     const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
 
-    if (isMock && EXPERIENCES_DATABASE[id]) {
-      setExp(EXPERIENCES_DATABASE[id]);
-      return;
-    }
-
-    if (isMock && !EXPERIENCES_DATABASE[id]) {
+    if (isMock) {
       setExp({
         id: id,
         title: id.includes('hrc') || id === 'exp-1' ? 'Honda Racing / HRC Trackside Engineer' : 'Gridpass Platform & Waterway Radar',
@@ -172,8 +107,6 @@ export default function ExperienceDetailPage() {
                 hometown: 'Monmouth Beach, NJ'
               }
             });
-          } else if (EXPERIENCES_DATABASE[id]) {
-            setExp(EXPERIENCES_DATABASE[id]);
           } else {
             setExp(null);
           }
