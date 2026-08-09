@@ -293,7 +293,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between text-left overflow-hidden">
+      <div data-testid="edit-passport-drawer" className="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col justify-between text-left overflow-hidden">
         
         {/* Header */}
         <div className="p-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-900 text-white">
@@ -633,7 +633,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                     <button
                       type="button"
                       onClick={handleCancelEditExperience}
-                      className="text-[10px] font-mono font-bold text-neutral-500 hover:text-neutral-900 underline cursor-pointer"
+                      className="min-h-[44px] min-w-[44px] px-3 py-2 text-[10px] font-mono font-bold text-neutral-500 hover:text-neutral-900 underline cursor-pointer inline-flex items-center justify-center"
                     >
                       Cancel Edit
                     </button>
@@ -816,7 +816,7 @@ export function EditPassportDrawer({ isOpen, onClose, profile, onProfileUpdated 
                   <button
                     type="button"
                     onClick={handlePublishStory}
-                    className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer shadow-md"
+                    className="min-h-[44px] w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer shadow-md inline-flex items-center justify-center"
                   >
                     Publish Story to Passport Feed
                   </button>
