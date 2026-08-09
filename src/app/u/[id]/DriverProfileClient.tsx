@@ -1200,7 +1200,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                         {/* View Full Experience Asset Link Button */}
                         <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-end">
                           <Link
-                            href={`/exp/${exp.id || 'exp-' + (idx + 1)}`}
+                            href={`/exp/${exp.id || DEFAULT_PJ_EXPERIENCES[idx]?.id || 'exp-' + (idx + 1)}`}
                             data-testid={`view-experience-asset-btn-${idx}`}
                             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-4 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-2xs gap-1"
                           >
