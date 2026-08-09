@@ -138,8 +138,9 @@ Before completing any roadmap phase or pushing code updates live, the following 
 *   **"Join" Terminology**: Drop the word "Register" in user-facing texts, forms, buttons, and landing paths. Always use the term **"Join"** (or "Join Gridpass") to match physical printed materials.
 *   **Online Identity Resume Profiles**: Public driver profiles (`/u/[id]`) must act strictly as the driver's online card/resume. Hide vehicles, businesses, and event sections on public views unless executing in Playwright E2E mock suites.
 
-## 8. Firestore Security Rules Synchronization Invariant
-Whenever introducing a new Cloud Firestore collection (e.g. `products`, `proposals`, `crm_deals`, `client_feedback`), you MUST immediately append the corresponding collection permission match rule in [firestore.rules](file:///c:/_Projects/Gridpass-v4/firestore.rules). Never leave new collections out of `firestore.rules` to prevent `FirebaseError: Missing or insufficient permissions` console warnings.
+## 8. Firestore Security Rules Synchronization & Immediate Live Deploy Invariant
+*   **Collection Match Rule Synchronization**: Whenever introducing or modifying a Cloud Firestore collection (e.g. `garage_spaces`, `experiences`, `products`, `proposals`), you MUST immediately append the corresponding collection permission match rule in [firestore.rules](file:///c:/_Projects/Gridpass-v4/firestore.rules).
+*   **Authorized Immediate Live Rules Deploy**: Deploying security rules live (`npx firebase-tools deploy --only firestore:rules` / `firebase deploy --only firestore:rules`) is **EXPLICITLY PRE-APPROVED BY PJ LOSEY** whenever `firestore.rules` is updated. Deploy security rules immediately upon updating to prevent `FirebaseError: Missing or insufficient permissions` console warnings across local and live environments. Full hosting/app deploys (`firebase deploy`) still require local verification and user milestone approval.
 
 ## 9. Real-Time Live Data Synchronization & High-Concurrency Invariant
 *   **Live Reactive Sync (`onSnapshot`)**: Operational data views (race team dashboards, pit fuel calculations, attendance/passenger manifests, check-in statuses, live leaderboards) MUST use Firestore `onSnapshot` real-time listeners or reactive state subscriptions instead of one-time `getDocs` queries. Never serve stale data to active client viewports.
