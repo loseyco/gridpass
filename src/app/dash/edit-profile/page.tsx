@@ -324,7 +324,7 @@ export default function EditProfilePage() {
         <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
           <Link 
             href="/dash" 
-            className="text-xs font-bold text-neutral-500 hover:text-neutral-900 uppercase flex items-center gap-1"
+            className="min-h-[44px] min-w-[44px] px-3 text-xs font-bold text-neutral-500 hover:text-neutral-900 uppercase flex items-center justify-center gap-1"
           >
             <ArrowLeft className="w-4 h-4" /> Cancel
           </Link>
@@ -490,6 +490,23 @@ export default function EditProfilePage() {
             </div>
           </div>
 
+          {/* Career History Section */}
+          <div className="space-y-4 pt-4 border-t border-neutral-100" data-testid="career-history-section">
+            <div className="flex items-center justify-between">
+              <h4 className="text-[10px] font-extrabold uppercase text-neutral-900 tracking-wider">Career History</h4>
+              <Link
+                href="/exp/new"
+                data-testid="add-experience-btn"
+                className="min-h-[44px] px-3.5 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[9px] font-mono font-bold uppercase rounded-lg flex items-center justify-center gap-1 transition-colors shadow-sm"
+              >
+                + Add Experience
+              </Link>
+            </div>
+            <p className="text-[10px] text-neutral-500 font-mono">
+              Manage motorsport gigs, roles, and engineering experiences.
+            </p>
+          </div>
+
           {/* Social Media Handles Section */}
           <div className="space-y-4 pt-4 border-t border-neutral-100">
             <h4 className="text-[10px] font-extrabold uppercase text-neutral-900 tracking-wider">Social Links</h4>
@@ -571,7 +588,7 @@ export default function EditProfilePage() {
                   type="button"
                   onClick={handleSendResetEmail}
                   disabled={sendingReset || resetSent}
-                  className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-100 text-white disabled:text-neutral-400 text-[8px] font-bold uppercase rounded transition-colors cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] px-3.5 py-2 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-100 text-white disabled:text-neutral-400 text-[8px] font-bold uppercase rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center"
                 >
                   {sendingReset ? 'Sending...' : resetSent ? 'Email Sent' : 'Reset Password'}
                 </button>
@@ -590,7 +607,7 @@ export default function EditProfilePage() {
             <button 
               type="submit"
               disabled={isSaveDisabled}
-              className="w-full py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] disabled:bg-neutral-200 text-white text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center"
+              className="w-full min-h-[44px] py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] disabled:bg-neutral-200 text-white text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Profile'}
             </button>

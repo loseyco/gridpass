@@ -128,7 +128,8 @@ export default function CreateExperiencePage() {
 
           <div className="pt-2 flex items-center justify-end gap-3">
             <Link
-              href="/dash?tab=experiences"
+              href="/dash/edit-profile"
+              data-testid="cancel-exp-btn"
               className="min-h-[44px] px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center transition-all"
             >
               Cancel

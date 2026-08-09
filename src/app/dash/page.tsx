@@ -581,12 +581,14 @@ function DashboardContent() {
                 <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                   <Link
                     href={`/exp/${exp.id}`}
+                    data-testid={`view-exp-${exp.id}`}
                     className="min-h-[44px] min-w-[44px] px-4 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> View
                   </Link>
                   <Link
                     href={`/exp/${exp.id}/edit`}
+                    data-testid={`edit-exp-${exp.id}`}
                     className="min-h-[44px] min-w-[44px] px-4 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> Edit

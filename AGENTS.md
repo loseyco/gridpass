@@ -32,6 +32,10 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     3. ABSOLUTE BAN ON SYNTHETIC UI FALLBACKS: NEVER write conditional index-based or mock array fallbacks in UI component maps or hooks (e.g. NEVER use `(idx < 5 ? activeVersion : 0)`, `idx < 3 ? 'ONLINE' : 'OFFLINE'`, or synthetic status mocks). 
     4. STRICT RAW DATA EVALUATION: Every metric, status badge, asset, space, vehicle, experience, photo, link, and timestamp MUST evaluate directly from verified Firestore records, real URL parameters, or live API responses. If live data is absent, UI MUST render an explicit empty state (`⚪ Pending Delivery`, `⚪ No Experience Assets Created`, `⚪ No Storage Spaces Registered`, `0`, or `[]`) rather than returning a synthetic fallback number or mock status.
     5. MANDATORY COMPONENT AUDIT: Before declaring any page or feature complete, agents MUST audit all `.map()` functions, state hooks, and ternary operators to guarantee 0 synthetic fallbacks exist. Hardcoded presets are strictly restricted to isolated Playwright test files and the sales pitch simulator.
+*   **SINGLE CANONICAL EDIT ROUTE & DRY LINKING INVARIANT**:
+    1. EVERY asset type (User Profile, Vehicle, Experience Asset, Physical Storage Space, Business Profile, Event) MUST have exactly ONE canonical full-page edit route (e.g. `/dash/edit-profile`, `/exp/[id]/edit`, `/dash/space/new`, `/dash/vehicles/edit`).
+    2. NEVER rebuild, duplicate, or re-implement form inputs, inline drawers, or inline modal editors in multiple components across the site.
+    3. ALL UI components, profile cards, dashboard tables, and passport views MUST simply LINK directly via standard Next.js `<Link>` to the single canonical edit page route.
 *   **ENTERPRISE GIT BRANCHING & RELEASE MILESTONE INVARIANT**:
     1. **Branch Architecture**:
        - `main`: Protected production release branch. Strictly reserved for clean, tagged release milestones (e.g. `v4.2.0`) when PJ Losey approves live production deployments.
