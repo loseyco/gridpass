@@ -73,6 +73,7 @@ interface PhysicalSpace {
   sqft?: string;
   item_count?: number;
   notes?: string;
+  photo_url?: string;
 }
 
 function DashboardContent() {
@@ -151,16 +152,39 @@ function DashboardContent() {
         setVehicles(defaultMock);
       }
 
-      setBusinesses([
-        {
-          id: 'nielsens',
-          owner_uid: user?.uid || 'pjlosey',
-          name: 'NIELSEN ENTERPRISES',
-          description: 'Powersports and Marine Dealership',
-          category: 'dealership',
-          location_name: 'Lake Villa, IL'
-        }
-      ]);
+      const storedBusinesses = localStorage.getItem('__mock_businesses__');
+      if (storedBusinesses) {
+        setBusinesses(JSON.parse(storedBusinesses));
+      } else {
+        const defaultBusinesses: BusinessProfile[] = [
+          {
+            id: 'nielsens',
+            owner_uid: user?.uid || 'pjlosey',
+            name: 'NIELSEN ENTERPRISES',
+            description: 'Powersports and Marine Dealership',
+            category: 'dealership',
+            location_name: 'Lake Villa, IL'
+          },
+          {
+            id: 'monarch-defender',
+            owner_uid: user?.uid || 'pjlosey',
+            name: 'Monarch Defender',
+            description: 'Custom Land Rover & Utility Vehicle Restoration',
+            category: 'shop_garage',
+            location_name: 'Monmouth, IL'
+          },
+          {
+            id: 'shaw-daddys-bbq',
+            owner_uid: user?.uid || 'pjlosey',
+            name: "Shaw Daddy's BBQ",
+            description: 'Trackside Catering & Event Food Service',
+            category: 'food_beverage',
+            location_name: 'Monmouth, IL'
+          }
+        ];
+        localStorage.setItem('__mock_businesses__', JSON.stringify(defaultBusinesses));
+        setBusinesses(defaultBusinesses);
+      }
 
       setEvents([
         {
@@ -217,7 +241,8 @@ function DashboardContent() {
             name: "Kristina's Garage",
             type: 'Residential Garage',
             location: 'Grayslake, IL',
-            sqft: '600'
+            sqft: '600',
+            photo_url: 'https://images.unsplash.com/photo-1588854337221-4cf9fa96059c?auto=format&fit=crop&w=300&q=80'
           },
           {
             id: 'space-2',
@@ -225,7 +250,8 @@ function DashboardContent() {
             name: 'Monmouth Beach Self-Storage Unit #402',
             type: 'Storage Unit',
             location: 'Monmouth Beach, NJ',
-            sqft: '200'
+            sqft: '200',
+            photo_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80'
           },
           {
             id: 'space-3',
@@ -233,7 +259,8 @@ function DashboardContent() {
             name: 'Rented Workshop Room',
             type: 'Rented Room',
             location: 'Chicago, IL',
-            sqft: '400'
+            sqft: '400',
+            photo_url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=300&q=80'
           },
           {
             id: 'space-4',
@@ -241,7 +268,8 @@ function DashboardContent() {
             name: "7'x14' Enclosed Utility Trailer",
             type: 'Utility Trailer',
             location: 'Grayslake, IL',
-            sqft: '98'
+            sqft: '98',
+            photo_url: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=300&q=80'
           },
           {
             id: 'space-5',
@@ -249,7 +277,8 @@ function DashboardContent() {
             name: "Kristina's House",
             type: 'Residence',
             location: 'Grayslake, IL',
-            sqft: '2400'
+            sqft: '2400',
+            photo_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=300&q=80'
           }
         ];
         localStorage.setItem('__mock_spaces__', JSON.stringify(defaultSpaces));
@@ -296,15 +325,14 @@ function DashboardContent() {
       const list: BusinessProfile[] = [];
       snap.forEach((docSnap) => {
         const bData = docSnap.data();
+        // Ignore unclaimed directory listings
+        if (bData.is_unclaimed || bData.status === 'unclaimed') return;
+
         const matchesUser = 
           bData.owner_uid === user.uid ||
           bData.owner_id === user.uid ||
           bData.user_id === user.uid ||
-          bData.created_by === user.uid ||
-          bData.created_by === user.email ||
-          bData.contact_email === user.email ||
-          bData.owner_email === user.email ||
-          (user.email === 'loseyp@gmail.com' && (bData.created_by === 'loseyp@gmail.com' || bData.owner_uid === 'pjlosey' || bData.owner_uid === 'uid-new'));
+          (bData.created_by === user.uid && !bData.is_unclaimed);
 
         if (matchesUser && !bData.is_hidden) {
           list.push({ 
@@ -759,19 +787,38 @@ function DashboardContent() {
                 className="bg-white border border-neutral-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 data-testid={`physical-space-card-${space.id}`}
               >
-                <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 bg-amber-500 text-neutral-950 rounded-md">
-                      {space.type}
-                    </span>
-                    <h3 className="text-sm font-black text-neutral-900 uppercase tracking-tight">
-                      {space.name}
-                    </h3>
+                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                  {/* Far Left Space Photo Thumbnail */}
+                  <div 
+                    className="w-16 h-12 rounded-xl overflow-hidden shrink-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center"
+                    data-testid={`space-thumbnail-container-${space.id}`}
+                  >
+                    {space.photo_url ? (
+                      <img 
+                        src={space.photo_url} 
+                        alt={space.name} 
+                        className="w-full h-full object-cover"
+                        data-testid={`space-thumbnail-img-${space.id}`} 
+                      />
+                    ) : (
+                      <Warehouse className="w-5 h-5 text-neutral-400" />
+                    )}
                   </div>
-                  <div className="text-xs font-mono text-neutral-500 flex items-center gap-2 flex-wrap">
-                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#ff3b30]" /> {space.location}</span>
-                    {space.sqft && <span>• {space.sqft}</span>}
-                    {space.item_count !== undefined && <span>• {space.item_count} items staged</span>}
+
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 bg-amber-500 text-neutral-950 rounded-md" data-testid={`space-badge-${space.id}`}>
+                        {space.type}
+                      </span>
+                      <h3 className="text-sm font-black text-neutral-900 uppercase tracking-tight" data-testid={`space-title-${space.id}`}>
+                        {space.name}
+                      </h3>
+                    </div>
+                    <div className="text-xs font-mono text-neutral-500 flex items-center gap-2 flex-wrap">
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#ff3b30]" /> {space.location}</span>
+                      {space.sqft && <span>• {space.sqft}</span>}
+                      {space.item_count !== undefined && <span>• {space.item_count} items staged</span>}
+                    </div>
                   </div>
                 </div>
 

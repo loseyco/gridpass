@@ -86,6 +86,11 @@ function CreateBusinessForm() {
         website: website.trim() || '',
         description: description.trim() || '',
         owner_id: user?.uid || 'guest-owner',
+        owner_uid: user?.uid || 'guest-owner',
+        user_id: user?.uid || 'guest-owner',
+        created_by: user?.uid || 'guest-owner',
+        is_unclaimed: false,
+        status: 'active',
         created_at: new Date().toISOString(),
         verified: true,
         logo_url: ''
