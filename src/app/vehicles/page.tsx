@@ -17,6 +17,7 @@ interface ExploreVehicle {
   co_owners?: string[] | string;
   ownership_split?: string;
   trim?: string;
+  mods?: string[] | string;
 }
 
 export default function VehiclesPage() {
@@ -89,7 +90,8 @@ export default function VehiclesPage() {
               },
               co_owners: data.co_owners || '',
               ownership_split: data.ownership_split || '',
-              trim: data.trim || ''
+              trim: data.trim || '',
+              mods: data.mods || data.mods_description || []
             } as ExploreVehicle;
           })
           .filter(v => v.make.trim() !== '' && v.model.trim() !== '');
@@ -110,11 +112,13 @@ export default function VehiclesPage() {
 
   const filteredVehicles = vehicles.filter(v => {
     const term = searchQuery.toLowerCase();
+    const modsStr = Array.isArray(v.mods) ? v.mods.join(' ').toLowerCase() : String(v.mods || '').toLowerCase();
     return (
       (v.make || '').toLowerCase().includes(term) ||
       (v.model || '').toLowerCase().includes(term) ||
       (v.tag_id || '').toLowerCase().includes(term) ||
-      String(v.year).includes(term)
+      String(v.year).includes(term) ||
+      modsStr.includes(term)
     );
   });
 

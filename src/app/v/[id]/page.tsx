@@ -1,12 +1,14 @@
 import { Metadata } from 'next';
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { VehicleProfileClient } from './VehicleProfileClient';
 import CreateVehiclePage from '../create/page';
 
 interface SpecItem {
   engine?: string;
   transmission?: string;
+  differential?: string;
+  gear_ratio?: string;
   hp?: number | string;
   torque?: number | string;
 }
@@ -77,11 +79,25 @@ async function getVehicleData(vehicleId: string): Promise<VehicleData | null> {
   if (!vehicleId) return null;
 
   try {
+    let vData: any = null;
+    let docId = vehicleId;
+
     const docSnap = await getDoc(doc(db, 'vehicles', vehicleId));
     if (docSnap.exists()) {
-      const vData = docSnap.data();
+      vData = docSnap.data();
+      docId = docSnap.id;
+    } else {
+      const q = query(collection(db, 'vehicles'), where('tag_id', '==', vehicleId));
+      const qSnap = await getDocs(q).catch(() => null);
+      if (qSnap && !qSnap.empty) {
+        vData = qSnap.docs[0].data();
+        docId = qSnap.docs[0].id;
+      }
+    }
+
+    if (vData) {
       return {
-        id: docSnap.id,
+        id: docId,
         tag_id: vData.tag_id || '',
         owner_id: vData.owner_id || null,
         owner_email: vData.owner_email,
@@ -100,7 +116,7 @@ async function getVehicleData(vehicleId: string): Promise<VehicleData | null> {
         is_ad_free: vData.is_ad_free,
         has_telemetry: vData.has_telemetry,
         is_verified_provenance: vData.is_verified_provenance,
-        photo_url: vData.photo_url,
+        photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl,
         awards: vData.awards,
         history: vData.history,
         co_owners: vData.co_owners || '',

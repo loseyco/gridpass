@@ -146,6 +146,42 @@ export const INITIAL_PLATFORM_FEATURES: InitialFeature[] = [
 
 export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
   {
+    version: 'v5.1.0',
+    title: 'Dynamic Physical Join Tag Routing & Leading-Zero Tag ID Staging Engine',
+    category: 'feature',
+    description: 'Engineered dynamic physical tag path routing (/join/id=720 & /join/720) with automatic sanitized redirect to /join?id=720, supporting leading-zero decal IDs (0720 vs 720) and QR setup staging screens.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/join, /join/[id], /leaderboard',
+  },
+  {
+    version: 'v5.0.0',
+    title: 'Fixed Inventory Excel Worksheet Table Cell Rendering & Added Rapid Bulk Add Storage Space Dropdown Locking',
+    category: 'feature',
+    description: 'Decoupled standalone GarageInventoryManager component, refactored excelColumns to match @gridpass/ui ExcelWorksheetTable ColumnDef interface (key, label, render), rendering full part names, specs, photos, valuations, and status pills in Excel cells. Added rapid bulk add intake storage space dropdown locking to preserve selected space across consecutive items.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/inventory, /dash/garage',
+  },
+  {
+    version: 'v4.9.2',
+    title: 'Plain-English Copywriting Refresh, Bulk Add Items Studio & Excel Header Dropdown Popover Fix',
+    category: 'feature',
+    description: 'Replaced technical jargon words (+ Stage Item -> + Add Item, Rapid Bulk Intake -> Bulk Add Items, Inventory HQ -> Inventory) across Inventory HQ, fixed Excel column header dropdown popovers to float unclipped over footers, and mandated verified Gridpass member autocomplete validation for asset co-owners.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/inventory',
+  },
+  {
+    version: 'v4.9.1',
+    title: 'Asset Age Tracking, Bought/Last Used Dates, Sell Advisor & Verified Member Co-Ownership',
+    category: 'feature',
+    description: 'Added purchase_date, last_used_date, and computed asset age tracking (days/months/years) with automated Idle Sell Candidate recommendation badges, and introduced multi-ownership support binding verified Gridpass member UIDs with equity share splits.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/inventory',
+  },
+  {
     version: 'v4.8.0',
     title: 'Second Life SaaS Venue Portal Engine, Live Audio Player, Photo Gallery & Telemetry v4.8',
     category: 'feature',
@@ -441,6 +477,15 @@ export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
     timestamp: '2026-08-02T07:06:00.000Z',
     author: 'antigravity',
     route_affected: '/admin/db',
+  },
+  {
+    version: 'v4.3.0',
+    title: 'Add Your Car Overhaul: Native Photo Uploads, Drivetrain Specs & Firestore Integration',
+    category: 'feature',
+    description: 'Renamed form to "ADD YOUR CAR" with native direct camera/file uploads (no URL pasting), optional drivetrain specs (Transmission, Differential, Gear Ratio), multi-photo build galleries, and 100% direct Cloud Firestore data persistence.',
+    timestamp: '2026-08-11T19:28:00.000Z',
+    author: 'antigravity',
+    route_affected: '/v/new',
   },
   {
     version: 'v4.2.0',

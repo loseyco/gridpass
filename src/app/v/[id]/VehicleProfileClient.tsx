@@ -22,6 +22,8 @@ import { EditVehicleDrawer } from '@/components/EditVehicleDrawer';
 interface SpecItem {
   engine?: string;
   transmission?: string;
+  differential?: string;
+  gear_ratio?: string;
   hp?: number | string;
   torque?: number | string;
 }
@@ -350,17 +352,15 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const [submittingLog, setSubmittingLog] = useState(false);
 
   // Checks
-  const isMock = typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__;
   const isOwner = user && vehicle && user.uid === vehicle.owner_id;
   
-  // A certified shop is a user with a B2B shop email (mock or actual) or explicitly authenticated
-  const isShop = user && (
+  // A certified shop is a user with a B2B shop email or explicitly authenticated
+  const isShop = Boolean(user && (
     user.email?.endsWith('@performancetuning.com') || 
     user.email?.endsWith('@monmouthmarine.com') ||
     user.email?.endsWith('@gridpass.app') ||
-    (user as any).role === 'shop' ||
-    (isMock && user.email === 'mike@performancetuning.com')
-  );
+    (user as any).role === 'shop'
+  ));
 
   useEffect(() => {
     if (authLoading) return;
@@ -368,184 +368,42 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
     let isMounted = true;
 
     async function loadVehicleData() {
-      if (isMock) {
-        // Return simulated vehicle data for Playwright tests
-        await new Promise(r => setTimeout(r, 100));
-        
-        let ownerId = 'user-marcus-123';
-        if (vehicleId === 'mock-unclaimed-v1') ownerId = '';
-
-        const mockVehicle: VehicleData = {
-          id: vehicleId || 'mock-v1',
-          tag_id: 'GP-MARCUS-GT',
-          owner_id: ownerId,
-          owner_email: 'marcus@enthusiast.com',
-          year: 2024,
-          make: 'Ford',
-          model: 'Mustang GT',
-          trim: 'Premium',
-          specs: {
-            engine: '5.0L Coyote V8',
-            transmission: '6-Speed Manual',
-            hp: 480,
-            torque: 415
-          },
-          mods: [
-            { category: 'Exhaust', brand: 'Roush', name: 'Cat-Back Exhaust System', cost: 1200 },
-            { category: 'Suspension', brand: 'Steeda', name: 'Progressive lowering springs', cost: 350 }
-          ],
-          partner_dealer: 'Monmouth Marine Ford',
-          has_telemetry: true,
-          is_verified_provenance: true,
-          vin: '1FA6P8CF5R5123456',
-          vin_checked: true,
-          vin_report: {
-            status: 'CLEAN',
-            accident_history: '0 Incidents Reported',
-            theft_records: 'No Active Theft Alerts',
-            recall_status: '0 Active Recalls',
-            database_registry: 'Verified with Gridpass Ledger',
-            audited_at: new Date().toLocaleDateString()
-          },
-          thumbs_up: 18,
-          thumbs_down: 1,
-          photo_url: 'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=800&q=80',
-          awards: [
-            'Best Mustang Build - Wall Stadium 2025',
-            'People Choice Award - Cars & Coffee 2026'
-          ],
-          history: [
-            'Purchased new from Monmouth Marine Ford in 2024.',
-            'Roush Exhaust installed at 1,500 miles.',
-            'Lowering springs installed at 3,000 miles.'
-          ],
-          co_owners: '',
-          purchase_date: '2026-06-01',
-          purchase_price: 4500,
-          ownership_split: '50/50',
-          title_status: 'Clean (Held by Kristina)',
-          sticker_status: 'Active (Expires 2028)',
-          engine_hours: 120,
-          story: 'Me and Kristina bought this 2007 Sea-Doo GTI SE to share our weekend adventures. It has been incredibly reliable on the bay!',
-          documents: [
-            { name: 'Registration (WI-9384-AB)', status: 'Valid' },
-            { name: 'USCG Safety Equipment', status: 'Compliant' },
-            { name: 'Hull Insurance Policy', status: 'Active' }
-          ],
-          additional_photos: [
-            'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80',
-            'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=800&q=80'
-          ],
-          due_maintenance: [
-            { title: 'Jet Pump Wear Ring Inspection', due_date: '2026-08-01', status: 'Pending', parts_needed: 'Wear Ring', affiliate_link: '' },
-            { title: 'Winterization & Stable Fluid', due_date: '2026-10-15', status: 'Pending', parts_needed: 'Stable fluid', affiliate_link: '' }
-          ]
-        };
-
-        const mockLogs: ServiceLog[] = [
-          {
-            id: 'log-1',
-            title: 'Roush Cat-Back Exhaust Installation',
-            notes: 'Installed Roush exhaust system. Sounds throaty. Fits perfectly.',
-            date: '2025-10-12',
-            cost: 1200,
-            recorded_by: 'mike@performancetuning.com',
-            is_verified: true,
-            shop_id: 'performance-tuning-demo'
-          },
-          {
-            id: 'log-2',
-            title: 'First Oil Change',
-            notes: 'Standard 5W-30 synthetic oil change and filter replacement.',
-            date: '2025-08-01',
-            cost: 85,
-            recorded_by: 'owner@gridpass.app',
-            is_verified: false
-          }
-        ];
-
-        const mockSightings: Sighting[] = [
-          {
-            id: 'sight-1',
-            spotted_by: 'Sarah Spotter',
-            photo_url: '',
-            latitude: 40.2204,
-            longitude: -74.0006,
-            location_name: 'Wall Stadium Speedway',
-            description: 'Looking clean in the paddock!',
-            timestamp: new Date().toISOString()
-          },
-          {
-            id: 'sight-2',
-            spotted_by: 'Racetrack Dave',
-            photo_url: '',
-            latitude: 39.9526,
-            longitude: -75.1652,
-            location_name: 'Badlands Offroad Gate',
-            description: 'Checked-in for track day.',
-            timestamp: new Date(Date.now() - 86400000).toISOString()
-          }
-        ];
-
-        const mockExpenses: VehicleExpense[] = [
-          {
-            id: 'exp-1',
-            vehicle_id: vehicleId,
-            owner_id: ownerId,
-            title: 'Premium Gas Fill-up',
-            category: 'fuel',
-            cost: 45,
-            date: '2026-06-05',
-            notes: 'Standard marina gas fill',
-            paid_by: 'Marcus Mustang'
-          },
-          {
-            id: 'exp-2',
-            vehicle_id: vehicleId,
-            owner_id: ownerId,
-            title: 'Roush Cat-Back Exhaust Installation',
-            category: 'addon',
-            cost: 1200,
-            date: '2025-10-12',
-            notes: 'Installed Roush exhaust',
-            paid_by: 'Marcus Mustang'
-          },
-          {
-            id: 'exp-3',
-            vehicle_id: vehicleId,
-            owner_id: ownerId,
-            title: 'Yearly Sticker & Decal',
-            category: 'license',
-            cost: 120,
-            date: '2026-06-02',
-            notes: 'Registration renewal',
-            paid_by: 'Kristina'
-          }
-        ];
-
-        if (isMounted) {
-          setOwnerProfile({ displayName: 'Marcus Mustang', username: 'pjlosey-mock' });
-          setVehicle(mockVehicle);
-          setServiceLogs(mockLogs);
-          setSightings(mockSightings);
-          setExpenses(mockExpenses);
-          setThumbsUp(mockVehicle.thumbs_up || 18);
-          setThumbsDown(mockVehicle.thumbs_down || 1);
-          setVinAuditReport(mockVehicle.vin_report || null);
-          setLoading(false);
-        }
-        return;
-      }
-
       try {
-        // Real Firestore query
+        // Real Firestore query with multi-fallback (id -> tag_id -> slug match)
+        let vData: any = null;
+        let foundDocId = vehicleId;
+
         const docRef = doc(db, 'vehicles', vehicleId);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          const vData = docSnap.data();
+          vData = docSnap.data();
+          foundDocId = docSnap.id;
+        } else {
+          // Fallback Query 1: by tag_id
+          const tagQuery = query(collection(db, 'vehicles'), where('tag_id', '==', vehicleId));
+          const tagSnap = await getDocs(tagQuery);
+          if (!tagSnap.empty) {
+            vData = tagSnap.docs[0].data();
+            foundDocId = tagSnap.docs[0].id;
+          } else {
+            // Fallback Query 2: search all vehicles for matching slug or title
+            const allSnap = await getDocs(collection(db, 'vehicles'));
+            const matchedDoc = allSnap.docs.find(d => {
+              const dData = d.data();
+              const titleSlug = (dData.title || `${dData.year || ''} ${dData.make || ''} ${dData.model || ''}`).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+              return d.id === vehicleId || dData.tag_id === vehicleId || titleSlug === vehicleId.toLowerCase();
+            });
+            if (matchedDoc) {
+              vData = matchedDoc.data();
+              foundDocId = matchedDoc.id;
+            }
+          }
+        }
+
+        if (vData) {
           const loadedVehicle: VehicleData = {
-            id: docSnap.id,
+            id: foundDocId,
             tag_id: vData.tag_id || '',
             owner_id: vData.owner_id || null,
             owner_email: vData.owner_email,
@@ -696,7 +554,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
     loadVehicleData();
 
     return () => { isMounted = false; };
-  }, [vehicleId, user, authLoading, isMock]);
+  }, [vehicleId, user, authLoading]);
 
   // Share Passport URL handler
   const handleShare = async () => {
@@ -729,17 +587,6 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const handleVote = async (type: 'up' | 'down') => {
     if (voteType || voting) return;
     setVoting(true);
-
-    if (isMock) {
-      if (type === 'up') setThumbsUp(prev => prev + 1);
-      else setThumbsDown(prev => prev + 1);
-      setVoteType(type);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`gridpass_vote_${vehicleId}`, type);
-      }
-      setVoting(false);
-      return;
-    }
 
     try {
       // Record a sighting as the rating document
@@ -868,13 +715,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
       }
     };
 
-    if (isMock) {
-      setVinAuditReport(report);
-      setVehicle(prev => prev ? { ...prev, ...updatedVehicleData } : null);
-      setVinAuditing(false);
-      await logEvent('success', 'system', `VIN history audited and decoded for mock vehicle`);
-      return;
-    }
+
 
     try {
       const docRef = doc(db, 'vehicles', vehicleId);
@@ -901,16 +742,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
       vin_report: hasVinChanged ? null : (vehicle?.vin_report || null)
     };
 
-    if (isMock) {
-      setVehicle(prev => prev ? { ...prev, ...updatedFields } : null);
-      if (hasVinChanged) {
-        setVinAuditReport(null);
-      }
-      setIsEditingVin(false);
-      setSavingVin(false);
-      await logEvent('success', 'system', `Updated vehicle VIN in mock`);
-      return;
-    }
+
 
     try {
       const docRef = doc(db, 'vehicles', vehicleId);
@@ -937,24 +769,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
     const isVerifiedStamp = isShop;
     const authorEmail = user?.email || 'authenticated-user@gridpass.app';
 
-    if (isMock) {
-      const newLog: ServiceLog = {
-        id: `log-mock-${Date.now()}`,
-        title: logTitle,
-        notes: logNotes,
-        date: logDate,
-        cost: logCost ? parseFloat(logCost) : undefined,
-        recorded_by: authorEmail,
-        is_verified: isVerifiedStamp,
-        shop_id: isVerifiedStamp ? 'performance-tuning-demo' : undefined
-      };
-      setServiceLogs(prev => [newLog, ...prev]);
-      setLogTitle('');
-      setLogNotes('');
-      setLogCost('');
-      setSubmittingLog(false);
-      return;
-    }
+
 
     try {
       const payload = {
@@ -978,7 +793,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
         date: payload.date,
         cost: payload.cost || undefined,
         recorded_by: payload.recorded_by,
-        is_verified: payload.is_verified,
+        is_verified: Boolean(payload.is_verified),
         shop_id: payload.shop_id || undefined
       };
 
@@ -1008,7 +823,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
       return;
     }
 
-    const ownerUid = isMock ? 'user-marcus-123' : (user?.uid || 'unknown-uid');
+    const ownerUid = user?.uid || 'unknown-uid';
     const resolvedPaidBy = expensePaidBy.trim() || user?.displayName || user?.email?.split('@')[0] || 'Owner';
 
     const splitPayload = {
@@ -1020,31 +835,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
 
     if (editingExpenseId) {
       // EDIT MODE
-      if (isMock) {
-        setExpenses(prev => prev.map(exp => exp.id === editingExpenseId ? {
-          ...exp,
-          title: expenseTitle.trim(),
-          category: expenseCategory,
-          cost: costNum,
-          date: expenseDate,
-          notes: expenseNotes.trim(),
-          paid_by: resolvedPaidBy,
-          ...splitPayload
-        } : exp));
-        setExpenseTitle('');
-        setExpenseCost('');
-        setExpenseNotes('');
-        setExpensePaidBy('');
-        setExpenseIsSplit(false);
-        setExpenseSplitBetween([]);
-        setExpenseSplitDetails([]);
-        setExpensePhotoUrl('');
-        setCustomSplitName('');
-        setPaidBySelect('');
-        setEditingExpenseId(null);
-        setSubmittingExpense(false);
-        return;
-      }
+
 
       try {
         const expenseDocRef = doc(db, 'expenses', editingExpenseId);
@@ -1089,33 +880,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
       }
     } else {
       // ADD MODE
-      if (isMock) {
-        const newExpense: VehicleExpense = {
-          id: `exp-mock-${Date.now()}`,
-          vehicle_id: vehicleId,
-          owner_id: ownerUid,
-          title: expenseTitle.trim(),
-          category: expenseCategory,
-          cost: costNum,
-          date: expenseDate,
-          notes: expenseNotes.trim(),
-          paid_by: resolvedPaidBy,
-          ...splitPayload
-        };
-        setExpenses(prev => [newExpense, ...prev]);
-        setExpenseTitle('');
-        setExpenseCost('');
-        setExpenseNotes('');
-        setExpensePaidBy('');
-        setExpenseIsSplit(false);
-        setExpenseSplitBetween([]);
-        setExpenseSplitDetails([]);
-        setExpensePhotoUrl('');
-        setCustomSplitName('');
-        setPaidBySelect('');
-        setSubmittingExpense(false);
-        return;
-      }
+
 
       try {
         const payload = {
@@ -1522,7 +1287,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
 
     const payload: VehicleExpense = {
       vehicle_id: vehicleId,
-      owner_id: isMock ? 'user-marcus-123' : (user?.uid || 'unknown-uid'),
+      owner_id: user?.uid || 'unknown-uid',
       title: `Settle Up: ${debtor} paid ${creditor}`,
       category: 'other',
       cost: amount,
@@ -1537,10 +1302,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
       ]
     };
 
-    if (isMock) {
-      setExpenses(prev => [{ ...payload, id: `exp-settle-${Date.now()}` }, ...prev]);
-      return;
-    }
+
 
     try {
       const docRef = await addDoc(collection(db, 'expenses'), {
@@ -1596,10 +1358,7 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
   const handleDeleteExpense = async (expenseId: string) => {
     if (!confirm("Are you sure you want to delete this expense record?")) return;
 
-    if (isMock) {
-      setExpenses(prev => prev.filter(exp => exp.id !== expenseId));
-      return;
-    }
+
 
     try {
       await deleteDoc(doc(db, 'expenses', expenseId));
@@ -1655,12 +1414,9 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
     );
   }
 
-  const isMarcus = isMock && user?.email === 'marcus@enthusiast.com';
-  const isMike = isMock && user?.email === 'mike@performancetuning.com';
-  
-  const showTelemetryTab = isOwner || isMarcus;
-  const showServiceTab = isOwner || isShop || isMarcus || isMike;
-  const showExpensesTab = isOwner || isMarcus;
+  const showTelemetryTab = Boolean(isOwner);
+  const showServiceTab = Boolean(isOwner || isShop);
+  const showExpensesTab = Boolean(isOwner);
 
   const showTabsBar = showTelemetryTab || showServiceTab || showExpensesTab;
 
@@ -1819,7 +1575,13 @@ export function VehicleProfileClient({ initialVehicle, vehicleId }: { initialVeh
                     <span className="text-neutral-900 text-right truncate">{vehicle.specs?.engine || 'N/A'}</span>
 
                     <span className="text-neutral-450 uppercase">Transmission</span>
-                    <span className="text-neutral-900 text-right truncate">{vehicle.specs?.transmission || 'N/A'}</span>
+                    <span className="text-neutral-900 text-right truncate">{vehicle.specs?.transmission || (vehicle as any).transmission || 'N/A'}</span>
+
+                    <span className="text-neutral-450 uppercase">Differential / Axle</span>
+                    <span className="text-neutral-900 text-right truncate">{vehicle.specs?.differential || (vehicle as any).differential || 'N/A'}</span>
+
+                    <span className="text-neutral-450 uppercase">Gear Ratio</span>
+                    <span className="text-neutral-900 text-right truncate">{vehicle.specs?.gear_ratio || (vehicle as any).gear_ratio || 'N/A'}</span>
 
                     <span className="text-neutral-450 uppercase">Output Power</span>
                     <span className="text-neutral-900 text-right">{vehicle.specs?.hp ? `${vehicle.specs.hp} HP` : 'N/A'}</span>

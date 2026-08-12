@@ -14,7 +14,8 @@ Before making any codebase edits or running tests, you MUST read and strictly ad
 Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for in-progress, and ensure all changes are fully verified using E2E tests before completing your goal.
 
 ## 3.1 Token Awareness & Lean Execution
-*   **Google AI Ultra Tier Context**: The workspace operates on the **Google AI Ultra ($200/mo)** tier with generous quota limits (Gemini 86%+ / Claude/GPT 80%+). The General Manager (GM) utilizes top-tier model intelligence for deep reasoning and multi-agent coordination while maintaining token-lean execution guardrails.
+* **MANDATORY PHOTO UPLOAD INVARIANT (NO URL PASTING)**: NEVER force or require users to paste raw image URLs into forms (vehicle, profile, business, event). ALWAYS provide direct native file picker and camera photo upload controls (`<input type="file" accept="image/*">`) with Base64 / Cloud Storage preview handling.
+* **Google AI Ultra Tier Context**: The workspace operates on the **Google AI Ultra ($200/mo)** tier with generous quota limits (Gemini 86%+ / Claude/GPT 80%+). The General Manager (GM) utilizes top-tier model intelligence for deep reasoning and multi-agent coordination while maintaining token-lean execution guardrails.
 *   **Concise Codebase Contracts**: Maintain lean, direct rule definitions in workspace files to minimize prompt context overhead.
 *   **Shared Component Reuse**: Always reuse shared layout templates, headers, footers, and design primitives instead of re-writing redundant UI styles on every page.
 *   **Targeted Audits**: Execute heavy persona audits and subagent workflows during phase completion or pre-push milestones, not on trivial single-file edits.
@@ -32,10 +33,10 @@ Always mark checklist progress in `task.md` using `[x]` for completed, `[/]` for
     3. ABSOLUTE BAN ON SYNTHETIC UI FALLBACKS: NEVER write conditional index-based or mock array fallbacks in UI component maps or hooks (e.g. NEVER use `(idx < 5 ? activeVersion : 0)`, `idx < 3 ? 'ONLINE' : 'OFFLINE'`, or synthetic status mocks). 
     4. STRICT RAW DATA EVALUATION: Every metric, status badge, asset, space, vehicle, experience, photo, link, and timestamp MUST evaluate directly from verified Firestore records, real URL parameters, or live API responses. If live data is absent, UI MUST render an explicit empty state (`⚪ Pending Delivery`, `⚪ No Experience Assets Created`, `⚪ No Storage Spaces Registered`, `0`, or `[]`) rather than returning a synthetic fallback number or mock status.
     5. MANDATORY COMPONENT AUDIT: Before declaring any page or feature complete, agents MUST audit all `.map()` functions, state hooks, and ternary operators to guarantee 0 synthetic fallbacks exist. Hardcoded presets are strictly restricted to isolated Playwright test files and the sales pitch simulator.
-*   **SINGLE CANONICAL EDIT ROUTE & DRY LINKING INVARIANT**:
-    1. EVERY asset type (User Profile, Vehicle, Experience Asset, Physical Storage Space, Business Profile, Event) MUST have exactly ONE canonical full-page edit route (e.g. `/dash/edit-profile`, `/exp/[id]/edit`, `/dash/space/new`, `/dash/vehicles/edit`).
-    2. NEVER rebuild, duplicate, or re-implement form inputs, inline drawers, or inline modal editors in multiple components across the site.
-    3. ALL UI components, profile cards, dashboard tables, and passport views MUST simply LINK directly via standard Next.js `<Link>` to the single canonical edit page route.
+*   **UNIFIED CANONICAL FORM COMPONENT INVARIANT (ZERO CREATE/EDIT DRIFT)**:
+    1. EVERY entity type (Physical Storage Space, Vehicle, Business Profile, Event, Experience Asset, User Profile) MUST use a SINGLE shared canonical form component (e.g. `StorageSpaceForm.tsx`, `VehiclePassportForm.tsx`, `BusinessProfileForm.tsx`) for BOTH Create (`mode="create"`) and Edit (`mode="edit"`) routes.
+    2. Create and Edit forms MUST NEVER be implemented as separate disconnected JSX files that can drift apart. Fields, inputs, photos, dropdowns, and validation logic MUST be 100% identical between Create and Edit modes.
+    3. ALL UI components, profile cards, dashboard tables, and passport views MUST simply link directly via standard Next.js `<Link>` to the single canonical edit/create page routes.
 *   **ENTERPRISE GIT BRANCHING & RELEASE MILESTONE INVARIANT**:
     1. **Branch Architecture**:
        - `main`: Protected production release branch. Strictly reserved for clean, tagged release milestones (e.g. `v4.2.0`) when PJ Losey approves live production deployments.
@@ -201,6 +202,22 @@ Before completing any roadmap phase or pushing code updates live, the following 
 ## 19. Mobile-First (iPhone/Android) & Tablet (iPad) Primary Architectural Paradigm
 *   **80%+ Primary Target**: All coders, architects, developers, and subagents MUST treat iPhone, Android smartphones, and iPad/tablets as the **PRIMARY target platforms**. Everything built for drivers, spectators, attendees, gate check-in scanning, pass claiming, and food truck ordering MUST feel 100% like a native Apple iOS / Android PWA application (touch targets ≥44px, zero hover reliance, outdoor sunlight high-contrast readability, input font-size ≥16px to prevent iOS zoom, and smooth mobile bottom drawers).
 *   **Secondary Responsive Desktop Target**: Desktop viewports are secondary — reserved primarily for Super Admin (`/admin`), race team engineering dashboards, and B2B inventory management. Desktop views MUST expand gracefully to widescreen multi-column real estate so desk users get full screen utilization, without ever compromising the mobile-first priority.
+
+## 20. Strict Plain-English Copywriting & Zero Jargon Invariant
+*   **Absolute Ban on Corporate & AI Jargon**: Coders and subagents MUST NEVER use artificial, robotic, or hyper-technical SaaS jargon words in user-facing texts, headings, buttons, toasts, modals, or card labels.
+*   **Banned Jargon Words & Mandatory Plain-English Replacements**:
+    - ❌ `Stage Item` / `Staging` -> ✅ `Add Item` / `Saving`
+    - ❌ `Rapid Bulk Intake` / `Intake Studio` -> ✅ `Bulk Add Items`
+    - ❌ `Inventory HQ` / `Space HQ` -> ✅ `Inventory` / `Storage Spaces`
+    - ❌ `Motorsport SaaS` -> ✅ `Gridpass Garage`
+    - ❌ `Master Inventory Excel Worksheet` -> ✅ `Inventory Spreadsheet`
+    - ❌ `Staged Items` -> ✅ `Total Items`
+    - ❌ `Item Passport Drawer` -> ✅ `Item Details`
+    - ❌ `Transformation Storyboard` -> ✅ `Timeline Logbook`
+    - ❌ `Assessor Verification Sign-Off Block` -> ✅ `Insurance Inventory Schedule`
+    - ❌ `Manifest` / `Exhibitor Grid` -> ✅ `Entry List` / `Vendor List`
+*   **Layperson-Friendly Principle**: Every label, button, modal subtitle, and toast message MUST read like natural, spoken English that a garage owner, mechanic, racer, or food truck operator understands instantly without confusion.
+
 
 
 
