@@ -7,6 +7,44 @@ import { SOPGuide } from '@/lib/types/admin';
 
 const DEFAULT_SOPS: SOPGuide[] = [
   {
+    id: 'sop_006_global_motorsport_registry_and_anti_fraud_claims',
+    slug: 'global-motorsport-registry-and-claims-sop',
+    title: 'Global Motorsport Entity Registry, Multi-Tier Claim Verification & Dispute Resolution Court SOP',
+    category: 'Paddock & Registry Governance',
+    author_agent: 'architect',
+    description: 'Standard operating procedure for the self-populating paddock entity database (drivers, riders, teams, tracks, venues), autonomous discovery harvesting from accredited feeds, 3-tier anti-fraud claim verification, and dispute resolution freeze protocols.',
+    prerequisites: ['Super Admin Role Access (PJ Losey)', 'Access to /admin/claims and /admin/tickets'],
+    steps: [
+      'Step 1 (Discovery Intake): As Gemini 3.7 Flash parses incoming press dispatches, autonomously detect new drivers, riders, teams, and tracks and register them in paddock_entities with is_claimed: false.',
+      'Step 2 (Unclaimed Hub Presentation): Display unclaimed profile banner on /news/hub/[type]/[slug] prompting official representatives to claim the profile.',
+      'Step 3 (3-Tier Verification): Route claimants through Option 1 (Corporate domain OTP match), Option 2 (Social bio verification token scraped by bot), or Option 3 (Sanctioning hard card/license upload).',
+      'Step 4 (Admin Triage Queue): Review pending license/hard card claims in /admin/claims with 1-tap [Approve & Transfer] or [Reject].',
+      'Step 5 (Ownership Dispute Freeze): When a member clicks [Dispute / Contest Ownership], place profile in UNDER_DISPUTE_REVIEW read-only freeze to prevent unauthorized tampering.',
+      'Step 6 (Dispute Court Resolution): Super Admin compares Claimant A vs Claimant B evidence in /admin/claims?tab=disputes and executes 1-tap re-assignment to the verified true owner.'
+    ],
+    components_referenced: ['PaddockWireDaemon', 'PaddockHubPage', 'AdminClaimsPage', 'ClaimVerificationModal', 'DisputeOwnershipDrawer'],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'sop_005_motorsport_news_wire_and_notifications',
+    slug: 'motorsport-news-wire-and-notifications-sop',
+    title: 'Real-Time Motorsport News Wire, Ingestion Daemon & Universal Notifications SOP',
+    category: 'News & Media Operations',
+    author_agent: 'aiseo_expert',
+    description: 'Operational guidelines for the continuous motorsport news wire, multi-outlet deduplication, Gemini 3.7 Flash journalistic rewriting, universal member notification center, and dedicated paddock hub discovery.',
+    prerequisites: ['Google AI Studio API Key', 'Firebase Cloud Firestore', 'Playwright E2E Suite'],
+    steps: [
+      'Step 1 (Daemon Heartbeat): Run scripts/paddock_wire_daemon.ts on local PC workstation polling 12 accredited feeds every 2 minutes.',
+      'Step 2 (Deduplication & Multi-Source Merge): Detect cross-outlet coverage with >=40% semantic similarity and merge into a single master dispatch with live chronological timeline updates.',
+      'Step 3 (Gemini 3.7 Flash Journalistic Synthesis): Rewrite raw press dispatches into 100% original, fact-locked Gridpass news reports with 0 competitor boilerplate and historical continuity context from prior articles.',
+      'Step 4 (Live Real-Time Sync): Ensure all feed subscribers use Firestore onSnapshot listeners so new stories stream to viewports with zero browser reloads.',
+      'Step 5 (Universal Notification Center): Route digests, replies, and upvotes to the slide-over notification drawer with 4 filter tabs and red unread counter badge.',
+      'Step 6 (Mobile Density Compliance): Keep news toolbar strictly constrained to 2 compact rows on mobile viewports with >=44px touch targets.'
+    ],
+    components_referenced: ['NewsPortalPage', 'ArticleEditorialReaderPage', 'MemberNotificationsDrawer', 'PaddockDirectoryPage', 'PaddockWireDaemon'],
+    created_at: new Date().toISOString().split('T')[0],
+  },
+  {
     id: 'sop_004_production_deployment_and_intake',
     slug: 'production-deployment-and-intake-sop',
     title: 'Master Production Build, Physical QR Decal Intake & Firebase Hosting Deployment SOP',
@@ -91,11 +129,18 @@ export default function AdminSOPKnowledgeBasePage() {
     const unsubSOPs = onSnapshot(
       collection(db, 'sops'),
       (snapshot) => {
-        if (!snapshot.empty) {
-          const list: SOPGuide[] = [];
-          snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as SOPGuide));
-          setSops(list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')));
-        }
+        const list: SOPGuide[] = [];
+        snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as SOPGuide));
+
+        // Merge any code-defined SOPs not yet in Firestore
+        DEFAULT_SOPS.forEach((codeSOP) => {
+          const exists = list.some((s) => s.id === codeSOP.id || s.slug === codeSOP.slug);
+          if (!exists) {
+            list.unshift(codeSOP);
+          }
+        });
+
+        setSops(list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '')));
       },
       (err) => console.warn('SOPs listener fallback:', err)
     );

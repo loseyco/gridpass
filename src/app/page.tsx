@@ -2,12 +2,13 @@
 
 import React, { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader2, Heart, Users, Car, Calendar, QrCode, Compass, Building2, Globe, ArrowRight } from 'lucide-react';
+import { Loader2, Heart, Users, Car, Calendar, QrCode, Compass, Building2, Globe, ArrowRight, Newspaper } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Logo from '@/components/Logo';
 import LiveActivityFeed from '@/components/feed/LiveActivityFeed';
 import { db } from '@/lib/firebase/config';
 import { collection, onSnapshot } from 'firebase/firestore';
+import JoinClient from './join/JoinClient';
 
 function HomeClient() {
   const { user } = useAuth();
@@ -63,11 +64,41 @@ function HomeClient() {
     const unsubEventsList = onSnapshot(collection(db, 'events'), (snap) => {
       const list: any[] = [];
       snap.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() });
+        const data = docSnap.data();
+        if (data.status !== 'completed' && data.status !== 'cancelled' && !data.is_hidden && !data.archived) {
+          list.push({ id: docSnap.id, ...data });
+        }
       });
       setFeaturedEvents(list);
     });
     return () => unsubEventsList();
+  }, []);
+
+  // Real-time Latest News Wire Dispatches State
+  const [latestNews, setLatestNews] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsubNews = onSnapshot(collection(db, 'news_articles'), (snap) => {
+      const list: any[] = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.is_public !== false && data.status !== 'draft') {
+          list.push({
+            id: docSnap.id,
+            ...data,
+            cover_image: data.cover_image || data.cover_image_url || data.image_url || null,
+          });
+        }
+      });
+      list.sort((a, b) => {
+        const timeA = a.published_at || a.created_at || '';
+        const timeB = b.published_at || b.created_at || '';
+        return timeB.localeCompare(timeA);
+      });
+      setLatestNews(list.slice(0, 3));
+    });
+    return () => unsubNews();
   }, []);
 
   return (
@@ -188,6 +219,68 @@ function HomeClient() {
           <LiveActivityFeed />
         </div>
 
+      </div>
+
+      {/* Latest Motorsport News Section */}
+      <div className="pt-6 border-t border-neutral-200 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-black uppercase text-neutral-900 tracking-tight flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-[#ff3b30]" />
+              <span>Latest News</span>
+            </h2>
+            <p className="text-xs text-neutral-500 font-medium">Breaking race reports, paddock updates, and championship news.</p>
+          </div>
+          <Link href="/news" className="text-xs font-bold text-[#ff3b30] hover:underline uppercase tracking-wider flex items-center gap-1">
+            <span>All News ➔</span>
+          </Link>
+        </div>
+
+        {latestNews.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {latestNews.map((art) => (
+              <Link
+                key={art.id}
+                href={`/news/${art.slug || art.id}`}
+                className="relative overflow-hidden bg-white hover:bg-neutral-50 border border-neutral-200/90 hover:border-neutral-300 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 group shadow-xs hover:shadow-lg"
+              >
+                {/* Background Image - Noticeable by default, Rich & Vibrant on hover */}
+                {art.cover_image && (
+                  <div
+                    className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-65 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+                    style={{ backgroundImage: `url(${art.cover_image})` }}
+                  />
+                )}
+                {/* Clean gradient wash for crisp readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/80 to-white/50 group-hover:from-white/85 group-hover:via-white/60 group-hover:to-white/30 transition-all duration-300 pointer-events-none" />
+
+                <div className="relative z-10 space-y-2.5">
+                  <div className="flex items-center justify-between gap-1.5 text-[9px] font-black uppercase text-neutral-600 font-mono">
+                    <span className="px-2 py-0.5 bg-neutral-900/90 text-white rounded-md backdrop-blur-xs shadow-2xs">
+                      {art.category?.replace(/_/g, ' ')}
+                    </span>
+                    <span className="bg-white/80 px-1.5 py-0.5 rounded-md backdrop-blur-xs font-bold text-neutral-800">
+                      {art.published_at ? new Date(art.published_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'Live'}
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-xs uppercase text-neutral-950 group-hover:text-[#ff3b30] transition leading-snug line-clamp-2">
+                    {art.title}
+                  </h3>
+
+                  <p className="text-[11px] text-neutral-800 font-medium line-clamp-2 leading-relaxed">
+                    {art.summary}
+                  </p>
+                </div>
+
+                <div className="relative z-10 pt-3 border-t border-neutral-200/80 mt-3 flex items-center justify-between text-[10px] font-black text-[#ff3b30] uppercase tracking-wider">
+                  <span>Read Story</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Featured Real Events & Gatherings Section */}
@@ -351,9 +444,21 @@ function HomeClient() {
 }
 
 export default function Home() {
+  const [clientPath, setClientPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setClientPath(window.location.pathname.toLowerCase());
+    }
+  }, []);
+
+  if (clientPath === '/join' || (clientPath && clientPath.startsWith('/join/'))) {
+    return <JoinClient />;
+  }
+
   return (
     <Suspense fallback={
-      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center">
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
       </div>
     }>

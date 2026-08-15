@@ -69,4 +69,12 @@ test.describe('Gridpass Admin Suite & Management Console E2E Tests', () => {
     await page.goto('http://localhost:3000/admin/analytics');
     await expect(page.getByRole('heading', { name: /(GRIDPASS REAL-TIME MAP|Revenue Analytics)/i })).toBeVisible({ timeout: 20000 });
   });
+
+  test('Member Ideas & Feature Triage HQ renders intake queue and feedback items', async ({ page }) => {
+    await page.goto('http://localhost:3000/admin/feedback');
+    await expect(page.getByRole('heading', { name: /Member Ideas & Feature Request Triage HQ/i })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText(/Where can i buy one/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Pending Triage/i })).toBeVisible();
+  });
 });
+

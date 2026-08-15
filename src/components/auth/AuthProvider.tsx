@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && (window as any).__PLAYWRIGHT_MOCK__) {
+        if (typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true')) {
             console.log("[AuthProvider] Playwright mock active.");
             const mockUser = (window as any).__MOCK_USER__;
             if (mockUser === null) {

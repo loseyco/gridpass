@@ -1,7 +1,8 @@
 'use client';
 
-import GarageManagerPage from '../dash/garage/page';
+import React from 'react';
+import GarageInventoryManager from '@/components/inventory/GarageInventoryManager';
 
 export default function StandaloneInventoryPage() {
-  return <GarageManagerPage />;
+  return <GarageInventoryManager />;
 }

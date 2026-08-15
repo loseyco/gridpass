@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="nascarYellow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF200" />
+      <stop offset="100%" stop-color="#FFD100" />
+    </linearGradient>
+    <linearGradient id="nascarRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E4002B" />
+      <stop offset="100%" stop-color="#B3081E" />
+    </linearGradient>
+    <linearGradient id="nascarBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0055A5" />
+      <stop offset="100%" stop-color="#003366" />
+    </linearGradient>
+  </defs>
+  <!-- Slanted Color Bars -->
+  <g transform="skewX(-20) translate(30, 0)">
+    <rect x="0" y="25" width="22" height="70" fill="url(#nascarYellow)" rx="4"/>
+    <rect x="28" y="25" width="22" height="70" fill="url(#nascarRed)" rx="4"/>
+    <rect x="56" y="25" width="22" height="70" fill="url(#nascarBlue)" rx="4"/>
+  </g>
+  <!-- Bold NASCAR Typography -->
+  <text x="120" y="82" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-style="italic" font-size="52" fill="#FFFFFF" letter-spacing="-1">NASCAR</text>
+  <text x="122" y="104" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-style="italic" font-size="16" fill="#FF3B30" letter-spacing="4">CUP SERIES</text>
+</svg>

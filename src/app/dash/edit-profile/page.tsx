@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db, storage, auth } from '@/lib/firebase/config';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -21,6 +21,7 @@ interface UserProfile {
   birth_town?: string;
   birthday?: string;
   billing_address?: string;
+  iracing_cust_id?: string;
   social_instagram?: string;
   social_youtube?: string;
   social_tiktok?: string;
@@ -35,9 +36,11 @@ interface UserProfile {
   };
 }
 
-export default function EditProfilePage() {
+function EditProfileForm() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/dash';
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +60,7 @@ export default function EditProfilePage() {
   const [birthTown, setBirthTown] = useState('');
   const [birthday, setBirthday] = useState('');
   const [billingAddress, setBillingAddress] = useState('');
+  const [iracingCustId, setIracingCustId] = useState('');
   
   // Social Media Handles
   const [instagram, setInstagram] = useState('');
@@ -111,6 +115,7 @@ export default function EditProfilePage() {
           birth_town: 'Chicago, IL',
           birthday: '1990-06-15',
           billing_address: '123 Gridpass Way, Grayslake IL',
+          iracing_cust_id: '21596',
           social_instagram: 'pjlosey',
           social_youtube: 'pjlosey',
           social_tiktok: 'pjlosey',
@@ -125,6 +130,7 @@ export default function EditProfilePage() {
         setBirthTown('Chicago, IL');
         setBirthday('1990-06-15');
         setBillingAddress('123 Gridpass Way, Grayslake IL');
+        setIracingCustId('21596');
         setInstagram('pjlosey');
         setYoutube('pjlosey');
         setTiktok('pjlosey');
@@ -148,6 +154,7 @@ export default function EditProfilePage() {
           setBirthTown(data.birth_town || '');
           setBirthday(data.birthday || '');
           setBillingAddress(data.billing_address || '');
+          setIracingCustId(data.iracing_cust_id || '');
           setInstagram(data.social_instagram || data.socials?.instagram || '');
           setYoutube(data.social_youtube || data.socials?.youtube || '');
           setTiktok(data.social_tiktok || data.socials?.tiktok || '');
@@ -273,6 +280,7 @@ export default function EditProfilePage() {
       birth_town: birthTown.trim(),
       birthday: birthday.trim(),
       billing_address: billingAddress.trim(),
+      iracing_cust_id: iracingCustId.trim(),
       social_instagram: instagram.trim(),
       social_youtube: youtube.trim(),
       social_tiktok: tiktok.trim(),
@@ -289,14 +297,14 @@ export default function EditProfilePage() {
 
     if (isMock) {
       setSaving(false);
-      router.push('/dash');
+      router.push(redirectUrl);
       return;
     }
 
     try {
       const profileRef = doc(db, 'users', user.uid);
       await updateDoc(profileRef, updatedData);
-      router.push('/dash');
+      router.push(redirectUrl);
     } catch (err) {
       console.error("Error saving profile:", err);
       setSaving(false);
@@ -323,10 +331,10 @@ export default function EditProfilePage() {
         {/* Header Row */}
         <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
           <Link 
-            href="/dash" 
+            href={redirectUrl} 
             className="min-h-[44px] min-w-[44px] px-3 text-xs font-bold text-neutral-500 hover:text-neutral-900 uppercase flex items-center justify-center gap-1"
           >
-            <ArrowLeft className="w-4 h-4" /> Cancel
+            <ArrowLeft className="w-4 h-4" /> Back
           </Link>
           <h2 className="text-sm font-extrabold uppercase text-neutral-900 tracking-wider">
             Edit Profile
@@ -413,7 +421,7 @@ export default function EditProfilePage() {
                 <p className="text-[8px] font-mono font-bold text-neutral-400 uppercase">Checking availability...</p>
               )}
               {usernameStatus === 'available' && (
-                <p className="text-[8px] font-mono font-bold text-emerald-600 uppercase">✓ Username is available</p>
+                <p className="text-[8px] font-mono font-bold text-neutral-900 uppercase">✓ Username is available</p>
               )}
               {usernameStatus === 'taken' && (
                 <p className="text-[8px] font-mono font-bold text-[#ff3b30] uppercase">✗ Username is already taken</p>
@@ -488,6 +496,35 @@ export default function EditProfilePage() {
                 className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30]"
               />
             </div>
+
+            {/* iRacing Customer ID */}
+            <div className="space-y-0.5" data-testid="iracing-cust-id-field">
+              <div className="flex items-center justify-between">
+                <label className="text-[8px] font-mono font-bold text-neutral-400 uppercase">
+                  iRacing Customer ID (5-7 Digits)
+                </label>
+                {iracingCustId && (
+                  <span className="text-[8px] font-mono text-neutral-400">
+                    ID: #{iracingCustId}
+                  </span>
+                )}
+              </div>
+              <input 
+                type="text"
+                value={iracingCustId}
+                onChange={(e) => setIracingCustId(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="e.g. 21596"
+                className="w-full p-2 bg-neutral-50 border border-neutral-200 rounded-lg text-xs text-neutral-900 focus:outline-none focus:border-[#ff3b30] font-mono"
+              />
+              <div className="pt-2">
+                <a
+                  href={`/api/integrations/iracing/auth?redirect=/dash/edit-profile&uid=${user?.uid || ''}`}
+                  className="min-h-[44px] w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#ff3b30] hover:bg-[#d63026] text-white text-[10px] font-mono font-bold uppercase rounded-lg transition-colors shadow-sm"
+                >
+                  <span>🏎️ Connect Official iRacing Account</span>
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Career History Section */}
@@ -495,7 +532,7 @@ export default function EditProfilePage() {
             <div className="flex items-center justify-between">
               <h4 className="text-[10px] font-extrabold uppercase text-neutral-900 tracking-wider">Career History</h4>
               <Link
-                href="/exp/new"
+                href={`/exp/new?redirect=${encodeURIComponent(redirectUrl)}`}
                 data-testid="add-experience-btn"
                 className="min-h-[44px] px-3.5 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-[9px] font-mono font-bold uppercase rounded-lg flex items-center justify-center gap-1 transition-colors shadow-sm"
               >
@@ -581,7 +618,7 @@ export default function EditProfilePage() {
               
               <div className="pt-1 flex items-center justify-between">
                 <div>
-                  <span className="text-[8px] font-mono font-bold text-neutral-450 uppercase block">Password Credentials</span>
+                  <span className="text-[8px] font-mono font-bold text-neutral-400 uppercase block">Password Credentials</span>
                   <span className="text-[9px] text-neutral-500 block">Manage password security</span>
                 </div>
                 <button
@@ -595,7 +632,7 @@ export default function EditProfilePage() {
               </div>
               
               {resetSent && (
-                <p className="text-[8px] font-mono font-bold text-emerald-600 uppercase pt-1">
+                <p className="text-[8px] font-mono font-bold text-neutral-900 uppercase pt-1">
                   ✓ Check your inbox for a secure password reset link.
                 </p>
               )}
@@ -607,7 +644,7 @@ export default function EditProfilePage() {
             <button 
               type="submit"
               disabled={isSaveDisabled}
-              className="w-full min-h-[44px] py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] disabled:bg-neutral-200 text-white text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center"
+              className="w-full min-h-[44px] py-2.5 bg-[#ff3b30] hover:bg-[#bd2925] disabled:bg-neutral-200 text-white text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center cursor-pointer"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Profile'}
             </button>
@@ -618,3 +655,16 @@ export default function EditProfilePage() {
     </div>
   );
 }
+
+export default function EditProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-white text-neutral-900 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-[#ff3b30] animate-spin" />
+      </div>
+    }>
+      <EditProfileForm />
+    </Suspense>
+  );
+}
+

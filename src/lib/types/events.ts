@@ -110,6 +110,8 @@ export interface GridpassEvent {
   vendors?: string[]; // Array of Business Profile slug IDs attending/sponsoring
   is_claimed?: boolean; // True if the actual host has claimed ownership of the page
   claim_status?: 'unclaimed' | 'pending_verification' | 'verified';
+  claim_token?: string; // Random token used for magic claim links
+  official_event_url?: string; // Hyperlink to official event page
   is_pro?: boolean; // True if the event has been upgraded to a paid Pro staging tier
   is_archived?: boolean; // True if event has been manually archived or ended
   status?: string; // Status field from Firestore e.g. 'draft', 'upcoming', 'archived', 'completed'

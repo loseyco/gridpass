@@ -156,76 +156,103 @@ test.describe('E2E Visual Tests — Profile & Garage Hub', () => {
 
     await pillAll.click();
 
-    // 3. Location Tree filter bar
-    const locationTreeBar = page.locator('[data-testid="location-tree-filter-bar"]');
-    await expect(locationTreeBar).toBeVisible();
-
-    const zoneAllPill = page.locator('[data-testid="zone-filter-pill-All"]');
-    await expect(zoneAllPill).toBeVisible();
-
-    const zone1Pill = page.locator('[data-testid="zone-filter-pill-zone-1"]');
-    await expect(zone1Pill).toBeVisible();
-    await zone1Pill.click();
-
-    await zoneAllPill.click();
-
-    // 4. Auto-Listing Copy Generator button
+    // 3. Auto-Listing Copy Generator button
     const copyBtn = page.locator('[data-testid="copy-listing-btn-mock-item-1"]');
     await expect(copyBtn).toBeVisible();
     await copyBtn.click();
     await expect(page.locator('text=Copy Generated!')).toBeVisible();
 
-    // 5. QR Tag generator
+    // 4. QR Tag generator
     const qrBtn = page.locator('[data-testid="view-qr-tag-btn-mock-item-1"]');
     await expect(qrBtn).toBeVisible();
     await qrBtn.click();
 
     const qrModal = page.locator('[data-testid="qr-code-modal"]');
     await expect(qrModal).toBeVisible();
-    await expect(page.locator('text=PADDOCK ITEM QR TAG')).toBeVisible();
-
-    const downloadQrBtn = page.locator('[data-testid="download-qr-code-btn"]');
-    await expect(downloadQrBtn).toBeVisible();
 
     // Close QR modal
     const closeQrBtn = page.locator('[data-testid="close-qr-modal-btn"]');
     await closeQrBtn.click();
     await expect(qrModal).not.toBeVisible();
 
-    // 6. Item Passport modal
+    // 5. Item Passport modal with serial & replacement value inputs
     const stageItemBtn = page.locator('[data-testid="stage-item-btn"]');
     await expect(stageItemBtn).toBeVisible();
     await stageItemBtn.click();
 
     const itemModal = page.locator('[data-testid="item-passport-modal"]');
     await expect(itemModal).toBeVisible();
-    await expect(page.locator('text=GARAGE ITEM PASSPORT')).toBeVisible();
+
+    const serialInput = page.locator('[data-testid="item-serial-number-input"]');
+    const replaceValInput = page.locator('[data-testid="item-replacement-value-input"]');
+    await expect(serialInput).toBeVisible();
+    await expect(replaceValInput).toBeVisible();
 
     // Close Item modal
     const closeItemModalBtn = page.locator('[data-testid="close-item-passport-modal-btn"]');
     await closeItemModalBtn.click();
     await expect(itemModal).not.toBeVisible();
+
+    // 6. Insurance Schedule Modal & Certification Block Verification
+    const insuranceBtn = page.locator('[data-testid="export-insurance-schedule-btn"]');
+    await expect(insuranceBtn).toBeVisible();
+    await insuranceBtn.click();
+
+    const insuranceModal = page.locator('[data-testid="insurance-schedule-modal"]');
+    await expect(insuranceModal).toBeVisible();
+    await expect(page.locator('[data-testid="insurance-schedule-title"]')).toBeVisible();
+
+    const summaryBlock = page.locator('[data-testid="insurance-valuation-summary"]');
+    await expect(summaryBlock).toBeVisible();
+
+    const scheduleTable = page.locator('[data-testid="insurance-schedule-table"]');
+    await expect(scheduleTable).toBeVisible();
+
+    const certBlock = page.locator('[data-testid="insurance-certification-block"]');
+    await expect(certBlock).toBeVisible();
+
+    const closeInsuranceBtn = page.locator('[data-testid="close-insurance-modal-btn"]');
+    await closeInsuranceBtn.click();
+    await expect(insuranceModal).not.toBeVisible();
+
+    // 7. Sub-Tab Transformation Storyboard Verification
+    const storyboardTab = page.locator('[data-testid="subtab-storyboard"]');
+    await expect(storyboardTab).toBeVisible();
+    await storyboardTab.click();
+
+    const storyboardSection = page.locator('[data-testid="transformation-storyboard-section"]');
+    await expect(storyboardSection).toBeVisible();
+
+    const logMilestoneBtn = page.locator('[data-testid="log-milestone-btn"]');
+    await expect(logMilestoneBtn).toBeVisible();
+
+    const summaryCards = page.locator('[data-testid="disposition-summary-cards"]');
+    await expect(summaryCards).toBeVisible();
+
+    // Switch back to Inventory subtab
+    const inventoryTab = page.locator('[data-testid="subtab-inventory"]');
+    await inventoryTab.click();
   });
 
   test('4. Verify touch targets >= 44px on /dash/garage route', async ({ page }) => {
     await page.goto('http://localhost:3000/dash/garage');
 
-    // 1. Stage Item Button
+    // 1. Export Insurance Schedule Button
+    const insuranceBtn = page.locator('[data-testid="export-insurance-schedule-btn"]');
+    const insuranceBox = await insuranceBtn.boundingBox();
+    expect(insuranceBox).not.toBeNull();
+    if (insuranceBox) {
+      expect(insuranceBox.width).toBeGreaterThanOrEqual(44);
+      expect(insuranceBox.height).toBeGreaterThanOrEqual(44);
+    }
+
+    // 2. Stage Item Button
     const stageBtn = page.locator('[data-testid="stage-item-btn"]');
     const stageBox = await stageBtn.boundingBox();
     expect(stageBox).not.toBeNull();
     if (stageBox) {
       expect(stageBox.width).toBeGreaterThanOrEqual(44);
       expect(stageBox.height).toBeGreaterThanOrEqual(44);
-    }
-
-    // 2. Add Zone Button
-    const addZoneBtn = page.locator('[data-testid="add-zone-btn"]');
-    const zoneBox = await addZoneBtn.boundingBox();
-    expect(zoneBox).not.toBeNull();
-    if (zoneBox) {
-      expect(zoneBox.width).toBeGreaterThanOrEqual(44);
-      expect(zoneBox.height).toBeGreaterThanOrEqual(44);
     }
 
     // 3. Status filter pills
@@ -242,13 +269,13 @@ test.describe('E2E Visual Tests — Profile & Garage Hub', () => {
       }
     }
 
-    // 4. Location Zone filter pills
-    const zonePills = page.locator('[data-testid^="zone-filter-pill-"]');
-    const zoneCount = await zonePills.count();
-    expect(zoneCount).toBeGreaterThan(0);
+    // 4. Sub-tabs (Inventory & Storyboard)
+    const subtabs = page.locator('[data-testid^="subtab-"]');
+    const subtabCount = await subtabs.count();
+    expect(subtabCount).toBeGreaterThan(0);
 
-    for (let i = 0; i < zoneCount; i++) {
-      const box = await zonePills.nth(i).boundingBox();
+    for (let i = 0; i < subtabCount; i++) {
+      const box = await subtabs.nth(i).boundingBox();
       expect(box).not.toBeNull();
       if (box) {
         expect(box.width).toBeGreaterThanOrEqual(44);

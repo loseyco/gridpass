@@ -10,7 +10,10 @@ export type ItemCategory =
   | 'Body & Aerodynamics'
   | 'Hardware & Fasteners'
   | 'Tools & Equipment'
-  | 'Apparel & Safety'
+  | 'Detailing & Wraps'
+  | 'Food & Beverage Stock'
+  | 'Kitchen & Catering Gear'
+  | 'Apparel & Merch'
   | 'Accessories'
   | 'Other';
 
@@ -22,16 +25,36 @@ export type TransformationCategory =
   | 'Final Clean Bay';
 
 export interface GarageLocation {
+  space_id?: string;
+  space_name?: string;
   zone_id?: string;
   zone_name?: string;
   shelf?: string;
   bin_id?: string;
 }
 
+export interface ItemCoOwner {
+  uid: string;
+  name: string;
+  email?: string;
+  share_percentage?: number;
+  added_at?: string;
+}
+
 export interface GarageItem {
   id: string;
   garage_id?: string;
+  space_id?: string;
+  space_name?: string;
+  business_id?: string;
   owner_uid: string;
+  owner_name?: string;
+
+  // Co-ownership & Equity Sharing Support
+  co_owner_uids?: string[];
+  co_owners?: ItemCoOwner[];
+  is_shared_ownership?: boolean;
+
   title: string;
   category: ItemCategory;
   condition: ItemCondition;
@@ -60,6 +83,10 @@ export interface GarageItem {
   
   qr_code_tag?: string;
   
+  purchase_date?: string;
+  last_used_date?: string;
+  last_seen_date?: string;
+
   created_at: string;
   updated_at: string;
   sold_at?: string;

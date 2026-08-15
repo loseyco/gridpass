@@ -41,7 +41,8 @@ function JoinPageContent() {
     return null;
   };
 
-  const rawTagId = getUniversalTagId();
+  const uncleanedTagId = getUniversalTagId();
+  const rawTagId = uncleanedTagId ? uncleanedTagId.replace(/^(id=|tag=|tag_)/i, '').trim() : null;
   const router = useRouter();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -152,10 +153,13 @@ function JoinPageContent() {
     async function resolvePhysicalTag() {
       if (!rawTagId) return;
       const tagIdStr = rawTagId;
+      const strippedId = tagIdStr.replace(/^0+/, '');
+      const paddedId = tagIdStr.padStart(4, '0');
+      const searchTagIds = Array.from(new Set([tagIdStr, strippedId, paddedId, `tag_${tagIdStr}`, `tag_${strippedId}`, `tag_${paddedId}`]));
 
       try {
-        const q = query(collection(db, 'physical_tags'), where('tag_id', '==', tagIdStr));
-        const snap = await getDocs(q);
+        const q = query(collection(db, 'physical_tags'), where('tag_id', 'in', searchTagIds));
+        let snap = await getDocs(q).catch(() => null);
 
         let rec: any = null;
 
@@ -209,8 +213,27 @@ function JoinPageContent() {
             unclaimed_year: '2024',
             is_mock_unclaimed: true,
           };
-        } else if (!snap.empty) {
+        } else if (snap && !snap.empty) {
           rec = { id: snap.docs[0].id, ...snap.docs[0].data() };
+        } else {
+          // Attempt direct doc lookup for tag_0720, tag_720, 0720, 720
+          let directSnap = await getDoc(doc(db, 'physical_tags', `tag_${tagIdStr}`)).catch(() => null);
+          if (!directSnap || !directSnap.exists()) {
+            directSnap = await getDoc(doc(db, 'physical_tags', `tag_${strippedId}`)).catch(() => null);
+          }
+          if (!directSnap || !directSnap.exists()) {
+            directSnap = await getDoc(doc(db, 'physical_tags', tagIdStr)).catch(() => null);
+          }
+          if (!directSnap || !directSnap.exists()) {
+            directSnap = await getDoc(doc(db, 'physical_tags', strippedId)).catch(() => null);
+          }
+
+          if (directSnap && directSnap.exists()) {
+            rec = { id: directSnap.id, ...directSnap.data() };
+          }
+        }
+
+        if (rec) {
           if (rec.unclaimed_business_id || rec.target_type === 'business') {
             const bizId = rec.unclaimed_business_id || rec.tag_id;
             const bSnap = await getDoc(doc(db, 'businesses', bizId)).catch(() => null);
@@ -290,7 +313,7 @@ function JoinPageContent() {
         }
 
         // Increment total_scans and update last_scanned_at on physical_tags document
-        const tagDocId = snap.empty ? `tag_${rawTagId}` : snap.docs[0].id;
+        const tagDocId = (snap && !snap.empty) ? snap.docs[0].id : `tag_${rawTagId}`;
         await setDoc(
           doc(db, 'physical_tags', tagDocId),
           {

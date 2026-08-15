@@ -584,7 +584,7 @@ export default function AdminFeedbackTriagePage() {
                       markAsRoadmap(selectedItem, adminNote);
                       setSelectedItem(null);
                     }}
-                    className="w-full py-2.5 bg-purple-900 hover:bg-purple-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 bg-neutral-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <span>💡 Save to Roadmap Wishlist</span>
                   </button>

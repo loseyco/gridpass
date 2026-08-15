@@ -11,11 +11,12 @@ import {
   CarFront, Loader2, ArrowLeft, Heart, ShieldCheck, Printer, Sparkles, UserCircle,
   Facebook, Twitter, Linkedin, Globe, Share2, MessageSquare, Send, Store, Trophy,
   Calendar, CheckCircle2, Award, Flame, Download, Camera, Copy, Plus, X, Settings, Briefcase,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import GridpassQRCode, { downloadGridpassQR } from '@/components/qr/GridpassQRCode';
-import { EditPassportDrawer } from '@/components/EditPassportDrawer';
+import { getDomain } from '@/components/ExperienceLinksInput';
+import { TracksideAttendance } from '@/lib/types/news';
 
 interface DriverProfile {
   uid: string;
@@ -48,6 +49,8 @@ interface DriverProfile {
   social_twitter?: string;
   current_status?: string;
   credits_balance?: number;
+  iracing_cust_id?: string;
+  iracing_stats?: any;
 }
 
 interface Vehicle {
@@ -74,138 +77,6 @@ interface DriverProfileClientProps {
   initialProfile: DriverProfile | null;
   userId: string;
 }
-
-const DEFAULT_COVER = '/images/profile/pjlosey_cover.jpg';
-
-const DEFAULT_PJ_EXPERIENCES = [
-  {
-    id: 'exp-hrc-2021',
-    title: 'Honda Racing / HRC Trackside Engineer',
-    company: 'Honda Racing Corporation (HRC)',
-    location: 'Indianapolis, IN / Trackside',
-    startDate: '2021-01',
-    endDate: '2023-12',
-    category: 'motorsport_event',
-    entryType: 'motorsport_event',
-    description: 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization for IndyCar operations.',
-    skills: ['⚡ Telemetry Extraction', '⚡ IndyCar Sensors', '⚡ Race Strategy', '⚡ JSON Sensor Payloads'],
-    links: [
-      { id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/hrc_telemetry.jpg',
-        caption: 'HRC Telemetry Extraction & Lap Delta Visualization'
-      }
-    ]
-  },
-  {
-    id: 'exp-2',
-    title: 'Siemens Healthineers Project Engineer',
-    company: 'Siemens Healthineers',
-    location: 'Chicago, IL',
-    startDate: '2018-06',
-    endDate: '2021-01',
-    category: 'full_time',
-    entryType: 'full_time',
-    description: 'Proton accelerator beam engineering, clinical precision systems, and high-reliability medical hardware.',
-    skills: ['⚡ Proton Accelerators', '⚡ Medical Systems', '⚡ Clinical Engineering', '⚡ Hardware IoT'],
-    links: [
-      { id: 'link-2', title: 'Siemens Healthineers', url: 'https://siemens-healthineers.com' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/siemens_proton.jpg',
-        caption: 'Clinical Precision Beam Architecture'
-      }
-    ]
-  },
-  {
-    id: 'exp-3',
-    title: 'Managed $5M+ Elite Racing Operations',
-    company: 'Davidson Racing Collection',
-    location: 'Monmouth, IL',
-    startDate: '2020-01',
-    endDate: 'Present',
-    category: 'motorsport_event',
-    entryType: 'motorsport_event',
-    description: 'Full operations manager for $5M+ Davidson collection, race team logistics, and paddock operations.',
-    skills: ['⚡ Fleet Operations', '⚡ Paddock Logistics', '⚡ High-Valuation Assets', '⚡ Race Management'],
-    links: [
-      { id: 'link-3', title: 'Losey.co Profile', url: 'https://losey.co' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/davidson_paddock.jpg',
-        caption: '$5M+ Elite Racing Collection & Paddock Ops'
-      }
-    ]
-  },
-  {
-    id: 'exp-4',
-    title: 'UpfittersOS — Enterprise Fleet Upfitting & Shop OS',
-    company: 'UpfittersOS',
-    location: 'Monmouth Beach, NJ',
-    startDate: '2023-01',
-    endDate: 'Present',
-    category: 'special_project',
-    entryType: 'special_project',
-    description: 'Shop scheduling, interactive assembly steps, barcode inventory tracking, PDF timecards, and client quoting.',
-    skills: ['⚡ Next.js', '⚡ SaaS Architecture', '⚡ Barcode Inventory', '⚡ Fleet Upfitting'],
-    links: [
-      { id: 'link-4', title: 'UpfittersOS Live', url: 'https://upfittersos.com' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/davidson_paddock.jpg',
-        caption: 'UpfittersOS Enterprise Fleet Dashboard'
-      }
-    ]
-  },
-  {
-    id: 'exp-5',
-    title: 'srcommander — iRacing Telemetry & Performance Suite',
-    company: 'srcommander',
-    location: 'Chicago, IL',
-    startDate: '2022-01',
-    endDate: 'Present',
-    category: 'special_project',
-    entryType: 'special_project',
-    description: '60Hz telemetry ingestion daemon, tire heatmaps, lap comparisons, and automated league credit rewards.',
-    skills: ['⚡ 60Hz Telemetry', '⚡ Python Daemon', '⚡ Tire Heatmaps', '⚡ iRacing API'],
-    links: [
-      { id: 'link-5', title: 'srcommander Suite', url: 'https://iracing-commander.losey.co' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/hrc_telemetry.jpg',
-        caption: 'srcommander 60Hz Telemetry Daemon & Tire Heatmaps'
-      }
-    ]
-  },
-  {
-    id: 'exp-gridpass-2024',
-    title: 'Gridpass Platform & Waterway Radar',
-    company: 'Gridpass.app',
-    location: 'Monmouth Beach, NJ',
-    startDate: '2024-01',
-    endDate: 'Present',
-    category: 'special_project',
-    entryType: 'special_project',
-    description: 'Dynamic QR code portfolios for drivers, vehicles, events, team task boards, and live waterway marine GPS radar.',
-    skills: ['⚡ Systems Architecture', '⚡ Next.js', '⚡ Firebase', '⚡ Marine GPS', '⚡ QR Passports'],
-    links: [
-      { id: 'link-6', title: 'Gridpass Platform', url: 'https://gridpass.app' },
-      { id: 'link-7', title: 'Live Waterway Radar', url: 'https://gridpass.app/water' }
-    ],
-    gallery: [
-      {
-        url: '/images/profile/pjlosey_cover.jpg',
-        caption: 'Gridpass Motorsport Telemetry & Waterway GPS Radar'
-      }
-    ]
-  }
-];
 
 function formatExperienceDuration(startDateStr?: string, endDateStr?: string, fallbackYears?: string): string {
   if (!startDateStr && !fallbackYears) return '';
@@ -267,9 +138,9 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
   const [postingMessage, setPostingMessage] = useState(false);
   const [loading, setLoading] = useState(!initialProfile);
   const [showPrintModal, setShowPrintModal] = useState(false);
-  const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [shareText, setShareText] = useState('Share Passport');
-  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'businesses' | 'guestbook'>('career');
+  const [activeProfileTab, setActiveProfileTab] = useState<'career' | 'garage' | 'attendance' | 'simracing' | 'businesses' | 'guestbook'>('career');
+  const [userAttendances, setUserAttendances] = useState<TracksideAttendance[]>([]);
   const [buildRespects, setBuildRespects] = useState<Record<string, number>>({});
   const [activeLightboxGallery, setActiveLightboxGallery] = useState<any[] | null>(null);
   const [activeLightboxImageIndex, setActiveLightboxImageIndex] = useState<number>(0);
@@ -308,13 +179,13 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab');
-      if (tabParam === 'career' || tabParam === 'garage' || tabParam === 'businesses' || tabParam === 'guestbook') {
+      if (tabParam === 'career' || tabParam === 'garage' || tabParam === 'attendance' || tabParam === 'simracing' || tabParam === 'businesses' || tabParam === 'guestbook') {
         setActiveProfileTab(tabParam as any);
       }
     }
   }, []);
 
-  const handleTabChange = (tabId: 'career' | 'garage' | 'businesses' | 'guestbook') => {
+  const handleTabChange = (tabId: 'career' | 'garage' | 'attendance' | 'simracing' | 'businesses' | 'guestbook') => {
     setActiveProfileTab(tabId);
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
@@ -471,22 +342,24 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             display_name: 'PJ Losey',
             username: 'pjlosey',
             bio: 'Clinical Precision. Motorsport Velocity. Proprietary systems architecture, telemetry extraction, IoT hardware, and custom enterprise SaaS by PJ Losey.',
-            avatar_url: '/images/profile/pjlosey_avatar.jpg',
-            cover_url: '/images/profile/pjlosey_cover.jpg',
+            avatar_url: '',
+            cover_url: '',
             is_supporter: true,
             role: 'Founder & Chief Systems Architect',
             tagId: 'GP-DRV-PJLOSEY',
             home_town: 'Monmouth Beach, NJ',
             website: 'https://losey.co',
             website_url: 'https://losey.co',
-            experiences: DEFAULT_PJ_EXPERIENCES,
+            experiences: [],
             skills: ['⚡ Systems Architecture', '⚡ Telemetry Extraction', '⚡ Next.js', '⚡ TypeScript', '⚡ Full-Stack SaaS', '⚡ IoT Hardware'],
             socials: {
               instagram: 'pjlosey',
               facebook: 'pjlosey',
               linkedin: 'pjlosey',
               twitter: 'pjlosey'
-            }
+            },
+            iracing_cust_id: '21596',
+            iracing_stats: null
           };
           if (isMounted) {
             setProfile(mockDriverProfile);
@@ -508,15 +381,8 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             avatar_url: uData.avatar_url || uData.photoURL || '',
             is_supporter: uData.is_supporter === true,
             role: uData.role || (uData.email?.includes('loseyp') ? 'SUPER ADMIN & FOUNDER' : ''),
-            experiences: (uData.experiences && uData.experiences.length > 0)
-              ? uData.experiences.map((exp: any, i: number) => ({
-                  ...DEFAULT_PJ_EXPERIENCES[i],
-                  ...exp,
-                  id: exp.id || DEFAULT_PJ_EXPERIENCES[i]?.id || `exp-${i + 1}`,
-                  links: (exp.links && exp.links.length > 0) ? exp.links : DEFAULT_PJ_EXPERIENCES[i]?.links || []
-                }))
-              : DEFAULT_PJ_EXPERIENCES,
-            skills: (uData.skills && uData.skills.length > 0) ? uData.skills : ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture'],
+            experiences: uData.experiences || [],
+            skills: (uData.skills && uData.skills.length > 0) ? uData.skills : [],
             socials: {
               instagram: uData.social_instagram || uData.socials?.instagram || '',
               youtube: uData.social_youtube || uData.socials?.youtube || '',
@@ -530,7 +396,9 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             birth_town: uData.birth_town || '',
             birthday: uData.birthday || '',
             current_status: uData.current_status || '',
-            credits_balance: uData.credits || uData.credits_balance || 0
+            credits_balance: uData.credits || uData.credits_balance || 0,
+            iracing_cust_id: uData.iracing_cust_id || '',
+            iracing_stats: uData.iracing_stats || null,
           };
 
           if (isMounted) setProfile(loadedProfile);
@@ -538,19 +406,21 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           // Query vehicles strictly from Firestore
           const vQuery = query(collection(db, 'vehicles'), where('owner_id', '==', uDoc.id));
           const vSnap = await getDocs(vQuery);
-          const vList = vSnap.docs.map(vDoc => {
-            const vData = vDoc.data();
-            return {
-              id: vDoc.id,
-              tag_id: vData.tag_id || '',
-              year: vData.year || 2024,
-              make: vData.make || '',
-              model: vData.model || '',
-              trim: vData.trim,
-              photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl || (vData.images && vData.images[0]),
-              respects_count: vData.respects_count || 0
-            } as Vehicle;
-          });
+          const vList = vSnap.docs
+            .filter(vDoc => !vDoc.data().is_hidden && !vDoc.data().archived)
+            .map(vDoc => {
+              const vData = vDoc.data();
+              return {
+                id: vDoc.id,
+                tag_id: vData.tag_id || '',
+                year: vData.year || 2024,
+                make: vData.make || '',
+                model: vData.model || '',
+                trim: vData.trim,
+                photo_url: vData.photo_url || vData.imageUrl || vData.image_url || vData.photoUrl || (vData.images && vData.images[0]),
+                respects_count: vData.respects_count || 0
+              } as Vehicle;
+            });
           if (isMounted) setVehicles(vList);
 
           // Query businesses strictly from Firestore
@@ -571,6 +441,17 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
             if (isMounted) setGuestbookMessages(msgList);
           } catch (e) {
             if (isMounted) setGuestbookMessages([]);
+          }
+
+          // Query verified trackside attendances strictly from Firestore
+          try {
+            const attQuery = query(collection(db, 'user_attendance'), where('user_id', '==', uDoc.id));
+            const attSnap = await getDocs(attQuery);
+            const attList = attSnap.docs.map(aDoc => ({ id: aDoc.id, ...aDoc.data() } as TracksideAttendance));
+            attList.sort((a, b) => (b.attended_at || '').localeCompare(a.attended_at || ''));
+            if (isMounted) setUserAttendances(attList);
+          } catch (e) {
+            if (isMounted) setUserAttendances([]);
           }
         }
       } catch (err) {
@@ -647,7 +528,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           
           <div className="flex items-center gap-2">
             <Link 
-              href="/dash/edit-profile"
+              href={`/dash/edit-profile?redirect=/u/${profile.username || userId}`}
               data-testid="edit-passport-btn"
               className="min-h-[44px] inline-flex items-center justify-center py-2 px-3.5 bg-neutral-900/80 hover:bg-black backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase rounded-xl transition-all cursor-pointer gap-1.5 shadow-md"
             >
@@ -667,7 +548,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
         {/* Status Pill Floating Badge */}
         {profile.current_status && (
           <div className="absolute bottom-4 right-4 z-10 bg-black/75 backdrop-blur-md border border-neutral-700 text-white text-[10px] font-mono font-bold uppercase px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-[#ff3b30] animate-ping" />
             <span>{profile.current_status}</span>
           </div>
         )}
@@ -762,21 +643,20 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               </div>
 
               {/* ⚡ Profile Interactive Skills Tag Pills */}
-              <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                {(profile.skills && profile.skills.length > 0
-                  ? profile.skills
-                  : ['⚡ Next.js', '⚡ System Architecture', '⚡ React', '⚡ TypeScript', '⚡ Full-Stack Architecture']
-                ).map((skill: string, sIdx: number) => (
-                  <button
-                    key={sIdx}
-                    type="button"
-                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-full text-xs font-mono font-bold text-neutral-800 transition-all cursor-pointer gap-1 shadow-2xs hover:scale-105 active:scale-95"
-                    aria-label={`Skill tag pill: ${skill}`}
-                  >
-                    {skill}
-                  </button>
-                ))}
-              </div>
+              {profile.skills && profile.skills.length > 0 && (
+                <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  {profile.skills.map((skill: string, sIdx: number) => (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-full text-xs font-mono font-bold text-neutral-800 transition-all cursor-pointer gap-1 shadow-2xs hover:scale-105 active:scale-95"
+                      aria-label={`Skill tag pill: ${skill}`}
+                    >
+                      {skill}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quick Action Badge Button */}
@@ -792,11 +672,13 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </div>
         </div>
 
-        {/* 📑 4 CORE RESUME NAVIGATION TABS */}
+        {/* 📑 CORE RESUME & ATTENDANCE NAVIGATION TABS */}
         <div className="flex items-center gap-1.5 border-b border-neutral-200 pb-2 overflow-x-auto no-scrollbar">
           {[
             { id: 'career', label: '🏆 Career & About Me', count: profile.credits_balance || 100 },
             { id: 'garage', label: '🏎️ Digital Garage', count: vehicles.length },
+            { id: 'attendance', label: '🏁 Trackside Check-Ins', count: userAttendances.length },
+            { id: 'simracing', label: '🎮 Sim Racing', count: profile.iracing_cust_id ? `#${profile.iracing_cust_id}` : 0 },
             { id: 'businesses', label: '🏪 Businesses & Teams', count: userBusinesses.length },
             { id: 'guestbook', label: '💬 Fan Wall & Guestbook', count: guestbookMessages.length }
           ].map(tab => (
@@ -902,6 +784,94 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </div>
         )}
 
+        {/* TAB: TRACKSIDE RACES & EVENTS ATTENDED */}
+        {activeProfileTab === 'attendance' && (
+          <div className="space-y-4 animate-in fade-in duration-150 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-[#ff3b30]" /> 🏁 Trackside Races &amp; Events Attended ({userAttendances.length})
+              </h3>
+              <span className="text-[10px] font-mono font-bold text-neutral-500">
+                Verified Driver Passport Check-Ins
+              </span>
+            </div>
+
+            {userAttendances.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {userAttendances.map((att) => (
+                  <div
+                    key={att.id}
+                    className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-3 shadow-md hover:border-[#ff3b30] transition-all flex flex-col justify-between group"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-0.5 bg-red-50 border border-red-200 text-[#ff3b30] text-[9px] font-black uppercase rounded-md flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>Trackside Verified</span>
+                        </span>
+
+                        <span className="text-[10px] font-mono font-bold text-neutral-400">
+                          {att.attended_at
+                            ? new Date(att.attended_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            : 'Live Check-in'}
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-black uppercase text-neutral-900 tracking-tight leading-snug group-hover:text-[#ff3b30] transition">
+                        {att.article_title || 'Race Weekend & Event Session'}
+                      </h4>
+
+                      <p className="text-xs text-neutral-500 font-mono">
+                        Check-in recorded to official driver passport ledger.
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold text-neutral-400">
+                        Paddock Presence Logged
+                      </span>
+
+                      <Link
+                        href={`/news/${att.article_slug || att.article_id}`}
+                        className="min-h-[44px] px-3.5 py-2 bg-neutral-900 hover:bg-[#ff3b30] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <span>View Race Wire</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 sm:p-12 bg-white border border-neutral-200 rounded-3xl text-center space-y-4 shadow-md">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-2xl">
+                  📍
+                </div>
+                <div className="space-y-1 max-w-md mx-auto">
+                  <h4 className="text-sm font-black uppercase text-neutral-900">
+                    No Trackside Attendances Recorded Yet
+                  </h4>
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    Check in trackside at motorsport races, track days, and car shows on the Gridpass Racing Wire to build your verified event attendance passport.
+                  </p>
+                </div>
+                <div className="pt-1">
+                  <Link
+                    href="/news"
+                    className="min-h-[44px] inline-flex items-center justify-center px-5 py-2.5 bg-[#ff3b30] hover:bg-[#d63025] text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-md shadow-red-500/20"
+                  >
+                    <span>Browse Racing Wire &amp; Check In</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 2: BUSINESSES & TEAMS */}
         {activeProfileTab === 'businesses' && (
           <div className="space-y-4 animate-in fade-in duration-150 text-left">
@@ -920,7 +890,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                         <span className="text-[9px] font-mono font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md uppercase">
                           {biz.category || 'Motorsport Entity'}
                         </span>
-                        <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md uppercase">
+                        <span className="text-[9px] font-mono font-bold text-neutral-900 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md uppercase">
                           {biz.badge || 'VERIFIED HQ'}
                         </span>
                       </div>
@@ -1029,6 +999,107 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
           </div>
         )}
 
+        {/* TAB 3: SIM RACING */}
+        {activeProfileTab === 'simracing' && (
+          <div className="space-y-4 animate-in fade-in duration-150 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
+                <span className="text-base">🏎️</span> Sim Racing &amp; iRacing Profile
+              </h3>
+              {profile.iracing_cust_id && (
+                <span className="text-[10px] font-mono font-bold text-neutral-500">
+                  Cust ID: #{profile.iracing_cust_id}
+                </span>
+              )}
+            </div>
+
+            {profile.iracing_cust_id ? (
+              <div 
+                data-testid="iracing-driver-card"
+                className="p-6 sm:p-8 bg-white border border-neutral-200 rounded-3xl shadow-md space-y-6 text-left"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-neutral-900 text-white flex items-center justify-center text-xl shrink-0 shadow-inner">
+                      🏎️
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-neutral-900">
+                          Official iRacing Driver
+                        </h4>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-neutral-100 text-neutral-900 border border-neutral-200">
+                          Verified Profile
+                        </span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-900 text-white rounded-full text-xs font-mono font-bold uppercase tracking-wider">
+                        <span>Customer ID:</span>
+                        <span className="text-[#ff3b30]">#{profile.iracing_cust_id}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-neutral-600 font-medium leading-relaxed max-w-xl">
+                  Connect, race together, and invite this driver on official iRacing sessions.
+                </p>
+
+                <div className="pt-2 border-t border-neutral-100 flex flex-wrap items-center gap-3">
+                  <a
+                    href={`https://members-ng.iracing.com/web/racing/home/dashboard?cust_id=${profile.iracing_cust_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="iracing-profile-link"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                    aria-label="View iRacing Profile & Add Friend in new tab"
+                  >
+                    <span>View iRacing Profile &amp; Add Friend ↗</span>
+                    <ExternalLink className="w-4 h-4 text-[#ff3b30]" />
+                  </a>
+
+                  {user?.uid === profile.uid && (
+                    <Link
+                      href={`/dash/edit-profile?redirect=/u/${profile.username || userId}?tab=simracing`}
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer"
+                    >
+                      <Settings className="w-3.5 h-3.5 text-[#ff3b30]" /> Edit ID
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div 
+                data-testid="iracing-empty-state"
+                className="p-8 sm:p-12 bg-white border border-neutral-200 rounded-3xl text-center space-y-6 shadow-md"
+              >
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-2xl text-neutral-900 font-mono">
+                  🏎️
+                </div>
+
+                <div className="space-y-2 max-w-md mx-auto">
+                  <h4 className="text-base sm:text-lg font-black uppercase tracking-tight text-neutral-900">
+                    Official iRacing Driver
+                  </h4>
+                  <p className="text-xs text-neutral-500 font-medium leading-relaxed">
+                    No iRacing Customer ID linked to this driver profile yet. Connect, race together, and invite this driver on official iRacing sessions once linked.
+                  </p>
+                </div>
+
+                {user?.uid === profile.uid && (
+                  <div className="flex justify-center">
+                    <Link
+                      href={`/dash/edit-profile?redirect=/u/${profile.username || userId}?tab=simracing`}
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-md shadow-red-500/20"
+                    >
+                      🏎️ Link iRacing Customer ID
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 4: CAREER & TELEMETRY */}
         {activeProfileTab === 'career' && (
           <div className="space-y-4 animate-in fade-in duration-150 text-left">
@@ -1041,7 +1112,7 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               const totalEventsStaged = (vehicles.length > 0 ? 1 : 0) + (userBusinesses.length > 0 ? 1 : 0);
 
               return (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
                     <span className="text-2xl font-black font-mono text-neutral-900">{vehicles.length}</span>
                     <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Active Builds</span>
@@ -1051,8 +1122,12 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                     <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Respects Earned</span>
                   </div>
                   <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
-                    <span className="text-2xl font-black font-mono text-emerald-600">{profile.credits_balance || 100}</span>
+                    <span className="text-2xl font-black font-mono text-neutral-900">{profile.credits_balance || 0}</span>
                     <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Pit Credits</span>
+                  </div>
+                  <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
+                    <span className="text-2xl font-black font-mono text-neutral-900">{userAttendances.length}</span>
+                    <span className="text-[9px] font-mono font-bold text-neutral-500 uppercase block">Trackside Attended</span>
                   </div>
                   <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl text-center space-y-1">
                     <span className="text-2xl font-black font-mono text-purple-600">{totalEventsStaged}</span>
@@ -1062,42 +1137,65 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
               );
             })()}
 
+
+
             {/* Work & Career Experience Section */}
             <div className="p-5 bg-white border border-neutral-200 rounded-3xl space-y-4 shadow-md">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black uppercase text-neutral-900 flex items-center gap-1.5">
                   <Briefcase className="w-4 h-4 text-blue-600" /> Work Experience &amp; Motorsport Career History
                 </h4>
-                <button
-                  type="button"
-                  onClick={() => setShowEditDrawer(true)}
-                  className="min-h-[44px] inline-flex items-center text-[10px] font-mono font-bold text-[#ff3b30] hover:underline cursor-pointer"
+                <Link
+                  href={`/exp/new?redirect=/u/${profile.username || userId}?tab=career`}
+                  className="min-h-[44px] inline-flex items-center text-xs font-mono font-bold text-[#ff3b30] hover:underline cursor-pointer px-2"
                 >
-                  + Manage History
-                </button>
+                  [ + Add Experience ]
+                </Link>
               </div>
 
               {profile.experiences && profile.experiences.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {profile.experiences.map((exp: any, idx: number) => {
-                    const formattedDuration = formatExperienceDuration(exp.startDate, exp.endDate, exp.years);
+                  {[...profile.experiences]
+                    .sort((a: any, b: any) => {
+                      const aIsCurrent = !!a.is_current || (!a.end_date && !a.endDate && (a.date_range?.includes('Present') || a.years?.includes('Present')));
+                      const bIsCurrent = !!b.is_current || (!b.end_date && !b.endDate && (b.date_range?.includes('Present') || b.years?.includes('Present')));
+                      
+                      if (aIsCurrent && !bIsCurrent) return -1;
+                      if (!aIsCurrent && bIsCurrent) return 1;
 
-                    return (
-                      <div key={idx} className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-3 shadow-2xs hover:border-neutral-300 transition-all flex flex-col justify-between">
-                        <div className="space-y-2">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <h5 className="text-xs font-black uppercase text-neutral-900 leading-tight">{exp.title}</h5>
+                      const dateA = a.start_date || a.startDate || a.date_range || a.years || '';
+                      const dateB = b.start_date || b.startDate || b.date_range || b.years || '';
+                      return dateB.localeCompare(dateA);
+                    })
+                    .map((exp: any, idx: number) => {
+                      const formattedDuration = formatExperienceDuration(
+                        exp.start_date || exp.startDate,
+                        exp.is_current ? 'Present' : (exp.end_date || exp.endDate),
+                        exp.date_range || exp.years
+                      );
+                      const isCurrentRole = !!exp.is_current || formattedDuration.includes('Present');
+
+                      return (
+                        <div key={idx} className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl space-y-3 shadow-2xs hover:border-neutral-300 transition-all flex flex-col justify-between">
+                          <div className="space-y-2">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center justify-between gap-2">
+                                <h5 className="text-xs font-black uppercase text-neutral-900 leading-tight">{exp.title}</h5>
+                                {isCurrentRole && (
+                                  <span className="text-[10px] font-mono font-bold text-neutral-900 bg-neutral-100 border border-neutral-300 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#ff3b30] animate-pulse"></span> Active
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-mono font-bold text-[#ff3b30] bg-red-50 border border-red-200 px-2.5 py-1 rounded-md inline-self-start">
+                                {formattedDuration}
+                              </span>
                             </div>
-                            <span className="text-[10px] font-mono font-bold text-[#ff3b30] bg-red-50 border border-red-200 px-2.5 py-1 rounded-md inline-self-start">
-                              {formattedDuration}
-                            </span>
-                          </div>
 
-                          <div className="flex items-center justify-between text-xs font-bold text-neutral-700">
-                            <span>{exp.company}</span>
-                            {exp.location && <span className="text-neutral-500 font-mono text-[10px]">{exp.location}</span>}
-                          </div>
+                            <div className="flex items-center justify-between text-xs font-bold text-neutral-700">
+                              <span>{exp.company}</span>
+                              {exp.location && <span className="text-neutral-500 font-mono text-[10px]">{exp.location}</span>}
+                            </div>
 
                           {exp.description && (
                             <p className="text-xs text-neutral-600 font-medium leading-relaxed">
@@ -1124,82 +1222,113 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
                           {/* 🔗 Experience External Link Pills */}
                           {exp.links && exp.links.length > 0 && (
                             <div className="pt-2 flex flex-wrap items-center gap-2" data-testid={`experience-links-${idx}`}>
-                              {exp.links.map((link: { id?: string; title: string; url: string }, lIdx: number) => (
-                                <a
-                                  key={lIdx}
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  data-testid={`experience-link-pill-${idx}-${lIdx}`}
-                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl text-xs font-mono font-bold text-neutral-900 transition-all cursor-pointer shadow-2xs hover:border-neutral-400"
-                                  aria-label={`External link pill: ${link.title}`}
-                                >
-                                  <span>🔗 {link.title} ↗</span>
-                                </a>
-                              ))}
+                              {exp.links.map((link: { id?: string; title: string; url: string }, lIdx: number) => {
+                                const domain = getDomain(link.url);
+                                const faviconUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : '';
+                                const href = link.url.startsWith('http://') || link.url.startsWith('https://') ? link.url : `https://${link.url}`;
+
+                                return (
+                                  <a
+                                    key={lIdx}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    data-testid={`experience-link-pill-${idx}-${lIdx}`}
+                                    className="min-h-[44px] inline-flex items-center gap-2 px-3 py-2 bg-white hover:bg-neutral-100 border border-neutral-200 hover:border-neutral-300 rounded-xl text-xs font-mono font-bold text-neutral-900 transition-all cursor-pointer shadow-2xs group"
+                                    aria-label={`External link pill: ${link.title}`}
+                                  >
+                                    {faviconUrl ? (
+                                      <img
+                                        src={faviconUrl}
+                                        alt=""
+                                        className="w-4 h-4 rounded-sm object-contain shrink-0"
+                                        onError={(e) => {
+                                          (e.target as HTMLElement).style.display = 'none';
+                                        }}
+                                      />
+                                    ) : (
+                                      <Globe className="w-4 h-4 text-neutral-400 shrink-0" />
+                                    )}
+                                    <span className="truncate max-w-[180px]">{link.title}</span>
+                                    <span className="text-[10px] text-neutral-400 group-hover:text-[#ff3b30] font-normal transition-colors">
+                                      {domain} ↗
+                                    </span>
+                                  </a>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
 
                         {/* 📷 Portfolio Photo Gallery Thumbnails */}
-                        {exp.gallery && exp.gallery.length > 0 && (
-                          <div className="pt-2.5 space-y-2 border-t border-neutral-200/70">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-mono font-bold uppercase text-neutral-500 block">
-                                📷 Portfolio &amp; Proof Gallery ({exp.gallery.length})
-                              </span>
-                              {exp.gallery.length > 4 && (
-                                <button
-                                  type="button"
-                                  data-testid="view-all-photos-badge"
-                                  onClick={() => {
-                                    setActiveLightboxImageIndex(0);
-                                    setActiveLightboxGallery(exp.gallery);
-                                  }}
-                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1.5 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 border border-[#ff3b30]/30 rounded-xl text-[11px] font-mono font-bold text-[#ff3b30] transition-all cursor-pointer shadow-2xs"
-                                  aria-label={`View all ${exp.gallery.length} photos badge`}
-                                >
-                                  View All ({exp.gallery.length} Photos)
-                                </button>
-                              )}
-                            </div>
-
-                            <div 
-                              data-testid="portfolio-gallery-strip" 
-                              className="flex items-center gap-2.5 overflow-x-auto scroll-smooth scrollbar-thin py-1 no-scrollbar"
-                            >
-                              {exp.gallery.map((photo: any, pIdx: number) => {
-                                const photoUrl = typeof photo === 'string' ? photo : photo.url;
-                                const photoCaption = typeof photo === 'string' ? `${exp.title} Proof` : photo.caption;
-
-                                return (
+                        {((exp.photos && exp.photos.length > 0) || (exp.gallery && exp.gallery.length > 0)) && (() => {
+                          const photoList = (exp.photos && exp.photos.length > 0) ? exp.photos : exp.gallery;
+                          return (
+                            <div className="pt-2.5 space-y-2 border-t border-neutral-200/70">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-mono font-bold uppercase text-neutral-500 block">
+                                  📷 Portfolio &amp; Proof Gallery ({photoList.length})
+                                </span>
+                                {photoList.length > 4 && (
                                   <button
-                                    key={pIdx}
                                     type="button"
-                                    data-testid={`portfolio-photo-thumbnail-${pIdx}`}
+                                    data-testid="view-all-photos-badge"
                                     onClick={() => {
-                                      setActiveLightboxImageIndex(pIdx);
-                                      setActiveLightboxGallery(exp.gallery);
+                                      setActiveLightboxImageIndex(0);
+                                      setActiveLightboxGallery(photoList);
                                     }}
-                                    className="min-h-[44px] min-w-[44px] relative w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-neutral-300 hover:border-[#ff3b30] hover:scale-105 transition-all cursor-pointer group shadow-2xs"
-                                    title="Click to view image in Lightbox preview"
-                                    aria-label={`View photo thumbnail: ${photoCaption}`}
+                                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 py-1.5 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 border border-[#ff3b30]/30 rounded-xl text-[11px] font-mono font-bold text-[#ff3b30] transition-all cursor-pointer shadow-2xs"
+                                    aria-label={`View all ${photoList.length} photos badge`}
                                   >
-                                    <img src={photoUrl} alt={photoCaption || 'Gallery thumbnail'} className="w-full h-full object-cover group-hover:opacity-90" />
-                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                      <Camera className="w-4 h-4 text-white drop-shadow" />
-                                    </div>
+                                    View All ({photoList.length} Photos)
                                   </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
+                                )}
+                              </div>
 
-                        {/* View Full Experience Asset Link Button */}
-                        <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-end">
+                              <div 
+                                data-testid="portfolio-gallery-strip" 
+                                className="flex items-center gap-2.5 overflow-x-auto scroll-smooth scrollbar-thin py-1 no-scrollbar"
+                              >
+                                {photoList.map((photo: any, pIdx: number) => {
+                                  const photoUrl = typeof photo === 'string' ? photo : photo.url;
+                                  const photoCaption = typeof photo === 'string' ? `${exp.title} Proof` : (photo.caption || `${exp.title} Proof`);
+
+                                  return (
+                                    <button
+                                      key={pIdx}
+                                      type="button"
+                                      data-testid={`portfolio-photo-thumbnail-${pIdx}`}
+                                      onClick={() => {
+                                        setActiveLightboxImageIndex(pIdx);
+                                        setActiveLightboxGallery(photoList);
+                                      }}
+                                      className="min-h-[44px] min-w-[44px] relative w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-neutral-300 hover:border-[#ff3b30] hover:scale-105 transition-all cursor-pointer group shadow-2xs"
+                                      title="Click to view image in Lightbox preview"
+                                      aria-label={`View photo thumbnail: ${photoCaption}`}
+                                    >
+                                      <img src={photoUrl} alt={photoCaption || 'Gallery thumbnail'} className="w-full h-full object-cover group-hover:opacity-90" />
+                                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <Camera className="w-4 h-4 text-white drop-shadow" />
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* View Full Experience Asset Link Button & Edit Button */}
+                        <div className="pt-3 border-t border-neutral-200/70 flex items-center justify-between gap-2">
                           <Link
-                            href={`/exp/${exp.id || DEFAULT_PJ_EXPERIENCES[idx]?.id || 'exp-' + (idx + 1)}`}
+                            href={`/exp/${exp.id || 'exp-' + (idx + 1)}/edit?redirect=/u/${profile.username || userId}?tab=career`}
+                            data-testid={`edit-experience-asset-btn-${idx}`}
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 rounded-xl text-xs font-mono font-bold uppercase text-neutral-800 transition-all cursor-pointer shadow-2xs gap-1"
+                          >
+                            Edit
+                          </Link>
+                          <Link
+                            href={`/exp/${exp.id || 'exp-' + (idx + 1)}`}
                             data-testid={`view-experience-asset-btn-${idx}`}
                             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-4 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl transition-all cursor-pointer shadow-2xs gap-1"
                           >
@@ -1380,13 +1509,6 @@ export function DriverProfileClient({ initialProfile, userId }: DriverProfileCli
         );
       })()}
 
-      {/* ⚙️ SELF-SERVICE PASSPORT & CAREER MANAGEMENT DRAWER */}
-      <EditPassportDrawer
-        isOpen={showEditDrawer}
-        onClose={() => setShowEditDrawer(false)}
-        profile={profile}
-        onProfileUpdated={(updated) => setProfile(updated)}
-      />
     </div>
   );
 }

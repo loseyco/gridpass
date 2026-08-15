@@ -64,9 +64,16 @@ export default function ExperienceDetailPage() {
         company: id.includes('hrc') || id === 'exp-1' ? 'Honda Racing Corporation (HRC)' : 'Gridpass.app',
         category: 'motorsport_event',
         categoryPill: id.includes('hrc') || id === 'exp-1' ? 'MOTORSPORT GIG' : 'SPECIAL PROJECT',
-        description: 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization.',
+        description: id.includes('hrc') || id === 'exp-1' 
+          ? 'High-speed telemetry extraction, race strategy engine engineering, and brake zone sensor visualization.' 
+          : 'Dynamic QR code portfolios for motorsport drivers and live waterway radar tracking.',
         skills: ['⚡ Telemetry', '⚡ Systems Architecture'],
-        links: [{ id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }],
+        links: id.includes('hrc') || id === 'exp-1' 
+          ? [{ id: 'link-1', title: 'Losey.co Pedigree', url: 'https://losey.co' }]
+          : [
+              { id: 'link-1', title: 'Gridpass Platform', url: 'https://gridpass.app' },
+              { id: 'link-2', title: 'Live Waterway Radar', url: 'https://radar.gridpass.app' }
+            ],
         gallery: [{ url: '/images/profile/hrc_telemetry.jpg', caption: 'Experience Asset Detail View' }],
         owner: {
           name: 'PJ Losey',
@@ -288,8 +295,8 @@ export default function ExperienceDetailPage() {
             <h2 className="text-sm font-black uppercase tracking-wider text-neutral-900 flex items-center gap-2">
               👤 Asset Owner &amp; Driver Passport
             </h2>
-            <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" /> VERIFIED PASSPORT
+            <span className="text-[10px] font-mono font-bold text-neutral-800 bg-neutral-100 border border-neutral-300 px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-[#ff3b30]" /> VERIFIED PASSPORT
             </span>
           </div>
 

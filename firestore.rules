@@ -10,9 +10,11 @@ service cloud.firestore {
 
     // Agent Swarm, SOP Knowledge Base & Operational Tickets
     match /agent_tickets/{ticketId} { allow read, write: if true; }
+    match /tickets/{ticketId} { allow read, write: if true; }
     match /agent_staff/{staffId} { allow read, write: if true; }
     match /sops/{sopId} { allow read, write: if true; }
     match /swarm_interlock/{questionId} { allow read, write: if true; }
+    match /logs/{logId} { allow read, write: if true; }
 
     // User Feedback & Partner Request Queues
     match /user_feedback/{feedbackId} { allow read, write: if true; }
@@ -26,6 +28,7 @@ service cloud.firestore {
     match /vehicles/{vehicleId} { allow read, write: if true; }
     match /businesses/{businessId} { allow read, write: if true; }
     match /events/{eventId} { allow read, write: if true; }
+    match /scraped_events/{id} { allow read, write: if true; }
     match /features/{featureId} { allow read, write: if true; }
 
     // Event Ownership Claims, Radar Pins & Community News
@@ -62,6 +65,7 @@ service cloud.firestore {
 
     // Live Venue Radar & Public Spots
     match /sightings/{id} { allow read, write: if true; }
+    match /sighting_reports/{id} { allow read, write: if true; }
     match /venue_radar/{id} { allow read, write: if true; }
     match /spots/{id} { allow read, write: if true; }
 
@@ -102,6 +106,41 @@ service cloud.firestore {
     match /garage_sales/{id} { allow read, write: if true; }
     match /garage_spaces/{id} { allow read, write: if true; }
     match /experiences/{id} { allow read, write: if true; }
+
+    // News & Media Machine (Source of Truth, 4-Hour Recaps, RSS Feeds & Community Reports)
+    match /news_feeds/{id} { allow read, write: if true; }
+    match /raw_news_items/{id} { allow read, write: if true; }
+    match /articles/{id} { allow read, write: if true; }
+    match /news_articles/{id} {
+      allow read, write: if true;
+      match /comments/{commentId} { allow read, write: if true; }
+    }
+    match /paddock_entities/{id} { allow read, write: if true; }
+    match /news_reports/{id} { allow read, write: if true; }
+    match /news_comments/{id} { allow read, write: if true; }
+    match /content_reports/{id} { allow read, write: if true; }
+    match /news_reactions/{id} { allow read, write: if true; }
+    match /user_attendance/{id} { allow read, write: if true; }
+
+    // Affiliate Monetization & Outbound Click Tracking
+    match /affiliate_merchants/{id} { allow read, write: if true; }
+    match /affiliate_rules/{id} { allow read, write: if true; }
+    match /affiliate_clicks/{id} { allow read, write: if true; }
+    match /affiliate_actions/{id} { allow read, write: if true; }
+    match /affiliate_todos/{id} { allow read, write: if true; }
+    match /system_telemetry/{id} { allow read, write: if true; }
+
+    // Venues, Shows & Events Expansion
+    match /venues/{id} { allow read, write: if true; }
+    match /shows/{id} { allow read, write: if true; }
+    match /sl_applications/{id} { allow read, write: if true; }
+    match /request_tickets/{id} { allow read, write: if true; }
+
+    // User Stories, Messages & Desktop Documents
+    match /user_messages/{id} { allow read, write: if true; }
+    match /user_stories/{id} { allow read, write: if true; }
+    match /inventory_items/{id} { allow read, write: if true; }
+    match /user_documents/{id} { allow read, write: if true; }
 
     // Universal Dynamic update exception / fallback
     match /{collection}/{document} {

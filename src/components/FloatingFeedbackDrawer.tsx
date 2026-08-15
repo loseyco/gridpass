@@ -137,7 +137,7 @@ export function FloatingFeedbackDrawer() {
             </button>
             <button
               onClick={() => setIsMinimized(true)}
-              className="px-2 py-2 hover:bg-[#d63025] border-l border-white/30 text-white/80 hover:text-white font-bold text-xs active:scale-95 transition min-h-[44px] min-w-[32px] flex items-center justify-center"
+              className="px-3 py-2 hover:bg-[#d63025] border-l border-white/30 text-white/80 hover:text-white font-bold text-xs active:scale-95 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Minimize to tiny bubble"
             >
               ⎯

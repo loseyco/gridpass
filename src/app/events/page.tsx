@@ -139,7 +139,7 @@ export default function EventsDirectoryPage() {
 
   // Helper to determine if an event is permanently past / archived (> 48h after end date)
   const isEventArchived = (event: GridpassEvent): boolean => {
-    if (event.is_archived || event.status === 'archived' || event.status === 'past') {
+    if (event.is_archived || event.status === 'archived' || event.status === 'past' || event.status === 'completed' || event.status === 'cancelled') {
       return true;
     }
     if (event.frequency === 'repeating' || event.frequency === 'permanent_venue') {

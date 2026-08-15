@@ -48,22 +48,28 @@ export default function AdminChangelogPage() {
     }
   };
 
-  // Live real-time listener for changelogs collection
+  // Live real-time listener for changelogs collection with seamless code merge
   useEffect(() => {
     const q = query(collection(db, 'changelogs'), orderBy('timestamp', 'desc'));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        if (snapshot.empty) {
-          seedChangelogs();
-          setLogs(INITIAL_PLATFORM_CHANGELOGS.map((item, idx) => ({ id: `init_${idx}`, ...item })));
-          setLoading(false);
-          return;
-        }
         const list: ChangelogEntry[] = [];
         snapshot.forEach((docSnap) => {
           list.push({ id: docSnap.id, ...docSnap.data() } as ChangelogEntry);
         });
+
+        // Merge any code-defined changelogs that aren't yet in Firestore
+        INITIAL_PLATFORM_CHANGELOGS.forEach((codeLog, idx) => {
+          const exists = list.some(
+            (l) => l.version === codeLog.version && l.title === codeLog.title
+          );
+          if (!exists) {
+            list.unshift({ id: `code_${codeLog.version}_${idx}`, ...codeLog });
+          }
+        });
+
+        list.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
         setLogs(list);
         setLoading(false);
       },

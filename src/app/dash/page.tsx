@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ConfirmModal from '@/components/ConfirmModal';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useToast } from '@/components/ToastContext';
 import { db } from '@/lib/firebase/config';
 import { 
   collection, query, where, onSnapshot, doc, updateDoc, addDoc, deleteDoc, serverTimestamp 
@@ -78,6 +80,7 @@ interface PhysicalSpace {
 
 function DashboardContent() {
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -108,6 +111,27 @@ function DashboardContent() {
   const [spaceType, setSpaceType] = useState('Residential Workshop');
   const [spaceLocation, setSpaceLocation] = useState('Grayslake, IL');
   const [spaceSqft, setSpaceSqft] = useState('500');
+
+  // Confirmation Modals State
+  const [confirmVehicleModal, setConfirmVehicleModal] = useState<{
+    isOpen: boolean;
+    vehicleId: string;
+    vehicleName: string;
+  }>({
+    isOpen: false,
+    vehicleId: '',
+    vehicleName: '',
+  });
+
+  const [confirmExpModal, setConfirmExpModal] = useState<{
+    isOpen: boolean;
+    experienceId: string;
+    experienceTitle: string;
+  }>({
+    isOpen: false,
+    experienceId: '',
+    experienceTitle: '',
+  });
 
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
@@ -311,6 +335,7 @@ function DashboardContent() {
       const list: DashboardVehicle[] = [];
       snap.forEach((docSnap) => {
         const vData = docSnap.data();
+        if (vData.is_hidden || vData.archived) return;
         list.push({ 
           id: docSnap.id, 
           ...vData,
@@ -445,6 +470,41 @@ function DashboardContent() {
       setExperiences(prev => [newExp, ...prev]);
     }
     setShowExpModal(false);
+  };
+
+  const handleArchiveVehicle = async (vehicleId: string, vehicleName?: string) => {
+    if (!vehicleId) return;
+    try {
+      if (isMock) {
+        setVehicles(prev => prev.filter(v => v.id !== vehicleId));
+        const stored = localStorage.getItem('__mock_vehicles__');
+        if (stored) {
+          const parsed = JSON.parse(stored).filter((v: any) => v.id !== vehicleId);
+          localStorage.setItem('__mock_vehicles__', JSON.stringify(parsed));
+        }
+      } else {
+        const vehicleRef = doc(db, 'vehicles', vehicleId);
+        await updateDoc(vehicleRef, {
+          is_hidden: true,
+          archived: true,
+          updated_at: serverTimestamp()
+        });
+      }
+      showToast({
+        title: 'Vehicle Removed',
+        message: vehicleName 
+          ? `${vehicleName} has been removed from your active garage while preserving historical event registrations.`
+          : 'Vehicle removed from active garage while preserving historical event registrations.',
+        icon: '🗑️'
+      });
+    } catch (err) {
+      console.error('Failed to archive vehicle:', err);
+      showToast({
+        title: 'Error',
+        message: 'Failed to remove vehicle. Please try again.',
+        icon: '⚠️'
+      });
+    }
   };
 
   const handleDeleteExperience = (id: string) => {
@@ -682,6 +742,22 @@ function DashboardContent() {
                     >
                       Edit
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = `${v.year || ''} ${v.make || ''} ${v.model || ''}`.trim() || 'this vehicle';
+                        if (v.id) {
+                          setConfirmVehicleModal({
+                            isOpen: true,
+                            vehicleId: v.id,
+                            vehicleName: name,
+                          });
+                        }
+                      }}
+                      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-xs font-mono font-bold border border-neutral-200 hover:border-[#ff3b30] hover:text-[#ff3b30] hover:bg-red-50/50 bg-white text-neutral-600 px-4 rounded-xl transition-colors uppercase cursor-pointer"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))}
@@ -751,7 +827,11 @@ function DashboardContent() {
                   <button
                     type="button"
                     data-testid={`delete-exp-${exp.id}`}
-                    onClick={() => handleDeleteExperience(exp.id)}
+                    onClick={() => setConfirmExpModal({
+                      isOpen: true,
+                      experienceId: exp.id,
+                      experienceTitle: exp.title || 'this experience asset',
+                    })}
                     className="min-h-[44px] min-w-[44px] p-3 text-neutral-400 hover:text-red-600 transition-all rounded-xl border border-neutral-200 flex items-center justify-center"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -812,6 +892,11 @@ function DashboardContent() {
                       <span className="text-[9px] font-mono font-black uppercase px-2 py-0.5 bg-amber-500 text-neutral-950 rounded-md" data-testid={`space-badge-${space.id}`}>
                         {space.type}
                       </span>
+                      {(space.type?.includes('Trailer') || space.type?.includes('Hauler') || (space as any).is_dual_native_vehicle) && (
+                        <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-md flex items-center gap-1">
+                          🚚 Towed Vehicle Linked
+                        </span>
+                      )}
                       <h3 className="text-sm font-black text-neutral-900 uppercase tracking-tight" data-testid={`space-title-${space.id}`}>
                         {space.name}
                       </h3>
@@ -826,7 +911,7 @@ function DashboardContent() {
 
                 <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
                   <Link
-                    href="/inventory"
+                    href={`/inventory?space=${space.id}`}
                     data-testid={`manage-space-${space.id}`}
                     className="min-h-[44px] min-w-[44px] px-4 bg-neutral-900 hover:bg-black text-white text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-1 transition-all"
                   >
@@ -1250,6 +1335,34 @@ function DashboardContent() {
           </div>
         </div>
       )}
+
+      {/* CONFIRM VEHICLE REMOVAL MODAL */}
+      <ConfirmModal
+        isOpen={confirmVehicleModal.isOpen}
+        title="Remove Vehicle from Active Garage?"
+        message={`Are you sure you want to remove ${confirmVehicleModal.vehicleName || 'this vehicle'} from your garage? It will be archived and hidden from your active profile, but historical car show registrations and event check-ins will be preserved in Firestore.`}
+        confirmText="Yes, Remove Vehicle"
+        cancelText="Cancel"
+        onClose={() => setConfirmVehicleModal({ isOpen: false, vehicleId: '', vehicleName: '' })}
+        onConfirm={async () => {
+          await handleArchiveVehicle(confirmVehicleModal.vehicleId, confirmVehicleModal.vehicleName);
+          setConfirmVehicleModal({ isOpen: false, vehicleId: '', vehicleName: '' });
+        }}
+      />
+
+      {/* CONFIRM EXPERIENCE DELETE MODAL */}
+      <ConfirmModal
+        isOpen={confirmExpModal.isOpen}
+        title="Delete Experience Asset?"
+        message={`Are you sure you want to delete ${confirmExpModal.experienceTitle ? `"${confirmExpModal.experienceTitle}"` : 'this experience asset'}? This action cannot be undone.`}
+        confirmText="Delete Experience"
+        cancelText="Cancel"
+        onClose={() => setConfirmExpModal({ isOpen: false, experienceId: '', experienceTitle: '' })}
+        onConfirm={() => {
+          handleDeleteExperience(confirmExpModal.experienceId);
+          setConfirmExpModal({ isOpen: false, experienceId: '', experienceTitle: '' });
+        }}
+      />
 
     </div>
   );

@@ -6,11 +6,13 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { auth } from '@/lib/firebase/config';
 import { signOut } from 'firebase/auth';
 import { 
-  Car, Compass, QrCode, User, ArrowLeft, LogOut, Loader2, LayoutDashboard, Users, Building2, Calendar, Activity, Menu, X, Globe
+  Car, Compass, QrCode, User, ArrowLeft, LogOut, Loader2, LayoutDashboard, Users, Building2, Calendar, Activity, Menu, X, Globe, Wrench, ShieldCheck, ChevronDown, Newspaper
 } from 'lucide-react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { FloatingFeedbackDrawer } from '@/components/FloatingFeedbackDrawer';
+import PWAForceUpdater from '@/components/pwa/PWAForceUpdater';
+import MemberNotificationsDrawer from '@/components/MemberNotificationsDrawer';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -34,6 +36,7 @@ export function AppShell({ children }: AppShellProps) {
   const getActiveTab = () => {
     if (pathname?.startsWith('/explore') || pathname === '/members' || pathname === '/vehicles' || pathname === '/businesses' || pathname?.startsWith('/u/') || pathname?.startsWith('/v/') || pathname?.startsWith('/b/') || pathname?.startsWith('/venue/')) return 'explore';
     if (pathname === '/dash' || pathname === '/') return 'dash';
+    if (pathname?.startsWith('/inventory')) return 'inventory';
     if (pathname === '/events' || pathname?.startsWith('/events/')) return 'events';
     if (pathname === '/feed' || pathname?.startsWith('/feed/')) return 'feed';
     if (pathname === '/scan' || pathname?.startsWith('/scan/')) return 'scan';
@@ -42,7 +45,7 @@ export function AppShell({ children }: AppShellProps) {
   const activeMenu = getActiveTab();
 
   // Check if we are on a detail/sub-page that needs a Back button
-  const isTabRoute = pathname === '/dash' || pathname === '/' || pathname === '/explore' || pathname === '/events' || pathname === '/feed' || pathname === '/scan' || pathname === '/members' || pathname === '/vehicles' || pathname === '/businesses' || (user && pathname === `/u/${user.uid}`);
+  const isTabRoute = pathname === '/dash' || pathname === '/' || pathname === '/explore' || pathname === '/events' || pathname === '/feed' || pathname === '/scan' || pathname === '/members' || pathname === '/vehicles' || pathname === '/businesses' || pathname?.startsWith('/inventory') || (user && pathname === `/u/${user.uid}`);
   const showBackButton = !isTabRoute && pathname !== '/login';
 
   const handleSmartBack = () => {
@@ -98,13 +101,13 @@ export function AppShell({ children }: AppShellProps) {
             {showBackButton ? (
               <button 
                 onClick={handleSmartBack}
-                className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-black transition-all cursor-pointer flex items-center justify-center"
+                className="min-w-[44px] min-h-[44px] p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-black transition-all cursor-pointer flex items-center justify-center"
                 aria-label="Back"
               >
                 <ArrowLeft className="w-5 h-5 text-[#ff3b30]" />
               </button>
             ) : (
-              <Link href="/" className="hover:opacity-90 transition-opacity flex items-center gap-2">
+              <Link href="/" className="hover:opacity-90 transition-opacity flex items-center gap-2 min-h-[44px]">
                 <Logo className="w-6 h-6" textClassName="text-sm font-extrabold text-neutral-900 hidden sm:block" />
               </Link>
             )}
@@ -113,15 +116,23 @@ export function AppShell({ children }: AppShellProps) {
             <nav className="hidden md:flex items-center gap-1 ml-4">
               <Link 
                 href="/explore" 
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`px-3 py-2 min-h-[44px] inline-flex items-center rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                   activeMenu === 'explore' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
               >
                 Explore
               </Link>
               <Link 
+                href="/news" 
+                className={`px-3 py-2 min-h-[44px] inline-flex items-center rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                  pathname?.startsWith('/news') ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                News
+              </Link>
+              <Link 
                 href="/feed" 
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`px-3 py-2 min-h-[44px] inline-flex items-center rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                   activeMenu === 'feed' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
               >
@@ -129,12 +140,49 @@ export function AppShell({ children }: AppShellProps) {
               </Link>
               <Link 
                 href="/dash" 
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                className={`px-3 py-2 min-h-[44px] inline-flex items-center rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                   activeMenu === 'dash' ? 'text-[#ff3b30] bg-[#ff3b30]/5' : 'text-neutral-500 hover:text-neutral-900'
                 }`}
               >
                 Dash
               </Link>
+              {/* 🛠️ TOOLS DROPDOWN SELECTOR */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  className={`px-3 py-2 min-h-[44px] inline-flex items-center gap-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                    pathname?.startsWith('/inventory') || pathname?.startsWith('/scan')
+                      ? 'text-[#ff3b30] bg-[#ff3b30]/5'
+                      : 'text-neutral-500 hover:text-neutral-900'
+                  }`}
+                >
+                  <span>Tools</span>
+                  <ChevronDown className="w-3.5 h-3.5 transition-transform group-hover:rotate-180" />
+                </button>
+
+                {/* Hover & Focus Dropdown Card */}
+                <div className="absolute left-0 top-full pt-1.5 hidden group-hover:block group-focus-within:block z-50 w-64 animate-in fade-in duration-150">
+                  <div className="bg-white border border-neutral-200 rounded-2xl shadow-xl p-2 space-y-1 text-left">
+                    <Link
+                      href="/inventory"
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-neutral-50 transition-colors group/item"
+                    >
+                      <div className="p-2 bg-red-50 text-[#ff3b30] rounded-xl group-hover/item:bg-[#ff3b30] group-hover/item:text-white transition-colors">
+                        <Wrench className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-black uppercase text-neutral-900 text-xs">Inventory</span>
+                        <span className="text-[10px] text-neutral-500 font-normal block">Parts, Equipment &amp; Storage</span>
+                      </div>
+                    </Link>
+
+                    <div className="pt-2 border-t border-neutral-100 px-3 py-1.5 flex items-center justify-between font-mono text-[9px] text-neutral-400 font-bold uppercase">
+                      <span>⚡ Future Tools Coming</span>
+                      <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600">v4.9+</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </nav>
 
           </div>
@@ -143,7 +191,10 @@ export function AppShell({ children }: AppShellProps) {
             {getPageTitle()}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* 🔔 Universal Member Notifications & Digest Trigger */}
+            <MemberNotificationsDrawer />
+
             {user ? (
               <button
                 onClick={handleSignOut}
@@ -183,6 +234,15 @@ export function AppShell({ children }: AppShellProps) {
           />
 
           <div className="md:hidden sticky top-14 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200 shadow-2xl px-4 py-4 space-y-2 max-h-[calc(100vh-3.5rem)] overflow-y-auto animate-in slide-in-from-top-2 duration-150">
+            <Link 
+              href="/news" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px] text-[#ff3b30]"
+            >
+              <Newspaper className="w-5 h-5 text-[#ff3b30]" />
+              <span>News</span>
+            </Link>
+
             <Link 
               href="/explore" 
               onClick={() => setMobileMenuOpen(false)}
@@ -226,6 +286,15 @@ export function AppShell({ children }: AppShellProps) {
             >
               <Activity className="w-5 h-5 text-[#ff3b30]" />
               <span>Live Activity Feed</span>
+            </Link>
+
+            <Link 
+              href="/inventory" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-xs font-black uppercase tracking-wider py-3 px-3 rounded-xl hover:bg-neutral-100 active:bg-neutral-200 min-h-[44px]"
+            >
+              <Wrench className="w-5 h-5 text-[#ff3b30]" />
+              <span>Inventory &amp; Tools</span>
             </Link>
 
             <Link 
@@ -299,6 +368,16 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
 
           <Link 
+            href="/inventory" 
+            className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${
+              activeMenu === 'inventory' ? 'text-[#ff3b30]' : 'text-neutral-500 hover:text-[#bd2925]'
+            }`}
+          >
+            <Wrench className="w-4.5 h-4.5" />
+            <span className="text-[8px] font-bold uppercase tracking-wider mt-1">Tools</span>
+          </Link>
+
+          <Link 
             href={user ? "/dash" : "/login"} 
             className={`flex flex-col items-center justify-center w-14 h-12 transition-colors ${
               activeMenu === 'dash' ? 'text-[#ff3b30]' : 'text-neutral-500 hover:text-[#bd2925]'
@@ -320,6 +399,9 @@ export function AppShell({ children }: AppShellProps) {
 
         </nav>
       )}
+
+      {/* iOS PWA Forced Auto-Updater & Cache Buster */}
+      <PWAForceUpdater />
 
       {/* Universal Floating Feedback & Ticket Intake Drawer */}
       <FloatingFeedbackDrawer />

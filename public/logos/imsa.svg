@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" width="100%" height="100%">
+  <!-- IMSA WeatherTech Logo -->
+  <g transform="translate(10, 20)">
+    <!-- Red & Black IMSA Badge -->
+    <rect x="10" y="10" width="65" height="65" rx="10" fill="#E4002B" />
+    <text x="22" y="56" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-style="italic" font-size="28" fill="#FFFFFF">IM</text>
+    <text x="90" y="52" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-style="italic" font-size="44" fill="#FFFFFF" letter-spacing="-1">IMSA</text>
+    <text x="92" y="78" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="14" fill="#FFB81C" letter-spacing="3">WEATHERTECH</text>
+  </g>
+</svg>

@@ -15,6 +15,7 @@ import {
   Settings, Compass, Sun, Moon, Power, Check, Radio
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import GridpassDesktopOS from '@/components/os/GridpassDesktopOS';
 
 // Dynamically import MapComponent to prevent SSR window reference errors
 const MapComponent = dynamic(() => import('@/components/os/MapComponent'), {
@@ -68,8 +69,13 @@ export default function DashboardOSPage() {
 function DashboardOSContent() {
   const searchParams = useSearchParams();
   const vehicleId = searchParams.get('vehicleId');
+  const viewMode = searchParams.get('view');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+
+  if (viewMode !== 'telemetry') {
+    return <GridpassDesktopOS />;
+  }
 
   // Component States
   const [vehicle, setVehicle] = useState<any>(null);

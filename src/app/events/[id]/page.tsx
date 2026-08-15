@@ -381,8 +381,8 @@ export default function EventHubPage() {
         setUserLng(lng);
         setLocatingDevice(false);
 
-        const venueLat = (event as any)?.latitude ?? 40.91148;
-        const venueLng = (event as any)?.longitude ?? -90.64764;
+        const venueLat = Number((event as any)?.latitude) || Number((event as any)?.lat) || 40.91148;
+        const venueLng = Number((event as any)?.longitude) || Number((event as any)?.lng) || -90.64764;
         const dist = calculateDistanceMiles(lat, lng, venueLat, venueLng);
         setUserDistanceMiles(dist);
       },
@@ -2177,8 +2177,8 @@ export default function EventHubPage() {
     // Geofence Boundary Distance Check
     const isGeofenceActive = event.geofence_enabled !== false; // Default enabled
     const geofenceRadius = event.geofence_radius_miles ?? 1.0;
-    const venueLat = (event as any).latitude ?? 40.91148;
-    const venueLng = (event as any).longitude ?? -90.64764;
+    const venueLat = Number((event as any).latitude) || Number((event as any).lat) || 40.91148;
+    const venueLng = Number((event as any).longitude) || Number((event as any).lng) || -90.64764;
 
     if (isGeofenceActive && pinLat && pinLng) {
       const distance = calculateDistanceMiles(pinLat, pinLng, venueLat, venueLng);
@@ -2714,63 +2714,64 @@ export default function EventHubPage() {
             </div>
           </div>
 
-          {/* Equal 5-Column Grid Mobile Control Bar (100% fits any mobile screen with ZERO clipping) */}
-          <div className="max-w-4xl mx-auto grid grid-cols-5 gap-1 w-full text-center">
+          {/* Equal 5-Column Grid Mobile Control Bar (Charcoal & Crimson Segments) */}
+          <div className="max-w-4xl mx-auto grid grid-cols-5 gap-1 w-full text-center bg-[#1c1c1e] p-1 rounded-xl shadow-md border border-neutral-800/65">
             <button
               type="button"
               onClick={() => setActiveEventTab('hub')}
-              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full touch-manipulation active:scale-95 ${
-                activeEventTab === 'hub' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
+              className={`min-h-[44px] py-1 px-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full touch-manipulation active:scale-95 ${
+                activeEventTab === 'hub' ? 'bg-[#ff3b30] text-white shadow-xs' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
               }`}
             >
-              <Flag className="w-3.5 h-3.5 text-[#ff3b30] shrink-0" />
+              <Flag className={`w-3 h-3 shrink-0 ${activeEventTab === 'hub' ? 'text-white' : 'text-[#ff3b30]'}`} />
               <span>HUB</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveEventTab('map')}
-              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
-                activeEventTab === 'map' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
+              className={`min-h-[44px] py-1 px-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
+                activeEventTab === 'map' ? 'bg-[#ff3b30] text-white shadow-xs' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
               }`}
             >
-              <Map className="w-3.5 h-3.5 text-[#ff3b30] shrink-0" />
+              <Map className={`w-3 h-3 shrink-0 ${activeEventTab === 'map' ? 'text-white' : 'text-[#ff3b30]'}`} />
               <span>MAP</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveEventTab('passes')}
-              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
-                activeEventTab === 'passes' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
+              className={`min-h-[44px] py-1 px-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
+                activeEventTab === 'passes' ? 'bg-[#ff3b30] text-white shadow-xs' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
               }`}
             >
-              <Ticket className="w-3.5 h-3.5 text-[#ff3b30] shrink-0" />
+              <Ticket className={`w-3 h-3 shrink-0 ${activeEventTab === 'passes' ? 'text-white' : 'text-[#ff3b30]'}`} />
               <span>PASSES</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveEventTab('entrants')}
-              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
-                activeEventTab === 'entrants' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
+              className={`min-h-[44px] py-1 px-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
+                activeEventTab === 'entrants' ? 'bg-[#ff3b30] text-white shadow-xs' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
               }`}
             >
-              <CarFront className="w-3.5 h-3.5 text-[#ff3b30] shrink-0" />
+              <CarFront className={`w-3 h-3 shrink-0 ${activeEventTab === 'entrants' ? 'text-white' : 'text-[#ff3b30]'}`} />
               <span>GRID</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveEventTab('discussion')}
-              className={`min-h-[44px] py-2 px-1 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
-                activeEventTab === 'discussion' ? 'bg-neutral-900 text-white shadow-xs' : 'bg-neutral-100/90 text-neutral-700 hover:bg-neutral-200'
+              className={`min-h-[44px] py-1 px-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 cursor-pointer w-full relative touch-manipulation active:scale-95 ${
+                activeEventTab === 'discussion' ? 'bg-[#ff3b30] text-white shadow-xs' : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
               }`}
             >
-              <MessageSquare className="w-3.5 h-3.5 text-[#ff3b30] shrink-0" />
+              <MessageSquare className={`w-3 h-3 shrink-0 ${activeEventTab === 'discussion' ? 'text-white' : 'text-[#ff3b30]'}`} />
               <span>CHAT</span>
             </button>
           </div>
+        </header>
 
-          {/* Compact Quick-Join Action Strip for Sub-Tabs (MAP, PASSES, GRID, CHAT) */}
-          {activeEventTab !== 'hub' && activeEventTab !== 'register-vehicle' && activeEventTab !== 'register-vendor' && activeEventTab !== 'edit-cover' && (
-            <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 pt-1.5 border-t border-neutral-100">
+        {/* Compact Quick-Join Action Strip for Sub-Tabs (MAP, PASSES, GRID, CHAT) */}
+        {activeEventTab !== 'hub' && activeEventTab !== 'register-vehicle' && activeEventTab !== 'register-vendor' && activeEventTab !== 'edit-cover' && (
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 pt-1.5 border-t border-neutral-100">
               {event.allow_vehicles !== false && (
                 <button
                   type="button"
@@ -2798,7 +2799,6 @@ export default function EventHubPage() {
               )}
             </div>
           )}
-        </header>
 
         {/* Top Cover & Master Header Card (Rendered ONLY on HUB tab view to preserve 100% viewport space for MAP, PASSES, GRID, & CHAT) */}
         {activeEventTab === 'hub' && (
@@ -2887,6 +2887,20 @@ export default function EventHubPage() {
                       {(event.start_date || event.startDate!).includes('T') && ` at ${new Date(event.start_date || event.startDate!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
                     </span>
                   )}
+                  {event.official_event_url && (
+                    <>
+                      <span>•</span>
+                      <a
+                        href={event.official_event_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-neutral-600 hover:text-[#ff3b30] transition-colors cursor-pointer group"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-neutral-500 hover:text-[#ff3b30] group-hover:text-[#ff3b30] shrink-0" />
+                        <span className="underline decoration-dotted underline-offset-2">Official Page</span>
+                      </a>
+                    </>
+                  )}
                 </div>
 
                 {/* Action Row & Join Grid (Side by side grid for Join Vehicle + Vendor) */}
@@ -2936,6 +2950,16 @@ export default function EventHubPage() {
                     </div>
                   </div>
 
+                  {/* Explanatory utility banner */}
+                  <div className="bg-neutral-50 border border-neutral-200/80 rounded-xl p-3 text-[11px] text-neutral-600 font-sans space-y-1">
+                    <p className="font-extrabold uppercase text-[#1c1c1e] text-[10px] tracking-wider flex items-center gap-1">
+                      🏁 Drivers &amp; Show Cars
+                    </p>
+                    <p className="leading-relaxed">
+                      Register your vehicle to stage your custom spec card, modifications list, and dyno stats for spectators to scan at the show. Print your free windshield spec sheet pass!
+                    </p>
+                  </div>
+
                   {/* Join Buttons Grid (Side-by-side on mobile, saving tons of vertical space!) */}
                   <div className="grid grid-cols-2 gap-2">
                     {event.allow_vehicles !== false && (
@@ -2972,7 +2996,7 @@ export default function EventHubPage() {
                     <span>•</span>
                     <span className="flex items-center gap-1 text-neutral-700">🚘 {event.entrants ? Object.keys(event.entrants).length : 0} Vehicles</span>
                     <span>•</span>
-                    <span className="flex items-center gap-1 text-blue-600">🏪 {event.vendors ? event.vendors.length : 0} Exhibitors</span>
+                    <span className="flex items-center gap-1 text-blue-600">🏪 {event.vendors ? event.vendors.length : 0} Vendors</span>
                   </div>
                 </div>
               </div>
@@ -3144,7 +3168,7 @@ export default function EventHubPage() {
             <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
               <div>
                 <span className="text-[9px] font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-widest block w-fit mb-1">
-                  Vendor Exhibitor Registration
+                  Vendor & Business Registration
                 </span>
                 <h2 className="text-lg font-black uppercase text-neutral-900 tracking-tight">
                   Join Event as a Vendor / Business
@@ -3974,8 +3998,8 @@ export default function EventHubPage() {
           {/* Interactive Event Radar & Venue Map Canvas */}
           <div ref={mapCanvasRef}>
             <EventRadarFullMap
-              eventLat={40.91148}
-              eventLng={-90.64764}
+              eventLat={Number((event as any).latitude) || Number((event as any).lat) || 40.91148}
+              eventLng={Number((event as any).longitude) || Number((event as any).lng) || -90.64764}
               locationName={event.location_name || event.locationName || 'Event Grounds'}
               pins={gpsPins}
               activeFilter={pinFilter}

@@ -22,8 +22,19 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 
   if (tagId) {
     try {
-      // 1. Check physical_tags/tag_[tagId]
-      const tagSnap = await getDoc(doc(db, 'physical_tags', `tag_${tagId}`)).catch(() => null);
+      const strippedId = tagId.replace(/^0+/, '');
+      // 1. Check physical_tags/tag_[tagId] and tag_[strippedId]
+      let tagSnap = await getDoc(doc(db, 'physical_tags', `tag_${tagId}`)).catch(() => null);
+      if (!tagSnap || !tagSnap.exists()) {
+        tagSnap = await getDoc(doc(db, 'physical_tags', `tag_${strippedId}`)).catch(() => null);
+      }
+      if (!tagSnap || !tagSnap.exists()) {
+        tagSnap = await getDoc(doc(db, 'physical_tags', tagId)).catch(() => null);
+      }
+      if (!tagSnap || !tagSnap.exists()) {
+        tagSnap = await getDoc(doc(db, 'physical_tags', strippedId)).catch(() => null);
+      }
+
       if (tagSnap && tagSnap.exists()) {
         const tData = tagSnap.data();
         if (tData.custom_spotted_title || tData.title) {

@@ -1,150 +1,307 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Briefcase, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { SkillsTagInput } from '@/components/SkillsTagInput';
+import { ExperiencePhotoUploader } from '@/components/ExperiencePhotoUploader';
+import { ExperienceLinksInput, ExperienceLinkItem } from '@/components/ExperienceLinksInput';
+import { ExperienceDatePicker } from '@/components/ExperienceDatePicker';
 
-export default function CreateExperiencePage() {
+const CATEGORY_GROUPS = [
+  {
+    label: 'Role / Discipline Category',
+    options: [
+      'Shop Foreman / Lead Tech',
+      'Master Mechanic / Service Tech',
+      'Engine Builder / Machinist',
+      'Custom Fabricator / TIG Welder',
+      'ECU Tuner / Dyno Calibration',
+      'Paint & Body / Restoration',
+      'Electrical / Wiring Harness',
+      '4x4 / Off-Road Upfitter',
+      'Pro / Club Race Driver',
+      'Track Day / HPDE / Time Attack',
+      'Drag Racer / Street Strip',
+      'Drift Driver',
+      'Sim Racer / Esports',
+      'Telemetry / Data Engineer',
+      'Race Strategist / Crew Chief',
+      'Pit Crew / Tire & Fuel',
+      'Automotive Photographer / Video',
+      'Content Creator / Media',
+      'Speed Shop / Parts Specialist',
+      'Special Project / Engineering',
+    ],
+  },
+  {
+    label: 'Custom Descriptor',
+    options: ['Custom / Other'],
+  },
+];
+
+function CreateExperienceForm() {
   const { user } = useAuth();
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/u/pjlosey?tab=career';
 
+  const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
-  const [category, setCategory] = useState('Driver');
+  const [category, setCategory] = useState('Shop Foreman / Lead Tech');
+  const [customCategory, setCustomCategory] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isCurrent, setIsCurrent] = useState(false);
   const [dateRange, setDateRange] = useState('');
   const [description, setDescription] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [links, setLinks] = useState<ExperienceLinkItem[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-
     setSaving(true);
+
     try {
-      if (user?.uid) {
-        await addDoc(collection(db, 'experiences'), {
+      const finalCategory = category === 'Custom / Other' && customCategory.trim() ? customCategory.trim() : category;
+      const cleanSkills = skills.map((s) => s.trim()).filter(Boolean);
+      const cleanLinks = links.filter((l) => l.url.trim().length > 0);
+
+      // Check if running in Playwright mock mode
+      const isMock = typeof window !== 'undefined' && (!!(window as any).__PLAYWRIGHT_MOCK__ || localStorage.getItem('__playwright_mock__') === 'true');
+
+      if (!isMock && user?.uid) {
+        const expData = {
           user_id: user.uid,
+          driver_id: user.uid,
           title: title.trim(),
           company: company.trim(),
-          category,
-          date_range: dateRange.trim(),
+          category: finalCategory,
+          start_date: startDate.trim(),
+          end_date: isCurrent ? null : endDate.trim(),
+          is_current: isCurrent,
+          date_range: dateRange.trim() || (isCurrent ? `${startDate} – Present` : startDate),
           description: description.trim(),
+          skills: cleanSkills,
+          photos: photos,
+          links: cleanLinks,
           created_at: serverTimestamp(),
           updated_at: serverTimestamp(),
-        });
+        };
+
+        const docRef = await addDoc(collection(db, 'experiences'), expData);
+
+        // Sync with user's embedded experiences array
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const currentExp = userSnap.data().experiences || [];
+          const newEntry = {
+            id: docRef.id,
+            title: title.trim(),
+            company: company.trim(),
+            category: finalCategory,
+            start_date: startDate.trim(),
+            end_date: isCurrent ? null : endDate.trim(),
+            is_current: isCurrent,
+            date_range: dateRange.trim() || (isCurrent ? `${startDate} – Present` : startDate),
+            description: description.trim(),
+            skills: cleanSkills,
+            photos: photos,
+            links: cleanLinks,
+          };
+          await updateDoc(userRef, {
+            experiences: [...currentExp, newEntry],
+            updated_at: serverTimestamp(),
+          });
+        }
       }
-      router.push('/dash?tab=experiences');
+
+      router.push(redirectUrl);
     } catch (err) {
-      console.error('Error creating experience:', err);
+      console.error('Error creating experience asset:', err);
+    } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 p-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/dash?tab=experiences"
-            className="min-h-[44px] min-w-[44px] p-2.5 bg-white border border-neutral-200 hover:bg-neutral-100 rounded-xl inline-flex items-center justify-center transition-all shadow-sm"
-          >
-            <ArrowLeft className="w-5 h-5 text-neutral-800" />
-          </Link>
-          <div>
-            <h1 className="text-xl font-black uppercase text-neutral-900 tracking-tight flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-[#ff3b30]" /> New Experience Asset
-            </h1>
-            <p className="text-xs text-neutral-500 font-mono">Add motorsport gig, engineering role, or racing project</p>
+    <div className="min-h-screen bg-neutral-100 text-neutral-900 pb-20">
+      {/* Header */}
+      <div className="border-b border-neutral-200 bg-white sticky top-0 z-30 shadow-sm">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href={redirectUrl}
+              className="p-2 -ml-2 rounded-xl text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-xl font-black uppercase tracking-wider text-neutral-900 flex items-center gap-2">
+                <span className="text-[#ff3b30]">🧰</span> New Experience Asset
+              </h1>
+              <p className="text-xs text-neutral-500 font-medium">
+                Add motorsport gig, engineering role, or racing project
+              </p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <form onSubmit={handleSubmit} className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-6">
+          {/* Title */}
           <div>
-            <label className="block text-xs font-mono font-bold uppercase text-neutral-700 mb-1">Role / Title *</label>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-600 mb-2">
+              Role / Title <span className="text-[#ff3b30]">*</span>
+            </label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Lead Race Engineer / Pro Driver"
-              className="w-full h-11 px-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-sans focus:outline-none focus:border-black"
+              className="w-full h-12 px-4 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-900 text-sm font-bold focus:bg-white focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30] outline-none transition-all"
             />
           </div>
 
+          {/* Company / Team */}
           <div>
-            <label className="block text-xs font-mono font-bold uppercase text-neutral-700 mb-1">Team / Company / Venue</label>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-600 mb-2">
+              Team / Company / Venue
+            </label>
             <input
               type="text"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="e.g. Losey Racing / Road America"
-              className="w-full h-11 px-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-sans focus:outline-none focus:border-black"
+              className="w-full h-12 px-4 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-900 text-sm font-bold focus:bg-white focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30] outline-none transition-all"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-mono font-bold uppercase text-neutral-700 mb-1">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full h-11 px-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-sans focus:outline-none focus:border-black"
-              >
-                <option value="Driver">Driver</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Pit Crew">Pit Crew</option>
-                <option value="Media/Photo">Media/Photo</option>
-                <option value="Organizer">Organizer</option>
-                <option value="Sponsor">Sponsor</option>
-              </select>
-            </div>
+          {/* Skills Tag Input */}
+          <SkillsTagInput skills={skills} onChange={setSkills} />
 
-            <div>
-              <label className="block text-xs font-mono font-bold uppercase text-neutral-700 mb-1">Date Range</label>
-              <input
-                type="text"
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                placeholder="e.g. 2024 - Present"
-                className="w-full h-11 px-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-sans focus:outline-none focus:border-black"
-              />
-            </div>
+          {/* Photo Gallery Uploader */}
+          <ExperiencePhotoUploader photos={photos} onChange={setPhotos} />
+
+          {/* Verification Links */}
+          <ExperienceLinksInput links={links} onChange={setLinks} />
+
+          {/* Category Dropdown */}
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-600 mb-2">
+              Role Category (Optional)
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full h-12 px-4 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-900 text-sm font-bold focus:bg-white focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30] outline-none transition-all"
+            >
+              {CATEGORY_GROUPS.map((group, idx) => (
+                <optgroup key={idx} label={group.label}>
+                  {group.options.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
+          {/* Custom Category input */}
+          {category === 'Custom / Other' && (
+            <div>
+              <label className="block text-xs font-black uppercase tracking-wider text-neutral-600 mb-2">
+                Custom Descriptor <span className="text-[#ff3b30]">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder="e.g. Vintage Restorer / Track Marshal"
+                className="w-full h-12 px-4 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-900 text-sm font-bold focus:bg-white focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30] outline-none transition-all"
+              />
+            </div>
+          )}
+
+          {/* Date Picker (Start / End / Present) */}
+          <ExperienceDatePicker
+            startDate={startDate}
+            endDate={endDate}
+            isCurrent={isCurrent}
+            onChange={({ startDate, endDate, isCurrent, dateRangeText }) => {
+              setStartDate(startDate);
+              setEndDate(endDate);
+              setIsCurrent(isCurrent);
+              setDateRange(dateRangeText);
+            }}
+          />
+
+          {/* Description */}
           <div>
-            <label className="block text-xs font-mono font-bold uppercase text-neutral-700 mb-1">Description</label>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-600 mb-2">
+              Description
+            </label>
             <textarea
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detail key responsibilities, podiums, achievements, or track specs..."
-              className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-sans focus:outline-none focus:border-black"
+              placeholder="Key achievements, chassis tuned, championships won, or telemetry milestones..."
+              className="w-full p-4 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-900 text-sm font-medium focus:bg-white focus:border-[#ff3b30] focus:ring-1 focus:ring-[#ff3b30] outline-none transition-all resize-none"
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-3">
+          {/* Actions */}
+          <div className="pt-4 border-t border-neutral-100 flex items-center justify-end gap-3">
             <Link
-              href="/dash/edit-profile"
-              data-testid="cancel-exp-btn"
-              className="min-h-[44px] px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center transition-all"
+              href={redirectUrl}
+              className="px-5 py-3 rounded-xl border border-neutral-200 text-neutral-600 font-bold text-xs uppercase tracking-wider hover:bg-neutral-50 transition-colors min-h-[44px] flex items-center"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              disabled={saving}
-              className="min-h-[44px] px-6 py-2 bg-[#ff3b30] hover:bg-[#bd2925] text-white text-xs font-mono font-bold uppercase rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md disabled:opacity-50"
+              disabled={saving || !title.trim()}
+              className="px-6 py-3 rounded-xl bg-[#ff3b30] hover:bg-[#e0342b] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center gap-2 min-h-[44px]"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {saving ? 'Saving...' : 'Create Asset'}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" /> Create Asset
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewExperiencePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-6">
+          <Loader2 className="w-8 h-8 animate-spin text-[#ff3b30]" />
+        </div>
+      }
+    >
+      <CreateExperienceForm />
+    </Suspense>
   );
 }
