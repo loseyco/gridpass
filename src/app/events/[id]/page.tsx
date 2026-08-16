@@ -103,8 +103,12 @@ export default function EventHubPage() {
 
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['hub', 'map', 'passes', 'entrants', 'entrant-detail', 'vendor-detail', 'person-detail', 'discussion', 'host', 'register-vehicle', 'register-vendor', 'edit-event', 'submit-news', 'check-in', 'claim-event', 'edit-cover'].includes(tabParam)) {
-      setActiveEventTab(tabParam as any);
+    if (tabParam) {
+      if (['hub', 'map', 'passes', 'entrants', 'discussion', 'host', 'register-vehicle', 'register-vendor', 'edit-event', 'submit-news', 'check-in', 'claim-event', 'edit-cover'].includes(tabParam)) {
+        setActiveEventTab(tabParam as any);
+      } else if (tabParam === 'entrant-detail' || tabParam === 'vendor-detail' || tabParam === 'person-detail') {
+        setActiveEventTab('entrants');
+      }
     }
   }, [searchParams]);
 

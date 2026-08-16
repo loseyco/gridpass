@@ -135,8 +135,10 @@ function DashboardContent() {
 
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam) {
+    if (tabParam && ['vehicles', 'experiences', 'spaces', 'businesses', 'events', 'membership'].includes(tabParam)) {
       setActiveTab(tabParam);
+    } else if (tabParam) {
+      setActiveTab('vehicles');
     }
   }, [searchParams]);
 

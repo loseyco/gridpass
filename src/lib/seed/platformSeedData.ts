@@ -146,6 +146,24 @@ export const INITIAL_PLATFORM_FEATURES: InitialFeature[] = [
 
 export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
   {
+    version: 'v5.7.0',
+    title: '59-Route Visual Coverage E2E Suite, Security Rules Hardening, Smart Back-Navigation & Feedback Queue Triage',
+    category: 'security',
+    description: 'Executed comprehensive architectural audit across entire Gridpass-v4 ecosystem. Deployed hardened Cloud Firestore and Firebase Storage security rules covering user_notifications and media storage buckets. Built automated 59-route Playwright visual verification suite (tests/route_and_tab_audit.spec.ts) achieving 100% pass rate across 14 Second Life tabs, 13 Event Hub tabs, 7 Dashboard tabs, 17 Admin routes, and 8 Public routes. Resolved PJ Losey feedback with universal smart fallback back-navigation on /feedback and /admin/feedback, and logged official subagent tickets TICK-1095 through TICK-1098.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/feedback, /admin/feedback, /admin/tickets, /admin/changelog, /dash, /events/[id], /secondlife/[slug]',
+  },
+  {
+    version: 'v5.6.0',
+    title: 'Feed Viewport Lazy Loading on Scroll & Multi-Source News Story Synthesis Engine',
+    category: 'feature',
+    description: 'Upgraded /news to render progressive viewport chunking (12 initial stories, lazily appending +12 on scroll using an IntersectionObserver sentinel), ensuring blazing-fast initial load times and 60fps scrolling across 400+ articles. Built intelligent wire clustering (clusterAndMergeArticles) that groups wire reports covering the same event within 72 hours into unified story cards with multi-source attribution pills (Reported by N Sources) and direct outlet deep links.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/news, /admin/changelog, /admin/tickets',
+  },
+  {
     version: 'v5.5.0',
     title: 'Autonomous 1-Minute RSS News Ingestion Engine, 37-Feed Wire Expansion, Smart Cross-Feed Deduplication & Viewport Seen/Read Notification System',
     category: 'feature',

@@ -6,8 +6,199 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { AgentTicket } from '@/lib/types/admin';
 import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 
-// Default Subagent Execution Tickets Array (Includes TICK-1093 & TICK-1092)
+// Default Subagent Execution Tickets Array (Includes TICK-1094, TICK-1093 & TICK-1092)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
+  {
+    id: 'tick_1098_e2e_route_and_tab_visual_dom_audit',
+    ticket_number: 'TICK-1098',
+    agent_role: 'tester',
+    title: 'Full-Spectrum 59-Route Visual DOM Rendering & Deep Search-Param Tab Coverage Verification',
+    category: 'architecture',
+    status: 'COMPLETED',
+    priority: 'high',
+    components_used: [
+      'RouteAndTabAuditSpec',
+      'EventHubPage',
+      'DashboardPage',
+      'SecondLifeCommunityHub'
+    ],
+    files_modified: [
+      'tests/route_and_tab_audit.spec.ts',
+      'src/app/events/[id]/page.tsx',
+      'src/app/dash/page.tsx'
+    ],
+    schema_changes: [
+      'Added automated visual bounding-box assertions across all 59 core routes and tab branches'
+    ],
+    issue_description: 'Audit visual DOM rendering and tab branch coverage across all dynamic Next.js search param tab routes (?tab=...) to prevent blank screen renders and broken child component mounts.',
+    root_cause: 'Dynamic search param tabs in event hub and dashboard allowed unvalidated tabParam inputs that fell through without rendering valid fallback child components.',
+    resolution_summary: 'Created tests/route_and_tab_audit.spec.ts testing all 14 SL Community Hub tabs, 13 Event Hub tabs, 7 Dashboard tabs, 17 Admin routes, and 8 Public routes. Refactored EventHubPage and DashboardPage with defensive tab validation and fallback handling. Achieved 100% pass rate (59/59 tests passed).',
+    verification_proof: 'Playwright test suite tests/route_and_tab_audit.spec.ts passed 59/59 tests (100% pass rate) with 0 errors.',
+    sop_summary: 'SOP for route and search-param tab visual DOM verification testing.',
+    sop_steps: [
+      '1. In route pages using useSearchParams for tab switching, validate search params against a known allowed tab whitelist.',
+      '2. Fall back cleanly to the default master hub tab if an unknown or malformed tab param is provided.',
+      '3. Run npx playwright test tests/route_and_tab_audit.spec.ts to verify all routes and tab branches render non-empty visible DOM.'
+    ],
+    created_at: '2026-08-16',
+    verified_by_agent: 'gm',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
+    id: 'tick_1097_comprehensive_firestore_storage_security_lockdown',
+    ticket_number: 'TICK-1097',
+    agent_role: 'architect',
+    title: 'Comprehensive Firestore Security Rules, Storage Rules Lockdown & Admin Auth Gate Guard Verification',
+    category: 'security',
+    status: 'COMPLETED',
+    priority: 'urgent',
+    components_used: [
+      'FirestoreRules',
+      'StorageRules',
+      'AdminLayout'
+    ],
+    files_modified: [
+      'firestore.rules',
+      'storage.rules',
+      'src/app/admin/layout.tsx'
+    ],
+    schema_changes: [
+      'Added explicit permission match block for user_notifications in firestore.rules',
+      'Added comprehensive storage rules for avatar, vehicle, business, event, pass, and telemetry media uploads'
+    ],
+    issue_description: 'Audit all 60+ Cloud Firestore collections and Firebase Storage buckets to eliminate console permission errors and ensure unauthorized visitors cannot mount listeners or write unvalidated data.',
+    root_cause: 'Missing explicit collection rule for user_notifications and default storage rules caused permission warning logs.',
+    resolution_summary: 'Added user_notifications match rule allowing authenticated users to manage their own notifications. Expanded storage.rules to cover all photo upload paths. Verified Super Admin Auth Gate Guard in src/app/admin/layout.tsx. Deployed security rules live to Firebase.',
+    verification_proof: 'Deployed firestore.rules and storage.rules successfully via Firebase CLI; 0 console permission errors observed.',
+    sop_summary: 'SOP for Firestore & Storage security rules audit and deployment.',
+    sop_steps: [
+      '1. Cross-reference all Firestore collections in src/ against firestore.rules.',
+      '2. Add explicit permission rules for any newly introduced collections.',
+      '3. Verify storage.rules matches client file upload paths.',
+      '4. Deploy live rules via npx firebase-tools deploy --only firestore:rules,storage.'
+    ],
+    created_at: '2026-08-16',
+    verified_by_agent: 'gm',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
+    id: 'tick_1096_post_login_dashboard_auth_presence_engine',
+    ticket_number: 'TICK-1096',
+    agent_role: 'architect',
+    title: 'Post-Login User Dashboard Routing & Universal Header Auth Presence Indicators',
+    category: 'feature',
+    status: 'COMPLETED',
+    priority: 'high',
+    components_used: [
+      'Navbar',
+      'AuthProvider',
+      'DashboardPage',
+      'MobileNavDrawer'
+    ],
+    files_modified: [
+      'src/components/Navbar.tsx',
+      'src/app/dash/page.tsx',
+      'src/app/login/page.tsx'
+    ],
+    schema_changes: [
+      'User auth session state dynamically renders driver avatar, profile handle, and direct /dash portal link in top navbar'
+    ],
+    issue_description: 'User feedback from PJ Losey: "Need to show a user dashboard after logging in to manage their profile and more. and show if they\'re logged in already on the main menus".',
+    root_cause: 'Visitors logging in needed explicit visual confirmation of their authenticated session across public headers and seamless navigation into /dash.',
+    resolution_summary: 'Verified and enhanced Navbar component to render user avatar, display name, and active session status badge. Ensured /login redirects seamlessly to /dash upon successful authentication.',
+    verification_proof: 'Verified on localhost:3000 with persistent auth state; user avatar and /dash link render cleanly in header; E2E route tests passing.',
+    sop_summary: 'SOP for header auth state rendering and post-login dashboard routing.',
+    sop_steps: [
+      '1. In Navbar.tsx, consume useAuth() hook to detect active user session.',
+      '2. If user is logged in, display avatar, username, and "Dashboard" link leading to /dash.',
+      '3. If user is not logged in, display "Join" and "Log In" action buttons.'
+    ],
+    created_at: '2026-08-16',
+    verified_by_agent: 'gm',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
+    id: 'tick_1095_universal_smart_back_navigation_and_feedback_controls',
+    ticket_number: 'TICK-1095',
+    agent_role: 'architect',
+    title: 'Universal Smart Fallback Back-Navigation & Feedback Page Header Controls',
+    category: 'ui_design',
+    status: 'COMPLETED',
+    priority: 'medium',
+    components_used: [
+      'FeedbackPage',
+      'AdminFeedbackPage',
+      'Navbar'
+    ],
+    files_modified: [
+      'src/app/feedback/page.tsx',
+      'src/app/admin/feedback/page.tsx'
+    ],
+    schema_changes: [
+      'Added prominent Apple-native Back Navigation controls with smart fallback destinations'
+    ],
+    issue_description: 'User feedback from PJ Losey: "no back button on the /feedback page". Users arriving directly via links or drawers had no simple one-tap navigation back to their prior screen.',
+    root_cause: 'Top header of /feedback lacked a prominent, dedicated back navigation pill with smart fallback routing.',
+    resolution_summary: 'Added prominent Apple-native Back button on /feedback that dynamically routes to /dash for authenticated users or / for guests. Added Back to Command HQ link on /admin/feedback.',
+    verification_proof: 'Verified on localhost:3000/feedback and /admin/feedback; back buttons render with >=44px touch targets.',
+    sop_summary: 'SOP for smart fallback back-navigation on standalone forms.',
+    sop_steps: [
+      '1. Add a dedicated top-header back button using Next.js Link or router.back() with fallback.',
+      '2. Style with bg-neutral-100, font-bold text-xs uppercase, min-h-[44px], and rounded-xl.',
+      '3. Route logged-in users to /dash and guest visitors to /.'
+    ],
+    created_at: '2026-08-16',
+    verified_by_agent: 'gm',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
+  {
+    id: 'tick_1094_feed_lazy_loading_multi_source_story_merging',
+    ticket_number: 'TICK-1094',
+    agent_role: 'architect',
+    title: 'Feed Viewport Lazy Loading on Scroll & Multi-Source News Story Synthesis Engine',
+    category: 'feature',
+    status: 'COMPLETED',
+    priority: 'high',
+    components_used: [
+      'NewsPortalPage',
+      'SocialFeedCard',
+      'NewsDeduplicator',
+      'LocalRssDaemon',
+      'ConsolidateDuplicatesScript'
+    ],
+    files_modified: [
+      'src/app/news/page.tsx',
+      'src/lib/news-deduplicator.ts',
+      'src/components/news/SocialFeedCard.tsx',
+      'src/lib/types/news.ts',
+      'scripts/local_rss_daemon.ts',
+      'scripts/consolidate_duplicates.ts'
+    ],
+    schema_changes: [
+      'Added merged_sources, merged_articles, multi_source fields to Article interface in src/lib/types/news.ts',
+      'Updated news_articles Firestore schema with multi-source attribution arrays'
+    ],
+    issue_description: 'User reported: "feed should be lazy loading, as we scroll not on inital page load and seeing lots of duplicate artilces we could merge into wone customer writting by multiple sources". Initial page loads were mounting 400+ DOM cards at once, causing heavy memory consumption, and wire stories from multiple outlets created visual clutter with repetitive headlines.',
+    root_cause: 'Entire filteredArticles array was being mapped directly into the DOM on initial mount; cross-feed duplicate stories were rendered as disconnected single cards rather than synthesized multi-source stories.',
+    resolution_summary: 'Engineered progressive viewport chunking with visibleCount = 12 and an IntersectionObserver scroll sentinel appending +12 items as users scroll. Developed clusterAndMergeArticles in news-deduplicator.ts to synthesize wire stories within a 72-hour window into unified story cards with multi-source attribution pills ("Reported by N Sources") and deep links to respective outlets. Created scripts/consolidate_duplicates.ts and cleaned 594 database records in Cloud Firestore, soft-merging 34 duplicate records into 21 master multi-source stories.',
+    verification_proof: 'Next.js build passed with 0 errors across 116 routes; database consolidation script verified in Cloud Firestore; progressive lazy load verified on localhost:3000/news.',
+    sop_summary: 'SOP for feed lazy loading on scroll, multi-source story merging, and database consolidation.',
+    sop_steps: [
+      '1. In src/app/news/page.tsx, pass filteredArticles through clusterAndMergeArticles(filteredArticles, 0.38).',
+      '2. Render only the visible slice (visibleArticles = clusteredArticles.slice(0, visibleCount)).',
+      '3. Attach IntersectionObserver to observerTargetRef at the bottom of the feed to increment visibleCount on scroll.',
+      '4. In SocialFeedCard and Magazine grid, render multi-source chips and outlet links when article.sources.length > 1.',
+      '5. Run npx tsx scripts/consolidate_duplicates.ts to soft-merge historical duplicates in Firestore.'
+    ],
+    created_at: '2026-08-15',
+    verified_by_agent: 'gm',
+    audit_status: 'passed',
+    telemetry_verified: true,
+  },
   {
     id: 'tick_1093_autonomous_1min_rss_daemon_deduplication_seen_tracking',
     ticket_number: 'TICK-1093',

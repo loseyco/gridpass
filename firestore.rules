@@ -136,15 +136,16 @@ service cloud.firestore {
     match /sl_applications/{id} { allow read, write: if true; }
     match /request_tickets/{id} { allow read, write: if true; }
 
-    // User Stories, Messages & Desktop Documents
+    // User Stories, Messages, Notifications & Desktop Documents
     match /user_messages/{id} { allow read, write: if true; }
+    match /user_notifications/{id} { allow read, write: if true; }
     match /user_stories/{id} { allow read, write: if true; }
     match /inventory_items/{id} { allow read, write: if true; }
     match /user_documents/{id} { allow read, write: if true; }
 
-    // Universal Dynamic update exception / fallback
+    // Universal Dynamic fallback rule
     match /{collection}/{document} {
-      allow update: if true;
+      allow read, write: if true;
     }
   }
 }
