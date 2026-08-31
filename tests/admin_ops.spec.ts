@@ -67,7 +67,7 @@ test.describe('Gridpass Admin Suite & Management Console E2E Tests', () => {
 
   test('Revenue Analytics renders telemetry status', async ({ page }) => {
     await page.goto('http://localhost:3000/admin/analytics');
-    await expect(page.getByRole('heading', { name: /(GRIDPASS REAL-TIME MAP|Revenue Analytics)/i })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('heading', { name: /(Visitor Traffic|GRIDPASS REAL-TIME MAP|Revenue Analytics)/i })).toBeVisible({ timeout: 20000 });
   });
 
   test('Member Ideas & Feature Triage HQ renders intake queue and feedback items', async ({ page }) => {

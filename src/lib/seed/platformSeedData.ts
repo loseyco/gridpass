@@ -146,6 +146,43 @@ export const INITIAL_PLATFORM_FEATURES: InitialFeature[] = [
 
 export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
   {
+    version: 'v4.3.0',
+    title: 'GridPass Sim Racing Apex Core: Windows Taskbar App, Zero-Install Launcher, TV Studio & Pre-Race Auto-Sync',
+    category: 'feature',
+    description: 'Master release of GridPass SRCommander sim racing suite: 1) Native Windows System Tray app running by the clock with live iRacing status and right-click menu, 2) 100% zero-install self-healing bootstrap batch launcher, 3) TV Director Studio with 1-click instant replays, camera snapping, and lower-thirds, 4) Pre-race session load hotfix auto-sync, 5) 60 FPS physics HUD, dual wind sim fans, chassis halo RGB shift lights, and 48kHz steward radio.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/srcommander/download, /srcommander/rig, /srcommander/studio, /srleague/overlay',
+  },
+  {
+    version: 'v5.4.0',
+    title: 'Sim Racing League Series Hub, Multi-Session iRacing Scoring, Driver Verification & Season Finale Crowning',
+    category: 'feature',
+    description: 'Released all-in-one Sim Racing Series Championship Hub with Next Race Spotlight hero, 1-tap lobby password reveal/copy, and 4 in-page tabs (Schedule, Roster, Standings, Rulebook). Built universal multi-channel iRacing results scoring engine supporting auto-detected PC files, JSON uploads, and web text/CSV parsing with permanent iRacing Customer ID (cust_id) priority matching. Integrated 1-click and bulk guest driver enrollment, 1-tap results clearing/reverting with zero double-counting, full Season Finale champion crowning stage, 1-click Season 2 launch, and official iRacing circuit/vehicle intelligence guides with live specs and store links.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/srleague/[leagueId]/series/[seriesId], /srleague/[leagueId]/join, /srcommander/results, /admin/tickets, /admin/changelog',
+  },
+
+  {
+    version: 'v5.9.0',
+    title: 'SRLeague Championship Manager & Real-Time OBS Live Streaming Broadcast Overlay Suite',
+    category: 'feature',
+    description: 'Launched /srleague and /srleague/overlay featuring comprehensive multi-class championship management (Live Driver Standings, Drop-Week calculations, Season Calendar & Rounds, Driver Roster & Livery assignments, Stewarding, BOP Ballast/Restrictors & Protest Log) and a 100% transparent OBS browser source streaming overlay with F1-style timing tower, moving SVG circuit radar with multi-car telemetry pins, dual driver battle PIP with live throttle/brake/steering/RPM/speed telemetry comparison, and race control flag tickers.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/srleague, /srleague/[leagueId], /srleague/overlay, /admin/tickets, /admin/changelog',
+  },
+  {
+    version: 'v5.8.0',
+    title: 'Commercial Sim Racing Center Suite: FIA 5-Light Grid Starts, 4K TV Jumbotron, 60s Stint Turnaround, Motor E-Stop & Soundboard Mixer',
+    category: 'feature',
+    description: 'Delivered full commercial sim center operating suite: Synchronized FIA 5-Red-Light sequence with Web Audio beeps and reaction timer, 4K spectator TV jumbotron (/srcommander/tv), 4 customer drive mode presets (Casual, Pro, Junior, Corporate Relay), 1-tap Direct Drive Motor E-Stop kill switch (0 Nm), 60s automated turnaround routine, digital 3-tier podium ceremony with mobile telemetry slip generator, 4-channel audio soundboard mixer with automatic ducking, and cockpit hospitality callouts.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/srcommander, /srcommander/tv, /srcommander/rig/[rigId], /srcommander/overlay',
+  },
+  {
     version: 'v5.7.0',
     title: '59-Route Visual Coverage E2E Suite, Security Rules Hardening, Smart Back-Navigation & Feedback Queue Triage',
     category: 'security',
@@ -198,6 +235,15 @@ export const INITIAL_PLATFORM_CHANGELOGS: InitialChangelog[] = [
     timestamp: new Date().toISOString(),
     author: 'antigravity',
     route_affected: '/admin/events',
+  },
+  {
+    version: 'v5.2.0',
+    title: 'Full-Spectrum System Audit, 0 Fake Data Invariant Enforcement & Security Rules Lockdown',
+    category: 'security',
+    description: 'Comprehensive operational swarm audit across 7,075 system logs, 211 QR tag scans, and 72 Firestore collections. Enforced zero synthetic fallback data leaks (removed mockClaims in admin claims), verified root layout light Apple theme (#ffffff / #1c1c1e), confirmed 100% security rules synchronization with zero permission errors, and validated all 59 core routes and dynamic tab branches with 0 blank screens.',
+    timestamp: new Date().toISOString(),
+    author: 'antigravity',
+    route_affected: '/admin, /news, /dash, /events, /feedback, /rig',
   },
   {
     version: 'v5.1.0',

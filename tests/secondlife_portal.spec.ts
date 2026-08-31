@@ -12,7 +12,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Apply tab rendering and form interaction', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=apply');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Title / Header verification
     await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
@@ -27,7 +27,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Staff tab rendering', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=staff');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
@@ -40,7 +40,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Schedule tab rendering', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
@@ -53,7 +53,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Applications tab rendering', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=applications');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
     
@@ -63,7 +63,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Resort Photo Gallery tab category pills & photo grid rendering', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=gallery');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Title / Header verification
     await expect(page.locator('h1, h2, h3').first()).toContainText(/Skinny Dip Inn/i);
@@ -94,7 +94,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Lightbox modal preview interaction', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=gallery');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Click on photo card
     await page.getByRole('heading', { name: 'Sunset Beach Deck & Pool' }).click();
@@ -111,7 +111,7 @@ test.describe('Second Life Venue Portal & Tabs E2E Suite', () => {
 
   test('Skinny Dip Inn - Add Photo modal interaction', async ({ page }) => {
     await page.goto('http://localhost:3000/secondlife/skinny-dip-inn?tab=gallery');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Open Add Photo Modal
     await page.getByRole('button', { name: /Add Photo/i }).click();
