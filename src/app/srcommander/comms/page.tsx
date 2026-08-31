@@ -5,6 +5,17 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ToastContext";
 import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
+import {
   Radio,
   Mic,
   MicOff,
@@ -136,9 +147,9 @@ interface ChatMessage {
   time: string;
   sender: string;
   num: string;
-  channel: "car_radio" | "spotter" | "steward" | "paddock";
+  channel: string;
   text: string;
-  type: "text" | "telemetry_share" | "incident" | "steward_alert";
+  type: string;
   badge?: string;
 }
 
@@ -208,7 +219,7 @@ function playMotorsportBeep(type: "ptt_on" | "ptt_off" | "steward_chime") {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   MAIN COMPONENT INNER
+   MAIN COMPONENT INNER (STRICT ZERO SYNTHETIC FALLBACKS)
    ───────────────────────────────────────────────────────────── */
 function SRCommanderCommsDesktopContent() {
   const searchParams = useSearchParams();
@@ -219,7 +230,7 @@ function SRCommanderCommsDesktopContent() {
   const [envMode, setEnvMode] = useState<"live" | "local">("live");
   const [unitSystem, setUnitSystem] = useState<"mph" | "kph">("mph");
 
-  // WebSocket Live Connection
+  // WebSocket Live Connection to Python Daemon (ws://127.0.0.1:8080)
   const [isWsConnected, setIsWsConnected] = useState<boolean>(false);
   const [rawTelemetry, setRawTelemetry] = useState<LiveBridgePayload | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -231,54 +242,59 @@ function SRCommanderCommsDesktopContent() {
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [stewardAnnouncementText, setStewardAnnouncementText] = useState<string>("");
   const [chatInput, setChatInput] = useState<string>("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: "m-1",
-      time: "14:22:04",
-      sender: "Race Control",
-      num: "00",
-      channel: "steward",
-      text: "⚡ Mandatory Drivers Briefing concluded. Green flag in 10 minutes.",
-      type: "steward_alert",
-      badge: "STEWARD",
-    },
-    {
-      id: "m-2",
-      time: "14:23:18",
-      sender: "AI Spotter (Chief)",
-      num: "48",
-      channel: "spotter",
-      text: "Radio check 5x5. Track temp is 88°F. Wind 4 mph North.",
-      type: "text",
-      badge: "SPOTTER",
-    },
-    {
-      id: "m-3",
-      time: "14:24:02",
-      sender: "Marcus V. (Engineer)",
-      num: "48",
-      channel: "car_radio",
-      text: "Setup map 'Sprint-Qual-A' applied. Brake balance set to 54.2%.",
-      type: "text",
-      badge: "CREW",
-    },
-  ]);
+  const [firestoreMessages, setFirestoreMessages] = useState<ChatMessage[]>([]);
 
   // Tab 3: Rig Hardware State
-  const [fanPower, setFanPower] = useState<number>(75);
+  const [fanPower, setFanPower] = useState<number>(0);
   const [isTestingFan, setIsTestingFan] = useState<boolean>(false);
-  const [haloMode, setHaloMode] = useState<string>("DYNAMIC_RACING");
-  const [haloBrightness, setHaloBrightness] = useState<number>(100);
+  const [haloMode, setHaloMode] = useState<string>("OFF");
+  const [haloBrightness, setHaloBrightness] = useState<number>(0);
   const [isTestingLed, setIsTestingLed] = useState<boolean>(false);
 
   // Tab 4: Broadcast Studio State
-  const [activeCameraGroup, setActiveCameraGroup] = useState<string>("TV1");
-
-  // Fallback Simulation State
-  const [simTick, setSimTick] = useState<number>(0);
+  const [activeCameraGroup, setActiveCameraGroup] = useState<string>("LIVE");
 
   /* ─────────────────────────────────────────────────────────────
-     1. WEBSOCKET CONNECTION & COMMAND DISPATCHER
+     1. REAL-TIME FIRESTORE RADIO MESSAGES LISTENER
+     ───────────────────────────────────────────────────────────── */
+  useEffect(() => {
+    try {
+      const q = query(
+        collection(db, "paddock_messages"),
+        orderBy("created_at", "desc"),
+        limit(40)
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const msgs: ChatMessage[] = [];
+        snapshot.forEach((doc) => {
+          const d = doc.data();
+          msgs.push({
+            id: doc.id,
+            time: d.created_at?.toDate
+              ? d.created_at.toDate().toLocaleTimeString("en-US", { hour12: false })
+              : new Date().toLocaleTimeString("en-US", { hour12: false }),
+            sender: d.sender_name || "Unknown Driver",
+            num: d.car_number || "00",
+            channel: d.channel || "paddock",
+            text: d.text || "",
+            type: d.type || "text",
+            badge: d.badge || (d.channel === "steward" ? "STEWARD" : "RADIO"),
+          });
+        });
+        setFirestoreMessages(msgs.reverse());
+      }, (err) => {
+        console.warn("Firestore radio messages subscription:", err);
+      });
+
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn("Firestore listener setup error:", err);
+    }
+  }, []);
+
+  /* ─────────────────────────────────────────────────────────────
+     2. WEBSOCKET CONNECTION TO PYTHON DAEMON
      ───────────────────────────────────────────────────────────── */
   useEffect(() => {
     let reconnectTimer: NodeJS.Timeout;
@@ -331,26 +347,6 @@ function SRCommanderCommsDesktopContent() {
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSimTick((prev) => prev + 1);
-    }, 100);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    let vuInterval: NodeJS.Timeout;
-    if (isTransmitting && !isMuted) {
-      vuInterval = setInterval(() => {
-        const baseLevel = 45 + Math.sin(Date.now() / 80) * 35 + Math.random() * 20;
-        setAudioLevel(Math.min(100, Math.max(10, Math.floor(baseLevel))));
-      }, 50);
-    } else {
-      setAudioLevel(0);
-    }
-    return () => clearInterval(vuInterval);
-  }, [isTransmitting, isMuted]);
-
   // Keyboard Spacebar PTT Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -381,77 +377,43 @@ function SRCommanderCommsDesktopContent() {
     };
   }, []);
 
-  // Build Unified Telemetry Data
-  const currentTelemetry = useMemo(() => {
-    if (rawTelemetry && rawTelemetry.focused_car) {
-      return {
-        isLive: true,
-        carNum: rawTelemetry.focused_car.num || "48",
-        driverName: rawTelemetry.focused_car.name || "PJ Losey",
-        carName: rawTelemetry.focused_car.car_name || "Dallara P217 LMP2",
-        trackName: rawTelemetry.session_info?.track_name || "Sebring International Raceway",
-        trackConfig: rawTelemetry.session_info?.track_config || "12 Hour Layout",
-        sessionPhase: rawTelemetry.session_info?.session_type?.toUpperCase() || "PRACTICE",
-        sessionCountdown: rawTelemetry.session_info?.time_remaining_str || "24:18",
-        flagState: rawTelemetry.session_info?.flag_state || "GREEN",
-        speedMph: Math.round(rawTelemetry.focused_car.speed_mph || 0),
-        speedKph: Math.round(rawTelemetry.focused_car.speed_kph || 0),
-        gear: rawTelemetry.focused_car.gear === 0 ? "N" : rawTelemetry.focused_car.gear === -1 ? "R" : String(rawTelemetry.focused_car.gear || 4),
-        rpm: Math.round(rawTelemetry.focused_car.rpm || 0),
-        rpmMax: rawTelemetry.focused_car.rpm_max || 8200,
-        throttlePct: Math.round((rawTelemetry.focused_car.throttle_pct || 0) * 100),
-        brakePct: Math.round((rawTelemetry.focused_car.brake_pct || 0) * 100),
-        steerDeg: Math.round(rawTelemetry.focused_car.steer_deg || 0),
-        deltaBest: rawTelemetry.focused_car.delta_best || -0.218,
-        fuelLiters: rawTelemetry.focused_car.fuel_liters || 18.6,
-        bestLapStr: rawTelemetry.focused_car.best_lap_str || "1:44.892",
-        lastLapStr: rawTelemetry.focused_car.last_lap_str || "1:45.176",
-        pos: rawTelemetry.focused_car.pos || 1,
-        timingTower: rawTelemetry.timing_tower || [],
-      };
-    }
-
-    const cycle = (simTick % 120) / 120;
-    const simGear = cycle < 0.15 ? "2" : cycle < 0.35 ? "3" : cycle < 0.6 ? "4" : cycle < 0.85 ? "5" : "6";
-    const simRpm = Math.floor(5800 + Math.sin(simTick * 0.25) * 1800 + 400);
-    const simSpeed = Math.floor(112 + Math.sin(simTick * 0.15) * 42);
-    const simThrottle = Math.floor(75 + Math.sin(simTick * 0.3) * 25);
-    const simBrake = simThrottle > 85 ? 0 : Math.floor(Math.abs(Math.cos(simTick * 0.3)) * 40);
+  /* ─────────────────────────────────────────────────────────────
+     3. STRICT RAW TELEMETRY EVALUATION (ZERO SYNTHETIC DATA)
+     ───────────────────────────────────────────────────────────── */
+  const telemetry = useMemo(() => {
+    const isLive = Boolean(rawTelemetry?.connected && rawTelemetry.focused_car);
+    const fc = rawTelemetry?.focused_car;
+    const si = rawTelemetry?.session_info;
 
     return {
-      isLive: false,
-      carNum: "48",
-      driverName: "PJ Losey",
-      carName: "Dallara P217 LMP2",
-      trackName: "Sebring International Raceway",
-      trackConfig: "12 Hour Grand Prix Circuit",
-      sessionPhase: "QUALIFYING",
-      sessionCountdown: "18:42 REMAINING",
-      flagState: "GREEN",
-      speedMph: simSpeed,
-      speedKph: Math.round(simSpeed * 1.60934),
-      gear: simGear,
-      rpm: simRpm,
-      rpmMax: 8200,
-      throttlePct: simThrottle,
-      brakePct: simBrake,
-      steerDeg: Math.round(Math.sin(simTick * 0.1) * 22),
-      deltaBest: -0.284,
-      fuelLiters: 19.4,
-      bestLapStr: "1:44.892",
-      lastLapStr: "1:45.176",
-      pos: 1,
-      timingTower: [
-        { car_idx: 1, pos: 1, name: "PJ Losey", num: "48", team: "GridPass Works", car_name: "LMP2", speed_mph: simSpeed, speed_kph: 240, best_lap_str: "1:44.892", last_lap_str: "1:45.176", gap_str: "LEADER", in_pit: false, is_fastest: true, is_focused: true },
-        { car_idx: 2, pos: 2, name: "Marcus Vance", num: "11", team: "Apex Racing", car_name: "LMP2", speed_mph: 148, speed_kph: 238, best_lap_str: "1:45.176", last_lap_str: "1:45.320", gap_str: "+0.284", in_pit: false, is_fastest: false, is_focused: false },
-        { car_idx: 3, pos: 3, name: "Sarah Koenig", num: "24", team: "Velox GT", car_name: "LMP2", speed_mph: 146, speed_kph: 235, best_lap_str: "1:45.410", last_lap_str: "1:45.890", gap_str: "+0.518", in_pit: false, is_fastest: false, is_focused: false },
-        { car_idx: 4, pos: 4, name: "Liam O'Connor", num: "7", team: "Celtic Simsport", car_name: "LMP2", speed_mph: 144, speed_kph: 231, best_lap_str: "1:45.920", last_lap_str: "1:46.104", gap_str: "+1.028", in_pit: true, is_fastest: false, is_focused: false },
-      ],
+      isLive,
+      carNum: fc?.num || "--",
+      driverName: fc?.name || "No Driver Focused",
+      carName: fc?.car_name || "No Vehicle Detected",
+      trackName: si?.track_name || "No Active Sim Track",
+      trackConfig: si?.track_config || "",
+      sessionPhase: si?.session_type ? si.session_type.toUpperCase() : "STANDBY",
+      sessionCountdown: si?.time_remaining_str || "--:--",
+      flagState: si?.flag_state || "NONE",
+      speedMph: fc ? Math.round(fc.speed_mph || 0) : 0,
+      speedKph: fc ? Math.round(fc.speed_kph || 0) : 0,
+      gear: fc ? (fc.gear === 0 ? "N" : fc.gear === -1 ? "R" : String(fc.gear || "N")) : "N",
+      rpm: fc ? Math.round(fc.rpm || 0) : 0,
+      rpmMax: fc?.rpm_max || 8000,
+      throttlePct: fc ? Math.round((fc.throttle_pct || 0) * 100) : 0,
+      brakePct: fc ? Math.round((fc.brake_pct || 0) * 100) : 0,
+      steerDeg: fc ? Math.round(fc.steer_deg || 0) : 0,
+      deltaBest: fc?.delta_best || 0,
+      fuelLiters: fc?.fuel_liters || 0,
+      bestLapStr: fc?.best_lap_str || "--:--.---",
+      lastLapStr: fc?.last_lap_str || "--:--.---",
+      pos: fc?.pos || 0,
+      timingTower: rawTelemetry?.timing_tower || [],
     };
-  }, [rawTelemetry, simTick]);
+  }, [rawTelemetry]);
 
   /* ─────────────────────────────────────────────────────────────
-     4. HANDLERS
+     4. USER ACTIONS & FIRESTORE RADIO TRANSMISSION
      ───────────────────────────────────────────────────────────── */
   const handlePttToggle = (transmitting: boolean) => {
     setIsTransmitting(transmitting);
@@ -468,78 +430,76 @@ function SRCommanderCommsDesktopContent() {
     });
   };
 
-  const handleSendStewardAnnouncement = (customText?: string) => {
-    const textToSend = customText || stewardAnnouncementText;
-    if (!textToSend.trim()) return;
-
-    playMotorsportBeep("steward_chime");
-    sendWsCommand({ action: "ANNOUNCE_RACE_CONTROL", text: textToSend });
-
-    const newMsg: ChatMessage = {
-      id: `m-${Date.now()}`,
-      time: new Date().toLocaleTimeString("en-US", { hour12: false }),
-      sender: "Race Control (Broadcast)",
-      num: "00",
-      channel: "steward",
-      text: textToSend,
-      type: "steward_alert",
-      badge: "STEWARD",
-    };
-    setChatMessages((prev) => [...prev, newMsg]);
-    setStewardAnnouncementText("");
-
-    showToast({
-      title: "Race Control Announcement Dispatched",
-      message: textToSend,
-      icon: "📢",
-    });
-  };
-
-  const handleSendChatMessage = () => {
+  const handleSendChatMessage = async () => {
     if (!chatInput.trim()) return;
-    const newMsg: ChatMessage = {
-      id: `m-${Date.now()}`,
-      time: new Date().toLocaleTimeString("en-US", { hour12: false }),
-      sender: currentTelemetry.driverName,
-      num: currentTelemetry.carNum,
-      channel: selectedChannel,
-      text: chatInput,
-      type: "text",
-      badge: selectedChannel === "car_radio" ? "CAR" : selectedChannel === "spotter" ? "SPOTTER" : "DRIVER",
-    };
-    setChatMessages((prev) => [...prev, newMsg]);
+    const textToSend = chatInput.trim();
     setChatInput("");
+
+    try {
+      await addDoc(collection(db, "paddock_messages"), {
+        sender_name: telemetry.driverName !== "No Driver Focused" ? telemetry.driverName : "Driver",
+        car_number: telemetry.carNum !== "--" ? telemetry.carNum : "00",
+        channel: selectedChannel,
+        text: textToSend,
+        type: "text",
+        badge: selectedChannel === "car_radio" ? "CAR" : selectedChannel === "spotter" ? "SPOTTER" : "DRIVER",
+        created_at: serverTimestamp(),
+      });
+
+      showToast({
+        title: "Radio Transmission Logged",
+        message: textToSend,
+        icon: "🎙️",
+      });
+    } catch (err: any) {
+      showToast({
+        title: "Transmission Error",
+        message: err?.message || "Failed to post message",
+        icon: "⚠️",
+      });
+    }
   };
 
-  const handleShareTelemetrySnippet = (type: "delta" | "incident" | "fuel" | "tires") => {
-    let snippetText = "";
-    if (type === "delta") {
-      snippetText = `⏱️ Car #${currentTelemetry.carNum} Lap Delta: ${currentTelemetry.deltaBest < 0 ? "-" : "+"}${Math.abs(currentTelemetry.deltaBest).toFixed(3)}s vs PB (${currentTelemetry.bestLapStr})`;
-    } else if (type === "incident") {
-      snippetText = `💥 Car #${currentTelemetry.carNum} Incident Report: Contact/Off-track Turn 7 exit. Telemetry snapshot logged.`;
-    } else if (type === "fuel") {
-      snippetText = `⛽ Car #${currentTelemetry.carNum} Fuel Status: ${currentTelemetry.fuelLiters.toFixed(1)}L remaining (~6.8 laps). Target pit window Lap 18.`;
-    } else if (type === "tires") {
-      snippetText = `🛞 Car #${currentTelemetry.carNum} Tires: FL: 198°F (24.2 PSI) | FR: 204°F (24.8 PSI) | RL: 189°F | RR: 194°F`;
+  const handleShareTelemetrySnippet = async (type: "delta" | "fuel") => {
+    if (!telemetry.isLive) {
+      showToast({
+        title: "Sim Offline",
+        message: "Connect iRacing to share real telemetry.",
+        icon: "⚠️",
+      });
+      return;
     }
 
-    const newMsg: ChatMessage = {
-      id: `m-${Date.now()}`,
-      time: new Date().toLocaleTimeString("en-US", { hour12: false }),
-      sender: currentTelemetry.driverName,
-      num: currentTelemetry.carNum,
-      channel: selectedChannel,
-      text: snippetText,
-      type: "telemetry_share",
-      badge: "TELEMETRY",
-    };
-    setChatMessages((prev) => [...prev, newMsg]);
+    let snippetText = "";
+    if (type === "delta") {
+      snippetText = `⏱️ Car #${telemetry.carNum} Lap Delta: ${telemetry.deltaBest < 0 ? "-" : "+"}${Math.abs(telemetry.deltaBest).toFixed(3)}s vs PB (${telemetry.bestLapStr})`;
+    } else if (type === "fuel") {
+      snippetText = `⛽ Car #${telemetry.carNum} Fuel Status: ${telemetry.fuelLiters.toFixed(1)}L remaining.`;
+    }
 
-    showToast({
-      title: "Telemetry Shared to Channel",
-      message: snippetText,
-      icon: "📡",
-    });
+    try {
+      await addDoc(collection(db, "paddock_messages"), {
+        sender_name: telemetry.driverName,
+        car_number: telemetry.carNum,
+        channel: selectedChannel,
+        text: snippetText,
+        type: "telemetry_share",
+        badge: "TELEMETRY",
+        created_at: serverTimestamp(),
+      });
+
+      showToast({
+        title: "Telemetry Shared",
+        message: snippetText,
+        icon: "📡",
+      });
+    } catch (err: any) {
+      showToast({
+        title: "Share Error",
+        message: err?.message || "Failed to share telemetry",
+        icon: "⚠️",
+      });
+    }
   };
 
   const handleTestFanBurst = () => {
@@ -582,7 +542,7 @@ function SRCommanderCommsDesktopContent() {
     });
   };
 
-  const rpmPct = Math.min(100, Math.max(0, (currentTelemetry.rpm / currentTelemetry.rpmMax) * 100));
+  const rpmPct = telemetry.rpmMax > 0 ? Math.min(100, Math.max(0, (telemetry.rpm / telemetry.rpmMax) * 100)) : 0;
   const isRedline = rpmPct >= 94;
 
   const renderTachometerLeds = () => {
@@ -592,7 +552,7 @@ function SRCommanderCommsDesktopContent() {
     return (
       <div className="flex items-center justify-between gap-1 sm:gap-1.5 w-full">
         {Array.from({ length: totalLeds }).map((_, i) => {
-          const isActive = i < activeCount;
+          const isActive = i < activeCount && telemetry.isLive;
           let ledColorClass = "bg-neutral-200 border-neutral-300";
 
           if (isActive) {
@@ -643,9 +603,9 @@ function SRCommanderCommsDesktopContent() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5 text-[11px] font-mono text-neutral-500">
-                  <span className="font-bold text-neutral-800">{currentTelemetry.trackName}</span>
+                  <span className="font-bold text-neutral-800">{telemetry.trackName}</span>
                   <span>•</span>
-                  <span>{currentTelemetry.carName}</span>
+                  <span>{telemetry.carName}</span>
                 </div>
               </div>
             </div>
@@ -654,13 +614,13 @@ function SRCommanderCommsDesktopContent() {
             <div className="md:hidden">
               <span
                 className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border flex items-center gap-1.5 ${
-                  isWsConnected
+                  telemetry.isLive
                     ? "bg-emerald-50 text-emerald-700 border-emerald-300"
                     : "bg-neutral-100 text-neutral-600 border-neutral-200"
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full ${isWsConnected ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"}`} />
-                <span>{isWsConnected ? "60 FPS" : "SIM"}</span>
+                <span className={`w-2 h-2 rounded-full ${telemetry.isLive ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"}`} />
+                <span>{telemetry.isLive ? "60 FPS" : "STANDBY"}</span>
               </span>
             </div>
           </div>
@@ -669,22 +629,22 @@ function SRCommanderCommsDesktopContent() {
           <div className="hidden md:flex items-center gap-3">
             <div
               className={`px-3.5 py-1.5 rounded-2xl text-xs font-mono font-bold uppercase tracking-wider border flex items-center gap-2 shadow-2xs ${
-                isWsConnected
+                telemetry.isLive
                   ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                   : "bg-neutral-100 text-neutral-600 border-neutral-300"
               }`}
             >
-              <span className={`w-2.5 h-2.5 rounded-full ${isWsConnected ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"}`} />
-              <span>{isWsConnected ? "🟢 60 FPS CONNECTED" : "⚪ STANDBY SIMULATION"}</span>
+              <span className={`w-2.5 h-2.5 rounded-full ${telemetry.isLive ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"}`} />
+              <span>{telemetry.isLive ? "🟢 60 FPS LIVE" : "⚪ SIM STANDBY (WAITING FOR IRACING)"}</span>
             </div>
 
             <div className="px-3.5 py-1.5 rounded-2xl bg-neutral-50 border border-neutral-200 text-xs font-mono flex items-center gap-2 shadow-2xs">
               <span className="px-2 py-0.5 rounded-md bg-red-600 text-white font-black text-[10px] uppercase">
-                {currentTelemetry.sessionPhase}
+                {telemetry.sessionPhase}
               </span>
-              <span className="font-bold text-neutral-800">{currentTelemetry.sessionCountdown}</span>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-black text-[10px] uppercase border border-emerald-300">
-                FLAG: {currentTelemetry.flagState}
+              <span className="font-bold text-neutral-800">{telemetry.sessionCountdown}</span>
+              <span className="px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 font-bold text-[10px] uppercase border border-neutral-300">
+                FLAG: {telemetry.flagState}
               </span>
             </div>
 
@@ -782,7 +742,7 @@ function SRCommanderCommsDesktopContent() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          3. MAIN TAB CONTENT PANELS
+          3. MAIN TAB CONTENT PANELS (ZERO SYNTHETIC DATA)
          ───────────────────────────────────────────────────────────── */}
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex-1">
         {/* ═════════════════════════════════════════════════════════════
@@ -794,7 +754,7 @@ function SRCommanderCommsDesktopContent() {
             <div className="p-4 bg-red-50 border-2 border-red-300 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black shadow-md shadow-red-600/30 shrink-0">
-                  <Megaphone className="w-5 h-5 animate-pulse" />
+                  <Megaphone className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -822,11 +782,10 @@ function SRCommanderCommsDesktopContent() {
               </div>
             </div>
 
-            {/* Radio Deck: Left Control Panel + Right Chat Deck */}
+            {/* Radio Deck */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: Channels & PTT Engine (5 cols) */}
+              {/* Left Column: Channels & PTT Engine */}
               <div className="lg:col-span-5 space-y-4">
-                {/* 1. Channel Selector */}
                 <div className="p-5 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-3 shadow-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
@@ -848,14 +807,14 @@ function SRCommanderCommsDesktopContent() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center font-bold text-xs">
-                          #48
+                          #{telemetry.carNum !== "--" ? telemetry.carNum : "CAR"}
                         </div>
                         <div>
                           <strong className="text-xs font-black uppercase text-neutral-900 block">
-                            Team Radio Car #48
+                            Team Radio {telemetry.carNum !== "--" ? `Car #${telemetry.carNum}` : "(Assigned on Grid)"}
                           </strong>
                           <span className="text-[10px] text-neutral-500 font-mono">
-                            Private Driver &amp; Race Engineer Feed (462.5625 MHz)
+                            Private Driver &amp; Race Engineer Feed
                           </span>
                         </div>
                       </div>
@@ -936,7 +895,7 @@ function SRCommanderCommsDesktopContent() {
                   </div>
                 </div>
 
-                {/* 2. Push-To-Talk Indicator & Active VU Meter */}
+                {/* Push-To-Talk Indicator */}
                 <div className="p-5 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
@@ -955,7 +914,6 @@ function SRCommanderCommsDesktopContent() {
                     </button>
                   </div>
 
-                  {/* Big Interactive PTT Button */}
                   <button
                     onMouseDown={() => handlePttToggle(true)}
                     onMouseUp={() => handlePttToggle(false)}
@@ -975,33 +933,10 @@ function SRCommanderCommsDesktopContent() {
                       Hold Spacebar or Wheel Button 3 to broadcast
                     </span>
                   </button>
-
-                  {/* Real-time Dynamic VU Audio Meter */}
-                  <div className="space-y-1.5 bg-white p-3.5 rounded-2xl border border-neutral-200">
-                    <div className="flex items-center justify-between text-[11px] font-mono">
-                      <span className="text-neutral-500 font-bold">Microphone VU Level:</span>
-                      <span className="font-bold text-neutral-800">{isTransmitting ? `${audioLevel}%` : "0% (Idle)"}</span>
-                    </div>
-                    <div className="flex items-center gap-1 h-3">
-                      {Array.from({ length: 20 }).map((_, i) => {
-                        const barPct = (i + 1) * 5;
-                        const isBarActive = audioLevel >= barPct;
-                        let colorClass = "bg-neutral-200";
-                        if (isBarActive) {
-                          if (i < 12) colorClass = "bg-emerald-500";
-                          else if (i < 16) colorClass = "bg-amber-400";
-                          else colorClass = "bg-red-600";
-                        }
-                        return (
-                          <div key={i} className={`flex-1 h-full rounded-xs transition-all duration-75 ${colorClass}`} />
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Right Column: Telemetry-Linked Interactive Chat Deck (7 cols) */}
+              {/* Right Column: Live Firestore Radio Chat Feed */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="p-5 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-4 shadow-xs flex flex-col h-[560px]">
                   {/* Chat Header */}
@@ -1010,82 +945,85 @@ function SRCommanderCommsDesktopContent() {
                       <MessageSquare className="w-4 h-4 text-red-600" />
                       <strong className="text-xs font-black uppercase text-neutral-900">
                         {selectedChannel === "car_radio"
-                          ? "Car #48 Team Radio Feed"
+                          ? "Team Radio Channel"
                           : selectedChannel === "spotter"
-                          ? "Spotter Tactical Voice Log"
+                          ? "Spotter Tactical Channel"
                           : selectedChannel === "steward"
-                          ? "Official Steward Dispatch Feed"
+                          ? "Steward Dispatch Feed"
                           : "Paddock Open Chat"}
                       </strong>
                     </div>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleShareTelemetrySnippet("delta")}
-                        className="px-2 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 rounded-lg text-[10px] font-mono font-bold text-neutral-700 transition cursor-pointer shadow-2xs"
-                        title="Share Lap Delta"
+                        disabled={!telemetry.isLive}
+                        className="px-2 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 rounded-lg text-[10px] font-mono font-bold text-neutral-700 transition cursor-pointer shadow-2xs disabled:opacity-40"
                       >
                         + Share Delta
                       </button>
                       <button
                         onClick={() => handleShareTelemetrySnippet("fuel")}
-                        className="px-2 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 rounded-lg text-[10px] font-mono font-bold text-neutral-700 transition cursor-pointer shadow-2xs"
-                        title="Share Fuel"
+                        disabled={!telemetry.isLive}
+                        className="px-2 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 rounded-lg text-[10px] font-mono font-bold text-neutral-700 transition cursor-pointer shadow-2xs disabled:opacity-40"
                       >
-                        + Fuel
-                      </button>
-                      <button
-                        onClick={() => handleShareTelemetrySnippet("tires")}
-                        className="px-2 py-1 bg-white hover:bg-neutral-100 border border-neutral-300 rounded-lg text-[10px] font-mono font-bold text-neutral-700 transition cursor-pointer shadow-2xs"
-                        title="Share Tires"
-                      >
-                        + Tires
+                        + Share Fuel
                       </button>
                     </div>
                   </div>
 
                   {/* Messages Feed */}
                   <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 font-mono text-xs">
-                    {chatMessages.map((msg) => {
-                      const isSteward = msg.channel === "steward" || msg.type === "steward_alert";
-                      const isTelemetry = msg.type === "telemetry_share";
+                    {firestoreMessages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center p-6 text-neutral-400">
+                        <Radio className="w-8 h-8 mb-2 text-neutral-300" />
+                        <span className="text-xs font-bold uppercase">⚪ No Radio Messages Yet</span>
+                        <p className="text-[11px] font-sans text-neutral-500 mt-1">
+                          Hold PTT or type a message below to transmit to this channel.
+                        </p>
+                      </div>
+                    ) : (
+                      firestoreMessages.map((msg) => {
+                        const isSteward = msg.channel === "steward" || msg.type === "steward_alert";
+                        const isTelemetry = msg.type === "telemetry_share";
 
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`p-3 rounded-2xl border transition ${
-                            isSteward
-                              ? "bg-red-50/80 border-red-200 text-red-900"
-                              : isTelemetry
-                              ? "bg-purple-50/80 border-purple-200 text-purple-950"
-                              : "bg-white border-neutral-200 text-neutral-800 shadow-2xs"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="px-1.5 py-0.5 rounded bg-neutral-900 text-white font-black text-[9px]">
-                                #{msg.num}
-                              </span>
-                              <strong className="font-bold text-[11px] text-neutral-900">
-                                {msg.sender}
-                              </strong>
-                              {msg.badge && (
-                                <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase ${
-                                  msg.badge === "STEWARD"
-                                    ? "bg-red-600 text-white"
-                                    : msg.badge === "TELEMETRY"
-                                    ? "bg-purple-600 text-white"
-                                    : "bg-neutral-200 text-neutral-700"
-                                }`}>
-                                  {msg.badge}
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`p-3 rounded-2xl border transition ${
+                              isSteward
+                                ? "bg-red-50/80 border-red-200 text-red-900"
+                                : isTelemetry
+                                ? "bg-purple-50/80 border-purple-200 text-purple-950"
+                                : "bg-white border-neutral-200 text-neutral-800 shadow-2xs"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className="px-1.5 py-0.5 rounded bg-neutral-900 text-white font-black text-[9px]">
+                                  #{msg.num}
                                 </span>
-                              )}
+                                <strong className="font-bold text-[11px] text-neutral-900">
+                                  {msg.sender}
+                                </strong>
+                                {msg.badge && (
+                                  <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase ${
+                                    msg.badge === "STEWARD"
+                                      ? "bg-red-600 text-white"
+                                      : msg.badge === "TELEMETRY"
+                                      ? "bg-purple-600 text-white"
+                                      : "bg-neutral-200 text-neutral-700"
+                                  }`}>
+                                    {msg.badge}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-neutral-400">{msg.time}</span>
                             </div>
-                            <span className="text-[10px] text-neutral-400">{msg.time}</span>
+                            <p className="text-xs leading-relaxed font-sans text-neutral-800">{msg.text}</p>
                           </div>
-                          <p className="text-xs leading-relaxed font-sans text-neutral-800">{msg.text}</p>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
 
                   {/* Chat Input Bar */}
@@ -1097,7 +1035,7 @@ function SRCommanderCommsDesktopContent() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleSendChatMessage();
                       }}
-                      placeholder={`Transmit to ${selectedChannel.replace("_", " ")}...`}
+                      placeholder={`Transmit message to ${selectedChannel.replace("_", " ")}...`}
                       className="flex-1 px-4 py-2.5 bg-white border border-neutral-300 rounded-xl text-xs font-sans text-neutral-900 focus:outline-hidden focus:border-red-500 shadow-inner"
                     />
                     <button
@@ -1123,10 +1061,10 @@ function SRCommanderCommsDesktopContent() {
             <div className="p-6 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-4 shadow-xs text-center">
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-neutral-500 font-bold uppercase tracking-wider">
-                  Sequential Shift Tachometer (WS2812B Halo Engine)
+                  Sequential Shift Tachometer (Live SDK Telemetry)
                 </span>
                 <span className="font-bold text-neutral-800">
-                  {currentTelemetry.rpm.toLocaleString()} / {currentTelemetry.rpmMax.toLocaleString()} RPM ({Math.round(rpmPct)}%)
+                  {telemetry.isLive ? `${telemetry.rpm.toLocaleString()} / ${telemetry.rpmMax.toLocaleString()} RPM (${Math.round(rpmPct)}%)` : "⚪ Standby (0 RPM)"}
                 </span>
               </div>
 
@@ -1141,7 +1079,7 @@ function SRCommanderCommsDesktopContent() {
                   Active Gear
                 </span>
                 <div className="text-7xl font-black font-mono text-neutral-950 tracking-tighter">
-                  {currentTelemetry.gear}
+                  {telemetry.gear}
                 </div>
                 <span className="text-[11px] font-mono text-neutral-400">
                   Sequential Paddle Shift
@@ -1162,7 +1100,7 @@ function SRCommanderCommsDesktopContent() {
                   </button>
                 </div>
                 <div className="text-7xl font-black font-mono text-red-600 tracking-tighter">
-                  {unitSystem === "mph" ? currentTelemetry.speedMph : currentTelemetry.speedKph}
+                  {unitSystem === "mph" ? telemetry.speedMph : telemetry.speedKph}
                 </div>
                 <span className="text-[11px] font-mono text-neutral-500 font-bold uppercase">
                   {unitSystem.toUpperCase()} • GPS Ground Speed
@@ -1175,101 +1113,61 @@ function SRCommanderCommsDesktopContent() {
                   Delta vs Session Best
                 </span>
                 <div className={`text-6xl font-black font-mono tracking-tighter ${
-                  currentTelemetry.deltaBest < 0 ? "text-emerald-600" : "text-red-600"
+                  telemetry.isLive
+                    ? telemetry.deltaBest < 0 ? "text-emerald-600" : "text-red-600"
+                    : "text-neutral-400"
                 }`}>
-                  {currentTelemetry.deltaBest < 0 ? "-" : "+"}{Math.abs(currentTelemetry.deltaBest).toFixed(3)}s
+                  {telemetry.isLive
+                    ? `${telemetry.deltaBest < 0 ? "-" : "+"}${Math.abs(telemetry.deltaBest).toFixed(3)}s`
+                    : "0.000s"}
                 </div>
                 <span className="text-[11px] font-mono text-neutral-500">
-                  Best: <strong className="text-neutral-900">{currentTelemetry.bestLapStr}</strong> | Last: {currentTelemetry.lastLapStr}
+                  Best: <strong className="text-neutral-900">{telemetry.bestLapStr}</strong> | Last: {telemetry.lastLapStr}
                 </span>
               </div>
             </div>
 
-            {/* Lower Grid: Throttle/Brake Pedals + 4-Corner Tires */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Pedals Input Traces */}
-              <div className="p-6 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-4 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
-                    Pedals &amp; Steering Input Telemetry
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded">
-                    DirectInput 250Hz
-                  </span>
-                </div>
-
-                <div className="space-y-3 font-mono text-xs">
-                  {/* Throttle */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-emerald-700">THROTTLE:</span>
-                      <span className="font-bold text-neutral-900">{currentTelemetry.throttlePct}%</span>
-                    </div>
-                    <div className="w-full bg-neutral-200 h-3.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-emerald-500 h-full transition-all duration-75"
-                        style={{ width: `${currentTelemetry.throttlePct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Brake */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-red-700">BRAKE PRESSURE:</span>
-                      <span className="font-bold text-neutral-900">{currentTelemetry.brakePct}%</span>
-                    </div>
-                    <div className="w-full bg-neutral-200 h-3.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-red-600 h-full transition-all duration-75"
-                        style={{ width: `${currentTelemetry.brakePct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Steering */}
-                  <div className="pt-1 flex items-center justify-between text-neutral-600">
-                    <span>Steering Angle:</span>
-                    <strong className="text-neutral-900 font-bold">{currentTelemetry.steerDeg}°</strong>
-                  </div>
-                </div>
+            {/* Pedals & Inputs */}
+            <div className="p-6 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-4 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
+                  Pedals &amp; Steering Input Telemetry
+                </span>
+                <span className="text-[10px] font-mono font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded">
+                  DirectInput 250Hz
+                </span>
               </div>
 
-              {/* 4-Corner Tires */}
-              <div className="p-6 bg-neutral-50 border border-neutral-200 rounded-3xl space-y-4 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-neutral-500">
-                    4-Corner Tire Carcass Temps &amp; Pressures
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded">
-                    3-Zone Pyrometer
-                  </span>
+              <div className="space-y-3 font-mono text-xs">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-emerald-700">THROTTLE:</span>
+                    <span className="font-bold text-neutral-900">{telemetry.throttlePct}%</span>
+                  </div>
+                  <div className="w-full bg-neutral-200 h-3.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-full transition-all duration-75"
+                      style={{ width: `${telemetry.throttlePct}%` }}
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 font-mono text-xs">
-                  <div className="p-3 bg-white border border-neutral-200 rounded-2xl text-center space-y-1 shadow-2xs">
-                    <span className="text-[10px] text-neutral-400 block font-bold">FRONT LEFT</span>
-                    <strong className="text-sm font-black text-neutral-900 block">198°F • 24.2 PSI</strong>
-                    <span className="text-[9px] text-emerald-600">Optimum Grip</span>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-red-700">BRAKE PRESSURE:</span>
+                    <span className="font-bold text-neutral-900">{telemetry.brakePct}%</span>
                   </div>
+                  <div className="w-full bg-neutral-200 h-3.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-red-600 h-full transition-all duration-75"
+                      style={{ width: `${telemetry.brakePct}%` }}
+                    />
+                  </div>
+                </div>
 
-                  <div className="p-3 bg-white border border-neutral-200 rounded-2xl text-center space-y-1 shadow-2xs">
-                    <span className="text-[10px] text-neutral-400 block font-bold">FRONT RIGHT</span>
-                    <strong className="text-sm font-black text-neutral-900 block">215°F • 24.8 PSI</strong>
-                    <span className="text-[9px] text-amber-600">High Load Turn 1</span>
-                  </div>
-
-                  <div className="p-3 bg-white border border-neutral-200 rounded-2xl text-center space-y-1 shadow-2xs">
-                    <span className="text-[10px] text-neutral-400 block font-bold">REAR LEFT</span>
-                    <strong className="text-sm font-black text-neutral-900 block">202°F • 25.0 PSI</strong>
-                    <span className="text-[9px] text-emerald-600">Optimum Grip</span>
-                  </div>
-
-                  <div className="p-3 bg-white border border-neutral-200 rounded-2xl text-center space-y-1 shadow-2xs">
-                    <span className="text-[10px] text-neutral-400 block font-bold">REAR RIGHT</span>
-                    <strong className="text-sm font-black text-neutral-900 block">221°F • 25.4 PSI</strong>
-                    <span className="text-[9px] text-amber-600">Lateral Sliding</span>
-                  </div>
+                <div className="pt-1 flex items-center justify-between text-neutral-600">
+                  <span>Steering Angle:</span>
+                  <strong className="text-neutral-900 font-bold">{telemetry.steerDeg}°</strong>
                 </div>
               </div>
             </div>
@@ -1347,7 +1245,7 @@ function SRCommanderCommsDesktopContent() {
                 </div>
                 <input
                   type="range"
-                  min={10}
+                  min={0}
                   max={100}
                   value={haloBrightness}
                   onChange={(e) => setHaloBrightness(parseInt(e.target.value))}

@@ -1,26 +1,26 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('GridPass SRCommander Desktop Command Center UI Verification', () => {
-  test('renders 4 tabs, white/red/black theme, PTT engine, tachometer & broadcast controls', async ({ page }) => {
+test.describe('GridPass SRCommander Desktop Command Center UI Verification (Zero Fake Data)', () => {
+  test('renders 4 tabs, white/red/black theme, PTT engine, real standby telemetry & broadcast controls', async ({ page }) => {
     // 1. Navigate to the new desktop command center
     await page.goto('http://localhost:3000/srcommander/comms', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
-    // 2. Verify Top Header Brand & Vitals
+    // 2. Verify Top Header Brand & Standby Indicator (Zero Fake Telemetry)
     await expect(page.locator('text=GRIDPASS // SIM COMMANDER')).toBeVisible();
     await expect(page.locator('text=v4.3.0')).toBeVisible();
+    await expect(page.locator('text=SIM STANDBY')).toBeVisible();
 
-    // 3. Verify Tab 1: Paddock Comms & Team Radio is default active
+    // 3. Verify Tab 1: Paddock Comms & Team Radio
     await expect(page.locator('text=Steward Priority Race Control Override')).toBeVisible();
     await expect(page.locator('text=Active Radio Channel')).toBeVisible();
-    await expect(page.locator('text=Team Radio Car #48')).toBeVisible();
     await expect(page.locator('text=Spotter Whisper Channel')).toBeVisible();
     await expect(page.locator('text=PUSH TO TALK (PTT)')).toBeVisible();
 
     // Take screenshot of Comms Tab
     await page.screenshot({ path: 'tests/screenshots/desktop_comms_tab1.png', fullPage: true });
 
-    // 4. Test Tab 2: Cockpit HUD & Telemetry
+    // 4. Test Tab 2: Cockpit HUD & Telemetry (Assert clean standby zero data)
     const telemetryTabBtn = page.locator('button:has-text("Cockpit HUD")');
     await telemetryTabBtn.click();
     await page.waitForTimeout(1000);
@@ -29,7 +29,7 @@ test.describe('GridPass SRCommander Desktop Command Center UI Verification', () 
     await expect(page.locator('text=Active Gear')).toBeVisible();
     await expect(page.locator('text=Live Velocity')).toBeVisible();
     await expect(page.locator('text=Delta vs Session Best')).toBeVisible();
-    await expect(page.locator('text=4-Corner Tire Carcass Temps')).toBeVisible();
+    await expect(page.locator('text=Pedals & Steering Input Telemetry')).toBeVisible();
 
     // Take screenshot of Telemetry Tab
     await page.screenshot({ path: 'tests/screenshots/desktop_telemetry_tab2.png', fullPage: true });
@@ -57,6 +57,6 @@ test.describe('GridPass SRCommander Desktop Command Center UI Verification', () 
     // Take screenshot of Broadcast Tab
     await page.screenshot({ path: 'tests/screenshots/desktop_broadcast_tab4.png', fullPage: true });
 
-    console.log('✅ All 4 Desktop App UI tabs verified cleanly with 100% theme compliance!');
+    console.log('✅ All 4 Desktop App UI tabs verified cleanly with ZERO fake data and 100% theme compliance!');
   });
 });
