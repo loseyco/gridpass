@@ -412,17 +412,20 @@ class WindowsSystemTrayManager:
         status_text = "🟢 iRacing Status: LIVE (60 FPS)" if is_connected else "⚪ iRacing Status: Waiting..."
         startup_enabled = is_windows_startup_enabled()
 
+        def on_open_comms(icon, item):
+            webbrowser.open(f"{ACTIVE_CLOUD_URL}/srcommander/comms")
+
         def on_open_rig(icon, item):
-            webbrowser.open("http://localhost:3000/srcommander/rig")
+            webbrowser.open(f"{ACTIVE_CLOUD_URL}/srcommander/rig")
 
         def on_open_studio(icon, item):
-            webbrowser.open("http://localhost:3000/srcommander/studio")
+            webbrowser.open(f"{ACTIVE_CLOUD_URL}/srcommander/studio")
 
         def on_open_overlay(icon, item):
-            webbrowser.open("http://localhost:3000/srleague/overlay?local=true")
+            webbrowser.open(f"{ACTIVE_CLOUD_URL}/srcommander/overlay")
 
         def on_open_download(icon, item):
-            webbrowser.open("http://localhost:3000/srcommander/download")
+            webbrowser.open(f"{ACTIVE_CLOUD_URL}/srleague/download")
 
         def on_toggle_startup(icon, item):
             new_val = not is_windows_startup_enabled()
@@ -461,9 +464,10 @@ class WindowsSystemTrayManager:
             pystray.MenuItem(f"🏎️ GridPass SRCommander v{DAEMON_VERSION}", None, enabled=False),
             pystray.MenuItem(status_text, None, enabled=False),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("🎛️ Open Rig Manager", on_open_rig, default=True),
+            pystray.MenuItem("🖥️ Open Desktop Command Center", on_open_comms, default=True),
+            pystray.MenuItem("🎛️ Open Rig Manager", on_open_rig),
             pystray.MenuItem("📺 Open TV Broadcast Studio", on_open_studio),
-            pystray.MenuItem("🖥️ Open OBS Broadcast Overlay", on_open_overlay),
+            pystray.MenuItem("🏁 Open In-Game Overlay", on_open_overlay),
             pystray.MenuItem("📥 Open Download & Setup Hub", on_open_download),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("🚀 Start with Windows (Boot)", on_toggle_startup, checked=lambda item: is_windows_startup_enabled()),
