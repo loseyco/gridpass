@@ -9,6 +9,51 @@ import { ExcelWorksheetTable, ColumnDef } from '@gridpass/ui';
 // Default Subagent Execution Tickets Array (Includes TICK-1107, TICK-1106, TICK-1105, TICK-1104, TICK-1103, TICK-1102, TICK-1101, TICK-1100, TICK-1099, TICK-1098)
 const DEFAULT_AGENT_TICKETS: AgentTicket[] = [
   {
+    id: 'tick_1137_srleague_download_hub_and_dev_live_environment_switcher',
+    ticket_number: 'TICK-1137',
+    agent_role: 'architect',
+    title: 'GridPass SRLeague: Driver Companion Download Hub, Multi-Point Entry Matrix & Live vs Dev Environment Switcher',
+    category: 'feature',
+    status: 'VERIFIED',
+    priority: 'urgent',
+    components_used: [
+      'SRLeagueDownloadHub',
+      'EnvironmentSwitcher',
+      'WindowsSystemTray',
+      'LeagueMultiPointEntry',
+      'SRCommanderRigManager'
+    ],
+    files_modified: [
+      'src/app/srleague/download/page.tsx',
+      'src/app/srleague/page.tsx',
+      'src/app/srleague/[leagueId]/page.tsx',
+      'src/app/srleague/[leagueId]/join/page.tsx',
+      'scripts/gridpass_core_daemon.py',
+      'scripts/Launch_GridPass_Apex_Core.bat',
+      'src/app/srcommander/rig/page.tsx',
+      'tests/verify_srleague_download.spec.ts',
+      'src/app/admin/tickets/page.tsx'
+    ],
+    schema_changes: [
+      'Added /srleague/download dedicated Driver Companion download hub with dual 1-click batch launcher & daemon download pipelines',
+      'Added Driver Companion entry points across SRLeague root, individual league hubs, and league join registration flows',
+      'Added Live (gridpass.app) vs Dev (localhost:3000) environment switcher in Windows system tray context menu, CLI flags (--live/--dev), and Rig Manager UI pill'
+    ],
+    issue_description: 'League drivers and league organizers needed dedicated access to download the GridPass Driver Companion directly within the SRLeague portal, across league hubs, and during season join flows, with seamless switching between Live (gridpass.app) and Local Dev (localhost:3000) backend environments.',
+    root_cause: 'Lack of dedicated SRLeague companion download routing, absence of companion download callouts in league directory and join pages, and hardcoded localhost URLs without dynamic Live/Dev environment toggles.',
+    resolution_summary: 'Implemented dedicated /srleague/download portal with 1-click dual launcher/daemon downloads, added Driver Companion cards and download buttons across SRLeague hub, leagues directory, and season join flows, and engineered seamless Live (gridpass.app) vs Dev (localhost:3000) environment switching in the Windows system tray, CLI flags (--live/--dev), and Rig Manager UI pill.',
+    verification_proof: 'Playwright headed test (tests/verify_srleague_download.spec.ts) passed 100% with full-page screenshot proof (tests/screenshots/srleague_download_hub_verified.png).',
+    sop_summary: 'SOP for downloading Driver Companion via SRLeague and toggling between Live and Dev environments.',
+    sop_steps: [
+      '1. Navigate to /srleague/download or click "Download Driver Companion" from any league page or season join flow.',
+      '2. Download and run Launch_GridPass_Apex_Core.bat on the sim racing PC.',
+      '3. Right-click the Windows system tray icon or toggle the Environment Switcher in /srcommander/rig to seamlessly switch between Live (gridpass.app) and Dev (localhost:3000).'
+    ],
+    created_at: '2026-08-31T19:25:00Z',
+    completed_at: '2026-08-31T19:28:00Z',
+    verified_at: '2026-08-31T19:28:00Z'
+  },
+  {
     id: 'tick_1136_srcommander_zero_install_launcher_and_download_pipeline',
     ticket_number: 'TICK-1136',
     agent_role: 'architect',
